@@ -24,29 +24,19 @@ namespace MegaCrit.Sts2.Core.Models.Events;
 
 public sealed class EndlessConveyor : EventModel
 {
-	private record struct Dish
+	private record struct Dish(string id, Func<Task> action, IEnumerable<IHoverTip> hoverTips, float weight)
 	{
-		public readonly string id;
+		public readonly string id = id;
 
-		public readonly LocString title;
+		public readonly LocString title = new LocString("events", "ENDLESS_CONVEYOR.DISHES." + id + ".title");
 
-		public readonly string optionKey;
+		public readonly string optionKey = "ENDLESS_CONVEYOR.pages.ALL.options." + id;
 
-		public readonly IEnumerable<IHoverTip> hoverTips;
+		public readonly IEnumerable<IHoverTip> hoverTips = hoverTips;
 
-		public readonly float weight;
+		public readonly float weight = weight;
 
-		public readonly Func<Task> action;
-
-		public Dish(string id, Func<Task> action, IEnumerable<IHoverTip> hoverTips, float weight)
-		{
-			this.id = id;
-			title = new LocString("events", "ENDLESS_CONVEYOR.DISHES." + id + ".title");
-			optionKey = "ENDLESS_CONVEYOR.pages.ALL.options." + id;
-			this.action = action;
-			this.hoverTips = hoverTips;
-			this.weight = weight;
-		}
+		public readonly Func<Task> action = action;
 	}
 
 	private const string _currentDishTitleKey = "CurrentDishTitle";
@@ -93,7 +83,7 @@ public sealed class EndlessConveyor : EventModel
 
 	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(new DynamicVar[6]
 	{
-		new GoldVar(35),
+		new GoldVar(40),
 		new GoldVar("GoldenFyshGold", 75),
 		new HealVar("ClamRollHeal", 10m),
 		new MaxHpVar("CaviarMaxHp", 4m),
@@ -101,9 +91,9 @@ public sealed class EndlessConveyor : EventModel
 		new StringVar("LastDishTitle")
 	});
 
-	public override bool IsAllowed(RunState runState)
+	public override bool IsAllowed(IRunState runState)
 	{
-		return runState.Players.All((Player p) => p.Gold >= 105);
+		return runState.Players.All((Player p) => p.Gold >= 120);
 	}
 
 	public override void CalculateVars()
@@ -208,6 +198,10 @@ public sealed class EndlessConveyor : EventModel
 		return Task.CompletedTask;
 	}
 
+	/// <summary>
+	/// Generates a list of possible dishes and uses a weighted roll to determine a dish.
+	/// Lots of exceptions and info here.
+	/// </summary>
 	private void RollDish()
 	{
 		NumOfGrabs++;
@@ -262,6 +256,9 @@ public sealed class EndlessConveyor : EventModel
 		}
 	}
 
+	/// <summary>
+	/// Player chose not to partake in the feast. Sad.
+	/// </summary>
 	private Task ObserveChef()
 	{
 		IEnumerable<CardModel> enumerable = base.Owner.Deck.Cards.Where((CardModel c) => c.IsUpgradable);

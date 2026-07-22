@@ -1,14 +1,8 @@
 namespace MegaCrit.Sts2.Core.Runs.Metrics;
 
-public struct ActWinMetric
+public struct ActWinMetric(string actId, bool win)
 {
-	public readonly string act;
+	public readonly string act = actId;
 
-	public readonly bool win;
-
-	public ActWinMetric(string actId, bool win)
-	{
-		act = actId;
-		this.win = win;
-	}
+	public readonly bool win = win;
 }

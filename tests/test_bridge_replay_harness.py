@@ -200,6 +200,63 @@ def test_bridge_replay_recorder_records_state_action_state_sequence():
     assert recorder.trace.steps[0].resulting_state["player"]["energy"] == 0
 
 
+def test_bridge_replay_recorder_preserves_potion_slots_and_mask_metadata():
+    base = {
+        "type": BridgeStateType.COMBAT_ACTION,
+        "player": {"hp": 80, "max_hp": 80, "block": 0, "energy": 1, "max_energy": 3, "powers": []},
+        "hand": [],
+        "enemies": [],
+        "draw_pile_count": 0,
+        "discard_pile_count": 0,
+        "exhaust_pile_count": 0,
+        "round": 1,
+        "max_potion_slots": 3,
+    }
+    initial = {
+        **base,
+        "potions": [{
+            "slot": 2,
+            "id": "BufferPotion",
+            "usage": "CombatOnly",
+            "can_use": True,
+            "target": "Self",
+            "requires_target": False,
+            "target_type": "Self",
+        }],
+    }
+    after = {**base, "potions": []}
+    client = FakeBridgeClient([initial, after])
+    recorder = BridgeReplayRecorder(client)
+
+    recorder.receive_state()
+    recorder.use_potion(2)
+    recorder.receive_state()
+
+    assert recorder.trace.initial_state["potions"] == initial["potions"]
+    assert recorder.trace.initial_state["max_potion_slots"] == 3
+    assert recorder.trace.steps[0].resulting_state["potions"] == []
+
+
+def test_normalize_bridge_state_canonicalizes_python_potion_enum_names():
+    state = normalize_bridge_state({
+        "type": BridgeStateType.COMBAT_ACTION,
+        "player": {},
+        "potions": [{
+            "slot": 0,
+            "id": "FirePotion",
+            "usage": "COMBAT_ONLY",
+            "target": "ANY_ENEMY",
+            "target_type": "ANY_ENEMY",
+            "requires_target": True,
+        }],
+        "max_potion_slots": 3,
+    })
+
+    assert state["potions"][0]["usage"] == "CombatOnly"
+    assert state["potions"][0]["target"] == "AnyEnemy"
+    assert state["potions"][0]["target_type"] == "AnyEnemy"
+
+
 def test_bridge_replay_recorder_records_skip_and_multi_select_actions():
     initial = {
         "type": BridgeStateType.CARD_SELECT,
@@ -488,6 +545,18 @@ def test_compare_combat_replay_handles_potion_action():
     initial_state = combat_state_to_bridge_state(combat)
     assert combat.use_potion(0)
     resulting_state = combat_state_to_bridge_state(combat)
+
+    assert initial_state["potions"] == [{
+        "slot": 0,
+        "id": "BlockPotion",
+        "can_use": True,
+        "usage": "CombatOnly",
+        "target": "AnyPlayer",
+        "requires_target": False,
+        "target_type": "AnyPlayer",
+    }]
+    assert initial_state["max_potion_slots"] == 3
+    assert resulting_state["potions"] == []
 
     trace = BridgeReplayTrace(
         initial_state=initial_state,

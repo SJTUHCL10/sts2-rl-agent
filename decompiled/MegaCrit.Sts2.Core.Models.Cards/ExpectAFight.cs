@@ -14,8 +14,6 @@ public sealed class ExpectAFight : CardModel
 {
 	private const string _calculatedEnergyKey = "CalculatedEnergy";
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(base.EnergyHoverTip);
-
 	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(new DynamicVar[4]
 	{
 		new EnergyVar(0),
@@ -23,6 +21,8 @@ public sealed class ExpectAFight : CardModel
 		new CalculationExtraVar(1m),
 		new CalculatedVar("CalculatedEnergy").WithMultiplier((CardModel card, Creature? _) => PileType.Hand.GetPile(card.Owner).Cards.Count((CardModel c) => c.Type == CardType.Attack))
 	});
+
+	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(base.EnergyHoverTip);
 
 	public ExpectAFight()
 		: base(2, CardType.Skill, CardRarity.Uncommon, TargetType.Self)

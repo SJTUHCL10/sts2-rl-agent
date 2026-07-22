@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using MegaCrit.Sts2.Core.Combat;
 using MegaCrit.Sts2.Core.Commands;
+using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.Entities.Creatures;
 using MegaCrit.Sts2.Core.Entities.Powers;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
@@ -21,7 +22,10 @@ public sealed class VulnerablePower : PowerModel
 
 	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new DynamicVar("DamageIncrease", 1.5m));
 
-	public override decimal ModifyDamageMultiplicative(Creature? target, decimal amount, ValueProp props, Creature? dealer, CardModel? cardSource)
+	/// <summary>
+	/// Multiplies damage received by 1.5x.
+	/// </summary>
+	public override decimal ModifyDamageMultiplicative(Creature? target, decimal amount, ValueProp props, Creature? dealer, CardModel? cardSource, CardPlay? cardPlay)
 	{
 		if (target != base.Owner)
 		{
@@ -39,21 +43,21 @@ public sealed class VulnerablePower : PowerModel
 			{
 				num = paperPhrog.ModifyVulnerableMultiplier(target, num, props, dealer, cardSource);
 			}
-			CrueltyPower power = dealer.GetPower<CrueltyPower>();
-			if (power != null)
+			CrueltyPower crueltyPower = dealer.GetPower<CrueltyPower>() ?? dealer.PetOwner?.Creature.GetPower<CrueltyPower>();
+			if (crueltyPower != null)
 			{
-				num = power.ModifyVulnerableMultiplier(target, num, props, dealer, cardSource);
+				num = crueltyPower.ModifyVulnerableMultiplier(target, num, props, dealer, cardSource);
 			}
 		}
-		DebilitatePower power2 = target.GetPower<DebilitatePower>();
-		if (power2 != null)
+		DebilitatePower power = target.GetPower<DebilitatePower>();
+		if (power != null)
 		{
-			num = power2.ModifyVulnerableMultiplier(target, num, props, dealer, cardSource);
+			num = power.ModifyVulnerableMultiplier(target, num, props, dealer, cardSource);
 		}
 		return num;
 	}
 
-	public override async Task AfterTurnEnd(PlayerChoiceContext choiceContext, CombatSide side)
+	public override async Task AfterSideTurnEnd(PlayerChoiceContext choiceContext, CombatSide side, IEnumerable<Creature> participants)
 	{
 		if (side == CombatSide.Enemy)
 		{

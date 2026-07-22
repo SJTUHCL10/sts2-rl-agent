@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -7,9 +8,12 @@ using MegaCrit.Sts2.Core.Entities.Players;
 using MegaCrit.Sts2.Core.Entities.Relics;
 using MegaCrit.Sts2.Core.Factories;
 using MegaCrit.Sts2.Core.Helpers;
+using MegaCrit.Sts2.Core.Models.Characters;
+using MegaCrit.Sts2.Core.Rewards;
 using MegaCrit.Sts2.Core.Rooms;
 using MegaCrit.Sts2.Core.Runs;
 using MegaCrit.Sts2.Core.Saves.Runs;
+using MegaCrit.Sts2.Core.Unlocks;
 
 namespace MegaCrit.Sts2.Core.Models.Relics;
 
@@ -17,9 +21,9 @@ public sealed class LastingCandy : RelicModel
 {
 	private bool _isActivating;
 
-	private int _combatsSeen;
+	private int _combatRewardsSeen;
 
-	public override RelicRarity Rarity => RelicRarity.Rare;
+	public override RelicRarity Rarity => RelicRarity.Uncommon;
 
 	public override bool ShowCounter => true;
 
@@ -29,7 +33,7 @@ public sealed class LastingCandy : RelicModel
 		{
 			if (!IsActivating)
 			{
-				return CombatsSeen % 2;
+				return CombatRewardsSeen % 2;
 			}
 			return 2;
 		}
@@ -50,16 +54,16 @@ public sealed class LastingCandy : RelicModel
 	}
 
 	[SavedProperty]
-	public int CombatsSeen
+	public int CombatRewardsSeen
 	{
 		get
 		{
-			return _combatsSeen;
+			return _combatRewardsSeen;
 		}
 		set
 		{
 			AssertMutable();
-			_combatsSeen = value;
+			_combatRewardsSeen = value;
 		}
 	}
 
@@ -67,9 +71,9 @@ public sealed class LastingCandy : RelicModel
 	{
 		get
 		{
-			if (CombatsSeen > 0)
+			if (CombatRewardsSeen > 0)
 			{
-				return CombatsSeen % 2 == 0;
+				return CombatRewardsSeen % 2 == 1;
 			}
 			return false;
 		}
@@ -77,10 +81,25 @@ public sealed class LastingCandy : RelicModel
 
 	public override bool IsAllowed(IRunState runState)
 	{
+		if (runState.Players.Any(delegate(Player p)
+		{
+			if (p != null && p.Character is Ironclad)
+			{
+				UnlockState unlockState = p.UnlockState;
+				if (unlockState != null)
+				{
+					return unlockState.NumberOfRuns == 0;
+				}
+			}
+			return false;
+		}))
+		{
+			return false;
+		}
 		return RelicModel.IsBeforeAct3TreasureChest(runState);
 	}
 
-	public override bool TryModifyCardRewardOptions(Player player, List<CardCreationResult> options, CardCreationOptions creationOptions)
+	public override bool TryModifyCardRewardOptions(Player player, List<CardCreationResult> rewardOptions, CardCreationOptions creationOptions)
 	{
 		if (base.Owner != player)
 		{
@@ -94,27 +113,56 @@ public sealed class LastingCandy : RelicModel
 		{
 			return false;
 		}
-		IEnumerable<CardModel> customCardPool = from c in creationOptions.GetPossibleCards(player)
-			where c.Type == CardType.Power && options.TrueForAll((CardCreationResult o) => o.originalCard.Id != c.Id)
-			select c;
-		CardCreationOptions options2 = new CardCreationOptions(customCardPool, CardCreationSource.Other, creationOptions.RarityOdds).WithFlags(CardCreationFlags.NoModifyHooks | CardCreationFlags.NoCardPoolModifications);
-		CardModel cardModel = CardFactory.CreateForReward(base.Owner, 1, options2).FirstOrDefault()?.Card;
+		if (!creationOptions.Flags.HasFlag(CardCreationFlags.IsCardReward))
+		{
+			return false;
+		}
+		if (!creationOptions.Flags.HasFlag(CardCreationFlags.IsFromCombat))
+		{
+			return false;
+		}
+		bool allowDupes = false;
+		List<CardModel> source = creationOptions.GetPossibleCards(player).ToList();
+		IEnumerable<CardModel> source2 = source.Where((CardModel c) => CardPoolFilter(c, rewardOptions, allowDupes: false));
+		if (!source2.Any())
+		{
+			allowDupes = true;
+			source2 = source.Where((CardModel c) => CardPoolFilter(c, rewardOptions, allowDupes: true));
+		}
+		if (!source2.Any())
+		{
+			return false;
+		}
+		CardCreationOptions options = new CardCreationOptions(creationOptions.CardPools, CardCreationSource.Other, creationOptions.RarityOdds, delegate(CardModel c)
+		{
+			Func<CardModel, bool>? cardPoolFilter = creationOptions.CardPoolFilter;
+			return (cardPoolFilter == null || cardPoolFilter(c)) && CardPoolFilter(c, rewardOptions, allowDupes);
+		}).WithFlags(CardCreationFlags.NoModifyHooks | CardCreationFlags.NoCardPoolModifications);
+		CardModel cardModel = CardFactory.CreateForReward(base.Owner, 1, options).FirstOrDefault()?.Card;
 		if (cardModel != null)
 		{
 			CardCreationResult cardCreationResult = new CardCreationResult(cardModel);
 			cardCreationResult.ModifyCard(cardModel, this);
-			options.Add(cardCreationResult);
+			rewardOptions.Add(cardCreationResult);
 		}
 		return cardModel != null;
 	}
 
-	public override Task AfterCombatEnd(CombatRoom room)
+	public override Task BeforeCombatRewardOffered(RewardsSet rewards, CombatRoom room)
 	{
-		CombatsSeen++;
+		if (rewards.Player != base.Owner)
+		{
+			return Task.CompletedTask;
+		}
+		if (rewards.Rewards.All((Reward r) => !(r is CardReward)))
+		{
+			return Task.CompletedTask;
+		}
 		if (IsInTriggeringCombat)
 		{
 			TaskHelper.RunSafely(DoActivateVisuals());
 		}
+		CombatRewardsSeen++;
 		InvokeDisplayAmountChanged();
 		return Task.CompletedTask;
 	}
@@ -125,5 +173,18 @@ public sealed class LastingCandy : RelicModel
 		Flash();
 		await Cmd.Wait(1f);
 		IsActivating = false;
+	}
+
+	private static bool CardPoolFilter(CardModel card, List<CardCreationResult> rewardOptions, bool allowDupes)
+	{
+		if (card.Type == CardType.Power)
+		{
+			if (!allowDupes)
+			{
+				return rewardOptions.TrueForAll((CardCreationResult o) => o.originalCard.Id != card.Id);
+			}
+			return true;
+		}
+		return false;
 	}
 }

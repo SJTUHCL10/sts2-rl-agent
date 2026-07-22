@@ -1064,11 +1064,9 @@ def make_toric_toughness(upgraded: bool = False) -> CardInstance:
 
 @register_effect(CardId.FUEL)
 def fuel_effect(card: CardInstance, combat: CombatState, target: Creature | None) -> None:
-    cards = card.effect_vars.get("cards", 1)
     energy = card.effect_vars.get("energy", 1)
     owner = _owner(card, combat)
     combat.gain_energy(owner, energy)
-    combat._draw_cards(cards)
 
 
 def make_fuel(upgraded: bool = False) -> CardInstance:
@@ -1076,7 +1074,7 @@ def make_fuel(upgraded: bool = False) -> CardInstance:
         card_id=CardId.FUEL, cost=0, card_type=CardType.SKILL,
         target_type=TargetType.SELF, rarity=CardRarity.STATUS,
         upgraded=upgraded, keywords=frozenset({"exhaust"}),
-        effect_vars={"cards": 2 if upgraded else 1, "energy": 1},
+        effect_vars={"energy": 2 if upgraded else 1},
         instance_id=_get_next_id(),
     )
 
@@ -1091,7 +1089,7 @@ def make_giant_rock(upgraded: bool = False) -> CardInstance:
     return CardInstance(
         card_id=CardId.GIANT_ROCK, cost=1, card_type=CardType.ATTACK,
         target_type=TargetType.ANY_ENEMY, rarity=CardRarity.STATUS,
-        base_damage=20 if upgraded else 16, upgraded=upgraded,
+        base_damage=24 if upgraded else 20, upgraded=upgraded,
         instance_id=_get_next_id(),
     )
 
@@ -1137,7 +1135,7 @@ def make_minion_sacrifice(upgraded: bool = False) -> CardInstance:
     return CardInstance(
         card_id=CardId.MINION_SACRIFICE, cost=0, card_type=CardType.SKILL,
         target_type=TargetType.SELF, rarity=CardRarity.STATUS,
-        base_block=12 if upgraded else 9, upgraded=upgraded,
+        base_block=10 if upgraded else 7, upgraded=upgraded,
         keywords=frozenset({"exhaust"}), instance_id=_get_next_id(),
     )
 
@@ -1865,3 +1863,34 @@ def spoils_map_quest_complete(card: CardInstance, run_state) -> int:
             if point is not None:
                 point.remove_quest(card)
     return gold
+
+
+@register_effect(CardId.DOWSING)
+def dowsing_effect(card: CardInstance, combat: CombatState, target: Creature | None) -> None:
+    pass
+
+
+@register_effect(CardId.WITHER)
+def wither_effect(card: CardInstance, combat: CombatState, target: Creature | None) -> None:
+    pass
+
+
+@register_turn_end_in_hand_hook(CardId.WITHER)
+def wither_turn_end_in_hand(
+    card: CardInstance, combat: CombatState, cards_in_hand_at_turn_end: int
+) -> None:
+    _deal_self_damage(card, combat, card.effect_vars.get("damage", 3))
+
+
+def _make_new_reference_card(card_id: CardId, upgraded: bool) -> CardInstance:
+    from sts2_env.cards.factory import create_reference_card
+
+    return create_reference_card(card_id, upgraded=upgraded, allow_generation=True)
+
+
+def make_dowsing(upgraded: bool = False) -> CardInstance:
+    return _make_new_reference_card(CardId.DOWSING, upgraded)
+
+
+def make_wither(upgraded: bool = False) -> CardInstance:
+    return _make_new_reference_card(CardId.WITHER, upgraded)

@@ -6,6 +6,9 @@ using System.Runtime.CompilerServices;
 [CompilerGenerated]
 internal sealed class _003C_003Ez__ReadOnlyList<T> : IEnumerable, ICollection, IList, IEnumerable<T>, IReadOnlyCollection<T>, IReadOnlyList<T>, ICollection<T>, IList<T>
 {
+	[CompilerGenerated]
+	private readonly List<T> _items;
+
 	int ICollection.Count => _items.Count;
 
 	bool ICollection.IsSynchronized => false;

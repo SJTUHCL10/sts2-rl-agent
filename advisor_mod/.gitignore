@@ -1,0 +1,9 @@
+.godot/
+bin/
+obj/
+publish/
+packages/
+AdvisorMod.local.props
+*cs.uid
+*.user
+

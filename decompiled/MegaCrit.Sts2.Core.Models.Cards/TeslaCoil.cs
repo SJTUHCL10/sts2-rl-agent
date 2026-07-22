@@ -26,18 +26,22 @@ public sealed class TeslaCoil : CardModel
 	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
 	{
 		ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
-		await DamageCmd.Attack(base.DynamicVars.Damage.BaseValue).FromCard(this).Targeting(cardPlay.Target)
+		await DamageCmd.Attack(base.DynamicVars.Damage.BaseValue).FromCard(this, cardPlay).Targeting(cardPlay.Target)
 			.WithHitFx("vfx/vfx_attack_slash")
 			.Execute(choiceContext);
 		List<LightningOrb> list = base.Owner.PlayerCombatState.OrbQueue.Orbs.OfType<LightningOrb>().ToList();
-		foreach (LightningOrb item in list)
+		foreach (LightningOrb lightningOrb in list)
 		{
-			await OrbCmd.Passive(choiceContext, item, cardPlay.Target);
+			await OrbCmd.Passive(choiceContext, lightningOrb, cardPlay.Target);
+			if (base.IsUpgraded)
+			{
+				await OrbCmd.Passive(choiceContext, lightningOrb, cardPlay.Target);
+			}
 		}
 	}
 
 	protected override void OnUpgrade()
 	{
-		base.DynamicVars.Damage.UpgradeValueBy(3m);
+		base.DynamicVars.Damage.UpgradeValueBy(1m);
 	}
 }

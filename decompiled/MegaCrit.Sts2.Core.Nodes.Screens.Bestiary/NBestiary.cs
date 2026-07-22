@@ -1,95 +1,393 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 using Godot;
 using Godot.Bridge;
 using Godot.NativeInterop;
 using MegaCrit.Sts2.Core.Assets;
-using MegaCrit.Sts2.Core.Bindings.MegaSpine;
+using MegaCrit.Sts2.Core.ControllerInput;
+using MegaCrit.Sts2.Core.Entities.Creatures;
 using MegaCrit.Sts2.Core.Helpers;
 using MegaCrit.Sts2.Core.Localization;
+using MegaCrit.Sts2.Core.Logging;
 using MegaCrit.Sts2.Core.Models;
+using MegaCrit.Sts2.Core.Models.Acts;
+using MegaCrit.Sts2.Core.Models.Characters;
+using MegaCrit.Sts2.Core.Models.Encounters;
+using MegaCrit.Sts2.Core.MonsterMoves.MonsterMoveStateMachine;
+using MegaCrit.Sts2.Core.Nodes.Audio;
 using MegaCrit.Sts2.Core.Nodes.Combat;
+using MegaCrit.Sts2.Core.Nodes.CommonUi;
 using MegaCrit.Sts2.Core.Nodes.GodotExtensions;
 using MegaCrit.Sts2.Core.Nodes.Screens.MainMenu;
+using MegaCrit.Sts2.Core.Rooms;
 using MegaCrit.Sts2.Core.Saves;
 using MegaCrit.Sts2.Core.TestSupport;
 using MegaCrit.Sts2.addons.mega_text;
 
 namespace MegaCrit.Sts2.Core.Nodes.Screens.Bestiary;
 
+/// <summary>
+/// Screen that has a list of monsters that you can click on to view their name, description, hp, some stats, and
+/// a list of their moves which you can click on to play the associated animation and sfx.
+/// </summary>
 [ScriptPath("res://src/Core/Nodes/Screens/Bestiary/NBestiary.cs")]
 public class NBestiary : NSubmenu
 {
+	/// <summary>
+	/// Cached StringNames for the methods contained in this class, for fast lookup.
+	/// </summary>
 	public new class MethodName : NSubmenu.MethodName
 	{
+		/// <summary>
+		/// Cached name for the 'Create' method.
+		/// </summary>
 		public static readonly StringName Create = "Create";
 
+		/// <summary>
+		/// Cached name for the '_Ready' method.
+		/// </summary>
 		public new static readonly StringName _Ready = "_Ready";
 
+		/// <summary>
+		/// Cached name for the 'ToggleMode' method.
+		/// </summary>
+		public static readonly StringName ToggleMode = "ToggleMode";
+
+		/// <summary>
+		/// Cached name for the 'EnableMoveButtonHotkeys' method.
+		/// </summary>
+		public static readonly StringName EnableMoveButtonHotkeys = "EnableMoveButtonHotkeys";
+
+		/// <summary>
+		/// Cached name for the 'DisableMoveButtonHotkeys' method.
+		/// </summary>
+		public static readonly StringName DisableMoveButtonHotkeys = "DisableMoveButtonHotkeys";
+
+		/// <summary>
+		/// Cached name for the 'ShowMovesPanel' method.
+		/// </summary>
+		public static readonly StringName ShowMovesPanel = "ShowMovesPanel";
+
+		/// <summary>
+		/// Cached name for the 'ShowStatsPanel' method.
+		/// </summary>
+		public static readonly StringName ShowStatsPanel = "ShowStatsPanel";
+
+		/// <summary>
+		/// Cached name for the 'RefreshStatisticsText' method.
+		/// </summary>
+		public static readonly StringName RefreshStatisticsText = "RefreshStatisticsText";
+
+		/// <summary>
+		/// Cached name for the 'DisplayCharacterData' method.
+		/// </summary>
+		public static readonly StringName DisplayCharacterData = "DisplayCharacterData";
+
+		/// <summary>
+		/// Cached name for the 'UpdateDialogueBubbleStyle' method.
+		/// </summary>
+		public static readonly StringName UpdateDialogueBubbleStyle = "UpdateDialogueBubbleStyle";
+
+		/// <summary>
+		/// Cached name for the 'ShowDialogue' method.
+		/// </summary>
+		public static readonly StringName ShowDialogue = "ShowDialogue";
+
+		/// <summary>
+		/// Cached name for the 'HideDialogue' method.
+		/// </summary>
+		public static readonly StringName HideDialogue = "HideDialogue";
+
+		/// <summary>
+		/// Cached name for the 'OnSubmenuOpened' method.
+		/// </summary>
 		public new static readonly StringName OnSubmenuOpened = "OnSubmenuOpened";
 
+		/// <summary>
+		/// Cached name for the 'OnSubmenuClosed' method.
+		/// </summary>
 		public new static readonly StringName OnSubmenuClosed = "OnSubmenuClosed";
 
+		/// <summary>
+		/// Cached name for the 'CreateEntries' method.
+		/// </summary>
 		public static readonly StringName CreateEntries = "CreateEntries";
 
+		/// <summary>
+		/// Cached name for the 'CreateFilters' method.
+		/// </summary>
+		public static readonly StringName CreateFilters = "CreateFilters";
+
+		/// <summary>
+		/// Cached name for the 'OnCharacterFilterSelected' method.
+		/// </summary>
+		public static readonly StringName OnCharacterFilterSelected = "OnCharacterFilterSelected";
+
+		/// <summary>
+		/// Cached name for the 'AddEvents' method.
+		/// </summary>
+		public static readonly StringName AddEvents = "AddEvents";
+
+		/// <summary>
+		/// Cached name for the 'OnMonsterClicked' method.
+		/// </summary>
 		public static readonly StringName OnMonsterClicked = "OnMonsterClicked";
 
+		/// <summary>
+		/// Cached name for the 'SelectMonster' method.
+		/// </summary>
 		public static readonly StringName SelectMonster = "SelectMonster";
 
-		public static readonly StringName OnMoveButtonFocused = "OnMoveButtonFocused";
-
-		public static readonly StringName OnMoveButtonUnfocused = "OnMoveButtonUnfocused";
-
+		/// <summary>
+		/// Cached name for the 'OnMoveButtonClicked' method.
+		/// </summary>
 		public static readonly StringName OnMoveButtonClicked = "OnMoveButtonClicked";
 
-		public static readonly StringName PlayIdleAnim = "PlayIdleAnim";
+		/// <summary>
+		/// Cached name for the 'GetSideCenter' method.
+		/// </summary>
+		public static readonly StringName GetSideCenter = "GetSideCenter";
 
-		public static readonly StringName PlayMoveAnim = "PlayMoveAnim";
+		/// <summary>
+		/// Cached name for the 'GetSideFloor' method.
+		/// </summary>
+		public static readonly StringName GetSideFloor = "GetSideFloor";
 
-		public static readonly StringName OnMoveAnimCompleted = "OnMoveAnimCompleted";
+		/// <summary>
+		/// Cached name for the 'EnableStatsModeHotkeys' method.
+		/// </summary>
+		public static readonly StringName EnableStatsModeHotkeys = "EnableStatsModeHotkeys";
+
+		/// <summary>
+		/// Cached name for the 'DisableStatsModeHotkeys' method.
+		/// </summary>
+		public static readonly StringName DisableStatsModeHotkeys = "DisableStatsModeHotkeys";
+
+		/// <summary>
+		/// Cached name for the 'FilterLeft' method.
+		/// </summary>
+		public static readonly StringName FilterLeft = "FilterLeft";
+
+		/// <summary>
+		/// Cached name for the 'FilterRight' method.
+		/// </summary>
+		public static readonly StringName FilterRight = "FilterRight";
+
+		/// <summary>
+		/// Cached name for the 'SelectFilter' method.
+		/// </summary>
+		public static readonly StringName SelectFilter = "SelectFilter";
+
+		/// <summary>
+		/// Cached name for the 'UpdatePageIcons' method.
+		/// </summary>
+		public static readonly StringName UpdatePageIcons = "UpdatePageIcons";
+
+		/// <summary>
+		/// Cached name for the 'CanBeShown' method.
+		/// </summary>
+		public static readonly StringName CanBeShown = "CanBeShown";
 	}
 
+	/// <summary>
+	/// Cached StringNames for the properties and fields contained in this class, for fast lookup.
+	/// </summary>
 	public new class PropertyName : NSubmenu.PropertyName
 	{
+		/// <summary>
+		/// Cached name for the 'InitialFocusedControl' property.
+		/// </summary>
 		public new static readonly StringName InitialFocusedControl = "InitialFocusedControl";
 
+		/// <summary>
+		/// Cached name for the 'BackVfxContainer' property.
+		/// </summary>
+		public static readonly StringName BackVfxContainer = "BackVfxContainer";
+
+		/// <summary>
+		/// Cached name for the 'VfxContainer' property.
+		/// </summary>
+		public static readonly StringName VfxContainer = "VfxContainer";
+
+		/// <summary>
+		/// Cached name for the 'Layout' property.
+		/// </summary>
+		public static readonly StringName Layout = "Layout";
+
+		/// <summary>
+		/// Cached name for the '_monsterNameLabel' field.
+		/// </summary>
 		public static readonly StringName _monsterNameLabel = "_monsterNameLabel";
 
+		/// <summary>
+		/// Cached name for the '_epithet' field.
+		/// </summary>
 		public static readonly StringName _epithet = "_epithet";
 
+		/// <summary>
+		/// Cached name for the '_sidebar' field.
+		/// </summary>
 		public static readonly StringName _sidebar = "_sidebar";
 
+		/// <summary>
+		/// Cached name for the '_bestiaryList' field.
+		/// </summary>
 		public static readonly StringName _bestiaryList = "_bestiaryList";
 
-		public static readonly StringName _monsterVisualsContainer = "_monsterVisualsContainer";
-
-		public static readonly StringName _descriptionLabel = "_descriptionLabel";
-
+		/// <summary>
+		/// Cached name for the '_selectionArrow' field.
+		/// </summary>
 		public static readonly StringName _selectionArrow = "_selectionArrow";
 
-		public static readonly StringName _moveList = "_moveList";
-
-		public static readonly StringName _moveContainer = "_moveContainer";
-
+		/// <summary>
+		/// Cached name for the '_arrowTween' field.
+		/// </summary>
 		public static readonly StringName _arrowTween = "_arrowTween";
 
-		public static readonly StringName _arrowPosReset = "_arrowPosReset";
+		/// <summary>
+		/// Cached name for the '_initSelectionArrow' field.
+		/// </summary>
+		public static readonly StringName _initSelectionArrow = "_initSelectionArrow";
 
-		public static readonly StringName _monsterVisuals = "_monsterVisuals";
+		/// <summary>
+		/// Cached name for the '_layoutContainer' field.
+		/// </summary>
+		public static readonly StringName _layoutContainer = "_layoutContainer";
 
+		/// <summary>
+		/// Cached name for the '_currentLayout' field.
+		/// </summary>
+		public static readonly StringName _currentLayout = "_currentLayout";
+
+		/// <summary>
+		/// Cached name for the '_characterIcon' field.
+		/// </summary>
+		public static readonly StringName _characterIcon = "_characterIcon";
+
+		/// <summary>
+		/// Cached name for the '_iconTexture' field.
+		/// </summary>
+		public static readonly StringName _iconTexture = "_iconTexture";
+
+		/// <summary>
+		/// Cached name for the '_iconOutlineTexture' field.
+		/// </summary>
+		public static readonly StringName _iconOutlineTexture = "_iconOutlineTexture";
+
+		/// <summary>
+		/// Cached name for the '_dialogueLine' field.
+		/// </summary>
+		public static readonly StringName _dialogueLine = "_dialogueLine";
+
+		/// <summary>
+		/// Cached name for the '_dialogueLabel' field.
+		/// </summary>
+		public static readonly StringName _dialogueLabel = "_dialogueLabel";
+
+		/// <summary>
+		/// Cached name for the '_dialogueBubble' field.
+		/// </summary>
+		public static readonly StringName _dialogueBubble = "_dialogueBubble";
+
+		/// <summary>
+		/// Cached name for the '_dialogueTail' field.
+		/// </summary>
+		public static readonly StringName _dialogueTail = "_dialogueTail";
+
+		/// <summary>
+		/// Cached name for the '_dialogueTailShadow' field.
+		/// </summary>
+		public static readonly StringName _dialogueTailShadow = "_dialogueTailShadow";
+
+		/// <summary>
+		/// Cached name for the '_modeButton' field.
+		/// </summary>
+		public static readonly StringName _modeButton = "_modeButton";
+
+		/// <summary>
+		/// Cached name for the '_modeLabel' field.
+		/// </summary>
+		public static readonly StringName _modeLabel = "_modeLabel";
+
+		/// <summary>
+		/// Cached name for the '_isStatsMode' field.
+		/// </summary>
+		public static readonly StringName _isStatsMode = "_isStatsMode";
+
+		/// <summary>
+		/// Cached name for the '_pageLeftIcon' field.
+		/// </summary>
+		public static readonly StringName _pageLeftIcon = "_pageLeftIcon";
+
+		/// <summary>
+		/// Cached name for the '_pageRightIcon' field.
+		/// </summary>
+		public static readonly StringName _pageRightIcon = "_pageRightIcon";
+
+		/// <summary>
+		/// Cached name for the '_moveList' field.
+		/// </summary>
+		public static readonly StringName _moveList = "_moveList";
+
+		/// <summary>
+		/// Cached name for the '_moveContainer' field.
+		/// </summary>
+		public static readonly StringName _moveContainer = "_moveContainer";
+
+		/// <summary>
+		/// Cached name for the '_statsContainer' field.
+		/// </summary>
+		public static readonly StringName _statsContainer = "_statsContainer";
+
+		/// <summary>
+		/// Cached name for the '_filterContainer' field.
+		/// </summary>
+		public static readonly StringName _filterContainer = "_filterContainer";
+
+		/// <summary>
+		/// Cached name for the '_statsLabel' field.
+		/// </summary>
+		public static readonly StringName _statsLabel = "_statsLabel";
+
+		/// <summary>
+		/// Cached name for the '_currentFilter' field.
+		/// </summary>
+		public static readonly StringName _currentFilter = "_currentFilter";
+
+		/// <summary>
+		/// Cached name for the '_selectedEntry' field.
+		/// </summary>
 		public static readonly StringName _selectedEntry = "_selectedEntry";
 
+		/// <summary>
+		/// Cached name for the '_previousScreenshakeTarget' field.
+		/// </summary>
+		public static readonly StringName _previousScreenshakeTarget = "_previousScreenshakeTarget";
+
+		/// <summary>
+		/// Cached name for the '_tween' field.
+		/// </summary>
 		public static readonly StringName _tween = "_tween";
 
-		public static readonly StringName _isPlayingMoveAnim = "_isPlayingMoveAnim";
+		/// <summary>
+		/// Cached name for the '_dialogueTween' field.
+		/// </summary>
+		public static readonly StringName _dialogueTween = "_dialogueTween";
 	}
 
+	/// <summary>
+	/// Cached StringNames for the signals contained in this class, for fast lookup.
+	/// </summary>
 	public new class SignalName : NSubmenu.SignalName
 	{
 	}
 
 	private static readonly string _scenePath = SceneHelper.GetScenePath("screens/bestiary/bestiary");
+
+	private SerializableProgress _progress;
 
 	private MegaRichTextLabel _monsterNameLabel;
 
@@ -101,37 +399,77 @@ public class NBestiary : NSubmenu
 
 	private static readonly LocString _locked = new LocString("bestiary", "LOCKED.monsterTitle");
 
-	private Control _monsterVisualsContainer;
-
-	private static readonly LocString _placeholderDesc = new LocString("bestiary", "DESCRIPTION.placeholder");
-
-	private MegaRichTextLabel _descriptionLabel;
-
 	private Control _selectionArrow;
+
+	private Tween? _arrowTween;
+
+	private static readonly Vector2 _arrowOffset = new Vector2(-42f, 119f);
+
+	private bool _initSelectionArrow = true;
+
+	private Control _layoutContainer;
+
+	private NBestiaryLayout? _currentLayout;
+
+	private Control _characterIcon;
+
+	private TextureRect _iconTexture;
+
+	private TextureRect _iconOutlineTexture;
+
+	private Control _dialogueLine;
+
+	private MegaRichTextLabel _dialogueLabel;
+
+	private Control _dialogueBubble;
+
+	private TextureRect _dialogueTail;
+
+	private TextureRect _dialogueTailShadow;
+
+	private const string _dialogueTailPath = "res://images/ui/dialogue_tail.png";
+
+	private const string _thoughtTailPath = "res://images/ui/thought_tail.png";
+
+	private NButton _modeButton;
+
+	private MegaLabel _modeLabel;
+
+	private bool _isStatsMode;
+
+	private TextureRect _pageLeftIcon;
+
+	private TextureRect _pageRightIcon;
+
+	private static readonly StringName _filterLeftHotkey = MegaInput.viewDeckAndTabLeft;
+
+	private static readonly StringName _filterRightHotkey = MegaInput.viewExhaustPileAndTabRight;
 
 	private Control _moveList;
 
 	private Control _moveContainer;
 
-	private Tween? _arrowTween;
+	private Control _statsContainer;
 
-	private static readonly Vector2 _arrowOffset = new Vector2(-34f, 4f);
+	private Control _filterContainer;
 
-	private bool _arrowPosReset = true;
+	private MegaRichTextLabel _statsLabel;
 
-	private NCreatureVisuals? _monsterVisuals;
+	private NBestiaryCharacterFilter _currentFilter;
 
-	private MegaSprite? _animController;
+	private HashSet<ModelId> _discoveredMonsterIds;
 
-	private MegaAnimationState? _animState;
+	private HashSet<ModelId> _discoveredEncounterIds;
 
 	private NBestiaryEntry? _selectedEntry;
 
+	private Control? _previousScreenshakeTarget;
+
 	private Tween? _tween;
 
-	private bool _isPlayingMoveAnim;
+	private Tween? _dialogueTween;
 
-	protected override Control? InitialFocusedControl => _bestiaryList.GetChildren().OfType<NBestiaryEntry>().FirstOrDefault();
+	public static NBestiary? Instance { get; private set; }
 
 	public static string[] AssetPaths
 	{
@@ -143,6 +481,14 @@ public class NBestiary : NSubmenu
 			return list.ToArray();
 		}
 	}
+
+	protected override Control? InitialFocusedControl => _bestiaryList.GetChildren().OfType<NBestiaryEntry>().FirstOrDefault();
+
+	public Control BackVfxContainer { get; private set; }
+
+	public Control VfxContainer { get; private set; }
+
+	public Control? Layout => _currentLayout;
 
 	public static NBestiary? Create()
 	{
@@ -157,54 +503,451 @@ public class NBestiary : NSubmenu
 	{
 		ConnectSignals();
 		GetNode<MegaLabel>("%MoveHeader").SetTextAutoSize(new LocString("bestiary", "ACTIONS.header").GetFormattedText());
+		GetNode<MegaRichTextLabel>("%ConstructionLabel").SetTextAutoSize(new LocString("bestiary", "UNDER_CONSTRUCTION").GetRawText());
 		_sidebar = GetNode<NScrollableContainer>("%Sidebar");
 		_bestiaryList = GetNode<VBoxContainer>("%BestiaryList");
 		_monsterNameLabel = GetNode<MegaRichTextLabel>("%MonsterName");
+		_layoutContainer = GetNode<Control>("%LayoutContainer");
 		_epithet = GetNode<MegaLabel>("%Epithet");
-		_descriptionLabel = GetNode<MegaRichTextLabel>("%Description");
+		_characterIcon = GetNode<Control>("%CharacterIcon");
+		_iconTexture = GetNode<TextureRect>("%Icon");
+		_iconOutlineTexture = GetNode<TextureRect>("%Outline");
+		_dialogueLine = GetNode<Control>("%DialogueLine");
+		_dialogueLabel = GetNode<MegaRichTextLabel>("%DialogueText");
+		_dialogueBubble = GetNode<Control>("%Bubble");
+		_dialogueTail = GetNode<TextureRect>("%DialogueTail");
+		_dialogueTailShadow = GetNode<TextureRect>("%DialogueTailShadow");
+		_modeButton = GetNode<NBestiaryModeButton>("%ModeButton");
+		_modeButton.Connect(NClickableControl.SignalName.Released, Callable.From<NButton>(ToggleMode));
+		_modeLabel = GetNode<MegaLabel>("%ModeLabel");
+		_pageLeftIcon = GetNode<TextureRect>("%PageLeftIcon");
+		_pageRightIcon = GetNode<TextureRect>("%PageRightIcon");
+		NControllerManager.Instance.Connect(NControllerManager.SignalName.MouseDetected, Callable.From(UpdatePageIcons));
+		NControllerManager.Instance.Connect(NControllerManager.SignalName.ControllerDetected, Callable.From(UpdatePageIcons));
+		NInputManager.Instance.Connect(NInputManager.SignalName.InputRebound, Callable.From(UpdatePageIcons));
 		_moveContainer = GetNode<Control>("%MoveContainer");
+		_statsContainer = GetNode<Control>("%StatsContainer");
 		_selectionArrow = GetNode<Control>("%SelectionArrow");
-		_monsterVisualsContainer = GetNode<Control>("%MonsterVisualsContainer");
 		_moveList = GetNode<Control>("%MoveList");
+		_filterContainer = GetNode<Control>("%PoolFilters");
+		_statsLabel = GetNode<MegaRichTextLabel>("%StatisticsFull");
+		VfxContainer = GetNode<Control>("%VfxContainer");
+		BackVfxContainer = GetNode<Control>("%BackVfxContainer");
 	}
 
-	public override void OnSubmenuOpened()
+	private void ToggleMode(NButton _)
 	{
-		CreateEntries();
-	}
-
-	public override void OnSubmenuClosed()
-	{
-		_selectedEntry = null;
-		_monsterVisuals?.QueueFreeSafely();
-		_monsterVisuals = null;
-		foreach (Node child in _bestiaryList.GetChildren())
+		_isStatsMode = !_isStatsMode;
+		if (_isStatsMode)
 		{
-			child.QueueFreeSafely();
+			_modeLabel.SetTextAutoSize(new LocString("bestiary", "MODE.viewActions").GetRawText());
+			ShowStatsPanel();
+			DisplayCharacterData();
+			EnableStatsModeHotkeys();
+			DisableMoveButtonHotkeys();
+		}
+		else
+		{
+			_modeLabel.SetTextAutoSize(new LocString("bestiary", "MODE.viewStats").GetRawText());
+			ShowMovesPanel();
+			HideDialogue();
+			DisableStatsModeHotkeys();
+			EnableMoveButtonHotkeys();
+		}
+		UpdatePageIcons();
+	}
+
+	private void EnableMoveButtonHotkeys()
+	{
+		foreach (Node child in _moveList.GetChildren())
+		{
+			((NBestiaryMoveButton)child).Enable();
 		}
 	}
 
+	/// <summary>
+	/// We need to disable these hotkeys when we go to Stats mode because otherwise
+	/// paginating through the characters will make the monster perform actions.
+	/// </summary>
+	private void DisableMoveButtonHotkeys()
+	{
+		foreach (Node child in _moveList.GetChildren())
+		{
+			((NBestiaryMoveButton)child).Disable();
+		}
+	}
+
+	private void ShowMovesPanel()
+	{
+		_tween?.Kill();
+		_tween = CreateTween().SetParallel();
+		_statsContainer.Visible = false;
+		_moveContainer.Visible = true;
+		Control moveContainer = _moveContainer;
+		Color modulate = base.Modulate;
+		modulate.A = 0f;
+		moveContainer.Modulate = modulate;
+		_tween.TweenProperty(_moveContainer, "position:x", 242f, 0.5).SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Expo)
+			.From(210f);
+		_tween.TweenProperty(_moveContainer, "modulate:a", 1f, 0.5);
+	}
+
+	private void ShowStatsPanel()
+	{
+		_tween?.Kill();
+		_tween = CreateTween().SetParallel();
+		_moveContainer.Visible = false;
+		_statsContainer.Visible = true;
+		Control statsContainer = _statsContainer;
+		Color modulate = base.Modulate;
+		modulate.A = 0f;
+		statsContainer.Modulate = modulate;
+		_tween.TweenProperty(_statsContainer, "position:x", 242f, 0.5).SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Expo)
+			.From(210f);
+		_tween.TweenProperty(_statsContainer, "modulate:a", 1f, 0.5);
+	}
+
+	private void RefreshStatisticsText()
+	{
+		if (_selectedEntry == null)
+		{
+			Log.Error("How did this happen?");
+			return;
+		}
+		BestiaryEntry entry = _selectedEntry.Entry;
+		EnemyStats enemyStats = null;
+		if (entry.monsterModel != null)
+		{
+			enemyStats = _progress.EnemyStats.FirstOrDefault((EnemyStats e) => e.Id == entry.monsterModel.Id);
+		}
+		else
+		{
+			Log.Warn($"Need to handle special case: {entry.encounterModel.Id}");
+		}
+		foreach (Node child in _filterContainer.GetChildren())
+		{
+			NBestiaryCharacterFilter filter = child as NBestiaryCharacterFilter;
+			if (filter == null || enemyStats == null)
+			{
+				continue;
+			}
+			if (filter.character != null)
+			{
+				FightStats fightStats = enemyStats.FightStats.FirstOrDefault((FightStats f) => f.Character == filter.character.Id);
+				filter.kills = fightStats?.Wins ?? 0;
+				filter.deaths = fightStats?.Losses ?? 0;
+			}
+			else
+			{
+				filter.kills = enemyStats.TotalWins;
+				filter.deaths = enemyStats.TotalLosses;
+			}
+			filter.IsLocked = filter.kills + filter.deaths <= 0;
+		}
+	}
+
+	private void DisplayCharacterData()
+	{
+		if (_selectedEntry == null)
+		{
+			Log.Error("How did this happen?");
+			return;
+		}
+		BestiaryEntry entry = _selectedEntry.Entry;
+		if (entry.monsterModel == null)
+		{
+			return;
+		}
+		LocString locString = new LocString("bestiary", "STATS.layout");
+		if (_currentFilter.Total == 0)
+		{
+			locString.Add("total", 0m);
+			locString.Add("kills", 0m);
+			locString.Add("deaths", 0m);
+			locString.Add("winrate", "--");
+		}
+		else
+		{
+			locString.Add("total", _currentFilter.Total);
+			locString.Add("kills", _currentFilter.kills);
+			locString.Add("deaths", _currentFilter.deaths);
+			locString.Add("winrate", _currentFilter.WinRate);
+		}
+		_statsLabel.SetTextAutoSize(locString.GetFormattedText());
+		if (_currentFilter.kills <= 0)
+		{
+			_dialogueLabel.SetTextAutoSize(_currentFilter.BestiarySeenQuote);
+		}
+		else
+		{
+			LocString bestiaryKillQuote = _currentFilter.BestiaryKillQuote;
+			if (bestiaryKillQuote == null)
+			{
+				_dialogueLabel.SetTextAutoSize(new LocString("bestiary", "QUOTE_PLACEHOLDER").GetFormattedText());
+			}
+			else
+			{
+				_dialogueLabel.SetTextAutoSize(bestiaryKillQuote.GetFormattedText());
+			}
+		}
+		if (_currentFilter.character == null)
+		{
+			HideDialogue();
+		}
+		else
+		{
+			ShowDialogue();
+		}
+		UpdateDialogueBubbleStyle();
+	}
+
+	private void UpdateDialogueBubbleStyle()
+	{
+		CharacterModel character = _currentFilter.character;
+		Color selfModulate = character?.DialogueColor ?? StsColors.transparentWhite;
+		_characterIcon.Modulate = ((character == null) ? StsColors.transparentWhite : Colors.White);
+		if (character != null)
+		{
+			_iconTexture.Texture = character.IconTexture;
+			_iconOutlineTexture.Texture = character.IconOutlineTexture;
+		}
+		_dialogueBubble.SelfModulate = selfModulate;
+		_dialogueTail.SelfModulate = selfModulate;
+		string path = ((character is Silent) ? "res://images/ui/thought_tail.png" : "res://images/ui/dialogue_tail.png");
+		_dialogueTail.Texture = PreloadManager.Cache.GetCompressedTexture2D(path);
+	}
+
+	private void ShowDialogue()
+	{
+		_dialogueTween?.Kill();
+		_dialogueTween = CreateTween().SetParallel();
+		_dialogueLine.Modulate = StsColors.transparentWhite;
+		_dialogueTween.TweenProperty(_dialogueLine, "modulate", Colors.White, 0.1).SetDelay(0.1);
+		_dialogueTween.TweenProperty(_dialogueLine, "position:x", 560f, 0.4).SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Expo)
+			.From(528f)
+			.SetDelay(0.1);
+	}
+
+	private void HideDialogue()
+	{
+		_dialogueTween?.Kill();
+		_dialogueTween = CreateTween();
+		_dialogueTween.TweenProperty(_dialogueLine, "modulate", StsColors.transparentWhite, 0.1);
+	}
+
+	/// <summary>
+	/// On screen open. When the player opens the Bestiary.
+	/// </summary>
+	public override void OnSubmenuOpened()
+	{
+		Instance = this;
+		_progress = SaveManager.Instance.Progress.ToSerializable();
+		_previousScreenshakeTarget = NGame.Instance?.ScreenshakeTarget;
+		_isStatsMode = !SaveManager.Instance.PrefsSave.IsBestiaryActionsPreferred;
+		if (_isStatsMode)
+		{
+			_modeLabel.SetTextAutoSize(new LocString("bestiary", "MODE.viewActions").GetRawText());
+		}
+		else
+		{
+			_modeLabel.SetTextAutoSize(new LocString("bestiary", "MODE.viewStats").GetRawText());
+		}
+		CreateFilters();
+		CreateEntries();
+		if (_isStatsMode)
+		{
+			DisplayCharacterData();
+			EnableStatsModeHotkeys();
+			DisableMoveButtonHotkeys();
+		}
+		UpdatePageIcons();
+	}
+
+	/// <summary>
+	/// Called when the Bestiary is closed (Back button)
+	/// </summary>
+	public override void OnSubmenuClosed()
+	{
+		DisableStatsModeHotkeys();
+		DisableMoveButtonHotkeys();
+		_initSelectionArrow = true;
+		_selectedEntry = null;
+		Instance = null;
+		SaveManager.Instance.PrefsSave.IsBestiaryActionsPreferred = !_isStatsMode;
+		SaveManager.Instance.SavePrefsFile();
+		_currentLayout?.Cleanup();
+		if (_previousScreenshakeTarget != null)
+		{
+			if (_previousScreenshakeTarget.IsValid())
+			{
+				NGame.Instance?.SetScreenShakeTarget(_previousScreenshakeTarget);
+			}
+			else
+			{
+				Log.Warn("The screenshake target is no longer valid. This should never happen.");
+				_previousScreenshakeTarget = null;
+			}
+		}
+		else
+		{
+			NGame.Instance?.ClearScreenShakeTarget();
+		}
+		_bestiaryList.FreeChildren();
+		_lastFocusedControl = null;
+	}
+
+	/// <summary>
+	/// Initializes the list of monsters based on your save file.
+	/// </summary>
 	private void CreateEntries()
 	{
-		HashSet<ModelId> hashSet = (from e in SaveManager.Instance.Progress.EnemyStats.Values
+		_discoveredMonsterIds = (from e in SaveManager.Instance.Progress.EnemyStats.Values
 			where e.TotalWins > 0
 			select e.Id).ToHashSet();
-		foreach (MonsterModel item in ModelDb.Monsters.OrderBy((MonsterModel m) => m.Id.Entry))
+		_discoveredEncounterIds = (from e in SaveManager.Instance.Progress.EncounterStats.Values
+			where e.TotalWins > 0
+			select e.Id).ToHashSet();
+		foreach (ActModel act in ModelDb.Acts)
 		{
-			bool flag = hashSet.Contains(item.Id);
-			NBestiaryEntry nBestiaryEntry = NBestiaryEntry.Create(item, !flag);
+			AddAct(act);
+		}
+		AddEvents();
+		Control node = _sidebar.GetNode<Control>("Content");
+		Vector2 position = node.Position;
+		position.Y = 0f;
+		node.Position = position;
+		_sidebar.InstantlyScrollToTop();
+		NBestiaryEntry nBestiaryEntry = _bestiaryList.GetChildren().OfType<NBestiaryEntry>().FirstOrDefault((NBestiaryEntry e) => e.IsDiscovered && e.IsEnabled);
+		if (nBestiaryEntry == null)
+		{
+			Log.Error("Should not be possible as the Compendium + Bestiary isn't unlocked by default!");
+		}
+		else
+		{
+			SelectMonster(nBestiaryEntry);
+		}
+	}
+
+	private void CreateFilters()
+	{
+		_filterContainer.FreeChildren();
+		AddFilter(null);
+		AddFilter(ModelDb.Character<Ironclad>());
+		AddFilter(ModelDb.Character<Silent>());
+		AddFilter(ModelDb.Character<Regent>());
+		AddFilter(ModelDb.Character<Necrobinder>());
+		AddFilter(ModelDb.Character<Defect>());
+	}
+
+	private void AddFilter(CharacterModel? character)
+	{
+		NBestiaryCharacterFilter nBestiaryCharacterFilter = NBestiaryCharacterFilter.Create(character);
+		nBestiaryCharacterFilter.Connect(NBestiaryCharacterFilter.SignalName.Toggled, Callable.From<NBestiaryCharacterFilter>(OnCharacterFilterSelected));
+		_filterContainer.AddChildSafely(nBestiaryCharacterFilter);
+		if (character == null)
+		{
+			_currentFilter = nBestiaryCharacterFilter;
+			_currentFilter.IsSelected = true;
+		}
+	}
+
+	private void OnCharacterFilterSelected(NBestiaryCharacterFilter selectedFilter)
+	{
+		_currentFilter = selectedFilter;
+		foreach (Node child in _filterContainer.GetChildren())
+		{
+			if (!child.Equals(selectedFilter))
+			{
+				((NBestiaryCharacterFilter)child).Deselect();
+			}
+		}
+		if (_isStatsMode)
+		{
+			DisplayCharacterData();
+		}
+	}
+
+	private void AddAct(ActModel act)
+	{
+		if (!SaveManager.Instance.Progress.DiscoveredActs.Contains(act.Id))
+		{
+			return;
+		}
+		_bestiaryList.AddChildSafely(NBestiaryLabelDivider.Create(act));
+		HashSet<ModelId> hashSet = new HashSet<ModelId>();
+		List<BestiaryEntry> list = new List<BestiaryEntry>();
+		foreach (EncounterModel allEncounter in act.AllEncounters)
+		{
+			foreach (MonsterModel allPossibleMonster in allEncounter.AllPossibleMonsters)
+			{
+				if (hashSet.Add(allPossibleMonster.Id) && allPossibleMonster.ShouldShowInCompendium)
+				{
+					list.Add(BestiaryEntry.FromMonster(allPossibleMonster, allEncounter, allEncounter.RoomType));
+				}
+			}
+		}
+		if (act is Hive)
+		{
+			list.Add(BestiaryEntry.FromEncounter(ModelDb.Encounter<DecimillipedeElite>(), RoomType.Elite));
+		}
+		AddEntries(list);
+	}
+
+	private void AddEvents()
+	{
+		_bestiaryList.AddChildSafely(NBestiaryLabelDivider.Create(new LocString("bestiary", "EVENTS.title")));
+		HashSet<ModelId> hashSet = new HashSet<ModelId>();
+		List<BestiaryEntry> list = new List<BestiaryEntry>();
+		foreach (EncounterModel eventEncounter in ModelDb.EventEncounters)
+		{
+			foreach (MonsterModel allPossibleMonster in eventEncounter.AllPossibleMonsters)
+			{
+				if (hashSet.Add(allPossibleMonster.Id) && allPossibleMonster.ShouldShowInCompendium)
+				{
+					list.Add(BestiaryEntry.FromMonster(allPossibleMonster, eventEncounter, eventEncounter.RoomType));
+				}
+			}
+		}
+		AddEntries(list);
+	}
+
+	private void AddEntries(List<BestiaryEntry> entries)
+	{
+		entries.Sort(delegate(BestiaryEntry e1, BestiaryEntry e2)
+		{
+			if (e1.roomType != e2.roomType)
+			{
+				return e1.roomType.CompareTo(e2.roomType);
+			}
+			if (e1.roomType == RoomType.Boss)
+			{
+				int num = string.Compare(e1.GetEncounterTitle(), e2.GetEncounterTitle(), StringComparison.CurrentCulture);
+				if (num != 0)
+				{
+					return num;
+				}
+			}
+			return string.Compare(e1.GetEntryTitle(), e2.GetEntryTitle(), StringComparison.CurrentCulture);
+		});
+		foreach (BestiaryEntry entry in entries)
+		{
+			NBestiaryEntry nBestiaryEntry = NBestiaryEntry.Create(entry, entry.IsDiscovered(_discoveredMonsterIds, _discoveredEncounterIds));
 			_bestiaryList.AddChildSafely(nBestiaryEntry);
 			nBestiaryEntry.Connect(NClickableControl.SignalName.Released, Callable.From<NBestiaryEntry>(OnMonsterClicked));
 		}
-		_sidebar.InstantlyScrollToTop();
-		SelectMonster(_bestiaryList.GetChild<NBestiaryEntry>(0));
 	}
 
+	/// <summary>
+	/// A player clicked on a monster in the list on the right.
+	/// </summary>
 	private void OnMonsterClicked(NBestiaryEntry entry)
 	{
 		SelectMonster(entry);
 	}
 
+	/// <summary>
+	/// Loads a specific monster's bestiary entry.
+	/// </summary>
 	private void SelectMonster(NBestiaryEntry entry)
 	{
 		if (entry == _selectedEntry)
@@ -212,137 +955,319 @@ public class NBestiary : NSubmenu
 			return;
 		}
 		_moveList.FreeChildren();
-		_arrowPosReset = true;
-		_selectedEntry?.Deselect();
 		_selectedEntry = entry;
-		_selectedEntry.Select();
-		MonsterModel monster = _selectedEntry.Monster;
-		if (entry.IsLocked)
+		if (entry.IsUnderConstruction)
+		{
+			_monsterNameLabel.Text = entry.Entry.GetEntryTitle();
+			_currentLayout?.Cleanup();
+			_currentLayout?.QueueFreeSafely();
+		}
+		else if (!entry.IsDiscovered)
 		{
 			_monsterNameLabel.Text = _locked.GetFormattedText();
-			_descriptionLabel.Text = _placeholderDesc.GetFormattedText();
-			_monsterVisuals?.QueueFreeSafely();
-			_monsterVisuals = null;
-			_moveContainer.Visible = false;
-			return;
+			_currentLayout?.Cleanup();
+			_currentLayout?.QueueFreeSafely();
 		}
-		_tween?.Kill();
-		_tween = CreateTween().SetParallel();
-		_descriptionLabel.Text = _placeholderDesc.GetFormattedText();
-		_descriptionLabel.Modulate = StsColors.transparentWhite;
-		_monsterNameLabel.Text = monster.Title.GetFormattedText();
-		_monsterNameLabel.SelfModulate = StsColors.transparentWhite;
-		_epithet.Modulate = StsColors.transparentWhite;
-		_moveContainer.Modulate = StsColors.transparentWhite;
-		_tween.TweenProperty(_monsterNameLabel, "position:y", 88f, 0.5).SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Expo)
-			.From(24f);
-		_tween.TweenProperty(_monsterNameLabel, "self_modulate:a", 1f, 0.5);
-		_tween.TweenProperty(_epithet, "modulate:a", 1f, 0.5).SetDelay(0.2);
-		_tween.TweenProperty(_descriptionLabel, "position:y", 894f, 0.5).SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Expo)
-			.From(958f);
-		_tween.TweenProperty(_descriptionLabel, "modulate:a", 1f, 0.5);
-		_tween.TweenProperty(_moveContainer, "position:x", 242f, 0.5).SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Expo)
-			.From(210f)
-			.SetDelay(0.2);
-		_tween.TweenProperty(_moveContainer, "modulate:a", 1f, 0.5).SetDelay(0.2);
-		_monsterVisuals?.QueueFreeSafely();
-		_monsterVisuals = monster.CreateVisuals();
-		_monsterVisualsContainer.AddChildSafely(_monsterVisuals);
-		_monsterVisuals.Position = new Vector2(0f, _monsterVisuals.Bounds.Size.Y * 0.5f);
-		_monsterVisuals.Modulate = StsColors.transparentBlack;
-		_tween.TweenProperty(_monsterVisuals, "modulate", Colors.White, 0.25);
-		_isPlayingMoveAnim = false;
-		if (_monsterVisuals.HasSpineAnimation)
+		else
 		{
-			_moveContainer.Visible = true;
-			_animController = _monsterVisuals.SpineBody;
-			_animState = _animController.GetAnimationState();
-			monster.GenerateAnimator(_animController);
-			_monsterVisuals.SetUpSkin(monster);
-			PlayIdleAnim();
+			_tween?.Kill();
+			_tween = CreateTween().SetParallel();
+			_monsterNameLabel.Text = entry.Entry.GetEntryTitle();
+			_monsterNameLabel.SelfModulate = StsColors.transparentWhite;
+			_epithet.Modulate = StsColors.transparentWhite;
+			_tween.TweenProperty(_monsterNameLabel, "position:y", 88f, 0.5).SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Expo)
+				.From(24f);
+			_tween.TweenProperty(_monsterNameLabel, "self_modulate:a", 1f, 0.5);
+			_tween.TweenProperty(_epithet, "modulate:a", 1f, 0.5).SetDelay(0.2);
+			_tween.TweenProperty(_dialogueLabel, "position:y", 894f, 0.5).SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Expo)
+				.From(958f);
+			_tween.TweenProperty(_dialogueLabel, "modulate:a", 1f, 0.5);
+			if (_isStatsMode)
 			{
-				foreach (BestiaryMonsterMove item in monster.MonsterMoveList(_monsterVisuals))
+				ShowStatsPanel();
+			}
+			else
+			{
+				ShowMovesPanel();
+			}
+			RefreshStatisticsText();
+			_currentLayout?.Cleanup();
+			if (!entry.Entry.CanReuseLayout(_currentLayout))
+			{
+				_currentLayout?.QueueFreeSafely();
+				_currentLayout = entry.Entry.CreateLayoutNode(this);
+				_layoutContainer.AddChildSafely(_currentLayout);
+				NGame.Instance?.SetScreenShakeTarget(_currentLayout);
+			}
+			List<BestiaryMonsterMove> list = _currentLayout.Setup(entry.Entry, _tween);
+			for (int i = 0; i < list.Count; i++)
+			{
+				if (i >= 9)
 				{
-					NBestiaryMoveButton nBestiaryMoveButton = NBestiaryMoveButton.Create(item);
-					_moveList.AddChildSafely(nBestiaryMoveButton);
-					nBestiaryMoveButton.Connect(NClickableControl.SignalName.Focused, Callable.From<NBestiaryMoveButton>(OnMoveButtonFocused));
-					nBestiaryMoveButton.Connect(NClickableControl.SignalName.Unfocused, Callable.From<NBestiaryMoveButton>(OnMoveButtonUnfocused));
-					nBestiaryMoveButton.Connect(NClickableControl.SignalName.Released, Callable.From<NBestiaryMoveButton>(OnMoveButtonClicked));
+					Log.Error("Hotkeys for monster Actions beyond 9 are not supported!");
 				}
-				return;
+				NBestiaryMoveButton nBestiaryMoveButton = CreateBestiaryMoveButton(list[i], i + 1);
+				_moveList.AddChildSafely(nBestiaryMoveButton);
+				nBestiaryMoveButton.Connect(NClickableControl.SignalName.Released, Callable.From<NBestiaryMoveButton>(OnMoveButtonClicked));
+			}
+			if (_isStatsMode)
+			{
+				DisableMoveButtonHotkeys();
+				if (_currentFilter.IsLocked)
+				{
+					NBestiaryCharacterFilter child = _filterContainer.GetChild<NBestiaryCharacterFilter>(0);
+					child.IsSelected = true;
+					OnCharacterFilterSelected(child);
+				}
+				DisplayCharacterData();
 			}
 		}
-		_moveContainer.Visible = false;
-	}
-
-	private void OnMoveButtonFocused(NBestiaryMoveButton button)
-	{
-		if (_arrowPosReset)
+		if (_initSelectionArrow)
 		{
-			_selectionArrow.GlobalPosition = button.GlobalPosition + _arrowOffset;
-			_arrowPosReset = false;
+			Control selectionArrow = _selectionArrow;
+			Color modulate = _selectionArrow.Modulate;
+			modulate.A = 0f;
+			selectionArrow.Modulate = modulate;
+			_initSelectionArrow = false;
+			TaskHelper.RunSafely(InitializeSelectorArrow(entry));
 		}
-		_arrowTween?.Kill();
-		_arrowTween = CreateTween().SetParallel();
-		_arrowTween.TweenProperty(_selectionArrow, "modulate:a", 1f, 0.05);
-		_arrowTween.TweenProperty(_selectionArrow, "global_position", button.GlobalPosition + _arrowOffset, 0.25).SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Expo);
+		else
+		{
+			Control selectionArrow2 = _selectionArrow;
+			Color modulate = _selectionArrow.Modulate;
+			modulate.A = 1f;
+			selectionArrow2.Modulate = modulate;
+			_arrowTween?.Kill();
+			_arrowTween = CreateTween().SetParallel();
+			_arrowTween.TweenProperty(_selectionArrow, "position", entry.Position + _arrowOffset, 0.25).SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Expo);
+		}
 	}
 
-	private void OnMoveButtonUnfocused(NBestiaryMoveButton button)
+	private NBestiaryMoveButton CreateBestiaryMoveButton(BestiaryMonsterMove move, int moveIndex)
 	{
+		if (NControllerManager.Instance?.IsUsingController ?? false)
+		{
+			return moveIndex switch
+			{
+				1 => NBestiaryMoveButton.Create(move, MegaInput.viewDeckAndTabLeft), 
+				2 => NBestiaryMoveButton.Create(move, MegaInput.viewExhaustPileAndTabRight), 
+				3 => NBestiaryMoveButton.Create(move, MegaInput.viewDiscardPile), 
+				4 => NBestiaryMoveButton.Create(move, MegaInput.viewDrawPile), 
+				5 => NBestiaryMoveButton.Create(move, MegaInput.topPanel), 
+				6 => NBestiaryMoveButton.Create(move, MegaInput.altUp), 
+				7 => NBestiaryMoveButton.Create(move, MegaInput.altDown), 
+				8 => NBestiaryMoveButton.Create(move, MegaInput.altLeft), 
+				9 => NBestiaryMoveButton.Create(move, MegaInput.altRight), 
+				_ => NBestiaryMoveButton.Create(move, $"{moveIndex}"), 
+			};
+		}
+		return NBestiaryMoveButton.Create(move, $"mega_select_card_{moveIndex}");
+	}
+
+	private async Task InitializeSelectorArrow(NBestiaryEntry entry)
+	{
+		await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+		_selectionArrow.Position = entry.Position + _arrowOffset;
 		_arrowTween?.Kill();
 		_arrowTween = CreateTween().SetParallel();
-		_arrowTween.TweenProperty(_selectionArrow, "modulate:a", 0f, 0.25);
+		_arrowTween.TweenProperty(_selectionArrow, "modulate:a", 1f, 0.2);
 	}
 
 	private void OnMoveButtonClicked(NButton button)
 	{
 		NBestiaryMoveButton nBestiaryMoveButton = (NBestiaryMoveButton)button;
-		PlayMoveAnim(nBestiaryMoveButton.Move.animId);
-		nBestiaryMoveButton.PlaySfx();
+		PlayMoveAnim(_currentLayout?.GetCreatures() ?? Array.Empty<NCreature>(), nBestiaryMoveButton.Move);
 	}
 
-	private void PlayIdleAnim()
+	private static void PlayMoveAnim(IEnumerable<NCreature> creatures, BestiaryMonsterMove move)
 	{
-		if (_monsterVisuals != null && _monsterVisuals.HasSpineAnimation)
+		foreach (NCreature creature in creatures)
 		{
-			_isPlayingMoveAnim = false;
-			_animState.SetAnimation("idle_loop");
-		}
-	}
-
-	private void PlayMoveAnim(string animId)
-	{
-		if (_monsterVisuals != null && _monsterVisuals.HasSpineAnimation)
-		{
-			_animState.SetAnimation(animId, loop: false);
-			if (!_isPlayingMoveAnim)
+			if (move.stateId != null)
 			{
-				_animController.ConnectAnimationCompleted(Callable.From<GodotObject, GodotObject, GodotObject>(OnMoveAnimCompleted));
+				MonsterModel monster = creature.Entity.Monster;
+				if (monster == null)
+				{
+					throw new InvalidOperationException($"Non-monster creature {creature} is in the bestiary!");
+				}
+				monster.SetMoveImmediate((MoveState)monster.MoveStateMachine.States[move.stateId], forceTransition: true);
+				TaskHelper.RunSafely(monster.PerformMove());
 			}
-			_isPlayingMoveAnim = true;
+			else if (move.nonStateMove != null)
+			{
+				TaskHelper.RunSafely(move.nonStateMove(Array.Empty<Creature>()));
+			}
+			else if (move.action != null)
+			{
+				TaskHelper.RunSafely(move.action());
+			}
+			else if (move.animId != null)
+			{
+				creature.Visuals.SpineBody?.GetAnimationState().SetAnimation(move.animId, loop: false);
+				if (move.animId != "die")
+				{
+					creature.Visuals.SpineBody?.GetAnimationState().AddAnimation("idle_loop");
+				}
+				if (move.sfx != null)
+				{
+					NAudioManager.Instance.PlayOneShot(move.sfx);
+				}
+			}
+			if (move.stopSfxLoops)
+			{
+				creature.StopAllSfxLoops();
+			}
 		}
 	}
 
-	private void OnMoveAnimCompleted(GodotObject _, GodotObject __, GodotObject ___)
+	public NCreature? GetCreatureNode(Creature? creature)
 	{
-		if (_isPlayingMoveAnim)
+		foreach (NCreature item in _currentLayout?.GetCreatures() ?? Array.Empty<NCreature>())
 		{
-			_isPlayingMoveAnim = false;
-			_animController.DisconnectAnimationCompleted(Callable.From<GodotObject, GodotObject, GodotObject>(OnMoveAnimCompleted));
-			PlayIdleAnim();
+			if (item.Entity == creature)
+			{
+				return item;
+			}
+		}
+		return null;
+	}
+
+	public Vector2 GetSideCenter()
+	{
+		if (_currentLayout == null)
+		{
+			Log.Error("Tried to get current side center, but we're not showing anything!");
+			return Vector2.Zero;
+		}
+		Vector2 zero = Vector2.Zero;
+		int num = 0;
+		foreach (NCreature creature in _currentLayout.GetCreatures())
+		{
+			zero += creature.VfxSpawnPosition;
+			num++;
+		}
+		return zero / num;
+	}
+
+	public Vector2 GetSideFloor()
+	{
+		if (_currentLayout == null)
+		{
+			Log.Error("Tried to get current side floor, but we're not showing anything!");
+			return Vector2.Zero;
+		}
+		Vector2 zero = Vector2.Zero;
+		int num = 0;
+		foreach (NCreature creature in _currentLayout.GetCreatures())
+		{
+			zero += creature.GetBottomOfHitbox();
+			num++;
+		}
+		return zero / num;
+	}
+
+	private void EnableStatsModeHotkeys()
+	{
+		NHotkeyManager.Instance.PushHotkeyPressedBinding(_filterLeftHotkey, FilterLeft);
+		NHotkeyManager.Instance.PushHotkeyPressedBinding(_filterRightHotkey, FilterRight);
+	}
+
+	private void DisableStatsModeHotkeys()
+	{
+		NHotkeyManager.Instance.RemoveHotkeyPressedBinding(_filterLeftHotkey, FilterLeft);
+		NHotkeyManager.Instance.RemoveHotkeyPressedBinding(_filterRightHotkey, FilterRight);
+	}
+
+	private void FilterLeft()
+	{
+		List<NBestiaryCharacterFilter> list = _filterContainer.GetChildren().OfType<NBestiaryCharacterFilter>().ToList();
+		int num = list.IndexOf(_currentFilter);
+		for (int i = 1; i <= list.Count; i++)
+		{
+			int index = (num - i + list.Count) % list.Count;
+			if (!list[index].IsLocked)
+			{
+				SelectFilter(list[index]);
+				break;
+			}
 		}
 	}
 
+	private void FilterRight()
+	{
+		List<NBestiaryCharacterFilter> list = _filterContainer.GetChildren().OfType<NBestiaryCharacterFilter>().ToList();
+		int num = list.IndexOf(_currentFilter);
+		for (int i = 1; i <= list.Count; i++)
+		{
+			int index = (num + i) % list.Count;
+			if (!list[index].IsLocked)
+			{
+				SelectFilter(list[index]);
+				break;
+			}
+		}
+	}
+
+	private void SelectFilter(NBestiaryCharacterFilter filter)
+	{
+		filter.IsSelected = true;
+		OnCharacterFilterSelected(filter);
+	}
+
+	private void UpdatePageIcons()
+	{
+		bool flag = _isStatsMode && NControllerManager.Instance.IsUsingController;
+		_pageLeftIcon.Visible = flag;
+		_pageRightIcon.Visible = flag;
+		if (flag)
+		{
+			_pageLeftIcon.Texture = NInputManager.Instance.GetHotkeyIcon(MegaInput.viewDeckAndTabLeft);
+			_pageRightIcon.Texture = NInputManager.Instance.GetHotkeyIcon(MegaInput.viewExhaustPileAndTabRight);
+		}
+	}
+
+	public static bool CanBeShown()
+	{
+		if (SaveManager.Instance.Progress.DiscoveredActs.Count == 0)
+		{
+			return false;
+		}
+		return SaveManager.Instance.Progress.EnemyStats.Values.Any((EnemyStats e) => e.TotalWins > 0);
+	}
+
+	/// <summary>
+	/// Get the method information for all the methods declared in this class.
+	/// This method is used by Godot to register the available methods in the editor.
+	/// Do not call this method.
+	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	internal new static List<MethodInfo> GetGodotMethodList()
 	{
-		List<MethodInfo> list = new List<MethodInfo>(13);
+		List<MethodInfo> list = new List<MethodInfo>(30);
 		list.Add(new MethodInfo(MethodName.Create, new PropertyInfo(Variant.Type.Object, "", PropertyHint.None, "", PropertyUsageFlags.Default, new StringName("Control"), exported: false), MethodFlags.Normal | MethodFlags.Static, null, null));
 		list.Add(new MethodInfo(MethodName._Ready, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
+		list.Add(new MethodInfo(MethodName.ToggleMode, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
+		{
+			new PropertyInfo(Variant.Type.Object, "_", PropertyHint.None, "", PropertyUsageFlags.Default, new StringName("Control"), exported: false)
+		}, null));
+		list.Add(new MethodInfo(MethodName.EnableMoveButtonHotkeys, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
+		list.Add(new MethodInfo(MethodName.DisableMoveButtonHotkeys, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
+		list.Add(new MethodInfo(MethodName.ShowMovesPanel, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
+		list.Add(new MethodInfo(MethodName.ShowStatsPanel, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
+		list.Add(new MethodInfo(MethodName.RefreshStatisticsText, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
+		list.Add(new MethodInfo(MethodName.DisplayCharacterData, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
+		list.Add(new MethodInfo(MethodName.UpdateDialogueBubbleStyle, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
+		list.Add(new MethodInfo(MethodName.ShowDialogue, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
+		list.Add(new MethodInfo(MethodName.HideDialogue, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName.OnSubmenuOpened, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName.OnSubmenuClosed, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName.CreateEntries, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
+		list.Add(new MethodInfo(MethodName.CreateFilters, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
+		list.Add(new MethodInfo(MethodName.OnCharacterFilterSelected, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
+		{
+			new PropertyInfo(Variant.Type.Object, "selectedFilter", PropertyHint.None, "", PropertyUsageFlags.Default, new StringName("Control"), exported: false)
+		}, null));
+		list.Add(new MethodInfo(MethodName.AddEvents, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName.OnMonsterClicked, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
 		{
 			new PropertyInfo(Variant.Type.Object, "entry", PropertyHint.None, "", PropertyUsageFlags.Default, new StringName("Control"), exported: false)
@@ -351,32 +1276,26 @@ public class NBestiary : NSubmenu
 		{
 			new PropertyInfo(Variant.Type.Object, "entry", PropertyHint.None, "", PropertyUsageFlags.Default, new StringName("Control"), exported: false)
 		}, null));
-		list.Add(new MethodInfo(MethodName.OnMoveButtonFocused, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
-		{
-			new PropertyInfo(Variant.Type.Object, "button", PropertyHint.None, "", PropertyUsageFlags.Default, new StringName("Control"), exported: false)
-		}, null));
-		list.Add(new MethodInfo(MethodName.OnMoveButtonUnfocused, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
-		{
-			new PropertyInfo(Variant.Type.Object, "button", PropertyHint.None, "", PropertyUsageFlags.Default, new StringName("Control"), exported: false)
-		}, null));
 		list.Add(new MethodInfo(MethodName.OnMoveButtonClicked, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
 		{
 			new PropertyInfo(Variant.Type.Object, "button", PropertyHint.None, "", PropertyUsageFlags.Default, new StringName("Control"), exported: false)
 		}, null));
-		list.Add(new MethodInfo(MethodName.PlayIdleAnim, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
-		list.Add(new MethodInfo(MethodName.PlayMoveAnim, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
+		list.Add(new MethodInfo(MethodName.GetSideCenter, new PropertyInfo(Variant.Type.Vector2, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
+		list.Add(new MethodInfo(MethodName.GetSideFloor, new PropertyInfo(Variant.Type.Vector2, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
+		list.Add(new MethodInfo(MethodName.EnableStatsModeHotkeys, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
+		list.Add(new MethodInfo(MethodName.DisableStatsModeHotkeys, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
+		list.Add(new MethodInfo(MethodName.FilterLeft, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
+		list.Add(new MethodInfo(MethodName.FilterRight, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
+		list.Add(new MethodInfo(MethodName.SelectFilter, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
 		{
-			new PropertyInfo(Variant.Type.String, "animId", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false)
+			new PropertyInfo(Variant.Type.Object, "filter", PropertyHint.None, "", PropertyUsageFlags.Default, new StringName("Control"), exported: false)
 		}, null));
-		list.Add(new MethodInfo(MethodName.OnMoveAnimCompleted, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
-		{
-			new PropertyInfo(Variant.Type.Object, "_", PropertyHint.None, "", PropertyUsageFlags.Default, new StringName("Object"), exported: false),
-			new PropertyInfo(Variant.Type.Object, "__", PropertyHint.None, "", PropertyUsageFlags.Default, new StringName("Object"), exported: false),
-			new PropertyInfo(Variant.Type.Object, "___", PropertyHint.None, "", PropertyUsageFlags.Default, new StringName("Object"), exported: false)
-		}, null));
+		list.Add(new MethodInfo(MethodName.UpdatePageIcons, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
+		list.Add(new MethodInfo(MethodName.CanBeShown, new PropertyInfo(Variant.Type.Bool, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal | MethodFlags.Static, null, null));
 		return list;
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool InvokeGodotClassMethod(in godot_string_name method, NativeVariantPtrArgs args, out godot_variant ret)
 	{
@@ -388,6 +1307,66 @@ public class NBestiary : NSubmenu
 		if (method == MethodName._Ready && args.Count == 0)
 		{
 			_Ready();
+			ret = default(godot_variant);
+			return true;
+		}
+		if (method == MethodName.ToggleMode && args.Count == 1)
+		{
+			ToggleMode(VariantUtils.ConvertTo<NButton>(in args[0]));
+			ret = default(godot_variant);
+			return true;
+		}
+		if (method == MethodName.EnableMoveButtonHotkeys && args.Count == 0)
+		{
+			EnableMoveButtonHotkeys();
+			ret = default(godot_variant);
+			return true;
+		}
+		if (method == MethodName.DisableMoveButtonHotkeys && args.Count == 0)
+		{
+			DisableMoveButtonHotkeys();
+			ret = default(godot_variant);
+			return true;
+		}
+		if (method == MethodName.ShowMovesPanel && args.Count == 0)
+		{
+			ShowMovesPanel();
+			ret = default(godot_variant);
+			return true;
+		}
+		if (method == MethodName.ShowStatsPanel && args.Count == 0)
+		{
+			ShowStatsPanel();
+			ret = default(godot_variant);
+			return true;
+		}
+		if (method == MethodName.RefreshStatisticsText && args.Count == 0)
+		{
+			RefreshStatisticsText();
+			ret = default(godot_variant);
+			return true;
+		}
+		if (method == MethodName.DisplayCharacterData && args.Count == 0)
+		{
+			DisplayCharacterData();
+			ret = default(godot_variant);
+			return true;
+		}
+		if (method == MethodName.UpdateDialogueBubbleStyle && args.Count == 0)
+		{
+			UpdateDialogueBubbleStyle();
+			ret = default(godot_variant);
+			return true;
+		}
+		if (method == MethodName.ShowDialogue && args.Count == 0)
+		{
+			ShowDialogue();
+			ret = default(godot_variant);
+			return true;
+		}
+		if (method == MethodName.HideDialogue && args.Count == 0)
+		{
+			HideDialogue();
 			ret = default(godot_variant);
 			return true;
 		}
@@ -409,6 +1388,24 @@ public class NBestiary : NSubmenu
 			ret = default(godot_variant);
 			return true;
 		}
+		if (method == MethodName.CreateFilters && args.Count == 0)
+		{
+			CreateFilters();
+			ret = default(godot_variant);
+			return true;
+		}
+		if (method == MethodName.OnCharacterFilterSelected && args.Count == 1)
+		{
+			OnCharacterFilterSelected(VariantUtils.ConvertTo<NBestiaryCharacterFilter>(in args[0]));
+			ret = default(godot_variant);
+			return true;
+		}
+		if (method == MethodName.AddEvents && args.Count == 0)
+		{
+			AddEvents();
+			ret = default(godot_variant);
+			return true;
+		}
 		if (method == MethodName.OnMonsterClicked && args.Count == 1)
 		{
 			OnMonsterClicked(VariantUtils.ConvertTo<NBestiaryEntry>(in args[0]));
@@ -421,40 +1418,61 @@ public class NBestiary : NSubmenu
 			ret = default(godot_variant);
 			return true;
 		}
-		if (method == MethodName.OnMoveButtonFocused && args.Count == 1)
-		{
-			OnMoveButtonFocused(VariantUtils.ConvertTo<NBestiaryMoveButton>(in args[0]));
-			ret = default(godot_variant);
-			return true;
-		}
-		if (method == MethodName.OnMoveButtonUnfocused && args.Count == 1)
-		{
-			OnMoveButtonUnfocused(VariantUtils.ConvertTo<NBestiaryMoveButton>(in args[0]));
-			ret = default(godot_variant);
-			return true;
-		}
 		if (method == MethodName.OnMoveButtonClicked && args.Count == 1)
 		{
 			OnMoveButtonClicked(VariantUtils.ConvertTo<NButton>(in args[0]));
 			ret = default(godot_variant);
 			return true;
 		}
-		if (method == MethodName.PlayIdleAnim && args.Count == 0)
+		if (method == MethodName.GetSideCenter && args.Count == 0)
 		{
-			PlayIdleAnim();
+			ret = VariantUtils.CreateFrom<Vector2>(GetSideCenter());
+			return true;
+		}
+		if (method == MethodName.GetSideFloor && args.Count == 0)
+		{
+			ret = VariantUtils.CreateFrom<Vector2>(GetSideFloor());
+			return true;
+		}
+		if (method == MethodName.EnableStatsModeHotkeys && args.Count == 0)
+		{
+			EnableStatsModeHotkeys();
 			ret = default(godot_variant);
 			return true;
 		}
-		if (method == MethodName.PlayMoveAnim && args.Count == 1)
+		if (method == MethodName.DisableStatsModeHotkeys && args.Count == 0)
 		{
-			PlayMoveAnim(VariantUtils.ConvertTo<string>(in args[0]));
+			DisableStatsModeHotkeys();
 			ret = default(godot_variant);
 			return true;
 		}
-		if (method == MethodName.OnMoveAnimCompleted && args.Count == 3)
+		if (method == MethodName.FilterLeft && args.Count == 0)
 		{
-			OnMoveAnimCompleted(VariantUtils.ConvertTo<GodotObject>(in args[0]), VariantUtils.ConvertTo<GodotObject>(in args[1]), VariantUtils.ConvertTo<GodotObject>(in args[2]));
+			FilterLeft();
 			ret = default(godot_variant);
+			return true;
+		}
+		if (method == MethodName.FilterRight && args.Count == 0)
+		{
+			FilterRight();
+			ret = default(godot_variant);
+			return true;
+		}
+		if (method == MethodName.SelectFilter && args.Count == 1)
+		{
+			SelectFilter(VariantUtils.ConvertTo<NBestiaryCharacterFilter>(in args[0]));
+			ret = default(godot_variant);
+			return true;
+		}
+		if (method == MethodName.UpdatePageIcons && args.Count == 0)
+		{
+			UpdatePageIcons();
+			ret = default(godot_variant);
+			return true;
+		}
+		if (method == MethodName.CanBeShown && args.Count == 0)
+		{
+			ret = VariantUtils.CreateFrom<bool>(CanBeShown());
 			return true;
 		}
 		return base.InvokeGodotClassMethod(in method, args, out ret);
@@ -468,10 +1486,16 @@ public class NBestiary : NSubmenu
 			ret = VariantUtils.CreateFrom<NBestiary>(Create());
 			return true;
 		}
+		if (method == MethodName.CanBeShown && args.Count == 0)
+		{
+			ret = VariantUtils.CreateFrom<bool>(CanBeShown());
+			return true;
+		}
 		ret = default(godot_variant);
 		return false;
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool HasGodotClassMethod(in godot_string_name method)
 	{
@@ -480,6 +1504,46 @@ public class NBestiary : NSubmenu
 			return true;
 		}
 		if (method == MethodName._Ready)
+		{
+			return true;
+		}
+		if (method == MethodName.ToggleMode)
+		{
+			return true;
+		}
+		if (method == MethodName.EnableMoveButtonHotkeys)
+		{
+			return true;
+		}
+		if (method == MethodName.DisableMoveButtonHotkeys)
+		{
+			return true;
+		}
+		if (method == MethodName.ShowMovesPanel)
+		{
+			return true;
+		}
+		if (method == MethodName.ShowStatsPanel)
+		{
+			return true;
+		}
+		if (method == MethodName.RefreshStatisticsText)
+		{
+			return true;
+		}
+		if (method == MethodName.DisplayCharacterData)
+		{
+			return true;
+		}
+		if (method == MethodName.UpdateDialogueBubbleStyle)
+		{
+			return true;
+		}
+		if (method == MethodName.ShowDialogue)
+		{
+			return true;
+		}
+		if (method == MethodName.HideDialogue)
 		{
 			return true;
 		}
@@ -495,6 +1559,18 @@ public class NBestiary : NSubmenu
 		{
 			return true;
 		}
+		if (method == MethodName.CreateFilters)
+		{
+			return true;
+		}
+		if (method == MethodName.OnCharacterFilterSelected)
+		{
+			return true;
+		}
+		if (method == MethodName.AddEvents)
+		{
+			return true;
+		}
 		if (method == MethodName.OnMonsterClicked)
 		{
 			return true;
@@ -503,36 +1579,63 @@ public class NBestiary : NSubmenu
 		{
 			return true;
 		}
-		if (method == MethodName.OnMoveButtonFocused)
-		{
-			return true;
-		}
-		if (method == MethodName.OnMoveButtonUnfocused)
-		{
-			return true;
-		}
 		if (method == MethodName.OnMoveButtonClicked)
 		{
 			return true;
 		}
-		if (method == MethodName.PlayIdleAnim)
+		if (method == MethodName.GetSideCenter)
 		{
 			return true;
 		}
-		if (method == MethodName.PlayMoveAnim)
+		if (method == MethodName.GetSideFloor)
 		{
 			return true;
 		}
-		if (method == MethodName.OnMoveAnimCompleted)
+		if (method == MethodName.EnableStatsModeHotkeys)
+		{
+			return true;
+		}
+		if (method == MethodName.DisableStatsModeHotkeys)
+		{
+			return true;
+		}
+		if (method == MethodName.FilterLeft)
+		{
+			return true;
+		}
+		if (method == MethodName.FilterRight)
+		{
+			return true;
+		}
+		if (method == MethodName.SelectFilter)
+		{
+			return true;
+		}
+		if (method == MethodName.UpdatePageIcons)
+		{
+			return true;
+		}
+		if (method == MethodName.CanBeShown)
 		{
 			return true;
 		}
 		return base.HasGodotClassMethod(in method);
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool SetGodotClassPropertyValue(in godot_string_name name, in godot_variant value)
 	{
+		if (name == PropertyName.BackVfxContainer)
+		{
+			BackVfxContainer = VariantUtils.ConvertTo<Control>(in value);
+			return true;
+		}
+		if (name == PropertyName.VfxContainer)
+		{
+			VfxContainer = VariantUtils.ConvertTo<Control>(in value);
+			return true;
+		}
 		if (name == PropertyName._monsterNameLabel)
 		{
 			_monsterNameLabel = VariantUtils.ConvertTo<MegaRichTextLabel>(in value);
@@ -553,19 +1656,94 @@ public class NBestiary : NSubmenu
 			_bestiaryList = VariantUtils.ConvertTo<VBoxContainer>(in value);
 			return true;
 		}
-		if (name == PropertyName._monsterVisualsContainer)
-		{
-			_monsterVisualsContainer = VariantUtils.ConvertTo<Control>(in value);
-			return true;
-		}
-		if (name == PropertyName._descriptionLabel)
-		{
-			_descriptionLabel = VariantUtils.ConvertTo<MegaRichTextLabel>(in value);
-			return true;
-		}
 		if (name == PropertyName._selectionArrow)
 		{
 			_selectionArrow = VariantUtils.ConvertTo<Control>(in value);
+			return true;
+		}
+		if (name == PropertyName._arrowTween)
+		{
+			_arrowTween = VariantUtils.ConvertTo<Tween>(in value);
+			return true;
+		}
+		if (name == PropertyName._initSelectionArrow)
+		{
+			_initSelectionArrow = VariantUtils.ConvertTo<bool>(in value);
+			return true;
+		}
+		if (name == PropertyName._layoutContainer)
+		{
+			_layoutContainer = VariantUtils.ConvertTo<Control>(in value);
+			return true;
+		}
+		if (name == PropertyName._currentLayout)
+		{
+			_currentLayout = VariantUtils.ConvertTo<NBestiaryLayout>(in value);
+			return true;
+		}
+		if (name == PropertyName._characterIcon)
+		{
+			_characterIcon = VariantUtils.ConvertTo<Control>(in value);
+			return true;
+		}
+		if (name == PropertyName._iconTexture)
+		{
+			_iconTexture = VariantUtils.ConvertTo<TextureRect>(in value);
+			return true;
+		}
+		if (name == PropertyName._iconOutlineTexture)
+		{
+			_iconOutlineTexture = VariantUtils.ConvertTo<TextureRect>(in value);
+			return true;
+		}
+		if (name == PropertyName._dialogueLine)
+		{
+			_dialogueLine = VariantUtils.ConvertTo<Control>(in value);
+			return true;
+		}
+		if (name == PropertyName._dialogueLabel)
+		{
+			_dialogueLabel = VariantUtils.ConvertTo<MegaRichTextLabel>(in value);
+			return true;
+		}
+		if (name == PropertyName._dialogueBubble)
+		{
+			_dialogueBubble = VariantUtils.ConvertTo<Control>(in value);
+			return true;
+		}
+		if (name == PropertyName._dialogueTail)
+		{
+			_dialogueTail = VariantUtils.ConvertTo<TextureRect>(in value);
+			return true;
+		}
+		if (name == PropertyName._dialogueTailShadow)
+		{
+			_dialogueTailShadow = VariantUtils.ConvertTo<TextureRect>(in value);
+			return true;
+		}
+		if (name == PropertyName._modeButton)
+		{
+			_modeButton = VariantUtils.ConvertTo<NButton>(in value);
+			return true;
+		}
+		if (name == PropertyName._modeLabel)
+		{
+			_modeLabel = VariantUtils.ConvertTo<MegaLabel>(in value);
+			return true;
+		}
+		if (name == PropertyName._isStatsMode)
+		{
+			_isStatsMode = VariantUtils.ConvertTo<bool>(in value);
+			return true;
+		}
+		if (name == PropertyName._pageLeftIcon)
+		{
+			_pageLeftIcon = VariantUtils.ConvertTo<TextureRect>(in value);
+			return true;
+		}
+		if (name == PropertyName._pageRightIcon)
+		{
+			_pageRightIcon = VariantUtils.ConvertTo<TextureRect>(in value);
 			return true;
 		}
 		if (name == PropertyName._moveList)
@@ -578,19 +1756,24 @@ public class NBestiary : NSubmenu
 			_moveContainer = VariantUtils.ConvertTo<Control>(in value);
 			return true;
 		}
-		if (name == PropertyName._arrowTween)
+		if (name == PropertyName._statsContainer)
 		{
-			_arrowTween = VariantUtils.ConvertTo<Tween>(in value);
+			_statsContainer = VariantUtils.ConvertTo<Control>(in value);
 			return true;
 		}
-		if (name == PropertyName._arrowPosReset)
+		if (name == PropertyName._filterContainer)
 		{
-			_arrowPosReset = VariantUtils.ConvertTo<bool>(in value);
+			_filterContainer = VariantUtils.ConvertTo<Control>(in value);
 			return true;
 		}
-		if (name == PropertyName._monsterVisuals)
+		if (name == PropertyName._statsLabel)
 		{
-			_monsterVisuals = VariantUtils.ConvertTo<NCreatureVisuals>(in value);
+			_statsLabel = VariantUtils.ConvertTo<MegaRichTextLabel>(in value);
+			return true;
+		}
+		if (name == PropertyName._currentFilter)
+		{
+			_currentFilter = VariantUtils.ConvertTo<NBestiaryCharacterFilter>(in value);
 			return true;
 		}
 		if (name == PropertyName._selectedEntry)
@@ -598,25 +1781,51 @@ public class NBestiary : NSubmenu
 			_selectedEntry = VariantUtils.ConvertTo<NBestiaryEntry>(in value);
 			return true;
 		}
+		if (name == PropertyName._previousScreenshakeTarget)
+		{
+			_previousScreenshakeTarget = VariantUtils.ConvertTo<Control>(in value);
+			return true;
+		}
 		if (name == PropertyName._tween)
 		{
 			_tween = VariantUtils.ConvertTo<Tween>(in value);
 			return true;
 		}
-		if (name == PropertyName._isPlayingMoveAnim)
+		if (name == PropertyName._dialogueTween)
 		{
-			_isPlayingMoveAnim = VariantUtils.ConvertTo<bool>(in value);
+			_dialogueTween = VariantUtils.ConvertTo<Tween>(in value);
 			return true;
 		}
 		return base.SetGodotClassPropertyValue(in name, in value);
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool GetGodotClassPropertyValue(in godot_string_name name, out godot_variant value)
 	{
+		Control from;
 		if (name == PropertyName.InitialFocusedControl)
 		{
-			value = VariantUtils.CreateFrom<Control>(InitialFocusedControl);
+			from = InitialFocusedControl;
+			value = VariantUtils.CreateFrom(in from);
+			return true;
+		}
+		if (name == PropertyName.BackVfxContainer)
+		{
+			from = BackVfxContainer;
+			value = VariantUtils.CreateFrom(in from);
+			return true;
+		}
+		if (name == PropertyName.VfxContainer)
+		{
+			from = VfxContainer;
+			value = VariantUtils.CreateFrom(in from);
+			return true;
+		}
+		if (name == PropertyName.Layout)
+		{
+			from = Layout;
+			value = VariantUtils.CreateFrom(in from);
 			return true;
 		}
 		if (name == PropertyName._monsterNameLabel)
@@ -639,19 +1848,94 @@ public class NBestiary : NSubmenu
 			value = VariantUtils.CreateFrom(in _bestiaryList);
 			return true;
 		}
-		if (name == PropertyName._monsterVisualsContainer)
-		{
-			value = VariantUtils.CreateFrom(in _monsterVisualsContainer);
-			return true;
-		}
-		if (name == PropertyName._descriptionLabel)
-		{
-			value = VariantUtils.CreateFrom(in _descriptionLabel);
-			return true;
-		}
 		if (name == PropertyName._selectionArrow)
 		{
 			value = VariantUtils.CreateFrom(in _selectionArrow);
+			return true;
+		}
+		if (name == PropertyName._arrowTween)
+		{
+			value = VariantUtils.CreateFrom(in _arrowTween);
+			return true;
+		}
+		if (name == PropertyName._initSelectionArrow)
+		{
+			value = VariantUtils.CreateFrom(in _initSelectionArrow);
+			return true;
+		}
+		if (name == PropertyName._layoutContainer)
+		{
+			value = VariantUtils.CreateFrom(in _layoutContainer);
+			return true;
+		}
+		if (name == PropertyName._currentLayout)
+		{
+			value = VariantUtils.CreateFrom(in _currentLayout);
+			return true;
+		}
+		if (name == PropertyName._characterIcon)
+		{
+			value = VariantUtils.CreateFrom(in _characterIcon);
+			return true;
+		}
+		if (name == PropertyName._iconTexture)
+		{
+			value = VariantUtils.CreateFrom(in _iconTexture);
+			return true;
+		}
+		if (name == PropertyName._iconOutlineTexture)
+		{
+			value = VariantUtils.CreateFrom(in _iconOutlineTexture);
+			return true;
+		}
+		if (name == PropertyName._dialogueLine)
+		{
+			value = VariantUtils.CreateFrom(in _dialogueLine);
+			return true;
+		}
+		if (name == PropertyName._dialogueLabel)
+		{
+			value = VariantUtils.CreateFrom(in _dialogueLabel);
+			return true;
+		}
+		if (name == PropertyName._dialogueBubble)
+		{
+			value = VariantUtils.CreateFrom(in _dialogueBubble);
+			return true;
+		}
+		if (name == PropertyName._dialogueTail)
+		{
+			value = VariantUtils.CreateFrom(in _dialogueTail);
+			return true;
+		}
+		if (name == PropertyName._dialogueTailShadow)
+		{
+			value = VariantUtils.CreateFrom(in _dialogueTailShadow);
+			return true;
+		}
+		if (name == PropertyName._modeButton)
+		{
+			value = VariantUtils.CreateFrom(in _modeButton);
+			return true;
+		}
+		if (name == PropertyName._modeLabel)
+		{
+			value = VariantUtils.CreateFrom(in _modeLabel);
+			return true;
+		}
+		if (name == PropertyName._isStatsMode)
+		{
+			value = VariantUtils.CreateFrom(in _isStatsMode);
+			return true;
+		}
+		if (name == PropertyName._pageLeftIcon)
+		{
+			value = VariantUtils.CreateFrom(in _pageLeftIcon);
+			return true;
+		}
+		if (name == PropertyName._pageRightIcon)
+		{
+			value = VariantUtils.CreateFrom(in _pageRightIcon);
 			return true;
 		}
 		if (name == PropertyName._moveList)
@@ -664,19 +1948,24 @@ public class NBestiary : NSubmenu
 			value = VariantUtils.CreateFrom(in _moveContainer);
 			return true;
 		}
-		if (name == PropertyName._arrowTween)
+		if (name == PropertyName._statsContainer)
 		{
-			value = VariantUtils.CreateFrom(in _arrowTween);
+			value = VariantUtils.CreateFrom(in _statsContainer);
 			return true;
 		}
-		if (name == PropertyName._arrowPosReset)
+		if (name == PropertyName._filterContainer)
 		{
-			value = VariantUtils.CreateFrom(in _arrowPosReset);
+			value = VariantUtils.CreateFrom(in _filterContainer);
 			return true;
 		}
-		if (name == PropertyName._monsterVisuals)
+		if (name == PropertyName._statsLabel)
 		{
-			value = VariantUtils.CreateFrom(in _monsterVisuals);
+			value = VariantUtils.CreateFrom(in _statsLabel);
+			return true;
+		}
+		if (name == PropertyName._currentFilter)
+		{
+			value = VariantUtils.CreateFrom(in _currentFilter);
 			return true;
 		}
 		if (name == PropertyName._selectedEntry)
@@ -684,19 +1973,29 @@ public class NBestiary : NSubmenu
 			value = VariantUtils.CreateFrom(in _selectedEntry);
 			return true;
 		}
+		if (name == PropertyName._previousScreenshakeTarget)
+		{
+			value = VariantUtils.CreateFrom(in _previousScreenshakeTarget);
+			return true;
+		}
 		if (name == PropertyName._tween)
 		{
 			value = VariantUtils.CreateFrom(in _tween);
 			return true;
 		}
-		if (name == PropertyName._isPlayingMoveAnim)
+		if (name == PropertyName._dialogueTween)
 		{
-			value = VariantUtils.CreateFrom(in _isPlayingMoveAnim);
+			value = VariantUtils.CreateFrom(in _dialogueTween);
 			return true;
 		}
 		return base.GetGodotClassPropertyValue(in name, out value);
 	}
 
+	/// <summary>
+	/// Get the property information for all the properties declared in this class.
+	/// This method is used by Godot to register the available properties in the editor.
+	/// Do not call this method.
+	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	internal new static List<PropertyInfo> GetGodotPropertyList()
 	{
@@ -706,104 +2005,221 @@ public class NBestiary : NSubmenu
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName.InitialFocusedControl, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._sidebar, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._bestiaryList, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
-		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._monsterVisualsContainer, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
-		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._descriptionLabel, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._selectionArrow, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._arrowTween, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Bool, PropertyName._initSelectionArrow, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._layoutContainer, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._currentLayout, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._characterIcon, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._iconTexture, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._iconOutlineTexture, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._dialogueLine, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._dialogueLabel, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._dialogueBubble, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._dialogueTail, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._dialogueTailShadow, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._modeButton, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._modeLabel, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Bool, PropertyName._isStatsMode, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._pageLeftIcon, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._pageRightIcon, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._moveList, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._moveContainer, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
-		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._arrowTween, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
-		list.Add(new PropertyInfo(Variant.Type.Bool, PropertyName._arrowPosReset, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
-		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._monsterVisuals, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._statsContainer, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._filterContainer, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._statsLabel, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._currentFilter, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._selectedEntry, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._previousScreenshakeTarget, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._tween, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
-		list.Add(new PropertyInfo(Variant.Type.Bool, PropertyName._isPlayingMoveAnim, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._dialogueTween, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName.BackVfxContainer, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName.VfxContainer, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName.Layout, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		return list;
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override void SaveGodotObjectData(GodotSerializationInfo info)
 	{
 		base.SaveGodotObjectData(info);
+		info.AddProperty(PropertyName.BackVfxContainer, Variant.From<Control>(BackVfxContainer));
+		info.AddProperty(PropertyName.VfxContainer, Variant.From<Control>(VfxContainer));
 		info.AddProperty(PropertyName._monsterNameLabel, Variant.From(in _monsterNameLabel));
 		info.AddProperty(PropertyName._epithet, Variant.From(in _epithet));
 		info.AddProperty(PropertyName._sidebar, Variant.From(in _sidebar));
 		info.AddProperty(PropertyName._bestiaryList, Variant.From(in _bestiaryList));
-		info.AddProperty(PropertyName._monsterVisualsContainer, Variant.From(in _monsterVisualsContainer));
-		info.AddProperty(PropertyName._descriptionLabel, Variant.From(in _descriptionLabel));
 		info.AddProperty(PropertyName._selectionArrow, Variant.From(in _selectionArrow));
+		info.AddProperty(PropertyName._arrowTween, Variant.From(in _arrowTween));
+		info.AddProperty(PropertyName._initSelectionArrow, Variant.From(in _initSelectionArrow));
+		info.AddProperty(PropertyName._layoutContainer, Variant.From(in _layoutContainer));
+		info.AddProperty(PropertyName._currentLayout, Variant.From(in _currentLayout));
+		info.AddProperty(PropertyName._characterIcon, Variant.From(in _characterIcon));
+		info.AddProperty(PropertyName._iconTexture, Variant.From(in _iconTexture));
+		info.AddProperty(PropertyName._iconOutlineTexture, Variant.From(in _iconOutlineTexture));
+		info.AddProperty(PropertyName._dialogueLine, Variant.From(in _dialogueLine));
+		info.AddProperty(PropertyName._dialogueLabel, Variant.From(in _dialogueLabel));
+		info.AddProperty(PropertyName._dialogueBubble, Variant.From(in _dialogueBubble));
+		info.AddProperty(PropertyName._dialogueTail, Variant.From(in _dialogueTail));
+		info.AddProperty(PropertyName._dialogueTailShadow, Variant.From(in _dialogueTailShadow));
+		info.AddProperty(PropertyName._modeButton, Variant.From(in _modeButton));
+		info.AddProperty(PropertyName._modeLabel, Variant.From(in _modeLabel));
+		info.AddProperty(PropertyName._isStatsMode, Variant.From(in _isStatsMode));
+		info.AddProperty(PropertyName._pageLeftIcon, Variant.From(in _pageLeftIcon));
+		info.AddProperty(PropertyName._pageRightIcon, Variant.From(in _pageRightIcon));
 		info.AddProperty(PropertyName._moveList, Variant.From(in _moveList));
 		info.AddProperty(PropertyName._moveContainer, Variant.From(in _moveContainer));
-		info.AddProperty(PropertyName._arrowTween, Variant.From(in _arrowTween));
-		info.AddProperty(PropertyName._arrowPosReset, Variant.From(in _arrowPosReset));
-		info.AddProperty(PropertyName._monsterVisuals, Variant.From(in _monsterVisuals));
+		info.AddProperty(PropertyName._statsContainer, Variant.From(in _statsContainer));
+		info.AddProperty(PropertyName._filterContainer, Variant.From(in _filterContainer));
+		info.AddProperty(PropertyName._statsLabel, Variant.From(in _statsLabel));
+		info.AddProperty(PropertyName._currentFilter, Variant.From(in _currentFilter));
 		info.AddProperty(PropertyName._selectedEntry, Variant.From(in _selectedEntry));
+		info.AddProperty(PropertyName._previousScreenshakeTarget, Variant.From(in _previousScreenshakeTarget));
 		info.AddProperty(PropertyName._tween, Variant.From(in _tween));
-		info.AddProperty(PropertyName._isPlayingMoveAnim, Variant.From(in _isPlayingMoveAnim));
+		info.AddProperty(PropertyName._dialogueTween, Variant.From(in _dialogueTween));
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override void RestoreGodotObjectData(GodotSerializationInfo info)
 	{
 		base.RestoreGodotObjectData(info);
-		if (info.TryGetProperty(PropertyName._monsterNameLabel, out var value))
+		if (info.TryGetProperty(PropertyName.BackVfxContainer, out var value))
 		{
-			_monsterNameLabel = value.As<MegaRichTextLabel>();
+			BackVfxContainer = value.As<Control>();
 		}
-		if (info.TryGetProperty(PropertyName._epithet, out var value2))
+		if (info.TryGetProperty(PropertyName.VfxContainer, out var value2))
 		{
-			_epithet = value2.As<MegaLabel>();
+			VfxContainer = value2.As<Control>();
 		}
-		if (info.TryGetProperty(PropertyName._sidebar, out var value3))
+		if (info.TryGetProperty(PropertyName._monsterNameLabel, out var value3))
 		{
-			_sidebar = value3.As<NScrollableContainer>();
+			_monsterNameLabel = value3.As<MegaRichTextLabel>();
 		}
-		if (info.TryGetProperty(PropertyName._bestiaryList, out var value4))
+		if (info.TryGetProperty(PropertyName._epithet, out var value4))
 		{
-			_bestiaryList = value4.As<VBoxContainer>();
+			_epithet = value4.As<MegaLabel>();
 		}
-		if (info.TryGetProperty(PropertyName._monsterVisualsContainer, out var value5))
+		if (info.TryGetProperty(PropertyName._sidebar, out var value5))
 		{
-			_monsterVisualsContainer = value5.As<Control>();
+			_sidebar = value5.As<NScrollableContainer>();
 		}
-		if (info.TryGetProperty(PropertyName._descriptionLabel, out var value6))
+		if (info.TryGetProperty(PropertyName._bestiaryList, out var value6))
 		{
-			_descriptionLabel = value6.As<MegaRichTextLabel>();
+			_bestiaryList = value6.As<VBoxContainer>();
 		}
 		if (info.TryGetProperty(PropertyName._selectionArrow, out var value7))
 		{
 			_selectionArrow = value7.As<Control>();
 		}
-		if (info.TryGetProperty(PropertyName._moveList, out var value8))
+		if (info.TryGetProperty(PropertyName._arrowTween, out var value8))
 		{
-			_moveList = value8.As<Control>();
+			_arrowTween = value8.As<Tween>();
 		}
-		if (info.TryGetProperty(PropertyName._moveContainer, out var value9))
+		if (info.TryGetProperty(PropertyName._initSelectionArrow, out var value9))
 		{
-			_moveContainer = value9.As<Control>();
+			_initSelectionArrow = value9.As<bool>();
 		}
-		if (info.TryGetProperty(PropertyName._arrowTween, out var value10))
+		if (info.TryGetProperty(PropertyName._layoutContainer, out var value10))
 		{
-			_arrowTween = value10.As<Tween>();
+			_layoutContainer = value10.As<Control>();
 		}
-		if (info.TryGetProperty(PropertyName._arrowPosReset, out var value11))
+		if (info.TryGetProperty(PropertyName._currentLayout, out var value11))
 		{
-			_arrowPosReset = value11.As<bool>();
+			_currentLayout = value11.As<NBestiaryLayout>();
 		}
-		if (info.TryGetProperty(PropertyName._monsterVisuals, out var value12))
+		if (info.TryGetProperty(PropertyName._characterIcon, out var value12))
 		{
-			_monsterVisuals = value12.As<NCreatureVisuals>();
+			_characterIcon = value12.As<Control>();
 		}
-		if (info.TryGetProperty(PropertyName._selectedEntry, out var value13))
+		if (info.TryGetProperty(PropertyName._iconTexture, out var value13))
 		{
-			_selectedEntry = value13.As<NBestiaryEntry>();
+			_iconTexture = value13.As<TextureRect>();
 		}
-		if (info.TryGetProperty(PropertyName._tween, out var value14))
+		if (info.TryGetProperty(PropertyName._iconOutlineTexture, out var value14))
 		{
-			_tween = value14.As<Tween>();
+			_iconOutlineTexture = value14.As<TextureRect>();
 		}
-		if (info.TryGetProperty(PropertyName._isPlayingMoveAnim, out var value15))
+		if (info.TryGetProperty(PropertyName._dialogueLine, out var value15))
 		{
-			_isPlayingMoveAnim = value15.As<bool>();
+			_dialogueLine = value15.As<Control>();
+		}
+		if (info.TryGetProperty(PropertyName._dialogueLabel, out var value16))
+		{
+			_dialogueLabel = value16.As<MegaRichTextLabel>();
+		}
+		if (info.TryGetProperty(PropertyName._dialogueBubble, out var value17))
+		{
+			_dialogueBubble = value17.As<Control>();
+		}
+		if (info.TryGetProperty(PropertyName._dialogueTail, out var value18))
+		{
+			_dialogueTail = value18.As<TextureRect>();
+		}
+		if (info.TryGetProperty(PropertyName._dialogueTailShadow, out var value19))
+		{
+			_dialogueTailShadow = value19.As<TextureRect>();
+		}
+		if (info.TryGetProperty(PropertyName._modeButton, out var value20))
+		{
+			_modeButton = value20.As<NButton>();
+		}
+		if (info.TryGetProperty(PropertyName._modeLabel, out var value21))
+		{
+			_modeLabel = value21.As<MegaLabel>();
+		}
+		if (info.TryGetProperty(PropertyName._isStatsMode, out var value22))
+		{
+			_isStatsMode = value22.As<bool>();
+		}
+		if (info.TryGetProperty(PropertyName._pageLeftIcon, out var value23))
+		{
+			_pageLeftIcon = value23.As<TextureRect>();
+		}
+		if (info.TryGetProperty(PropertyName._pageRightIcon, out var value24))
+		{
+			_pageRightIcon = value24.As<TextureRect>();
+		}
+		if (info.TryGetProperty(PropertyName._moveList, out var value25))
+		{
+			_moveList = value25.As<Control>();
+		}
+		if (info.TryGetProperty(PropertyName._moveContainer, out var value26))
+		{
+			_moveContainer = value26.As<Control>();
+		}
+		if (info.TryGetProperty(PropertyName._statsContainer, out var value27))
+		{
+			_statsContainer = value27.As<Control>();
+		}
+		if (info.TryGetProperty(PropertyName._filterContainer, out var value28))
+		{
+			_filterContainer = value28.As<Control>();
+		}
+		if (info.TryGetProperty(PropertyName._statsLabel, out var value29))
+		{
+			_statsLabel = value29.As<MegaRichTextLabel>();
+		}
+		if (info.TryGetProperty(PropertyName._currentFilter, out var value30))
+		{
+			_currentFilter = value30.As<NBestiaryCharacterFilter>();
+		}
+		if (info.TryGetProperty(PropertyName._selectedEntry, out var value31))
+		{
+			_selectedEntry = value31.As<NBestiaryEntry>();
+		}
+		if (info.TryGetProperty(PropertyName._previousScreenshakeTarget, out var value32))
+		{
+			_previousScreenshakeTarget = value32.As<Control>();
+		}
+		if (info.TryGetProperty(PropertyName._tween, out var value33))
+		{
+			_tween = value33.As<Tween>();
+		}
+		if (info.TryGetProperty(PropertyName._dialogueTween, out var value34))
+		{
+			_dialogueTween = value34.As<Tween>();
 		}
 	}
 }

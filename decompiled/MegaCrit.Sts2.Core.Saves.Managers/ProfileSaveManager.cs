@@ -1,4 +1,4 @@
-using System.Threading.Tasks;
+using Godot;
 using MegaCrit.Sts2.Core.Saves.Migrations;
 
 namespace MegaCrit.Sts2.Core.Saves.Managers;
@@ -13,8 +13,6 @@ public class ProfileSaveManager
 
 	private readonly MigrationManager _migrationManager;
 
-	public static string ProfilePath => "profile.save";
-
 	public ProfileSave Profile { get; private set; }
 
 	public ProfileSaveManager(ISaveStore saveStore, MigrationManager migrationManager)
@@ -23,16 +21,21 @@ public class ProfileSaveManager
 		_migrationManager = migrationManager;
 	}
 
+	public static string GetProfileSavePath(bool? forceModState = null)
+	{
+		return UserDataPathProvider.GetAccountDir(forceModState).PathJoin("profile.save");
+	}
+
 	public void SaveProfile()
 	{
 		Profile.SchemaVersion = _migrationManager.GetLatestVersion<ProfileSave>();
 		string content = JsonSerializationUtility.ToJson(Profile);
-		_saveStore.WriteFile(ProfilePath, content);
+		_saveStore.WriteFile(GetProfileSavePath(), content);
 	}
 
 	public ReadSaveResult<ProfileSave> LoadProfile()
 	{
-		ReadSaveResult<ProfileSave> readSaveResult = _migrationManager.LoadSave<ProfileSave>(ProfilePath);
+		ReadSaveResult<ProfileSave> readSaveResult = _migrationManager.LoadSave<ProfileSave>(GetProfileSavePath());
 		if (!readSaveResult.Success || readSaveResult.SaveData == null)
 		{
 			Profile = _migrationManager.CreateNewSave<ProfileSave>();
@@ -42,21 +45,5 @@ public class ProfileSaveManager
 			Profile = readSaveResult.SaveData;
 		}
 		return readSaveResult;
-	}
-
-	public async Task SyncCloudToLocal()
-	{
-		if (_saveStore is CloudSaveStore cloudSaveStore)
-		{
-			await cloudSaveStore.SyncCloudToLocal(ProfilePath);
-		}
-	}
-
-	public async Task OverwriteCloudWithLocal()
-	{
-		if (_saveStore is CloudSaveStore cloudSaveStore)
-		{
-			await cloudSaveStore.OverwriteCloudWithLocal(ProfilePath);
-		}
 	}
 }

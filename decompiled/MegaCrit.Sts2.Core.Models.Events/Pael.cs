@@ -66,92 +66,93 @@ public class Pael : AncientEventModel
 
 	protected override AncientDialogueSet DefineDialogues()
 	{
-		AncientDialogueSet ancientDialogueSet = new AncientDialogueSet();
-		ancientDialogueSet.FirstVisitEverDialogue = new AncientDialogue("");
-		ancientDialogueSet.CharacterDialogues = new Dictionary<string, IReadOnlyList<AncientDialogue>>
+		return new AncientDialogueSet
 		{
-			[AncientEventModel.CharKey<Ironclad>()] = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[3]
+			FirstVisitEverDialogue = new AncientDialogue(""),
+			CharacterDialogues = new Dictionary<string, IReadOnlyList<AncientDialogue>>
 			{
-				new AncientDialogue("")
+				[AncientEventModel.CharKey<Ironclad>()] = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[3]
 				{
-					VisitIndex = 0
-				},
-				new AncientDialogue("")
+					new AncientDialogue("")
+					{
+						VisitIndex = 0
+					},
+					new AncientDialogue("")
+					{
+						VisitIndex = 1
+					},
+					new AncientDialogue("")
+					{
+						VisitIndex = 4
+					}
+				}),
+				[AncientEventModel.CharKey<Silent>()] = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[3]
 				{
-					VisitIndex = 1
-				},
-				new AncientDialogue("")
+					new AncientDialogue("")
+					{
+						VisitIndex = 0
+					},
+					new AncientDialogue("")
+					{
+						VisitIndex = 1
+					},
+					new AncientDialogue("")
+					{
+						VisitIndex = 4
+					}
+				}),
+				[AncientEventModel.CharKey<Defect>()] = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[3]
 				{
-					VisitIndex = 4
-				}
-			}),
-			[AncientEventModel.CharKey<Silent>()] = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[3]
+					new AncientDialogue("")
+					{
+						VisitIndex = 0
+					},
+					new AncientDialogue("")
+					{
+						VisitIndex = 1
+					},
+					new AncientDialogue("")
+					{
+						VisitIndex = 4
+					}
+				}),
+				[AncientEventModel.CharKey<Necrobinder>()] = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[3]
+				{
+					new AncientDialogue("", "", "")
+					{
+						VisitIndex = 0
+					},
+					new AncientDialogue("")
+					{
+						VisitIndex = 1
+					},
+					new AncientDialogue("", "", "")
+					{
+						VisitIndex = 4
+					}
+				}),
+				[AncientEventModel.CharKey<Regent>()] = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[3]
+				{
+					new AncientDialogue("", "")
+					{
+						VisitIndex = 0
+					},
+					new AncientDialogue("")
+					{
+						VisitIndex = 1
+					},
+					new AncientDialogue("", "", "")
+					{
+						VisitIndex = 4
+					}
+				})
+			},
+			AgnosticDialogues = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[2]
 			{
+				new AncientDialogue(""),
 				new AncientDialogue("")
-				{
-					VisitIndex = 0
-				},
-				new AncientDialogue("")
-				{
-					VisitIndex = 1
-				},
-				new AncientDialogue("")
-				{
-					VisitIndex = 4
-				}
-			}),
-			[AncientEventModel.CharKey<Defect>()] = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[3]
-			{
-				new AncientDialogue("")
-				{
-					VisitIndex = 0
-				},
-				new AncientDialogue("")
-				{
-					VisitIndex = 1
-				},
-				new AncientDialogue("")
-				{
-					VisitIndex = 4
-				}
-			}),
-			[AncientEventModel.CharKey<Necrobinder>()] = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[3]
-			{
-				new AncientDialogue("", "", "")
-				{
-					VisitIndex = 0
-				},
-				new AncientDialogue("")
-				{
-					VisitIndex = 1
-				},
-				new AncientDialogue("", "", "")
-				{
-					VisitIndex = 4
-				}
-			}),
-			[AncientEventModel.CharKey<Regent>()] = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[3]
-			{
-				new AncientDialogue("", "")
-				{
-					VisitIndex = 0
-				},
-				new AncientDialogue("")
-				{
-					VisitIndex = 1
-				},
-				new AncientDialogue("", "", "")
-				{
-					VisitIndex = 4
-				}
 			})
 		};
-		ancientDialogueSet.AgnosticDialogues = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[2]
-		{
-			new AncientDialogue(""),
-			new AncientDialogue("")
-		});
-		return ancientDialogueSet;
 	}
 
 	protected override IReadOnlyList<EventOption> GenerateInitialOptions()

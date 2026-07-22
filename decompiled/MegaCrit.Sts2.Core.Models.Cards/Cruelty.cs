@@ -16,14 +16,14 @@ public sealed class Cruelty : CardModel
 	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.FromPower<VulnerablePower>());
 
 	public Cruelty()
-		: base(1, CardType.Power, CardRarity.Rare, TargetType.Self)
+		: base(1, CardType.Power, CardRarity.Uncommon, TargetType.Self)
 	{
 	}
 
 	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
 	{
-		await CreatureCmd.TriggerAnim(base.Owner.Creature, "Cast", base.Owner.Character.CastAnimDelay);
-		await PowerCmd.Apply<CrueltyPower>(base.Owner.Creature, base.DynamicVars["CrueltyPower"].BaseValue, base.Owner.Creature, this);
+		await CreatureCmd.TriggerAnim(base.Owner.Creature, "PowerUp", base.Owner.Character.PowerUpAnimDelay);
+		await PowerCmd.Apply<CrueltyPower>(choiceContext, base.Owner.Creature, base.DynamicVars["CrueltyPower"].BaseValue, base.Owner.Creature, this);
 	}
 
 	protected override void OnUpgrade()

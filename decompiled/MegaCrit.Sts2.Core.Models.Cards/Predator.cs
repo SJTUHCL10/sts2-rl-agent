@@ -15,17 +15,17 @@ public sealed class Predator : CardModel
 	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new DamageVar(15m, ValueProp.Move));
 
 	public Predator()
-		: base(2, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy)
+		: base(2, CardType.Attack, CardRarity.Common, TargetType.AnyEnemy)
 	{
 	}
 
 	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
 	{
 		ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
-		await DamageCmd.Attack(base.DynamicVars.Damage.BaseValue).FromCard(this).Targeting(cardPlay.Target)
+		await DamageCmd.Attack(base.DynamicVars.Damage.BaseValue).FromCard(this, cardPlay).Targeting(cardPlay.Target)
 			.WithHitFx("vfx/vfx_attack_slash")
 			.Execute(choiceContext);
-		await PowerCmd.Apply<DrawCardsNextTurnPower>(base.Owner.Creature, 2m, base.Owner.Creature, this);
+		await PowerCmd.Apply<DrawCardsNextTurnPower>(choiceContext, base.Owner.Creature, 2m, base.Owner.Creature, this);
 	}
 
 	protected override void OnUpgrade()

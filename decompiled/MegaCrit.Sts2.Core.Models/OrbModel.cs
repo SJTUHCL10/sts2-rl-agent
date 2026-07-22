@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 using Godot;
 using MegaCrit.Sts2.Core.Assets;
 using MegaCrit.Sts2.Core.Audio.Debug;
-using MegaCrit.Sts2.Core.Bindings.MegaSpine;
 using MegaCrit.Sts2.Core.Combat;
 using MegaCrit.Sts2.Core.Commands;
+using MegaCrit.Sts2.Core.Context;
 using MegaCrit.Sts2.Core.Entities.Creatures;
 using MegaCrit.Sts2.Core.Entities.Players;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
@@ -41,6 +41,9 @@ public abstract class OrbModel : AbstractModel
 
 	public abstract decimal EvokeVal { get; }
 
+	/// <summary>
+	/// Set to true when this is removed from a player's orb queue.
+	/// </summary>
 	public bool HasBeenRemovedFromState { get; private set; }
 
 	public LocString Title => new LocString("orbs", base.Id.Entry + ".title");
@@ -51,6 +54,10 @@ public abstract class OrbModel : AbstractModel
 
 	private string SmartDescriptionLocKey => base.Id.Entry + ".smartDescription";
 
+	/// <summary>
+	/// NOTE: Unlike other models' DynamicDescription, this doesn't include any variables. Someone should probably do that
+	/// but it's a bit larger of a refactor than I want to do right now
+	/// </summary>
 	public LocString SmartDescription
 	{
 		get
@@ -145,13 +152,19 @@ public abstract class OrbModel : AbstractModel
 		}
 	}
 
-	public CombatState CombatState => Owner.Creature.CombatState;
+	/// <summary>
+	/// Get the CombatState of the orb's owner.
+	/// Will never be null, since orbs are combat-only.
+	/// </summary>
+	public ICombatState CombatState => Owner.Creature.CombatState;
 
 	public override bool ShouldReceiveCombatHooks => true;
 
 	public IEnumerable<string> AssetPaths => new global::_003C_003Ez__ReadOnlyArray<string>(new string[2] { IconPath, SpritePath });
 
-	public event Action? Triggered;
+	public event Action? PassiveActivated;
+
+	public event Action<Creature[]>? EvokeActivated;
 
 	public static OrbModel GetRandomOrb(Rng rng)
 	{
@@ -196,9 +209,7 @@ public abstract class OrbModel : AbstractModel
 
 	public Node2D CreateSprite()
 	{
-		Node2D node2D = PreloadManager.Cache.GetScene(SpritePath).Instantiate<Node2D>(PackedScene.GenEditState.Disabled);
-		new MegaSprite(node2D.GetNode("SpineSkeleton")).GetAnimationState().SetAnimation("idle_loop");
-		return node2D;
+		return PreloadManager.Cache.GetScene(SpritePath).Instantiate<Node2D>(PackedScene.GenEditState.Disabled);
 	}
 
 	public OrbModel ToMutable(int initialAmount = 0)
@@ -209,9 +220,14 @@ public abstract class OrbModel : AbstractModel
 		return orbModel;
 	}
 
-	public void Trigger()
+	protected void ActivatePassive()
 	{
-		this.Triggered?.Invoke();
+		this.PassiveActivated?.Invoke();
+	}
+
+	public void ActivateEvoke(Creature[] targets)
+	{
+		this.EvokeActivated?.Invoke(targets);
 	}
 
 	public virtual Task BeforeTurnEndOrbTrigger(PlayerChoiceContext choiceContext)
@@ -224,6 +240,31 @@ public abstract class OrbModel : AbstractModel
 		return Task.CompletedTask;
 	}
 
+	/// <summary>
+	/// Calculates the number of times an Orb's passive should trigger and performs it.
+	/// </summary>
+	public async Task TriggerPassive(PlayerChoiceContext choiceContext, Creature? target)
+	{
+		List<AbstractModel> modifyingModels;
+		int triggerCount = Hook.ModifyOrbPassiveTriggerCount(Owner.Creature.CombatState, this, 1, out modifyingModels);
+		await Hook.AfterModifyingOrbPassiveTriggerCount(Owner.Creature.CombatState, this, modifyingModels);
+		for (int i = 0; i < triggerCount; i++)
+		{
+			await Passive(choiceContext, target);
+			if (LocalContext.IsMe(Owner))
+			{
+				await Cmd.CustomScaledWait(0.1f, 0.25f);
+			}
+			else
+			{
+				await Cmd.Wait(0.05f);
+			}
+		}
+	}
+
+	/// <summary>
+	/// CAREFUL: Should only be used if in special cases, since this skips the ModifyOrbPassiveTrigger.
+	/// </summary>
 	public virtual Task Passive(PlayerChoiceContext choiceContext, Creature? target)
 	{
 		return Task.CompletedTask;
@@ -236,13 +277,14 @@ public abstract class OrbModel : AbstractModel
 
 	protected decimal ModifyOrbValue(decimal result)
 	{
-		return Hook.ModifyOrbValue(Owner.Creature.CombatState, Owner, result);
+		return Hook.ModifyOrbValue(Owner.Creature.CombatState, this, result);
 	}
 
 	protected override void AfterCloned()
 	{
 		base.AfterCloned();
-		this.Triggered = null;
+		this.EvokeActivated = null;
+		this.PassiveActivated = null;
 	}
 
 	public void RemoveInternal()

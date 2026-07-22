@@ -11,6 +11,7 @@ using MegaCrit.Sts2.Core.Entities.Multiplayer;
 using MegaCrit.Sts2.Core.Helpers;
 using MegaCrit.Sts2.Core.Localization;
 using MegaCrit.Sts2.Core.Logging;
+using MegaCrit.Sts2.Core.Multiplayer;
 using MegaCrit.Sts2.Core.Multiplayer.Connection;
 using MegaCrit.Sts2.Core.Multiplayer.Game;
 using MegaCrit.Sts2.Core.Nodes.CommonUi;
@@ -31,36 +32,81 @@ namespace MegaCrit.Sts2.Core.Nodes.Screens.MainMenu;
 [ScriptPath("res://src/Core/Nodes/Screens/MainMenu/NJoinFriendScreen.cs")]
 public class NJoinFriendScreen : NSubmenu
 {
+	/// <summary>
+	/// Cached StringNames for the methods contained in this class, for fast lookup.
+	/// </summary>
 	public new class MethodName : NSubmenu.MethodName
 	{
+		/// <summary>
+		/// Cached name for the 'Create' method.
+		/// </summary>
 		public static readonly StringName Create = "Create";
 
+		/// <summary>
+		/// Cached name for the '_Ready' method.
+		/// </summary>
 		public new static readonly StringName _Ready = "_Ready";
 
+		/// <summary>
+		/// Cached name for the 'OnSubmenuOpened' method.
+		/// </summary>
 		public new static readonly StringName OnSubmenuOpened = "OnSubmenuOpened";
 
+		/// <summary>
+		/// Cached name for the 'OnSubmenuClosed' method.
+		/// </summary>
 		public new static readonly StringName OnSubmenuClosed = "OnSubmenuClosed";
 
+		/// <summary>
+		/// Cached name for the 'RefreshButtonClicked' method.
+		/// </summary>
 		public static readonly StringName RefreshButtonClicked = "RefreshButtonClicked";
 	}
 
+	/// <summary>
+	/// Cached StringNames for the properties and fields contained in this class, for fast lookup.
+	/// </summary>
 	public new class PropertyName : NSubmenu.PropertyName
 	{
+		/// <summary>
+		/// Cached name for the 'InitialFocusedControl' property.
+		/// </summary>
 		public new static readonly StringName InitialFocusedControl = "InitialFocusedControl";
 
+		/// <summary>
+		/// Cached name for the 'DebugFriendsButtons' property.
+		/// </summary>
 		public static readonly StringName DebugFriendsButtons = "DebugFriendsButtons";
 
+		/// <summary>
+		/// Cached name for the '_buttonContainer' field.
+		/// </summary>
 		public static readonly StringName _buttonContainer = "_buttonContainer";
 
+		/// <summary>
+		/// Cached name for the '_loadingOverlay' field.
+		/// </summary>
 		public static readonly StringName _loadingOverlay = "_loadingOverlay";
 
+		/// <summary>
+		/// Cached name for the '_loadingFriendsIndicator' field.
+		/// </summary>
 		public static readonly StringName _loadingFriendsIndicator = "_loadingFriendsIndicator";
 
+		/// <summary>
+		/// Cached name for the '_noFriendsLabel' field.
+		/// </summary>
 		public static readonly StringName _noFriendsLabel = "_noFriendsLabel";
 
+		/// <summary>
+		/// Cached name for the '_refreshButton' field.
+		/// </summary>
 		public static readonly StringName _refreshButton = "_refreshButton";
 	}
 
+	/// <summary>
+	/// Cached StringNames for the signals contained in this class, for fast lookup.
+	/// </summary>
 	public new class SignalName : NSubmenu.SignalName
 	{
 	}
@@ -227,13 +273,13 @@ public class NJoinFriendScreen : NSubmenu
 
 	public async Task JoinGameAsync(IClientConnectionInitializer connInitializer)
 	{
-		if (_currentJoinFlow?.NetService?.IsConnected == true)
+		if (_currentJoinFlow?.NetService.IsConnected ?? false)
 		{
 			Log.Warn($"Tried to join game with connection {connInitializer} while we were already joining a game! Ignoring this attempt");
 			return;
 		}
 		_loadingOverlay.Visible = true;
-		_currentJoinFlow = new JoinFlow();
+		_currentJoinFlow = new JoinFlow(new NetClientGameService());
 		try
 		{
 			Log.Info($"Attempting to join game with connection initializer {connInitializer}");
@@ -285,40 +331,53 @@ public class NJoinFriendScreen : NSubmenu
 			}
 			else if (joinResult.sessionState == RunSessionState.Running)
 			{
-				throw new NotImplementedException("Rejoining a game is not yet implemented");
+				NErrorPopup nErrorPopup = NErrorPopup.Create(new NetErrorInfo(NetError.RunInProgress, selfInitiated: false));
+				if (nErrorPopup != null)
+				{
+					NModalContainer.Instance.Add(nErrorPopup);
+				}
+				_currentJoinFlow.NetService.Disconnect(NetError.RunInProgress);
 			}
 		}
 		catch (ClientConnectionFailedException ex)
 		{
 			Log.Error($"Received connection failed exception while joining game: {ex}");
-			NErrorPopup nErrorPopup = NErrorPopup.Create(ex.info);
-			if (nErrorPopup != null)
+			NErrorPopup nErrorPopup2 = NErrorPopup.Create(ex.info);
+			if (nErrorPopup2 != null)
 			{
-				NModalContainer.Instance.Add(nErrorPopup);
+				NModalContainer.Instance.Add(nErrorPopup2);
 			}
-			_currentJoinFlow.NetService?.Disconnect(ex.info.GetReason());
+			_currentJoinFlow.NetService.Disconnect(ex.info.GetReason());
 		}
 		catch (OperationCanceledException)
 		{
 			Log.Warn("Joining was canceled by user");
 		}
-		catch
+		catch (Exception ex3)
 		{
-			Log.Error("Received unexpected exception while joining game! Disconnecting with InternalError");
-			NErrorPopup nErrorPopup2 = NErrorPopup.Create(new NetErrorInfo(NetError.InternalError, selfInitiated: false));
-			if (nErrorPopup2 != null)
+			Log.Error($"Received unexpected exception {ex3.GetType()} while joining game! Disconnecting with InternalError");
+			NErrorPopup nErrorPopup3 = NErrorPopup.Create(new NetErrorInfo(NetError.InternalError, selfInitiated: false));
+			if (nErrorPopup3 != null)
 			{
-				NModalContainer.Instance.Add(nErrorPopup2);
+				NModalContainer.Instance.Add(nErrorPopup3);
 			}
-			_currentJoinFlow.NetService?.Disconnect(NetError.InternalError);
+			_currentJoinFlow.NetService.Disconnect(NetError.InternalError);
 			throw;
 		}
 		finally
 		{
-			_loadingOverlay.Visible = false;
+			if (GodotObject.IsInstanceValid(this))
+			{
+				_loadingOverlay.Visible = false;
+			}
 		}
 	}
 
+	/// <summary>
+	/// Get the method information for all the methods declared in this class.
+	/// This method is used by Godot to register the available methods in the editor.
+	/// Do not call this method.
+	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	internal new static List<MethodInfo> GetGodotMethodList()
 	{
@@ -331,6 +390,7 @@ public class NJoinFriendScreen : NSubmenu
 		return list;
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool InvokeGodotClassMethod(in godot_string_name method, NativeVariantPtrArgs args, out godot_variant ret)
 	{
@@ -378,6 +438,7 @@ public class NJoinFriendScreen : NSubmenu
 		return false;
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool HasGodotClassMethod(in godot_string_name method)
 	{
@@ -404,6 +465,7 @@ public class NJoinFriendScreen : NSubmenu
 		return base.HasGodotClassMethod(in method);
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool SetGodotClassPropertyValue(in godot_string_name name, in godot_variant value)
 	{
@@ -435,6 +497,7 @@ public class NJoinFriendScreen : NSubmenu
 		return base.SetGodotClassPropertyValue(in name, in value);
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool GetGodotClassPropertyValue(in godot_string_name name, out godot_variant value)
 	{
@@ -476,6 +539,11 @@ public class NJoinFriendScreen : NSubmenu
 		return base.GetGodotClassPropertyValue(in name, out value);
 	}
 
+	/// <summary>
+	/// Get the property information for all the properties declared in this class.
+	/// This method is used by Godot to register the available properties in the editor.
+	/// Do not call this method.
+	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	internal new static List<PropertyInfo> GetGodotPropertyList()
 	{
@@ -490,6 +558,7 @@ public class NJoinFriendScreen : NSubmenu
 		return list;
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override void SaveGodotObjectData(GodotSerializationInfo info)
 	{
@@ -501,6 +570,7 @@ public class NJoinFriendScreen : NSubmenu
 		info.AddProperty(PropertyName._refreshButton, Variant.From(in _refreshButton));
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override void RestoreGodotObjectData(GodotSerializationInfo info)
 	{

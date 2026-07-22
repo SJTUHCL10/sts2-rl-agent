@@ -151,12 +151,12 @@ HOTFIX_UPGRADED_FOCUS = 3
 LEAP_UPGRADED_BLOCK = 12
 LIGHTNING_ROD_UPGRADED_BLOCK = 7
 LIGHTNING_ROD_POWER = 2
-MOMENTUM_STRIKE_UPGRADED_DAMAGE = 13
-MOMENTUM_STRIKE_DAMAGE = 10
+MOMENTUM_STRIKE_UPGRADED_DAMAGE = 15
+MOMENTUM_STRIKE_DAMAGE = 11
 SWEEPING_BEAM_UPGRADED_DAMAGE = 9
 SWEEPING_BEAM_DRAW_COUNT = 1
 TURBO_UPGRADED_ENERGY = 3
-UPROAR_UPGRADED_DAMAGE = 7
+UPROAR_UPGRADED_DAMAGE = 8
 UPROAR_HITS = 2
 ALLY_PLAYER_ID = 2
 ALLY_PLAYER_HP = 70
@@ -889,13 +889,14 @@ def test_supercritical_factory_upgrade_gains_six_energy_and_exhausts():
     assert card in combat.exhaust_pile
 
 
-def test_trash_to_treasure_factory_upgrade_adds_innate_and_keeps_power_amount():
+def test_trash_to_treasure_factory_upgrade_reduces_cost_and_keeps_power_amount():
     combat = _make_combat()
     card = make_trash_to_treasure(upgraded=True)
     combat.hand = [card]
     combat.energy = ONE_ENERGY
 
-    assert card.is_innate is True
+    assert card.is_innate is False
+    assert card.cost == 0
     assert combat.play_card(HAND_CARD_INDEX)
 
     assert combat.player.get_power_amount(PowerId.TRASH_TO_TREASURE) == TRASH_TO_TREASURE_POWER

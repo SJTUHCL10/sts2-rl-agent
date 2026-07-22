@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Creatures;
+using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using MegaCrit.Sts2.Core.Helpers;
 using MegaCrit.Sts2.Core.Localization;
 using MegaCrit.Sts2.Core.Models.Powers;
@@ -12,6 +13,8 @@ namespace MegaCrit.Sts2.Core.Models.Monsters.Mocks;
 
 public sealed class MockArtifactMonster : MonsterModel
 {
+	public override bool IsMock => true;
+
 	public override LocString Title => MonsterModel.L10NMonsterLookup("BIG_DUMMY.name");
 
 	protected override string VisualsPath => SceneHelper.GetScenePath("creature_visuals/defect");
@@ -32,7 +35,7 @@ public sealed class MockArtifactMonster : MonsterModel
 	public override async Task AfterAddedToRoom()
 	{
 		await base.AfterAddedToRoom();
-		await PowerCmd.Apply<ArtifactPower>(base.Creature, 1m, base.Creature, null);
+		await PowerCmd.Apply<ArtifactPower>(new ThrowingPlayerChoiceContext(), base.Creature, 1m, base.Creature, null);
 	}
 
 	private Task NothingMove(IReadOnlyList<Creature> targets)

@@ -15,7 +15,7 @@ public sealed class WroughtInWar : CardModel
 	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(new DynamicVar[2]
 	{
 		new DamageVar(7m, ValueProp.Move),
-		new ForgeVar(5)
+		new ForgeVar(7)
 	});
 
 	protected override IEnumerable<IHoverTip> ExtraHoverTips => HoverTipFactory.FromForge();
@@ -28,7 +28,7 @@ public sealed class WroughtInWar : CardModel
 	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
 	{
 		ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
-		await DamageCmd.Attack(base.DynamicVars.Damage.BaseValue).FromCard(this).Targeting(cardPlay.Target)
+		await DamageCmd.Attack(base.DynamicVars.Damage.BaseValue).FromCard(this, cardPlay).Targeting(cardPlay.Target)
 			.WithHitFx("vfx/vfx_attack_blunt")
 			.Execute(choiceContext);
 		await ForgeCmd.Forge(base.DynamicVars.Forge.IntValue, base.Owner, this);

@@ -6,67 +6,144 @@ using Godot.Bridge;
 using Godot.NativeInterop;
 using MegaCrit.Sts2.Core.Assets;
 using MegaCrit.Sts2.Core.Helpers;
-using MegaCrit.Sts2.Core.Nodes.CommonUi;
 
 namespace MegaCrit.Sts2.Core.Nodes.Combat;
 
 [ScriptPath("res://src/Core/Nodes/Combat/NTargetingArrow.cs")]
 public class NTargetingArrow : Node2D
 {
+	/// <summary>
+	/// Cached StringNames for the methods contained in this class, for fast lookup.
+	/// </summary>
 	public new class MethodName : Node2D.MethodName
 	{
+		/// <summary>
+		/// Cached name for the '_Ready' method.
+		/// </summary>
 		public new static readonly StringName _Ready = "_Ready";
 
+		/// <summary>
+		/// Cached name for the '_Process' method.
+		/// </summary>
 		public new static readonly StringName _Process = "_Process";
 
+		/// <summary>
+		/// Cached name for the 'UpdateArrowPosition' method.
+		/// </summary>
 		public static readonly StringName UpdateArrowPosition = "UpdateArrowPosition";
 
+		/// <summary>
+		/// Cached name for the 'SetHighlightingOn' method.
+		/// </summary>
 		public static readonly StringName SetHighlightingOn = "SetHighlightingOn";
 
+		/// <summary>
+		/// Cached name for the 'SetHighlightingOff' method.
+		/// </summary>
 		public static readonly StringName SetHighlightingOff = "SetHighlightingOff";
 
+		/// <summary>
+		/// Cached name for the 'UpdateSegments' method.
+		/// </summary>
 		public static readonly StringName UpdateSegments = "UpdateSegments";
 
+		/// <summary>
+		/// Cached name for the 'StartDrawingFrom' method.
+		/// </summary>
 		public static readonly StringName StartDrawingFrom = "StartDrawingFrom";
 
+		/// <summary>
+		/// Cached name for the 'StopDrawing' method.
+		/// </summary>
 		public static readonly StringName StopDrawing = "StopDrawing";
 
+		/// <summary>
+		/// Cached name for the '_ExitTree' method.
+		/// </summary>
+		public new static readonly StringName _ExitTree = "_ExitTree";
+
+		/// <summary>
+		/// Cached name for the 'UpdateDrawingTo' method.
+		/// </summary>
 		public static readonly StringName UpdateDrawingTo = "UpdateDrawingTo";
 	}
 
+	/// <summary>
+	/// Cached StringNames for the properties and fields contained in this class, for fast lookup.
+	/// </summary>
 	public new class PropertyName : Node2D.PropertyName
 	{
+		/// <summary>
+		/// Cached name for the 'From' property.
+		/// </summary>
 		public static readonly StringName From = "From";
 
+		/// <summary>
+		/// Cached name for the '_fromPos' field.
+		/// </summary>
 		public static readonly StringName _fromPos = "_fromPos";
 
+		/// <summary>
+		/// Cached name for the '_fromControl' field.
+		/// </summary>
 		public static readonly StringName _fromControl = "_fromControl";
 
+		/// <summary>
+		/// Cached name for the '_toPosition' field.
+		/// </summary>
 		public static readonly StringName _toPosition = "_toPosition";
 
+		/// <summary>
+		/// Cached name for the '_segments' field.
+		/// </summary>
 		public static readonly StringName _segments = "_segments";
 
+		/// <summary>
+		/// Cached name for the '_arrowHead' field.
+		/// </summary>
 		public static readonly StringName _arrowHead = "_arrowHead";
 
+		/// <summary>
+		/// Cached name for the '_arrowHeadTween' field.
+		/// </summary>
 		public static readonly StringName _arrowHeadTween = "_arrowHeadTween";
 
+		/// <summary>
+		/// Cached name for the '_initialized' field.
+		/// </summary>
 		public static readonly StringName _initialized = "_initialized";
 
+		/// <summary>
+		/// Cached name for the '_followMouse' field.
+		/// </summary>
 		public static readonly StringName _followMouse = "_followMouse";
 	}
 
+	/// <summary>
+	/// Cached StringNames for the signals contained in this class, for fast lookup.
+	/// </summary>
 	public new class SignalName : Node2D.SignalName
 	{
 	}
 
 	private const int _segmentCount = 19;
 
+	/// <summary>
+	/// Where the arrow starts from.
+	/// </summary>
 	private Vector2 _fromPos;
 
 	private Control? _fromControl;
 
+	/// <summary>
+	/// Where the arrow tip is trying to be.
+	/// </summary>
 	private Vector2 _toPosition;
 
+	/// <summary>
+	/// Where the arrows tip is currently at. Typically making its way towards the _toPosition, as it lerps between targets.
+	/// Used only when the game is in controller mode, since in mouse mode we are always tracking the mouse position.
+	/// </summary>
 	private Vector2? _currentArrowPos;
 
 	private static readonly string _segmentHeadPath = ImageHelper.GetImagePath("ui/combat/targeting_arrow_head.png");
@@ -126,7 +203,7 @@ public class NTargetingArrow : Node2D
 				UpdateDrawingTo(GetViewport().GetMousePosition());
 				UpdateArrowPosition(_toPosition);
 			}
-			else
+			else if (_currentArrowPos.HasValue)
 			{
 				_currentArrowPos = _currentArrowPos.Value.Lerp(_toPosition, (float)delta * 14f);
 				UpdateArrowPosition(_currentArrowPos.Value);
@@ -188,11 +265,20 @@ public class NTargetingArrow : Node2D
 	public void StartDrawingFrom(Vector2 from, bool usingController)
 	{
 		_followMouse = !usingController;
-		if (!NControllerManager.Instance.IsUsingController)
+		if (_followMouse)
 		{
 			Input.MouseMode = Input.MouseModeEnum.Hidden;
 		}
 		_fromPos = from;
+		if (usingController)
+		{
+			_currentArrowPos = from;
+			_toPosition = from;
+		}
+		else
+		{
+			_currentArrowPos = null;
+		}
 		base.Visible = !NCombatUi.IsDebugHideTargetingUi;
 	}
 
@@ -200,14 +286,23 @@ public class NTargetingArrow : Node2D
 	{
 		_followMouse = !usingController;
 		base.ZIndex = control.ZIndex + 1;
-		Input.MouseMode = Input.MouseModeEnum.Hidden;
 		_fromControl = control;
+		if (usingController)
+		{
+			_currentArrowPos = control.GlobalPosition;
+			_toPosition = control.GlobalPosition;
+		}
+		else
+		{
+			Input.MouseMode = Input.MouseModeEnum.Hidden;
+			_currentArrowPos = null;
+		}
 		base.Visible = !NCombatUi.IsDebugHideTargetingUi;
 	}
 
 	public void StopDrawing()
 	{
-		if (!NControllerManager.Instance.IsUsingController)
+		if (_followMouse)
 		{
 			Input.MouseMode = Input.MouseModeEnum.Visible;
 		}
@@ -215,6 +310,14 @@ public class NTargetingArrow : Node2D
 		_currentArrowPos = null;
 		base.Visible = false;
 		SetHighlightingOff();
+	}
+
+	public override void _ExitTree()
+	{
+		if (_followMouse)
+		{
+			Input.MouseMode = Input.MouseModeEnum.Visible;
+		}
 	}
 
 	public void UpdateDrawingTo(Vector2 position)
@@ -226,10 +329,15 @@ public class NTargetingArrow : Node2D
 		}
 	}
 
+	/// <summary>
+	/// Get the method information for all the methods declared in this class.
+	/// This method is used by Godot to register the available methods in the editor.
+	/// Do not call this method.
+	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	internal static List<MethodInfo> GetGodotMethodList()
 	{
-		List<MethodInfo> list = new List<MethodInfo>(9);
+		List<MethodInfo> list = new List<MethodInfo>(10);
 		list.Add(new MethodInfo(MethodName._Ready, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName._Process, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
 		{
@@ -256,6 +364,7 @@ public class NTargetingArrow : Node2D
 			new PropertyInfo(Variant.Type.Bool, "usingController", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false)
 		}, null));
 		list.Add(new MethodInfo(MethodName.StopDrawing, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
+		list.Add(new MethodInfo(MethodName._ExitTree, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName.UpdateDrawingTo, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
 		{
 			new PropertyInfo(Variant.Type.Vector2, "position", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false)
@@ -263,6 +372,7 @@ public class NTargetingArrow : Node2D
 		return list;
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool InvokeGodotClassMethod(in godot_string_name method, NativeVariantPtrArgs args, out godot_variant ret)
 	{
@@ -314,6 +424,12 @@ public class NTargetingArrow : Node2D
 			ret = default(godot_variant);
 			return true;
 		}
+		if (method == MethodName._ExitTree && args.Count == 0)
+		{
+			_ExitTree();
+			ret = default(godot_variant);
+			return true;
+		}
 		if (method == MethodName.UpdateDrawingTo && args.Count == 1)
 		{
 			UpdateDrawingTo(VariantUtils.ConvertTo<Vector2>(in args[0]));
@@ -323,6 +439,7 @@ public class NTargetingArrow : Node2D
 		return base.InvokeGodotClassMethod(in method, args, out ret);
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool HasGodotClassMethod(in godot_string_name method)
 	{
@@ -358,6 +475,10 @@ public class NTargetingArrow : Node2D
 		{
 			return true;
 		}
+		if (method == MethodName._ExitTree)
+		{
+			return true;
+		}
 		if (method == MethodName.UpdateDrawingTo)
 		{
 			return true;
@@ -365,6 +486,7 @@ public class NTargetingArrow : Node2D
 		return base.HasGodotClassMethod(in method);
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool SetGodotClassPropertyValue(in godot_string_name name, in godot_variant value)
 	{
@@ -411,6 +533,7 @@ public class NTargetingArrow : Node2D
 		return base.SetGodotClassPropertyValue(in name, in value);
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool GetGodotClassPropertyValue(in godot_string_name name, out godot_variant value)
 	{
@@ -463,6 +586,11 @@ public class NTargetingArrow : Node2D
 		return base.GetGodotClassPropertyValue(in name, out value);
 	}
 
+	/// <summary>
+	/// Get the property information for all the properties declared in this class.
+	/// This method is used by Godot to register the available properties in the editor.
+	/// Do not call this method.
+	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	internal static List<PropertyInfo> GetGodotPropertyList()
 	{
@@ -479,6 +607,7 @@ public class NTargetingArrow : Node2D
 		return list;
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override void SaveGodotObjectData(GodotSerializationInfo info)
 	{
@@ -495,6 +624,7 @@ public class NTargetingArrow : Node2D
 		info.AddProperty(PropertyName._followMouse, Variant.From(in _followMouse));
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override void RestoreGodotObjectData(GodotSerializationInfo info)
 	{

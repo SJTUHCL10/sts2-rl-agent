@@ -21,10 +21,11 @@ public sealed class Claws : RelicModel
 
 	public override async Task AfterObtained()
 	{
-		CardSelectorPrefs cardSelectorPrefs = new CardSelectorPrefs(base.SelectionScreenPrompt, 0, base.DynamicVars.Cards.IntValue);
-		cardSelectorPrefs.Cancelable = false;
-		cardSelectorPrefs.RequireManualConfirmation = true;
-		CardSelectorPrefs prefs = cardSelectorPrefs;
+		CardSelectorPrefs prefs = new CardSelectorPrefs(base.SelectionScreenPrompt, 0, base.DynamicVars.Cards.IntValue)
+		{
+			Cancelable = false,
+			RequireManualConfirmation = true
+		};
 		List<CardTransformation> transformations = (await CardSelectCmd.FromDeckForTransformation(base.Owner, prefs, (CardModel c) => new CardTransformation(c, CreateMaulFromOriginal(c, forPreview: true)))).Select((CardModel original) => new CardTransformation(original, CreateMaulFromOriginal(original, forPreview: false))).ToList();
 		await CardCmd.Transform(transformations, base.Owner.PlayerRng.Transformations);
 	}

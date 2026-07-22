@@ -19,14 +19,14 @@ public sealed class MinionDiveBomb : CardModel
 	public override IEnumerable<CardKeyword> CanonicalKeywords => new global::_003C_003Ez__ReadOnlySingleElementList<CardKeyword>(CardKeyword.Exhaust);
 
 	public MinionDiveBomb()
-		: base(1, CardType.Attack, CardRarity.Token, TargetType.AnyEnemy)
+		: base(0, CardType.Attack, CardRarity.Token, TargetType.AnyEnemy)
 	{
 	}
 
 	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
 	{
 		ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
-		await DamageCmd.Attack(base.DynamicVars.Damage.BaseValue).FromCard(this).WithAttackerAnim("Cast", 1f)
+		await DamageCmd.Attack(base.DynamicVars.Damage.BaseValue).FromCard(this, cardPlay).WithAttackerAnim("Cast", 1f)
 			.Targeting(cardPlay.Target)
 			.WithAttackerFx(() => NMinionDiveBombVfx.Create(base.Owner.Creature, cardPlay.Target))
 			.Execute(choiceContext);

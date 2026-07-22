@@ -15,7 +15,7 @@ public sealed class SolarStrike : CardModel
 
 	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(new DynamicVar[2]
 	{
-		new DamageVar(8m, ValueProp.Move),
+		new DamageVar(9m, ValueProp.Move),
 		new StarsVar(1)
 	});
 
@@ -27,7 +27,7 @@ public sealed class SolarStrike : CardModel
 	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
 	{
 		ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
-		await DamageCmd.Attack(base.DynamicVars.Damage.BaseValue).FromCard(this).Targeting(cardPlay.Target)
+		await DamageCmd.Attack(base.DynamicVars.Damage.BaseValue).FromCard(this, cardPlay).Targeting(cardPlay.Target)
 			.WithHitFx("vfx/vfx_attack_slash")
 			.Execute(choiceContext);
 		await PlayerCmd.GainStars(base.DynamicVars.Stars.BaseValue, base.Owner);

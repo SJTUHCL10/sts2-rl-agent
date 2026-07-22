@@ -8,7 +8,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from sts2_env.core.creature import Creature
-from sts2_env.core.enums import CombatSide, MoveRepeatType, PowerId, ValueProp
+from sts2_env.core.enums import CardId, CombatSide, MoveRepeatType, PowerId, ValueProp
 from sts2_env.core.damage import calculate_damage, apply_damage
 from sts2_env.core.rng import Rng
 from sts2_env.monsters.intents import (
@@ -21,7 +21,7 @@ from sts2_env.monsters.state_machine import (
 )
 from sts2_env.monsters.block import gain_move_block
 from sts2_env.monsters.targets import apply_power_to_living_player_targets, living_player_targets
-from sts2_env.cards.status import make_burn, make_dazed, make_slimed
+from sts2_env.cards.status import make_burn, make_dazed, make_slimed, make_wither
 from sts2_env.monsters.shared import TORCH_HEAD_AMALGAM_MONSTER_ID
 
 if TYPE_CHECKING:
@@ -69,6 +69,113 @@ def _gain_unpowered_block(creature: Creature, amount: int, combat: CombatState) 
         from sts2_env.core.hooks import fire_after_block_gained
 
         fire_after_block_gained(creature, gained, combat, ValueProp.UNPOWERED, None)
+
+
+# ---- Aeonglass (v0.109.0 boss) ----
+
+AEONGLASS_MONSTER_ID = "AEONGLASS"
+AEONGLASS_BASE_HP = 512
+AEONGLASS_TOUGH_HP = 535
+AEONGLASS_BASE_EBB_DAMAGE = 22
+AEONGLASS_DEADLY_EBB_DAMAGE = 26
+AEONGLASS_EBB_BLOCK = 33
+AEONGLASS_BASE_LASER_DAMAGE = 11
+AEONGLASS_DEADLY_LASER_DAMAGE = 12
+AEONGLASS_LASER_REPEAT = 2
+AEONGLASS_BASE_STRENGTH = 3
+AEONGLASS_DEADLY_STRENGTH = 4
+AEONGLASS_BASE_WITHER = 1
+AEONGLASS_DEADLY_WITHER = 2
+AEONGLASS_EBB_MOVE = "EBB_MOVE"
+AEONGLASS_EYE_LASERS_MOVE = "EYE_LASERS_MOVE"
+AEONGLASS_INCREASING_INTENSITY_MOVE = "INCREASING_INTENSITY_MOVE"
+
+
+def create_aeonglass(rng: Rng, ascension_level: int = 0) -> tuple[Creature, MonsterAI]:
+    hp = _ascension_value(
+        ascension_level, TOUGH_ENEMIES_ASCENSION_LEVEL, AEONGLASS_TOUGH_HP, AEONGLASS_BASE_HP
+    )
+    ebb_damage = _ascension_value(
+        ascension_level,
+        DEADLY_ENEMIES_ASCENSION_LEVEL,
+        AEONGLASS_DEADLY_EBB_DAMAGE,
+        AEONGLASS_BASE_EBB_DAMAGE,
+    )
+    laser_damage = _ascension_value(
+        ascension_level,
+        DEADLY_ENEMIES_ASCENSION_LEVEL,
+        AEONGLASS_DEADLY_LASER_DAMAGE,
+        AEONGLASS_BASE_LASER_DAMAGE,
+    )
+    creature = Creature(max_hp=hp, monster_id=AEONGLASS_MONSTER_ID)
+    creature.apply_power(PowerId.ARTIFACT, 3, applier=creature)
+    encounter_state = {"additional_strength": 0, "wither_upgrades": 0}
+
+    def ebb(combat: CombatState) -> None:
+        _deal_damage_to_player(combat, creature, ebb_damage)
+        _gain_block(creature, AEONGLASS_EBB_BLOCK, combat)
+
+    def eye_lasers(combat: CombatState) -> None:
+        _deal_damage_to_player(combat, creature, laser_damage, hits=AEONGLASS_LASER_REPEAT)
+
+    def increasing_intensity(combat: CombatState) -> None:
+        wither_amount = _ascension_value(
+            _combat_ascension_level(combat),
+            DEADLY_ENEMIES_ASCENSION_LEVEL,
+            AEONGLASS_DEADLY_WITHER,
+            AEONGLASS_BASE_WITHER,
+        )
+        for player_state in combat.combat_player_states:
+            for existing in player_state.all_piles:
+                if existing.card_id is CardId.WITHER:
+                    existing.effect_vars["damage"] = existing.effect_vars.get("damage", 3) + 3
+                    existing.base_damage = existing.effect_vars["damage"]
+            for _ in range(wither_amount):
+                card = make_wither()
+                for _ in range(encounter_state["wither_upgrades"]):
+                    card.effect_vars["damage"] = card.effect_vars.get("damage", 3) + 3
+                    card.base_damage = card.effect_vars["damage"]
+                combat.add_generated_card_to_creature_discard(player_state.creature, card)
+        base_strength = _ascension_value(
+            _combat_ascension_level(combat),
+            DEADLY_ENEMIES_ASCENSION_LEVEL,
+            AEONGLASS_DEADLY_STRENGTH,
+            AEONGLASS_BASE_STRENGTH,
+        )
+        creature.apply_power(
+            PowerId.STRENGTH,
+            base_strength + encounter_state["additional_strength"],
+            applier=creature,
+        )
+        encounter_state["additional_strength"] += 1
+        encounter_state["wither_upgrades"] += 1
+
+    states: dict[str, MonsterState] = {
+        AEONGLASS_EBB_MOVE: MoveState(
+            AEONGLASS_EBB_MOVE,
+            ebb,
+            [attack_intent(ebb_damage), defend_intent()],
+            follow_up_id=AEONGLASS_EYE_LASERS_MOVE,
+        ),
+        AEONGLASS_EYE_LASERS_MOVE: MoveState(
+            AEONGLASS_EYE_LASERS_MOVE,
+            eye_lasers,
+            [multi_attack_intent(laser_damage, AEONGLASS_LASER_REPEAT)],
+            follow_up_id=AEONGLASS_INCREASING_INTENSITY_MOVE,
+        ),
+        AEONGLASS_INCREASING_INTENSITY_MOVE: MoveState(
+            AEONGLASS_INCREASING_INTENSITY_MOVE,
+            increasing_intensity,
+            [status_intent(), buff_intent()],
+            follow_up_id=AEONGLASS_EBB_MOVE,
+        ),
+    }
+    return creature, MonsterAI(states, AEONGLASS_EBB_MOVE)
+
+
+def apply_aeonglass_room_setup(combat: CombatState) -> None:
+    for state in combat.combat_player_states:
+        state.creature.apply_power(PowerId.WITHERING_PRESENCE, 6)
 
 
 # ========================================================================

@@ -85,9 +85,9 @@ public sealed class PollinousCore : RelicModel
 		InvokeDisplayAmountChanged();
 	}
 
-	public override Task BeforeSideTurnStart(PlayerChoiceContext choiceContext, CombatSide side, CombatState combatState)
+	public override Task BeforeHandDraw(Player player, PlayerChoiceContext choiceContext, ICombatState combatState)
 	{
-		if (side != base.Owner.Creature.Side)
+		if (player != base.Owner)
 		{
 			return Task.CompletedTask;
 		}
@@ -107,7 +107,7 @@ public sealed class PollinousCore : RelicModel
 		{
 			return count;
 		}
-		if (TurnsSeen != base.DynamicVars["Turns"].IntValue)
+		if (TurnsSeen < base.DynamicVars["Turns"].IntValue)
 		{
 			return count;
 		}

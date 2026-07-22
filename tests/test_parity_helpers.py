@@ -3345,9 +3345,9 @@ class TestStatusParity:
         combat.energy = 2
 
         assert combat.play_card(0)
-        assert len(combat.hand) == 0
-        assert len(combat.exhaust_pile) >= 9
-        assert combat.player.has_power(PowerId.INTANGIBLE)
+        assert len(combat.hand) == 9
+        assert card in combat.discard_pile
+        assert not combat.player.has_power(PowerId.INTANGIBLE)
 
     def test_transfigure_grants_replay_and_increases_cost(self):
         combat = _make_combat(create_necrobinder_starter_deck(), "Necrobinder")

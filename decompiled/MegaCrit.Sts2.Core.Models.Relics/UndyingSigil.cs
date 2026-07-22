@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.Entities.Creatures;
 using MegaCrit.Sts2.Core.Entities.Relics;
 using MegaCrit.Sts2.Core.HoverTips;
@@ -8,6 +9,10 @@ using MegaCrit.Sts2.Core.ValueProps;
 
 namespace MegaCrit.Sts2.Core.Models.Relics;
 
+/// <summary>
+/// This relic doesn't actually _do_ anything; Doom checks for its existence and makes enemy Doom trigger at the
+/// start of the enemy's turn instead of the end of the enemy's turn (so enemies die before they can attack).
+/// </summary>
 public sealed class UndyingSigil : RelicModel
 {
 	private const string _damageDecrease = "DamageDecrease";
@@ -18,7 +23,7 @@ public sealed class UndyingSigil : RelicModel
 
 	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.FromPower<DoomPower>());
 
-	public override decimal ModifyDamageMultiplicative(Creature? target, decimal amount, ValueProp props, Creature? dealer, CardModel? cardSource)
+	public override decimal ModifyDamageMultiplicative(Creature? target, decimal amount, ValueProp props, Creature? dealer, CardModel? cardSource, CardPlay? cardPlay)
 	{
 		if (dealer == null)
 		{

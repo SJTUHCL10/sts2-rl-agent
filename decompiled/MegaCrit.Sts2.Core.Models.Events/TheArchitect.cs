@@ -53,7 +53,7 @@ public sealed class TheArchitect : EventModel
 
 	public override EncounterModel CanonicalEncounter => ModelDb.Encounter<TheArchitectEventEncounter>();
 
-	protected override string LocTable => "ancients";
+	public override string LocTable => "ancients";
 
 	private AncientDialogue? Dialogue
 	{
@@ -202,117 +202,118 @@ public sealed class TheArchitect : EventModel
 
 	private static AncientDialogueSet DefineDialogues()
 	{
-		AncientDialogueSet ancientDialogueSet = new AncientDialogueSet();
-		ancientDialogueSet.FirstVisitEverDialogue = null;
-		ancientDialogueSet.CharacterDialogues = new Dictionary<string, IReadOnlyList<AncientDialogue>>
+		return new AncientDialogueSet
 		{
-			[CharKey<Ironclad>()] = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[3]
+			FirstVisitEverDialogue = null,
+			CharacterDialogues = new Dictionary<string, IReadOnlyList<AncientDialogue>>
 			{
-				new AncientDialogue("", "")
+				[CharKey<Ironclad>()] = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[3]
 				{
-					VisitIndex = 0,
-					EndAttackers = ArchitectAttackers.Both
-				},
-				new AncientDialogue("", "", "")
+					new AncientDialogue("", "")
+					{
+						VisitIndex = 0,
+						EndAttackers = ArchitectAttackers.Both
+					},
+					new AncientDialogue("", "", "")
+					{
+						VisitIndex = 1,
+						EndAttackers = ArchitectAttackers.Both
+					},
+					new AncientDialogue("", "", "")
+					{
+						VisitIndex = 2,
+						EndAttackers = ArchitectAttackers.Both
+					}
+				}),
+				[CharKey<Silent>()] = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[4]
 				{
-					VisitIndex = 1,
-					EndAttackers = ArchitectAttackers.Both
-				},
-				new AncientDialogue("", "", "")
+					new AncientDialogue("")
+					{
+						VisitIndex = 0,
+						StartAttackers = ArchitectAttackers.Player,
+						EndAttackers = ArchitectAttackers.Both
+					},
+					new AncientDialogue("")
+					{
+						VisitIndex = 1,
+						StartAttackers = ArchitectAttackers.Player,
+						EndAttackers = ArchitectAttackers.Both
+					},
+					new AncientDialogue("")
+					{
+						VisitIndex = 2,
+						StartAttackers = ArchitectAttackers.Player,
+						EndAttackers = ArchitectAttackers.Architect
+					},
+					new AncientDialogue("")
+					{
+						VisitIndex = 3,
+						StartAttackers = ArchitectAttackers.Player,
+						EndAttackers = ArchitectAttackers.Architect
+					}
+				}),
+				[CharKey<Defect>()] = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[3]
 				{
-					VisitIndex = 2,
-					EndAttackers = ArchitectAttackers.Both
-				}
-			}),
-			[CharKey<Silent>()] = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[4]
-			{
-				new AncientDialogue("")
+					new AncientDialogue("", "", "")
+					{
+						VisitIndex = 0,
+						EndAttackers = ArchitectAttackers.Both
+					},
+					new AncientDialogue("", "", "")
+					{
+						VisitIndex = 1,
+						EndAttackers = ArchitectAttackers.Both
+					},
+					new AncientDialogue("", "", "")
+					{
+						VisitIndex = 2,
+						EndAttackers = ArchitectAttackers.Both
+					}
+				}),
+				[CharKey<Necrobinder>()] = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[4]
 				{
-					VisitIndex = 0,
-					StartAttackers = ArchitectAttackers.Player,
-					EndAttackers = ArchitectAttackers.Both
-				},
-				new AncientDialogue("")
+					new AncientDialogue("", "")
+					{
+						VisitIndex = 0,
+						EndAttackers = ArchitectAttackers.Both
+					},
+					new AncientDialogue("", "")
+					{
+						VisitIndex = 1,
+						EndAttackers = ArchitectAttackers.Both
+					},
+					new AncientDialogue("", "")
+					{
+						VisitIndex = 2,
+						EndAttackers = ArchitectAttackers.Both
+					},
+					new AncientDialogue("", "", "")
+					{
+						VisitIndex = 3,
+						EndAttackers = ArchitectAttackers.Both
+					}
+				}),
+				[CharKey<Regent>()] = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[3]
 				{
-					VisitIndex = 1,
-					StartAttackers = ArchitectAttackers.Player,
-					EndAttackers = ArchitectAttackers.Both
-				},
-				new AncientDialogue("")
-				{
-					VisitIndex = 2,
-					StartAttackers = ArchitectAttackers.Player,
-					EndAttackers = ArchitectAttackers.Architect
-				},
-				new AncientDialogue("")
-				{
-					VisitIndex = 3,
-					StartAttackers = ArchitectAttackers.Player,
-					EndAttackers = ArchitectAttackers.Architect
-				}
-			}),
-			[CharKey<Defect>()] = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[3]
-			{
-				new AncientDialogue("", "", "")
-				{
-					VisitIndex = 0,
-					EndAttackers = ArchitectAttackers.Both
-				},
-				new AncientDialogue("", "", "")
-				{
-					VisitIndex = 1,
-					EndAttackers = ArchitectAttackers.Both
-				},
-				new AncientDialogue("", "", "")
-				{
-					VisitIndex = 2,
-					EndAttackers = ArchitectAttackers.Both
-				}
-			}),
-			[CharKey<Necrobinder>()] = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[4]
-			{
-				new AncientDialogue("", "")
-				{
-					VisitIndex = 0,
-					EndAttackers = ArchitectAttackers.Both
-				},
-				new AncientDialogue("", "")
-				{
-					VisitIndex = 1,
-					EndAttackers = ArchitectAttackers.Both
-				},
-				new AncientDialogue("", "")
-				{
-					VisitIndex = 2,
-					EndAttackers = ArchitectAttackers.Both
-				},
-				new AncientDialogue("", "", "")
-				{
-					VisitIndex = 3,
-					EndAttackers = ArchitectAttackers.Both
-				}
-			}),
-			[CharKey<Regent>()] = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[3]
-			{
-				new AncientDialogue("", "", "")
-				{
-					VisitIndex = 0,
-					EndAttackers = ArchitectAttackers.Both
-				},
-				new AncientDialogue("", "", "")
-				{
-					VisitIndex = 1,
-					EndAttackers = ArchitectAttackers.Both
-				},
-				new AncientDialogue("", "", "")
-				{
-					VisitIndex = 2,
-					EndAttackers = ArchitectAttackers.Both
-				}
-			})
+					new AncientDialogue("", "", "")
+					{
+						VisitIndex = 0,
+						EndAttackers = ArchitectAttackers.Both
+					},
+					new AncientDialogue("", "", "")
+					{
+						VisitIndex = 1,
+						EndAttackers = ArchitectAttackers.Both
+					},
+					new AncientDialogue("", "", "")
+					{
+						VisitIndex = 2,
+						EndAttackers = ArchitectAttackers.Both
+					}
+				})
+			},
+			AgnosticDialogues = Array.Empty<AncientDialogue>()
 		};
-		ancientDialogueSet.AgnosticDialogues = Array.Empty<AncientDialogue>();
-		return ancientDialogueSet;
 	}
 
 	private void LoadDialogue()
@@ -518,7 +519,7 @@ public sealed class TheArchitect : EventModel
 
 	private void ShowSpeechBubble(AncientDialogueLine line, Creature speaker)
 	{
-		SpeechBubble = TalkCmd.Play(line.LineText, speaker, double.MaxValue);
+		SpeechBubble = TalkCmd.Play(line.LineText, speaker, (line.Speaker == AncientDialogueSpeaker.Ancient) ? VfxColor.DarkGray : base.Owner.Character.SpeechBubbleColor, VfxDuration.Forever);
 	}
 
 	private Creature? GetSpeaker(AncientDialogueSpeaker speaker)
@@ -533,6 +534,6 @@ public sealed class TheArchitect : EventModel
 
 	private MegaAnimationState? GetArchitectAnimationState()
 	{
-		return NCombatRoom.Instance?.GetCreatureNode(ArchitectCreature)?.SpineController?.GetAnimationState();
+		return NCombatRoom.Instance?.GetCreatureNode(ArchitectCreature)?.SpineAnimation.GetAnimationState();
 	}
 }

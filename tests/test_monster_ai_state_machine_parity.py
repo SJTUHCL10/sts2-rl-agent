@@ -58,7 +58,7 @@ from sts2_env.encounters.act4 import (
     setup_sludge_spinner_weak,
     setup_soul_fysh_boss,
     setup_skulking_colony_elite,
-    setup_toadpoles_normal,
+    setup_seapunk_normal,
     setup_toadpoles_weak,
     setup_terror_eel_elite,
     setup_two_tailed_rats_normal,
@@ -749,8 +749,8 @@ DOORMAKER_DOOR_HP_SCALE_A8 = 25
 DOORMAKER_DOOR_STRENGTH_SCALE_A9 = 4
 TORCH_HEAD_AMALGAM_BASE_HP = 199
 TORCH_HEAD_AMALGAM_A8_HP = 211
-TORCH_HEAD_AMALGAM_TACKLE_DAMAGE_A9 = 19
-TORCH_HEAD_AMALGAM_WEAK_TACKLE_DAMAGE_A9 = 15
+TORCH_HEAD_AMALGAM_TACKLE_DAMAGE_A9 = 32
+TORCH_HEAD_AMALGAM_WEAK_TACKLE_DAMAGE_A9 = 16
 TORCH_HEAD_AMALGAM_SOUL_BEAM_DAMAGE = 8
 TORCH_HEAD_AMALGAM_SOUL_BEAM_HITS = 3
 QUEEN_BASE_HP = 400
@@ -6524,13 +6524,13 @@ class TestFixedRotation:
         ] == ["SPIKEN_MOVE", "WHIRL_MOVE"]
 
         toad_normal_combat = _make_combat(60)
-        setup_toadpoles_normal(toad_normal_combat, Rng(60))
+        setup_seapunk_normal(toad_normal_combat, Rng(60))
         assert [enemy.monster_id for enemy in toad_normal_combat.enemies] == [
             "CALCIFIED_CULTIST",
-            "TOADPOLE",
+            "SEAPUNK",
         ]
         assert toad_normal_combat.enemy_ais[toad_normal_combat.enemies[1].combat_id].current_move.state_id == (
-            "WHIRL_MOVE"
+            "SEA_KICK_MOVE"
         )
 
     def test_act4_normal_cultist_fossil_and_gremlin_merc_match_original_moves(self):

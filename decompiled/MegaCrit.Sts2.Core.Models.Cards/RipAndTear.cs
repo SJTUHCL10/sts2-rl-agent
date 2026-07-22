@@ -18,13 +18,13 @@ public sealed class RipAndTear : CardModel
 	public override CardPoolModel VisualCardPool => ModelDb.CardPool<DefectCardPool>();
 
 	public RipAndTear()
-		: base(1, CardType.Attack, CardRarity.Uncommon, TargetType.RandomEnemy)
+		: base(1, CardType.Attack, CardRarity.Event, TargetType.RandomEnemy)
 	{
 	}
 
 	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
 	{
-		await DamageCmd.Attack(base.DynamicVars.Damage.BaseValue).WithHitCount(2).FromCard(this)
+		await DamageCmd.Attack(base.DynamicVars.Damage.BaseValue).WithHitCount(2).FromCard(this, cardPlay)
 			.TargetingRandomOpponents(base.CombatState)
 			.WithHitVfxNode((Creature t) => NScratchVfx.Create(t, goingRight: true))
 			.Execute(choiceContext);

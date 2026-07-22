@@ -6,6 +6,11 @@ using MegaCrit.Sts2.Core.Helpers;
 
 namespace MegaCrit.Sts2.Core.ControllerInput;
 
+/// <summary>
+/// Maps controller specific behavior for different types of controllers.
+/// - used to override certain default controller inputs based on the controller types (ie, ps5 controllers use the touchpad to open the map)
+/// - Used to dynamically update the hotkey icons depending on what type of controller you are using.
+/// </summary>
 public abstract class ControllerConfig
 {
 	private Dictionary<string, string>? _glyphs;
@@ -14,6 +19,10 @@ public abstract class ControllerConfig
 
 	public virtual ControllerMappingType ControllerMappingType => ControllerMappingType.Default;
 
+	/// <summary>
+	/// The mapping between Steam Input Actions (defined in the vdf file), and the default controller input they
+	/// correspond to.
+	/// </summary>
 	public virtual Dictionary<string, StringName> SteamInputControllerMap => new Dictionary<string, StringName>
 	{
 		{
@@ -26,19 +35,19 @@ public abstract class ControllerConfig
 		},
 		{
 			"Up",
-			Controller.dPadNorth
+			Controller.dPadUp
 		},
 		{
 			"Down",
-			Controller.dPadSouth
+			Controller.dPadDown
 		},
 		{
 			"Left",
-			Controller.dPadWest
+			Controller.dPadLeft
 		},
 		{
 			"Right",
-			Controller.dPadEast
+			Controller.dPadRight
 		},
 		{
 			"Select",
@@ -74,10 +83,15 @@ public abstract class ControllerConfig
 		},
 		{
 			"Peek",
-			Controller.joystickPress
+			Controller.lStickPress
 		}
 	};
 
+	/// <summary>
+	/// The default map between controller inputs and specific in game commands.
+	/// We have this because inputs can vary between controller types (ex: On ps4 controllers, we use the touchpad instead of
+	/// the back/share button to open the map.
+	/// </summary>
 	public virtual Dictionary<StringName, StringName> DefaultControllerInputMap => new Dictionary<StringName, StringName>
 	{
 		{
@@ -118,23 +132,39 @@ public abstract class ControllerConfig
 		},
 		{
 			MegaInput.peek,
-			Controller.joystickPress
+			Controller.lStickPress
 		},
 		{
 			MegaInput.up,
-			Controller.dPadNorth
+			Controller.dPadUp
 		},
 		{
 			MegaInput.down,
-			Controller.dPadSouth
+			Controller.dPadDown
 		},
 		{
 			MegaInput.left,
-			Controller.dPadWest
+			Controller.dPadLeft
 		},
 		{
 			MegaInput.right,
-			Controller.dPadEast
+			Controller.dPadRight
+		},
+		{
+			MegaInput.altUp,
+			Controller.rStickUp
+		},
+		{
+			MegaInput.altDown,
+			Controller.rStickDown
+		},
+		{
+			MegaInput.altLeft,
+			Controller.rStickLeft
+		},
+		{
+			MegaInput.altRight,
+			Controller.rStickRight
 		},
 		{
 			MegaInput.pauseAndBack,
@@ -173,6 +203,14 @@ public abstract class ControllerConfig
 	private string DPadEast => ImageHelper.GetImagePath(FolderPath + "/right.tres");
 
 	private string Ps4Touchpad => ImageHelper.GetImagePath(FolderPath + "/touchpad.tres");
+
+	private string RightJoystickNorth => ImageHelper.GetImagePath(FolderPath + "/rs_up.tres");
+
+	private string RightJoystickSouth => ImageHelper.GetImagePath(FolderPath + "/rs_down.tres");
+
+	private string RightJoystickEast => ImageHelper.GetImagePath(FolderPath + "/rs_right.tres");
+
+	private string RightJoystickWest => ImageHelper.GetImagePath(FolderPath + "/rs_left.tres");
 
 	private Dictionary<string, string> GlyphMap
 	{
@@ -223,28 +261,44 @@ public abstract class ControllerConfig
 						StartButtonGlyph
 					},
 					{
-						Controller.joystickPress,
+						Controller.lStickPress,
 						JoystickPressGlyph
 					},
 					{
-						Controller.dPadNorth,
+						Controller.dPadUp,
 						DPadNorth
 					},
 					{
-						Controller.dPadSouth,
+						Controller.dPadDown,
 						DPadSouth
 					},
 					{
-						Controller.dPadEast,
+						Controller.dPadRight,
 						DPadEast
 					},
 					{
-						Controller.dPadWest,
+						Controller.dPadLeft,
 						DPadWest
 					},
 					{
 						Controller.ps4Touchpad,
 						Ps4Touchpad
+					},
+					{
+						Controller.rStickUp,
+						RightJoystickNorth
+					},
+					{
+						Controller.rStickDown,
+						RightJoystickSouth
+					},
+					{
+						Controller.rStickLeft,
+						RightJoystickWest
+					},
+					{
+						Controller.rStickRight,
+						RightJoystickEast
 					}
 				};
 			}

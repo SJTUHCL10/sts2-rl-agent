@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Godot;
 using MegaCrit.Sts2.Core.Assets;
+using MegaCrit.Sts2.Core.Audio.Debug;
 using MegaCrit.Sts2.Core.Combat;
 using MegaCrit.Sts2.Core.Context;
 using MegaCrit.Sts2.Core.Entities.Cards;
@@ -34,14 +35,14 @@ namespace MegaCrit.Sts2.Core.Commands;
 
 public static class CreatureCmd
 {
-	public static async Task<Creature> Add<T>(CombatState combatState, string? slotName = null) where T : MonsterModel
+	public static async Task<Creature> Add<T>(ICombatState combatState, string? slotName = null) where T : MonsterModel
 	{
 		Creature creature = combatState.CreateCreature(ModelDb.Monster<T>().ToMutable(), CombatSide.Enemy, slotName);
 		await Add(creature);
 		return creature;
 	}
 
-	public static async Task<Creature> Add(MonsterModel monster, CombatState combatState, CombatSide side = CombatSide.Enemy, string? slotName = null)
+	public static async Task<Creature> Add(MonsterModel monster, ICombatState combatState, CombatSide side = CombatSide.Enemy, string? slotName = null)
 	{
 		monster.AssertMutable();
 		Creature creature = combatState.CreateCreature(monster, side, slotName);
@@ -55,10 +56,14 @@ public static class CreatureCmd
 		{
 			throw new InvalidOperationException("Attempted to add a creature outside of combat.");
 		}
-		CombatState combatState = creature.CombatState;
+		ICombatState combatState = creature.CombatState;
 		if (combatState == null)
 		{
 			throw new InvalidOperationException("Attempted to add a creature with no combat state.");
+		}
+		if (!combatState.IsLiveCombat())
+		{
+			return;
 		}
 		combatState.AddCreature(creature);
 		CombatManager.Instance.AddCreature(creature);
@@ -68,56 +73,194 @@ public static class CreatureCmd
 		{
 			creature.PrepareForNextTurn(combatState.Players.Select((Player p) => p.Creature), rollNewMove: false);
 		}
+		MapPointRoomHistoryEntry mapPointRoomHistoryEntry = combatState.RunState.CurrentMapPointHistoryEntry?.Rooms.Last();
+		if (mapPointRoomHistoryEntry != null && creature != null && creature.Monster != null && creature.Side == CombatSide.Enemy && !mapPointRoomHistoryEntry.MonsterIds.Contains(creature.Monster.Id))
+		{
+			mapPointRoomHistoryEntry.MonsterIds.Add(creature.Monster.Id);
+		}
 		await Hook.AfterCreatureAddedToCombat(creature.CombatState, creature);
 	}
 
-	public static async Task<IEnumerable<DamageResult>> Damage(PlayerChoiceContext choiceContext, Creature target, DamageVar damageVar, CardModel cardSource)
+	/// <summary>
+	/// Damage a creature.
+	/// </summary>
+	/// <param name="choiceContext">The context that is signalled in the event of a player choice.</param>
+	/// <param name="target">Creature to damage.</param>
+	/// <param name="damageVar">
+	/// DamageVar containing the amount of damage they are taking and the properties of the damage.
+	/// </param>
+	/// <param name="cardSource">Card that dealt the damage. Optional.</param>
+	/// <param name="cardPlay">The object which represents a card play, or null if this damage is not part of card play.
+	/// Note that cardSource is set both when previewing AND when the card is played, but this is only set when the card
+	/// is played.</param>
+	/// <returns>
+	/// A set of damage results. Can be multiple if another creature absorbs some damage (like Osty via DieForYou).
+	/// </returns>
+	public static async Task<IEnumerable<DamageResult>> Damage(PlayerChoiceContext choiceContext, Creature target, DamageVar damageVar, CardModel cardSource, CardPlay? cardPlay)
 	{
-		return await Damage(choiceContext, target, damageVar.BaseValue, damageVar.Props, cardSource);
+		return await Damage(choiceContext, target, damageVar.BaseValue, damageVar.Props, cardSource, cardPlay);
 	}
 
-	public static async Task<IEnumerable<DamageResult>> Damage(PlayerChoiceContext choiceContext, Creature target, decimal amount, ValueProp props, CardModel cardSource)
+	/// <summary>
+	/// Damage a creature.
+	/// </summary>
+	/// <param name="choiceContext">The context that is signalled in the event of a player choice.</param>
+	/// <param name="target">Creature to damage.</param>
+	/// <param name="amount">Amount of damage it is taking.</param>
+	/// <param name="props">Properties of the damage.</param>
+	/// <param name="cardSource">Card that dealt the damage. Optional.</param>
+	/// <param name="cardPlay">The object which represents a card play, or null if this damage is not part of card play.
+	/// Note that cardSource is set both when previewing AND when the card is played, but this is only set when the card
+	/// is played.</param>
+	/// <returns>
+	/// A set of damage results. Can be multiple if another creature absorbs some damage (like Osty via DieForYou).
+	/// </returns>
+	public static async Task<IEnumerable<DamageResult>> Damage(PlayerChoiceContext choiceContext, Creature target, decimal amount, ValueProp props, CardModel? cardSource, CardPlay? cardPlay)
 	{
-		return await Damage(choiceContext, new List<Creature> { target }, amount, props, cardSource.Owner.Creature, cardSource);
+		return await Damage(choiceContext, new List<Creature> { target }, amount, props, cardSource?.Owner.Creature, cardSource, cardPlay);
 	}
 
+	/// <summary>
+	/// Damage a set of creatures.
+	/// </summary>
+	/// <param name="choiceContext">The context that is signalled in the event of a player choice.</param>
+	/// <param name="targets">Creatures to damage.</param>
+	/// <param name="damageVar">
+	/// DamageVar containing the amount of damage they are taking and the properties of the damage.
+	/// </param>
+	/// <param name="dealer">Creature who dealt the damage.</param>
+	/// <returns>A set of damage results.</returns>
 	public static async Task<IEnumerable<DamageResult>> Damage(PlayerChoiceContext choiceContext, IEnumerable<Creature> targets, DamageVar damageVar, Creature dealer)
 	{
 		return await Damage(choiceContext, targets, damageVar.BaseValue, damageVar.Props, dealer);
 	}
 
+	/// <summary>
+	/// Damage a set of creatures.
+	/// </summary>
+	/// <param name="choiceContext">The context that is signalled in the event of a player choice.</param>
+	/// <param name="targets">Creatures to damage.</param>
+	/// <param name="amount">Amount of damage they are taking.</param>
+	/// <param name="props">Properties of the damage.</param>
+	/// <param name="dealer">Creature who dealt the damage.</param>
+	/// <returns>A set of damage results.</returns>
 	public static async Task<IEnumerable<DamageResult>> Damage(PlayerChoiceContext choiceContext, IEnumerable<Creature> targets, decimal amount, ValueProp props, Creature dealer)
 	{
-		return await Damage(choiceContext, targets, amount, props, dealer, null);
+		return await Damage(choiceContext, targets, amount, props, dealer, null, null);
 	}
 
+	/// <summary>
+	/// Damage a creature.
+	/// </summary>
+	/// <param name="choiceContext">The context that is signalled in the event of a player choice.</param>
+	/// <param name="target">Creature to damage.</param>
+	/// <param name="damageVar">
+	/// DamageVar containing the amount of damage they are taking and the properties of the damage.
+	/// </param>
+	/// <param name="dealer">Creature who dealt the damage. Optional.</param>
+	/// <returns>
+	/// A set of damage results. Can be multiple if another creature absorbs some damage (like Osty via DieForYou).
+	/// </returns>
 	public static async Task<IEnumerable<DamageResult>> Damage(PlayerChoiceContext choiceContext, Creature target, DamageVar damageVar, Creature dealer)
 	{
 		return await Damage(choiceContext, target, damageVar.BaseValue, damageVar.Props, dealer);
 	}
 
+	/// <summary>
+	/// Damage a creature.
+	/// </summary>
+	/// <param name="choiceContext">The context that is signalled in the event of a player choice.</param>
+	/// <param name="target">Creature to damage.</param>
+	/// <param name="amount">Amount of damage it is taking.</param>
+	/// <param name="props">Properties of the damage.</param>
+	/// <param name="dealer">Creature who dealt the damage. Optional.</param>
+	/// <returns>
+	/// A set of damage results. Can be multiple if another creature absorbs some damage (like Osty via DieForYou).
+	/// </returns>
 	public static async Task<IEnumerable<DamageResult>> Damage(PlayerChoiceContext choiceContext, Creature target, decimal amount, ValueProp props, Creature dealer)
 	{
-		return await Damage(choiceContext, new global::_003C_003Ez__ReadOnlySingleElementList<Creature>(target), amount, props, dealer, null);
+		return await Damage(choiceContext, new global::_003C_003Ez__ReadOnlySingleElementList<Creature>(target), amount, props, dealer, null, null);
 	}
 
-	public static async Task<IEnumerable<DamageResult>> Damage(PlayerChoiceContext choiceContext, Creature target, DamageVar damageVar, Creature? dealer, CardModel? cardSource)
+	/// <summary>
+	/// Damage a creature.
+	/// </summary>
+	/// <param name="choiceContext">The context that is signalled in the event of a player choice.</param>
+	/// <param name="target">Creature to damage.</param>
+	/// <param name="damageVar">
+	/// DamageVar containing the amount of damage they are taking and the properties of the damage.
+	/// </param>
+	/// <param name="dealer">Creature who dealt the damage. Optional.</param>
+	/// <param name="cardSource">Card that dealt the damage. Optional.</param>
+	/// <param name="cardPlay">The object which represents a card play, or null if this damage is not part of card play.
+	/// Note that cardSource is set both when previewing AND when the card is played, but this is only set when the card
+	/// is played.</param>
+	/// <returns>
+	/// A set of damage results. Can be multiple if another creature absorbs some damage (like Osty via DieForYou).
+	/// </returns>
+	public static async Task<IEnumerable<DamageResult>> Damage(PlayerChoiceContext choiceContext, Creature target, DamageVar damageVar, Creature? dealer, CardModel? cardSource, CardPlay? cardPlay)
 	{
-		return await Damage(choiceContext, new global::_003C_003Ez__ReadOnlySingleElementList<Creature>(target), damageVar.BaseValue, damageVar.Props, dealer, cardSource);
+		return await Damage(choiceContext, new global::_003C_003Ez__ReadOnlySingleElementList<Creature>(target), damageVar.BaseValue, damageVar.Props, dealer, cardSource, cardPlay);
 	}
 
-	public static async Task<IEnumerable<DamageResult>> Damage(PlayerChoiceContext choiceContext, Creature target, decimal amount, ValueProp props, Creature? dealer, CardModel? cardSource)
+	/// <summary>
+	/// Damage a creature.
+	/// </summary>
+	/// <param name="choiceContext">The context that is signalled in the event of a player choice.</param>
+	/// <param name="target">Creature to damage.</param>
+	/// <param name="amount">Amount of damage it is taking.</param>
+	/// <param name="props">Properties of the damage.</param>
+	/// <param name="dealer">Creature who dealt the damage. Optional.</param>
+	/// <param name="cardSource">Card that dealt the damage. Optional.</param>
+	/// <param name="cardPlay">The object which represents a card play, or null if this damage is not part of card play.
+	/// Note that cardSource is set both when previewing AND when the card is played, but this is only set when the card
+	/// is played.</param>
+	/// <returns>
+	/// A set of damage results. Can be multiple if another creature absorbs some damage (like Osty via DieForYou).
+	/// </returns>
+	public static async Task<IEnumerable<DamageResult>> Damage(PlayerChoiceContext choiceContext, Creature target, decimal amount, ValueProp props, Creature? dealer, CardModel? cardSource, CardPlay? cardPlay)
 	{
-		return await Damage(choiceContext, new global::_003C_003Ez__ReadOnlySingleElementList<Creature>(target), amount, props, dealer, cardSource);
+		return await Damage(choiceContext, new global::_003C_003Ez__ReadOnlySingleElementList<Creature>(target), amount, props, dealer, cardSource, cardPlay);
 	}
 
-	public static async Task<IEnumerable<DamageResult>> Damage(PlayerChoiceContext choiceContext, IEnumerable<Creature> targets, DamageVar damageVar, Creature? dealer, CardModel? cardSource)
+	/// <summary>
+	/// Damage a set of creatures.
+	/// </summary>
+	/// <param name="choiceContext">The context that is signalled in the event of a player choice.</param>
+	/// <param name="targets">Creatures to damage.</param>
+	/// <param name="damageVar">
+	/// DamageVar containing the amount of damage they are taking and the properties of the damage.
+	/// </param>
+	/// <param name="dealer">Creature who dealt the damage. Optional.</param>
+	/// <param name="cardSource">Card that dealt the damage. Optional.</param>
+	/// <param name="cardPlay">The object which represents a card play, or null if this damage is not part of card play.
+	/// Note that cardSource is set both when previewing AND when the card is played, but this is only set when the card
+	/// is played.</param>
+	/// <returns>A set of damage results.</returns>
+	public static async Task<IEnumerable<DamageResult>> Damage(PlayerChoiceContext choiceContext, IEnumerable<Creature>? targets, DamageVar damageVar, Creature? dealer, CardModel? cardSource, CardPlay? cardPlay)
 	{
-		return await Damage(choiceContext, targets, damageVar.BaseValue, damageVar.Props, dealer, cardSource);
+		return await Damage(choiceContext, targets, damageVar.BaseValue, damageVar.Props, dealer, cardSource, cardPlay);
 	}
 
-	public static async Task<IEnumerable<DamageResult>> Damage(PlayerChoiceContext choiceContext, IEnumerable<Creature> targets, decimal amount, ValueProp props, Creature? dealer, CardModel? cardSource)
+	/// <summary>
+	/// Damage a set of creatures.
+	/// </summary>
+	/// <param name="choiceContext">The context that is signalled in the event of a player choice.</param>
+	/// <param name="targets">Creatures to damage.</param>
+	/// <param name="amount">Amount of damage they are taking.</param>
+	/// <param name="props">Properties of the damage.</param>
+	/// <param name="dealer">Creature who dealt the damage. Optional.</param>
+	/// <param name="cardSource">Card that dealt the damage. Optional.</param>
+	/// <param name="cardPlay">The object which represents a card play, or null if this damage is not part of card play.
+	/// Note that cardSource is set both when previewing AND when the card is played, but this is only set when the card
+	/// is played.</param>
+	/// <returns>A set of damage results.</returns>
+	public static async Task<IEnumerable<DamageResult>> Damage(PlayerChoiceContext choiceContext, IEnumerable<Creature>? targets, decimal amount, ValueProp props, Creature? dealer, CardModel? cardSource, CardPlay? cardPlay)
 	{
+		if (targets == null)
+		{
+			return Array.Empty<DamageResult>();
+		}
 		if (dealer != null && dealer.IsDead)
 		{
 			return targets.Select((Creature t) => new DamageResult(t, props)).ToList();
@@ -128,7 +271,7 @@ public static class CreatureCmd
 		{
 			return results;
 		}
-		CombatState combatState = targetList[0].CombatState;
+		ICombatState combatState = targetList[0].CombatState;
 		IRunState runState = IRunState.GetFrom(targetList.Append<Creature>(dealer).OfType<Creature>());
 		foreach (Creature originalTarget in targetList)
 		{
@@ -137,15 +280,15 @@ public static class CreatureCmd
 				continue;
 			}
 			IEnumerable<AbstractModel> modifiers;
-			decimal modifiedAmount = Hook.ModifyDamage(runState, combatState, originalTarget, dealer, amount, props, cardSource, ModifyDamageHookType.All, CardPreviewMode.None, out modifiers);
+			decimal modifiedAmount = Hook.ModifyDamage(runState, combatState, originalTarget, dealer, amount, props, cardSource, cardPlay, ModifyDamageHookType.All, CardPreviewMode.None, out modifiers);
 			await Hook.AfterModifyingDamageAmount(runState, combatState, cardSource, modifiers);
 			await Hook.BeforeDamageReceived(choiceContext, runState, combatState, originalTarget, modifiedAmount, props, dealer, cardSource);
 			Creature creature = originalTarget.PetOwner?.Creature ?? originalTarget;
 			decimal blockedDamage = creature.DamageBlockInternal(modifiedAmount, props);
-			decimal unblockedDamage = Hook.ModifyHpLostBeforeOsty(runState, combatState, originalTarget, Math.Max(modifiedAmount - blockedDamage, 0m), props, dealer, cardSource, out modifiers);
+			decimal unblockedDamage = Hook.ModifyHpLost(runState, combatState, originalTarget, Math.Max(modifiedAmount - blockedDamage, 0m), props, dealer, cardSource, HpLossHookPhase.BeforeOsty, out modifiers);
 			await Hook.AfterModifyingHpLostBeforeOsty(runState, combatState, modifiers);
 			Creature unblockedDamageTarget = ((combatState == null) ? originalTarget : Hook.ModifyUnblockedDamageTarget(combatState, originalTarget, unblockedDamage, props, dealer));
-			unblockedDamage = Hook.ModifyHpLostAfterOsty(runState, combatState, unblockedDamageTarget, unblockedDamage, props, dealer, cardSource, out modifiers);
+			unblockedDamage = Hook.ModifyHpLost(runState, combatState, unblockedDamageTarget, unblockedDamage, props, dealer, cardSource, HpLossHookPhase.AfterOsty, out modifiers);
 			await Hook.AfterModifyingHpLostAfterOsty(runState, combatState, modifiers);
 			DamageResult unblockedDamageResult = unblockedDamageTarget.LoseHpInternal(unblockedDamage, props);
 			List<DamageResult> damageResults = new List<DamageResult>(1) { unblockedDamageResult };
@@ -159,7 +302,7 @@ public static class CreatureCmd
 			}
 			else
 			{
-				decimal originalTargetDamage = Hook.ModifyHpLostAfterOsty(runState, combatState, originalTarget, unblockedDamageResult.OverkillDamage, props, dealer, cardSource, out modifiers);
+				decimal originalTargetDamage = Hook.ModifyHpLost(runState, combatState, originalTarget, unblockedDamageResult.OverkillDamage, props, dealer, cardSource, HpLossHookPhase.AfterOsty, out modifiers);
 				await Hook.AfterModifyingHpLostAfterOsty(runState, combatState, modifiers);
 				DamageResult damageResult = ((!(originalTargetDamage > 0m)) ? new DamageResult(originalTarget, props) : originalTarget.LoseHpInternal(originalTargetDamage, props));
 				damageResult.BlockedDamage = (int)blockedDamage;
@@ -167,7 +310,6 @@ public static class CreatureCmd
 				damageResult.WasFullyBlocked = wasFullyBlocked;
 				damageResults.Add(damageResult);
 			}
-			Node vfxContainer = NCombatRoom.Instance?.CombatVfxContainer;
 			List<Task> hitTriggers = new List<Task>();
 			foreach (DamageResult item in damageResults)
 			{
@@ -181,6 +323,7 @@ public static class CreatureCmd
 				{
 					continue;
 				}
+				Node vfxContainer = receiver.GetVfxContainer();
 				if (damage > 0 || (modifiedAmount == 0m && item.Receiver == unblockedDamageTarget))
 				{
 					NDamageNumVfx nDamageNumVfx = NDamageNumVfx.Create(receiver, item);
@@ -254,11 +397,15 @@ public static class CreatureCmd
 			Creature originalTarget = unblockedDamageResult.Receiver;
 			if (unblockedDamageResult.WasBlockBroken)
 			{
-				await Hook.AfterBlockBroken(originalTarget.CombatState, originalTarget);
+				await Hook.AfterBlockBroken(originalTarget.CombatState, choiceContext, originalTarget, dealer);
 			}
 			if (unblockedDamageResult.UnblockedDamage > 0)
 			{
 				await Hook.AfterCurrentHpChanged(runState, combatState, originalTarget, -unblockedDamageResult.UnblockedDamage);
+			}
+			if (dealer != null && dealer.Player != null && originalTarget.Player == null)
+			{
+				dealer.Player.ExtraFields.DamageDealt += unblockedDamageResult.UnblockedDamage;
 			}
 			if (combatState != null)
 			{
@@ -272,16 +419,12 @@ public static class CreatureCmd
 			{
 				killedCreatures.Add(originalTarget);
 			}
-			if (unblockedDamageResult.WasFullyBlocked)
+			if (unblockedDamageResult.WasFullyBlocked && CombatManager.Instance.IsInProgress)
 			{
-				if (!CombatManager.Instance.IsInProgress)
-				{
-					throw new InvalidOperationException("Damage was blocked while combat was not active!");
-				}
 				SfxCmd.Play("event:/sfx/block_hit");
-				Node node = NCombatRoom.Instance?.CombatVfxContainer;
-				node?.AddChildSafely(NBlockSparkVfx.Create(unblockedDamageResult.Receiver));
-				node?.AddChildSafely(NDamageBlockedVfx.Create(unblockedDamageResult.Receiver));
+				Node vfxContainer2 = unblockedDamageResult.Receiver.GetVfxContainer();
+				vfxContainer2?.AddChildSafely(NBlockSparkVfx.Create(unblockedDamageResult.Receiver));
+				vfxContainer2?.AddChildSafely(NDamageBlockedVfx.Create(unblockedDamageResult.Receiver));
 				NGame.Instance?.ScreenShake(ShakeStrength.Weak, ShakeDuration.Short);
 			}
 		}
@@ -290,11 +433,31 @@ public static class CreatureCmd
 		return results;
 	}
 
+	/// <summary>
+	/// Kill the specified creature.
+	/// NOTE: ALL creatures on the opposing side are considered the killer of this creature, no
+	/// matter who struck the killing blow.
+	/// </summary>
+	/// <param name="creature">Creature to kill.</param>
+	/// <param name="force">
+	/// Whether or not to force the death (blocking death prevention by effects like Fairy in a Bottle).
+	/// Usually false, but true in certain built-in cases like abandoning a run.
+	/// </param>
 	public static async Task Kill(Creature creature, bool force = false)
 	{
 		await Kill(new global::_003C_003Ez__ReadOnlySingleElementList<Creature>(creature), force);
 	}
 
+	/// <summary>
+	/// Kill the specified creatures.
+	/// NOTE: ALL creatures on the opposing side are considered the killer of these creatures,
+	/// no matter who struck the killing blow.
+	/// </summary>
+	/// <param name="creatures">Creatures to kill.</param>
+	/// <param name="force">
+	/// Whether or not to force the death (blocking death prevention by effects like Fairy in a Bottle).
+	/// Usually false, but true in certain built-in cases like abandoning a run.
+	/// </param>
 	public static async Task Kill(IReadOnlyCollection<Creature> creatures, bool force = false)
 	{
 		if (creatures.Count == 0)
@@ -306,6 +469,10 @@ public static class CreatureCmd
 		{
 			await KillWithoutCheckingWinCondition(item, force);
 		}
+		if (!RunManager.Instance.IsInProgress || RunManager.Instance.IsCleaningUp)
+		{
+			return;
+		}
 		if (runState != null && runState.Players.All((Player p) => p.Creature.IsDead))
 		{
 			if (CombatManager.Instance.IsInProgress)
@@ -315,20 +482,49 @@ public static class CreatureCmd
 			if (TestMode.IsOff)
 			{
 				NRun.Instance.RunMusicController.StopMusic();
+				NDebugAudioManager.Instance?.StopAll();
 				NAudioManager.Instance.PlayMusic("event:/temp/sfx/game_over");
 				SerializableRun serializableRun = RunManager.Instance.OnEnded(isVictory: false);
 				NRun.Instance.ShowGameOverScreen(serializableRun);
 			}
 		}
+		else
+		{
+			if (!CombatManager.Instance.IsInProgress)
+			{
+				return;
+			}
+			foreach (Creature item2 in creatures.ToList())
+			{
+				if (item2 != null)
+				{
+					ICombatState combatState = item2.CombatState;
+					if (combatState != null && combatState.CurrentSide == CombatSide.Player && item2.IsDead && item2.IsPlayer)
+					{
+						PlayerCmd.EndTurn(item2.Player, canBackOut: false);
+					}
+				}
+			}
+		}
 	}
 
+	/// <summary>
+	/// Kill the specified creature without checking win condition. For internal use only, when we know we will
+	/// be checking the win condition later.
+	/// </summary>
 	private static async Task KillWithoutCheckingWinCondition(Creature creature, bool force, int recursion = 0)
 	{
-		if (creature.CombatState == null && !creature.IsPlayer)
+		if ((creature.CombatState == null && !creature.IsPlayer) || (creature.CombatState != null && !creature.CombatState.IsLiveCombat()))
 		{
 			return;
 		}
-		CombatState combatState = creature.CombatState;
+		if (!CombatManager.Instance.IsInProgress && creature.IsPlayer && creature.Player.RunState.Players.Count > 1 && !(creature.Player.RunState.CurrentRoom?.IsVictoryRoom ?? false))
+		{
+			Log.Error($"Player {creature.Player.NetId} has been killed outside of combat in multiplayer! This should not occur");
+			await Heal(creature, 1m);
+			return;
+		}
+		ICombatState combatState = creature.CombatState;
 		IRunState runState = IRunState.GetFrom(new global::_003C_003Ez__ReadOnlySingleElementList<Creature>(creature));
 		int currentHp = creature.CurrentHp;
 		if (currentHp > 0)
@@ -408,9 +604,17 @@ public static class CreatureCmd
 		}
 	}
 
+	/// <summary>
+	/// Removes creature from combat without killing it and marks it escaped in the combat state.
+	/// Used for things like the EscapeArtist power.
+	/// </summary>
 	public static Task Escape(Creature creature, bool removeCreatureNode = true)
 	{
 		if (creature.IsDead)
+		{
+			return Task.CompletedTask;
+		}
+		if (creature.CombatState == null || !creature.CombatState.IsLiveCombat())
 		{
 			return Task.CompletedTask;
 		}
@@ -426,22 +630,51 @@ public static class CreatureCmd
 			}
 		}
 		CombatManager.Instance.RemoveCreature(creature);
-		creature.CombatState.CreatureEscaped(creature);
+		creature.CombatState?.CreatureEscaped(creature);
 		return Task.CompletedTask;
 	}
 
+	/// <summary>
+	/// Make the specified creature gain the specified amount of block.
+	/// </summary>
+	/// <param name="creature">Creature that should gain block.</param>
+	/// <param name="blockVar">BlockVar containing the amount of block they should gain, and the properties of the block.</param>
+	/// <param name="cardPlay">
+	/// The CardPlay that caused the block gain.
+	/// Null if it was not directly caused by a card play.
+	/// </param>
+	/// <param name="fast">If true, the wait that is performed after block gain is very small. Should be used in scenarios
+	/// where block gain happens quickly in sequence (e.g. After Image, Barnacled Pipe).</param>
+	/// <returns>The amount of block that the creature gained after all modifications were applied.</returns>
 	public static async Task<decimal> GainBlock(Creature creature, BlockVar blockVar, CardPlay? cardPlay, bool fast = false)
 	{
 		return await GainBlock(creature, blockVar.BaseValue, blockVar.Props, cardPlay, fast);
 	}
 
+	/// <summary>
+	/// Make this creature gain the specified amount of block.
+	/// </summary>
+	/// <param name="creature">Creature that should gain block.</param>
+	/// <param name="amount">Amount of block they should gain.</param>
+	/// <param name="props">Properties of the block.</param>
+	/// <param name="cardPlay">
+	/// The CardPlay that caused the block gain.
+	/// Null if it was not directly caused by a card play.
+	/// </param>
+	/// <param name="fast">If true, the wait that is performed after block gain is very small. Should be used in scenarios
+	/// where block gain happens quickly in sequence (e.g. After Image, Barnacled Pipe).</param>
+	/// <returns>The amount of block that the creature gained after all modifications were applied.</returns>
 	public static async Task<decimal> GainBlock(Creature creature, decimal amount, ValueProp props, CardPlay? cardPlay, bool fast = false)
 	{
 		if (CombatManager.Instance.IsOverOrEnding)
 		{
 			return default(decimal);
 		}
-		CombatState combatState = creature.CombatState;
+		if (creature.IsDead)
+		{
+			return default(decimal);
+		}
+		ICombatState combatState = creature.CombatState;
 		await Hook.BeforeBlockGained(combatState, creature, amount, props, cardPlay?.Card);
 		decimal modifiedAmount = amount;
 		modifiedAmount = Hook.ModifyBlock(combatState, creature, modifiedAmount, props, cardPlay?.Card, cardPlay, out IEnumerable<AbstractModel> modifiers);
@@ -466,20 +699,41 @@ public static class CreatureCmd
 		return modifiedAmount;
 	}
 
-	public static async Task LoseBlock(Creature creature, decimal amount)
+	/// <summary>
+	/// Make this creature lose the specified amount of block.
+	/// </summary>
+	/// <param name="choiceContext">The context that is signalled in the event of a player choice.</param>
+	/// <param name="target">Creature that should lose block.</param>
+	/// <param name="amount">Amount of block they should lose.</param>
+	/// <param name="remover">
+	/// Creature that caused the block loss.
+	/// Null if no creature was involved in the block loss, like if it was removed by a power.
+	/// </param>
+	public static async Task LoseBlock(PlayerChoiceContext choiceContext, Creature target, decimal amount, Creature? remover)
 	{
-		if (!CombatManager.Instance.IsOverOrEnding && !creature.IsDead)
+		if (!CombatManager.Instance.IsOverOrEnding && !target.IsDead && !(amount <= 0m))
 		{
-			int block = creature.Block;
-			creature.LoseBlockInternal(amount);
-			if (block > 0 && creature.Block <= 0)
+			int block = target.Block;
+			target.LoseBlockInternal(amount);
+			if (block > 0 && target.Block <= 0)
 			{
 				SfxCmd.Play("event:/sfx/block_break");
-				await Hook.AfterBlockBroken(creature.CombatState, creature);
+				await Hook.AfterBlockBroken(target.CombatState, choiceContext, target, remover);
 			}
 		}
 	}
 
+	/// <summary>
+	/// Heal a creature.
+	/// </summary>
+	/// <param name="creature">Creature to heal.</param>
+	/// <param name="amount">Amount to heal them by.</param>
+	/// <param name="playAnim">
+	/// Whether or not to show the heal animation.
+	/// True by default, and you should leave this true even if you're using it outside of combat (like when healing
+	/// a player at the rest site). Only set it to false if you explicitly want the heal animation to not play even
+	/// while in combat.
+	/// </param>
 	public static async Task Heal(Creature creature, decimal amount, bool playAnim = true)
 	{
 		if (CombatManager.Instance.IsEnding && !creature.IsPlayer)
@@ -487,7 +741,6 @@ public static class CreatureCmd
 			return;
 		}
 		bool isDead = creature.IsDead;
-		amount = Hook.ModifyHealAmount(creature.Player?.RunState ?? creature.CombatState?.RunState ?? NullRunState.Instance, creature.CombatState, creature, amount);
 		decimal num = Math.Min(amount, creature.MaxHp - creature.CurrentHp);
 		if (creature == null || !(creature.Monster is Osty))
 		{
@@ -506,7 +759,7 @@ public static class CreatureCmd
 				{
 					VfxCmd.PlayOnCreatureCenter(creature, "vfx/vfx_cross_heal");
 				}
-				(NCombatRoom.Instance?.CombatVfxContainer)?.AddChildSafely(NHealNumVfx.Create(creature, amount));
+				creature.GetVfxContainer()?.AddChildSafely(NHealNumVfx.Create(creature, amount));
 				if (isDead)
 				{
 					NCombatRoom.Instance?.GetCreatureNode(creature)?.StartReviveAnim();
@@ -541,12 +794,17 @@ public static class CreatureCmd
 		{
 			await Cmd.CustomScaledWait(0.1f, 0.25f);
 		}
-		if (amount > 0m)
+		if (amount > 0m && creature.CombatState != null)
 		{
 			await Hook.AfterCurrentHpChanged(creature.Player?.RunState ?? creature.CombatState.RunState, creature.CombatState, creature, amount);
 		}
 	}
 
+	/// <summary>
+	/// Set a creature's current HP to a new value.
+	/// </summary>
+	/// <param name="creature">Creature whose HP we're setting.</param>
+	/// <param name="amount">New amount of HP they should have.</param>
 	public static async Task SetCurrentHp(Creature creature, decimal amount)
 	{
 		bool flag = creature.IsDead && amount > 0m;
@@ -558,7 +816,7 @@ public static class CreatureCmd
 			{
 				NCombatRoom.Instance?.GetCreatureNode(creature)?.StartReviveAnim();
 			}
-			await Hook.AfterCurrentHpChanged(creature.Player?.RunState ?? creature.CombatState.RunState, creature.CombatState, creature, amount - num);
+			await Hook.AfterCurrentHpChanged(creature.Player?.RunState ?? creature.CombatState?.RunState ?? NullRunState.Instance, creature.CombatState, creature, amount - num);
 		}
 		if (creature.IsDead)
 		{
@@ -566,60 +824,109 @@ public static class CreatureCmd
 		}
 	}
 
+	/// <summary>
+	/// Increase a creature's maximum HP.
+	/// </summary>
+	/// <param name="creature">Creature to add max HP to.</param>
+	/// <param name="amount">Amount of max HP to add.</param>
 	public static async Task GainMaxHp(Creature creature, decimal amount)
 	{
 		if (amount < 0m)
 		{
 			throw new ArgumentException("amount must be non-negative. Use LoseMaxHp for max HP loss.");
 		}
-		await SetMaxHp(creature, (decimal)creature.MaxHp + amount);
+		decimal num = await SetMaxHp(creature, (decimal)creature.MaxHp + amount);
 		MapPointHistoryEntry mapPointHistoryEntry = creature.Player?.RunState.CurrentMapPointHistoryEntry;
 		if (mapPointHistoryEntry != null)
 		{
-			mapPointHistoryEntry.GetEntry(creature.Player.NetId).MaxHpGained += (int)amount;
+			mapPointHistoryEntry.GetEntry(creature.Player.NetId).MaxHpGained += (int)num;
 		}
-		await Heal(creature, amount);
+		await Heal(creature, num);
 	}
 
+	/// <summary>
+	/// Decrease a creature's maximum HP.
+	/// </summary>
+	/// <param name="choiceContext">The context that is signalled in the event of a player choice.</param>
+	/// <param name="creature">Creature to remove max HP from.</param>
+	/// <param name="amount">Amount of max HP to remove.</param>
+	/// <param name="isFromCard">
+	/// Whether or not this max HP loss is coming from a card.
+	/// Used to determine whether effects like <see cref="T:MegaCrit.Sts2.Core.Models.Cards.Rupture" /> should trigger.
+	/// </param>
 	public static async Task LoseMaxHp(PlayerChoiceContext choiceContext, Creature creature, decimal amount, bool isFromCard)
 	{
 		if (amount < 0m)
 		{
 			throw new ArgumentException("amount must be non-negative. Use GainMaxHp for max HP gain.");
 		}
-		decimal num = (decimal)creature.MaxHp - amount;
+		decimal newMaxHp = (decimal)creature.MaxHp - amount;
 		MapPointHistoryEntry mapPointHistoryEntry = creature.Player?.RunState.CurrentMapPointHistoryEntry;
 		if (mapPointHistoryEntry != null)
 		{
 			mapPointHistoryEntry.GetEntry(creature.Player.NetId).MaxHpLost += (int)amount;
 		}
-		if (num < (decimal)creature.CurrentHp)
+		if (newMaxHp < (decimal)creature.CurrentHp)
 		{
-			await Damage(choiceContext, creature, (decimal)creature.CurrentHp - num, isFromCard ? (ValueProp.Unblockable | ValueProp.Unpowered | ValueProp.Move) : (ValueProp.Unblockable | ValueProp.Unpowered), null, null);
+			await Damage(choiceContext, creature, (decimal)creature.CurrentHp - newMaxHp, isFromCard ? (ValueProp.Unblockable | ValueProp.Unpowered | ValueProp.Move) : (ValueProp.Unblockable | ValueProp.Unpowered), null, null);
 		}
-		await SetMaxHp(creature, (decimal)creature.MaxHp - amount);
+		await SetMaxHp(creature, Math.Max(1.0m, newMaxHp));
 	}
 
-	public static async Task SetMaxHp(Creature creature, decimal amount)
+	/// <summary>
+	/// Set a creature's maximum HP to a new value.
+	/// </summary>
+	/// <param name="creature">Creature whose max HP we're setting.</param>
+	/// <param name="amount">New amount of max HP they should have.</param>
+	/// <returns>
+	/// The amount that the creature's max HP changed by.
+	/// A positive number means their max HP increased, a negative number means it decreased.
+	/// </returns>
+	public static async Task<decimal> SetMaxHp(Creature creature, decimal amount)
 	{
+		int oldMaxHp = creature.MaxHp;
 		creature.SetMaxHpInternal(Math.Max(0m, amount));
+		int newMaxHp = creature.MaxHp;
 		if (creature.MaxHp <= 0)
 		{
 			await Kill(creature);
 		}
+		return newMaxHp - oldMaxHp;
 	}
 
+	/// <summary>
+	/// Set a creature's maximum AND current HP to a new value.
+	/// </summary>
+	/// <param name="creature">Creature whose max/current HP we're setting.</param>
+	/// <param name="amount">New amount of max/current HP they should have.</param>
 	public static async Task SetMaxAndCurrentHp(Creature creature, decimal amount)
 	{
 		await SetMaxHp(creature, amount);
 		await SetCurrentHp(creature, amount);
 	}
 
+	/// <summary>
+	/// Stun the specified creature, performing no logic during their stunned turn.
+	/// </summary>
+	/// <param name="creature">Creature to stun.</param>
+	/// <param name="nextMoveId">
+	/// ID of the move that the creature should perform the turn after they perform stunMove.
+	/// If null or empty, this will default to the last move they performed.
+	/// </param>
 	public static async Task Stun(Creature creature, string? nextMoveId = null)
 	{
 		await Stun(creature, (IReadOnlyList<Creature> _) => Task.CompletedTask, nextMoveId);
 	}
 
+	/// <summary>
+	/// Stun the specified creature, performing the specified logic during their stunned turn.
+	/// </summary>
+	/// <param name="creature">Creature to stun.</param>
+	/// <param name="stunMove">Logic for the move that the stunned creature will "perform".</param>
+	/// <param name="nextMoveId">
+	/// ID of the move that the creature should perform the turn after they perform stunMove.
+	/// If null or empty, this will default to the last move they performed.
+	/// </param>
 	public static Task Stun(Creature creature, Func<IReadOnlyList<Creature>, Task> stunMove, string? nextMoveId = null)
 	{
 		creature.StunInternal(Wrapper, nextMoveId);
@@ -629,19 +936,29 @@ public static class CreatureCmd
 			NStunnedVfx vfx = NStunnedVfx.Create(creature);
 			if (vfx != null)
 			{
-				Callable.From(delegate
+				Node vfxContainer = creature.GetVfxContainer();
+				if (vfxContainer != null)
 				{
-					NCombatRoom.Instance?.CombatVfxContainer.AddChildSafely(vfx);
-				}).CallDeferred();
+					Callable.From(delegate
+					{
+						vfxContainer.AddChildSafely(vfx);
+					}).CallDeferred();
+				}
 			}
 			await stunMove(c);
 		}
 	}
 
+	/// <summary>
+	/// Trigger an animation on the specified creature.
+	/// </summary>
+	/// <param name="creature">Creature to animate.</param>
+	/// <param name="triggerName">Name of the animation trigger.</param>
+	/// <param name="waitTime">Number of seconds to wait after starting the animation.</param>
 	public static async Task TriggerAnim(Creature creature, string triggerName, float waitTime)
 	{
-		NCreature nCreature = NCombatRoom.Instance?.GetCreatureNode(creature);
-		if (nCreature == null)
+		NCreature creatureNode = creature.GetCreatureNode();
+		if (creatureNode == null)
 		{
 			if (!TestMode.IsOn && CombatManager.Instance.IsInProgress)
 			{
@@ -656,19 +973,20 @@ public static class CreatureCmd
 			{
 				return;
 			}
-			if (!(triggerName == "Attack"))
+			switch (triggerName)
 			{
-				if (triggerName == "Cast")
-				{
-					SfxCmd.Play(character.CastSfx);
-				}
-			}
-			else
-			{
+			case "Attack":
 				SfxCmd.Play(character.AttackSfx);
+				break;
+			case "Cast":
+				SfxCmd.Play(character.CastSfx);
+				break;
+			case "PowerUp":
+				SfxCmd.Play(character.PowerUpSfx);
+				break;
 			}
 		}
-		nCreature.SetAnimationTrigger(triggerName);
+		creatureNode.SetAnimationTrigger(triggerName);
 		await Cmd.CustomScaledWait(Mathf.Min(waitTime * 0.5f, 0.25f), waitTime);
 	}
 }

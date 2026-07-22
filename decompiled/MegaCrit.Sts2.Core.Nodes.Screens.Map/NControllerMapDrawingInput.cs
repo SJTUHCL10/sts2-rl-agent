@@ -5,6 +5,7 @@ using Godot.Bridge;
 using Godot.NativeInterop;
 using MegaCrit.Sts2.Core.Assets;
 using MegaCrit.Sts2.Core.ControllerInput;
+using MegaCrit.Sts2.Core.Nodes.CommonUi;
 using MegaCrit.Sts2.Core.Nodes.GodotExtensions;
 using MegaCrit.Sts2.Core.Nodes.Screens.ScreenContext;
 
@@ -13,34 +14,76 @@ namespace MegaCrit.Sts2.Core.Nodes.Screens.Map;
 [ScriptPath("res://src/Core/Nodes/Screens/Map/NControllerMapDrawingInput.cs")]
 public class NControllerMapDrawingInput : NMapDrawingInput
 {
+	/// <summary>
+	/// Cached StringNames for the methods contained in this class, for fast lookup.
+	/// </summary>
 	public new class MethodName : NMapDrawingInput.MethodName
 	{
+		/// <summary>
+		/// Cached name for the 'Create' method.
+		/// </summary>
 		public new static readonly StringName Create = "Create";
 
+		/// <summary>
+		/// Cached name for the '_Ready' method.
+		/// </summary>
 		public new static readonly StringName _Ready = "_Ready";
 
+		/// <summary>
+		/// Cached name for the '_Process' method.
+		/// </summary>
 		public new static readonly StringName _Process = "_Process";
 
+		/// <summary>
+		/// Cached name for the '_Input' method.
+		/// </summary>
 		public new static readonly StringName _Input = "_Input";
 	}
 
+	/// <summary>
+	/// Cached StringNames for the properties and fields contained in this class, for fast lookup.
+	/// </summary>
 	public new class PropertyName : NMapDrawingInput.PropertyName
 	{
+		/// <summary>
+		/// Cached name for the '_eraserIconPos' field.
+		/// </summary>
 		public static readonly StringName _eraserIconPos = "_eraserIconPos";
 
+		/// <summary>
+		/// Cached name for the '_drawingIconPos' field.
+		/// </summary>
 		public static readonly StringName _drawingIconPos = "_drawingIconPos";
 
+		/// <summary>
+		/// Cached name for the '_isPressed' field.
+		/// </summary>
 		public static readonly StringName _isPressed = "_isPressed";
 
+		/// <summary>
+		/// Cached name for the '_cursorTex' field.
+		/// </summary>
 		public static readonly StringName _cursorTex = "_cursorTex";
 
+		/// <summary>
+		/// Cached name for the '_cursorTiltedTex' field.
+		/// </summary>
 		public static readonly StringName _cursorTiltedTex = "_cursorTiltedTex";
 
+		/// <summary>
+		/// Cached name for the '_cursor' field.
+		/// </summary>
 		public static readonly StringName _cursor = "_cursor";
 
+		/// <summary>
+		/// Cached name for the '_direction' field.
+		/// </summary>
 		public static readonly StringName _direction = "_direction";
 	}
 
+	/// <summary>
+	/// Cached StringNames for the signals contained in this class, for fast lookup.
+	/// </summary>
 	public new class SignalName : NMapDrawingInput.SignalName
 	{
 	}
@@ -106,10 +149,10 @@ public class NControllerMapDrawingInput : NMapDrawingInput
 			_cursor.GetNode<TextureRect>("TextureRect").Texture = _cursorTex;
 			_isPressed = false;
 		}
-		_direction = Input.GetVector(Controller.joystickLeft, Controller.joystickRight, Controller.joystickUp, Controller.joystickDown);
+		_direction = NControllerManager.Instance.GetLeftAnalogStickDirection();
 		if (_direction.Length() < 0.1f)
 		{
-			_direction += Input.GetVector(Controller.dPadWest, Controller.dPadEast, Controller.dPadNorth, Controller.dPadSouth);
+			_direction += Input.GetVector(Controller.dPadLeft, Controller.dPadRight, Controller.dPadUp, Controller.dPadDown);
 		}
 		if (_direction.Length() > 0f)
 		{
@@ -131,6 +174,11 @@ public class NControllerMapDrawingInput : NMapDrawingInput
 		}
 	}
 
+	/// <summary>
+	/// Get the method information for all the methods declared in this class.
+	/// This method is used by Godot to register the available methods in the editor.
+	/// Do not call this method.
+	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	internal new static List<MethodInfo> GetGodotMethodList()
 	{
@@ -148,6 +196,7 @@ public class NControllerMapDrawingInput : NMapDrawingInput
 		return list;
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool InvokeGodotClassMethod(in godot_string_name method, NativeVariantPtrArgs args, out godot_variant ret)
 	{
@@ -189,6 +238,7 @@ public class NControllerMapDrawingInput : NMapDrawingInput
 		return false;
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool HasGodotClassMethod(in godot_string_name method)
 	{
@@ -211,6 +261,7 @@ public class NControllerMapDrawingInput : NMapDrawingInput
 		return base.HasGodotClassMethod(in method);
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool SetGodotClassPropertyValue(in godot_string_name name, in godot_variant value)
 	{
@@ -252,6 +303,7 @@ public class NControllerMapDrawingInput : NMapDrawingInput
 		return base.SetGodotClassPropertyValue(in name, in value);
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool GetGodotClassPropertyValue(in godot_string_name name, out godot_variant value)
 	{
@@ -293,6 +345,11 @@ public class NControllerMapDrawingInput : NMapDrawingInput
 		return base.GetGodotClassPropertyValue(in name, out value);
 	}
 
+	/// <summary>
+	/// Get the property information for all the properties declared in this class.
+	/// This method is used by Godot to register the available properties in the editor.
+	/// Do not call this method.
+	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	internal new static List<PropertyInfo> GetGodotPropertyList()
 	{
@@ -307,6 +364,7 @@ public class NControllerMapDrawingInput : NMapDrawingInput
 		return list;
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override void SaveGodotObjectData(GodotSerializationInfo info)
 	{
@@ -320,6 +378,7 @@ public class NControllerMapDrawingInput : NMapDrawingInput
 		info.AddProperty(PropertyName._direction, Variant.From(in _direction));
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override void RestoreGodotObjectData(GodotSerializationInfo info)
 	{

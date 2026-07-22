@@ -34,7 +34,7 @@ public sealed class BrainLeech : EventModel
 		new IntVar("FromCardChoiceCount", 5m)
 	});
 
-	public override bool IsAllowed(RunState runState)
+	public override bool IsAllowed(IRunState runState)
 	{
 		return runState.CurrentActIndex < 2;
 	}
@@ -50,10 +50,10 @@ public sealed class BrainLeech : EventModel
 
 	private async Task Rip()
 	{
-		await CreatureCmd.Damage(new ThrowingPlayerChoiceContext(), base.Owner.Creature, (DamageVar)base.DynamicVars["RipHpLoss"], null, null);
+		await CreatureCmd.Damage(new ThrowingPlayerChoiceContext(), base.Owner.Creature, (DamageVar)base.DynamicVars["RipHpLoss"], null, null, null);
 		for (int i = 0; i < base.DynamicVars["RewardCount"].IntValue; i++)
 		{
-			CardCreationOptions options = CardCreationOptions.ForNonCombatWithDefaultOdds(new global::_003C_003Ez__ReadOnlySingleElementList<CardPoolModel>(ModelDb.CardPool<ColorlessCardPool>()));
+			CardCreationOptions options = CardCreationOptions.ForNonCombatWithDefaultOdds(new global::_003C_003Ez__ReadOnlySingleElementList<CardPoolModel>(ModelDb.CardPool<ColorlessCardPool>())).WithFlags(CardCreationFlags.NoRarityModification | CardCreationFlags.NoCardPoolModifications);
 			CardReward item = new CardReward(options, 3, base.Owner);
 			await RewardsCmd.OfferCustom(base.Owner, new List<Reward>(1) { item });
 		}
@@ -64,14 +64,11 @@ public sealed class BrainLeech : EventModel
 	{
 		Player owner = base.Owner;
 		List<CardCreationResult> cards = CardFactory.CreateForReward(owner, base.DynamicVars["FromCardChoiceCount"].IntValue, CardCreationOptions.ForNonCombatWithDefaultOdds(new global::_003C_003Ez__ReadOnlySingleElementList<CardPoolModel>(owner.Character.CardPool))).ToList();
-		CardSelectorPrefs cardSelectorPrefs = new CardSelectorPrefs(L10NLookup("BRAIN_LEECH.pages.SHARE_KNOWLEDGE.selectionScreenPrompt"), 1);
-		cardSelectorPrefs.Cancelable = false;
-		CardSelectorPrefs prefs = cardSelectorPrefs;
-		CardModel cardModel = (await CardSelectCmd.FromSimpleGridForRewards(new BlockingPlayerChoiceContext(), cards, base.Owner, prefs)).FirstOrDefault();
-		if (cardModel != null)
+		CardSelectorPrefs prefs = new CardSelectorPrefs(L10NLookup("BRAIN_LEECH.pages.SHARE_KNOWLEDGE.selectionScreenPrompt"), 1)
 		{
-			CardCmd.PreviewCardPileAdd(await CardPileCmd.Add(cardModel, PileType.Deck));
-		}
+			Cancelable = false
+		};
+		await SelectCardsToAddToDeckFromGrid(cards, prefs);
 		SetEventFinished(L10NLookup("BRAIN_LEECH.pages.SHARE_KNOWLEDGE.description"));
 	}
 }

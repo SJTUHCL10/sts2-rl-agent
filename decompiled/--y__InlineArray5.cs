@@ -5,4 +5,6 @@ using System.Runtime.InteropServices;
 [InlineArray(5)]
 internal struct _003C_003Ey__InlineArray5<T>
 {
+	[CompilerGenerated]
+	private T _element0;
 }

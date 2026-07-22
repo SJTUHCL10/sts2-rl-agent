@@ -1,7 +1,6 @@
 using System;
 using System.Threading.Tasks;
 using MegaCrit.Sts2.Core.Assets;
-using MegaCrit.Sts2.Core.Events;
 using MegaCrit.Sts2.Core.Helpers;
 using MegaCrit.Sts2.Core.Hooks;
 using MegaCrit.Sts2.Core.Models;
@@ -21,8 +20,17 @@ public class EventRoom : AbstractRoom
 
 	public override ModelId ModelId => CanonicalEvent.Id;
 
+	/// <summary>
+	/// The canonical version of the event that the player is doing in this room.
+	/// Unlike CombatRoom.Encounter, we want this to be canonical, because we create a separate mutable copy for each
+	/// player.
+	/// </summary>
 	public EventModel CanonicalEvent { get; }
 
+	/// <summary>
+	/// The mutable version of the event that the local player is doing in this room.
+	/// When using this, keep in mind that the
+	/// </summary>
 	public EventModel LocalMutableEvent => RunManager.Instance.EventSynchronizer.GetLocalEvent();
 
 	public Action<EventModel>? OnStart { private get; init; }
@@ -44,9 +52,8 @@ public class EventRoom : AbstractRoom
 		}
 	}
 
-	public override async Task Enter(IRunState? runState, bool isRestoringRoomStackBase)
+	public override async Task EnterInternal(IRunState? runState, bool isRestoringRoomStackBase)
 	{
-		await PreloadManager.LoadRoomEventAssets(CanonicalEvent, runState ?? NullRunState.Instance);
 		RunManager.Instance.EventSynchronizer.BeginEvent(CanonicalEvent, IsPreFinished, OnStart);
 		foreach (EventModel @event in RunManager.Instance.EventSynchronizer.Events)
 		{
@@ -57,10 +64,8 @@ public class EventRoom : AbstractRoom
 			}
 		}
 		EventModel localEvent = RunManager.Instance.EventSynchronizer.GetLocalEvent();
-		if (localEvent.LayoutType == EventLayoutType.Combat)
-		{
-			localEvent.GenerateInternalCombatState(runState ?? NullRunState.Instance);
-		}
+		RunManager.Instance.EventSynchronizer.GenerateInternalCombatStateIfNecessary(localEvent);
+		await PreloadManager.LoadRoomEventAssets(CanonicalEvent, runState ?? NullRunState.Instance);
 		if (!isRestoringRoomStackBase)
 		{
 			NEventRoom currentRoom = NEventRoom.Create(localEvent, runState, _isPreFinished);
@@ -73,18 +78,20 @@ public class EventRoom : AbstractRoom
 		await localEvent.AfterEventStarted();
 	}
 
-	public override Task Exit(IRunState? runState)
+	public override async Task Exit(IRunState? runState)
 	{
-		if (CanonicalEvent.IsDeterministic)
+		await RunManager.Instance.EventSynchronizer.AwaitPendingOptionTasks();
+		EventModel localEvent = RunManager.Instance.EventSynchronizer.GetLocalEvent();
+		if (localEvent.IsDeterministic)
 		{
-			RunManager.Instance.ChecksumTracker.GenerateChecksum($"Exiting event room {CanonicalEvent.Id}", null);
+			RunManager.Instance.ChecksumTracker.GenerateChecksum($"Exiting event room {localEvent.Id}", null);
 		}
+		RunManager.Instance.EventSynchronizer.BeforeExitingRoom();
 		foreach (EventModel @event in RunManager.Instance.EventSynchronizer.Events)
 		{
 			@event.StateChanged -= OnEventStateChanged;
 			@event.EnsureCleanup();
 		}
-		return Task.CompletedTask;
 	}
 
 	public override Task Resume(AbstractRoom exitedRoom, IRunState? runState)

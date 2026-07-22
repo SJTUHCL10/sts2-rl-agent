@@ -1528,3 +1528,52 @@ def make_volley(upgraded: bool = False) -> CardInstance:
     card = _make_reference_factory_card(CardId.VOLLEY, upgraded=upgraded)
     card.base_damage = VOLLEY_UPGRADED_DAMAGE if upgraded else VOLLEY_DAMAGE
     return card
+
+
+@register_effect(CardId.ABUNDANCE)
+def abundance(card: CardInstance, combat: CombatState, target: Creature | None) -> None:
+    candidates = [
+        candidate
+        for candidate in create_distinct_character_cards(
+            combat.character_id,
+            combat.combat_card_generation_rng,
+            12,
+            generation_context="combat",
+            is_multiplayer=combat.is_multiplayer,
+        )
+        if candidate.card_type == CardType.POWER
+    ][:3]
+    if not candidates:
+        return
+    if card.upgraded:
+        from sts2_env.cards.factory import create_card
+
+        candidates = [create_card(candidate.card_id, upgraded=True) for candidate in candidates]
+
+    def _resolver(selected: CardInstance | None) -> None:
+        if selected is None:
+            return
+        selected.set_temporary_cost_for_turn(0)
+        combat.add_generated_card_to_creature_hand(_owner(card, combat), selected)
+
+    combat.request_card_choice(
+        prompt="Choose one of three Powers",
+        cards=candidates,
+        source_pile="generated",
+        resolver=_resolver,
+    )
+
+
+@register_effect(CardId.THE_BALL)
+def the_ball(card: CardInstance, combat: CombatState, target: Creature | None) -> None:
+    assert target is not None
+    _deal_damage_single(card, combat, target)
+    card.base_damage += card.effect_vars.get("increase", 10)
+
+
+def make_abundance(upgraded: bool = False) -> CardInstance:
+    return _make_reference_factory_card(CardId.ABUNDANCE, upgraded=upgraded)
+
+
+def make_the_ball(upgraded: bool = False) -> CardInstance:
+    return _make_reference_factory_card(CardId.THE_BALL, upgraded=upgraded)

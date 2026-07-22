@@ -86,7 +86,7 @@ class TestColorlessCardEffectsReferenceParity:
         common = make_strike_ironclad()
         combat.hand = [make_anointed()]
         combat.draw_pile = [common, rare]
-        combat.energy = 1
+        combat.energy = 2
 
         assert combat.play_card(0)
 
@@ -186,7 +186,7 @@ class TestColorlessCardEffectsReferenceParity:
         second = make_defend_ironclad()
         combat.hand = [make_catastrophe()]
         combat.draw_pile = [first, second]
-        combat.energy = 2
+        combat.energy = 3
 
         assert combat.play_card(0)
 
@@ -526,7 +526,7 @@ class TestColorlessCardEffectsReferenceParity:
         )
         combat.hand = [make_beacon_of_hope(), make_finesse()]
         combat.draw_pile = []
-        combat.energy = 1
+        combat.energy = 2
 
         assert combat.play_card(0)
         assert combat.play_card(0)
@@ -542,7 +542,7 @@ class TestColorlessCardEffectsReferenceParity:
         enemy.max_hp = 100
         enemy.current_hp = 100
         combat.hand = [make_beacon_of_hope(), make_fisticuffs()]
-        combat.energy = 2
+        combat.energy = 3
 
         assert combat.play_card(0)
         assert combat.play_card(0, 0)

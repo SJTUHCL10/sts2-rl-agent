@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Godot;
@@ -24,6 +26,9 @@ namespace MegaCrit.Sts2.Core.Models.Events;
 
 public sealed class PunchOff : EventModel
 {
+	/// <summary>
+	/// Used to end the enemies punching each other.
+	/// </summary>
 	private CancellationTokenSource? _punchCts;
 
 	public override EventLayoutType LayoutType => EventLayoutType.Combat;
@@ -34,7 +39,7 @@ public sealed class PunchOff : EventModel
 
 	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new GoldVar(0));
 
-	public override bool IsAllowed(RunState runState)
+	public override bool IsAllowed(IRunState runState)
 	{
 		return runState.TotalFloor >= 6;
 	}
@@ -51,7 +56,6 @@ public sealed class PunchOff : EventModel
 	public override Task AfterEventStarted()
 	{
 		RunManager.Instance.RoomExited += OnRoomExited;
-		base.Owner.CanRemovePotions = false;
 		_punchCts = new CancellationTokenSource();
 		TaskHelper.RunSafely(PunchEachOther());
 		return Task.CompletedTask;
@@ -59,8 +63,8 @@ public sealed class PunchOff : EventModel
 
 	private async Task PunchEachOther()
 	{
-		Creature leftEnemy = _combatStateForCombatLayout.Enemies[0];
-		Creature rightEnemy = _combatStateForCombatLayout.Enemies[1];
+		Creature leftEnemy = _combatSynchronizer.CombatStateForLayout.Enemies[0];
+		Creature rightEnemy = _combatSynchronizer.CombatStateForLayout.Enemies[1];
 		NCreature leftEnemyNode = NCombatRoom.Instance?.GetCreatureNode(leftEnemy);
 		if (leftEnemyNode == null)
 		{
@@ -100,11 +104,6 @@ public sealed class PunchOff : EventModel
 		base.DynamicVars.Gold.BaseValue = base.Rng.NextInt(91, 99);
 	}
 
-	protected override void OnEventFinished()
-	{
-		base.Owner.CanRemovePotions = true;
-	}
-
 	private async Task Nab()
 	{
 		await CardPileCmd.AddCurseToDeck<Injury>(base.Owner);
@@ -127,12 +126,16 @@ public sealed class PunchOff : EventModel
 
 	private Task Fight()
 	{
-		base.Owner.CanRemovePotions = true;
-		EnterCombatWithoutExitingEvent<PunchOffEventEncounter>(new global::_003C_003Ez__ReadOnlyArray<Reward>(new Reward[2]
-		{
-			new RelicReward(base.Owner),
-			new PotionReward(base.Owner)
-		}), shouldResumeAfterCombat: false);
+		int num = 2;
+		List<Reward> list = new List<Reward>(num);
+		CollectionsMarshal.SetCount(list, num);
+		Span<Reward> span = CollectionsMarshal.AsSpan(list);
+		int num2 = 0;
+		span[num2] = new RelicReward(base.Owner);
+		num2++;
+		span[num2] = new PotionReward(base.Owner);
+		List<Reward> extraRewards = list;
+		EnterCombatWithoutExitingEvent<PunchOffEventEncounter>(extraRewards, shouldResumeAfterCombat: false);
 		return Task.CompletedTask;
 	}
 

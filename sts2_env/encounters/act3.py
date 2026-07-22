@@ -9,6 +9,8 @@ from sts2_env.core.rng import Rng
 if TYPE_CHECKING:
     from sts2_env.core.combat import CombatState
 from sts2_env.monsters.act3 import (
+    apply_aeonglass_room_setup,
+    create_aeonglass,
     create_devoted_sculptor,
     create_living_shield,
     create_scroll_of_biting,
@@ -167,6 +169,11 @@ ELITE_ENCOUNTERS: list[EncounterSetup] = [
 
 # ---- Boss Encounters ----
 
+def setup_aeonglass_boss(combat: CombatState, rng: Rng) -> None:
+    creature, ai = create_aeonglass(rng, ascension_level=getattr(combat, "ascension_level", 0))
+    combat.add_enemy(creature, ai)
+    apply_aeonglass_room_setup(combat)
+
 def setup_doormaker_boss(combat: CombatState, rng: Rng) -> None:
     door, door_ai = create_door(rng, ascension_level=getattr(combat, "ascension_level", 0))
     combat.add_enemy(door, door_ai)
@@ -186,17 +193,17 @@ def setup_test_subject_boss(combat: CombatState, rng: Rng) -> None:
 
 
 BOSS_ENCOUNTERS: list[EncounterSetup] = [
+    setup_aeonglass_boss,
     setup_queen_boss,
     setup_test_subject_boss,
-    setup_doormaker_boss,
 ]
 
 
 ALL_ACT3_ENCOUNTERS: list[EncounterSetup] = [
     setup_axebots_normal,
+    setup_aeonglass_boss,
     setup_construct_menagerie_normal,
     setup_devoted_sculptor_weak,
-    setup_doormaker_boss,
     setup_fabricator_normal,
     setup_frog_knight_normal,
     setup_globe_head_normal,

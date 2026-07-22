@@ -7,7 +7,10 @@ using Godot.Bridge;
 using Godot.NativeInterop;
 using MegaCrit.Sts2.Core.Assets;
 using MegaCrit.Sts2.Core.Helpers;
+using MegaCrit.Sts2.Core.Map;
+using MegaCrit.Sts2.Core.Nodes.GodotExtensions;
 using MegaCrit.Sts2.Core.Random;
+using MegaCrit.Sts2.Core.Runs;
 using MegaCrit.Sts2.Core.TestSupport;
 
 namespace MegaCrit.Sts2.Core.Nodes.Vfx;
@@ -15,20 +18,36 @@ namespace MegaCrit.Sts2.Core.Nodes.Vfx;
 [ScriptPath("res://src/Core/Nodes/Vfx/NMapCircleVfx.cs")]
 public class NMapCircleVfx : Control
 {
+	/// <summary>
+	/// Cached StringNames for the methods contained in this class, for fast lookup.
+	/// </summary>
 	public new class MethodName : Control.MethodName
 	{
+		/// <summary>
+		/// Cached name for the '_Ready' method.
+		/// </summary>
 		public new static readonly StringName _Ready = "_Ready";
-
-		public static readonly StringName Create = "Create";
 	}
 
+	/// <summary>
+	/// Cached StringNames for the properties and fields contained in this class, for fast lookup.
+	/// </summary>
 	public new class PropertyName : Control.PropertyName
 	{
+		/// <summary>
+		/// Cached name for the '_image' field.
+		/// </summary>
 		public static readonly StringName _image = "_image";
 
+		/// <summary>
+		/// Cached name for the '_playAnim' field.
+		/// </summary>
 		public static readonly StringName _playAnim = "_playAnim";
 	}
 
+	/// <summary>
+	/// Cached StringNames for the signals contained in this class, for fast lookup.
+	/// </summary>
 	public new class SignalName : Control.SignalName
 	{
 	}
@@ -43,14 +62,19 @@ public class NMapCircleVfx : Control
 
 	private bool _playAnim;
 
+	private MapCoord _mapCoord;
+
+	private IRunState _runState;
+
 	public static IEnumerable<string> AssetPaths => _textures.Append("res://scenes/vfx/map_circle_vfx.tscn");
 
 	public override void _Ready()
 	{
 		_image = GetNode<TextureRect>("TextureRect");
 		_image.Texture = PreloadManager.Cache.GetTexture2D(_textures[0]);
-		base.RotationDegrees = Rng.Chaotic.NextFloat(360f);
-		Vector2 vector = Vector2.One * Rng.Chaotic.NextFloat(0.85f, 0.9f);
+		Rng rng = new Rng((ulong)((long)_runState.Rng.Seed + (long)_mapCoord.row + 131L * (long)_mapCoord.row));
+		base.RotationDegrees = rng.NextFloat(360f);
+		Vector2 vector = Vector2.One * rng.NextFloat(0.85f, 0.9f);
 		if (_playAnim)
 		{
 			Tween tween = CreateTween().SetParallel();
@@ -76,11 +100,11 @@ public class NMapCircleVfx : Control
 		{
 			_image.Texture = PreloadManager.Cache.GetTexture2D(path);
 			SceneTreeTimer source = GetTree().CreateTimer(1.0 / 24.0);
-			await ToSignal(source, SceneTreeTimer.SignalName.Timeout);
+			await source.AwaitSignal(SceneTreeTimer.SignalName.Timeout, this);
 		}
 	}
 
-	public static NMapCircleVfx? Create(bool playAnim)
+	public static NMapCircleVfx? Create(IRunState runState, MapCoord mapCoord, bool playAnim)
 	{
 		if (TestMode.IsOn)
 		{
@@ -88,21 +112,25 @@ public class NMapCircleVfx : Control
 		}
 		NMapCircleVfx nMapCircleVfx = PreloadManager.Cache.GetScene("res://scenes/vfx/map_circle_vfx.tscn").Instantiate<NMapCircleVfx>(PackedScene.GenEditState.Disabled);
 		nMapCircleVfx._playAnim = playAnim;
+		nMapCircleVfx._mapCoord = mapCoord;
+		nMapCircleVfx._runState = runState;
 		return nMapCircleVfx;
 	}
 
+	/// <summary>
+	/// Get the method information for all the methods declared in this class.
+	/// This method is used by Godot to register the available methods in the editor.
+	/// Do not call this method.
+	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	internal static List<MethodInfo> GetGodotMethodList()
 	{
-		List<MethodInfo> list = new List<MethodInfo>(2);
+		List<MethodInfo> list = new List<MethodInfo>(1);
 		list.Add(new MethodInfo(MethodName._Ready, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
-		list.Add(new MethodInfo(MethodName.Create, new PropertyInfo(Variant.Type.Object, "", PropertyHint.None, "", PropertyUsageFlags.Default, new StringName("Control"), exported: false), MethodFlags.Normal | MethodFlags.Static, new List<PropertyInfo>
-		{
-			new PropertyInfo(Variant.Type.Bool, "playAnim", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false)
-		}, null));
 		return list;
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool InvokeGodotClassMethod(in godot_string_name method, NativeVariantPtrArgs args, out godot_variant ret)
 	{
@@ -112,26 +140,10 @@ public class NMapCircleVfx : Control
 			ret = default(godot_variant);
 			return true;
 		}
-		if (method == MethodName.Create && args.Count == 1)
-		{
-			ret = VariantUtils.CreateFrom<NMapCircleVfx>(Create(VariantUtils.ConvertTo<bool>(in args[0])));
-			return true;
-		}
 		return base.InvokeGodotClassMethod(in method, args, out ret);
 	}
 
-	[EditorBrowsable(EditorBrowsableState.Never)]
-	internal static bool InvokeGodotClassStaticMethod(in godot_string_name method, NativeVariantPtrArgs args, out godot_variant ret)
-	{
-		if (method == MethodName.Create && args.Count == 1)
-		{
-			ret = VariantUtils.CreateFrom<NMapCircleVfx>(Create(VariantUtils.ConvertTo<bool>(in args[0])));
-			return true;
-		}
-		ret = default(godot_variant);
-		return false;
-	}
-
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool HasGodotClassMethod(in godot_string_name method)
 	{
@@ -139,13 +151,10 @@ public class NMapCircleVfx : Control
 		{
 			return true;
 		}
-		if (method == MethodName.Create)
-		{
-			return true;
-		}
 		return base.HasGodotClassMethod(in method);
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool SetGodotClassPropertyValue(in godot_string_name name, in godot_variant value)
 	{
@@ -162,6 +171,7 @@ public class NMapCircleVfx : Control
 		return base.SetGodotClassPropertyValue(in name, in value);
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool GetGodotClassPropertyValue(in godot_string_name name, out godot_variant value)
 	{
@@ -178,6 +188,11 @@ public class NMapCircleVfx : Control
 		return base.GetGodotClassPropertyValue(in name, out value);
 	}
 
+	/// <summary>
+	/// Get the property information for all the properties declared in this class.
+	/// This method is used by Godot to register the available properties in the editor.
+	/// Do not call this method.
+	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	internal static List<PropertyInfo> GetGodotPropertyList()
 	{
@@ -187,6 +202,7 @@ public class NMapCircleVfx : Control
 		return list;
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override void SaveGodotObjectData(GodotSerializationInfo info)
 	{
@@ -195,6 +211,7 @@ public class NMapCircleVfx : Control
 		info.AddProperty(PropertyName._playAnim, Variant.From(in _playAnim));
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override void RestoreGodotObjectData(GodotSerializationInfo info)
 	{

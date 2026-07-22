@@ -23,20 +23,20 @@ public sealed class BansheesCry : CardModel
 	});
 
 	public BansheesCry()
-		: base(6, CardType.Attack, CardRarity.Rare, TargetType.AllEnemies)
+		: base(9, CardType.Attack, CardRarity.Rare, TargetType.AllEnemies)
 	{
 	}
 
 	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
 	{
-		await DamageCmd.Attack(base.DynamicVars.Damage.BaseValue).FromCard(this).TargetingAllOpponents(base.CombatState)
+		await DamageCmd.Attack(base.DynamicVars.Damage.BaseValue).FromCard(this, cardPlay).TargetingAllOpponents(base.CombatState)
 			.WithHitFx("vfx/vfx_attack_slash")
 			.Execute(choiceContext);
 	}
 
 	protected override void OnUpgrade()
 	{
-		base.DynamicVars.Damage.UpgradeValueBy(6m);
+		base.EnergyCost.UpgradeBy(-2);
 	}
 
 	public override Task AfterCardEnteredCombat(CardModel card)
@@ -49,12 +49,12 @@ public sealed class BansheesCry : CardModel
 		{
 			return Task.CompletedTask;
 		}
-		int num = CombatManager.Instance.History.CardPlaysFinished.Count((CardPlayFinishedEntry e) => e.WasEthereal && e.CardPlay.Card.Owner == base.Owner);
+		int num = CombatManager.Instance.History.CardPlaysFinished.Count((CardPlayFinishedEntry e) => e.WasEthereal && e.CardPlay.Player == base.Owner);
 		base.EnergyCost.AddThisCombat(-num * base.DynamicVars.Energy.IntValue);
 		return Task.CompletedTask;
 	}
 
-	public override Task AfterCardPlayed(PlayerChoiceContext context, CardPlay cardPlay)
+	public override Task AfterCardPlayed(PlayerChoiceContext choiceContext, CardPlay cardPlay)
 	{
 		if (cardPlay.Card.Owner != base.Owner)
 		{

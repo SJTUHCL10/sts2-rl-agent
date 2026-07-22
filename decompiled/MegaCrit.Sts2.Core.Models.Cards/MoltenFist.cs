@@ -32,13 +32,13 @@ public sealed class MoltenFist : CardModel
 	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
 	{
 		ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
-		await DamageCmd.Attack(base.DynamicVars.Damage.BaseValue).FromCard(this).Targeting(cardPlay.Target)
+		await DamageCmd.Attack(base.DynamicVars.Damage.BaseValue).FromCard(this, cardPlay).Targeting(cardPlay.Target)
 			.WithHitFx("vfx/vfx_molten_fist", null, "blunt_attack.mp3")
 			.Execute(choiceContext);
 		int num = (cardPlay.Target.IsAlive ? cardPlay.Target.GetPowerAmount<VulnerablePower>() : 0);
 		if (num > 0)
 		{
-			await PowerCmd.Apply<VulnerablePower>(cardPlay.Target, num, base.Owner.Creature, this);
+			await PowerCmd.Apply<VulnerablePower>(choiceContext, cardPlay.Target, num, base.Owner.Creature, this);
 		}
 	}
 

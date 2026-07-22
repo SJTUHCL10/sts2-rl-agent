@@ -253,7 +253,7 @@ class TestRelicUncommonRoomPotionOrbHooksParity:
         fire_before_side_turn_start(CombatSide.PLAYER, combat)
         for enemy in combat.enemies:
             assert enemy.get_power_amount(PowerId.POISON) == 4
-            assert enemy.current_hp == 89
+            assert enemy.current_hp == 67
             enemy.powers.pop(PowerId.POISON, None)
 
         combat.round_number = 2

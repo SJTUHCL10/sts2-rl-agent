@@ -118,8 +118,8 @@ LIGHTNING_ROD_POWER_KEY = "lightning_rod_power"
 LIGHTNING_ROD_POWER = 2
 MACHINE_LEARNING_CARDS_KEY = "cards"
 MACHINE_LEARNING_CARDS = 1
-MOMENTUM_STRIKE_DAMAGE = 10
-MOMENTUM_STRIKE_UPGRADED_DAMAGE = 13
+MOMENTUM_STRIKE_DAMAGE = 11
+MOMENTUM_STRIKE_UPGRADED_DAMAGE = 15
 OVERCLOCK_CARDS_KEY = "cards"
 OVERCLOCK_CARDS = 2
 OVERCLOCK_UPGRADED_CARDS = 3
@@ -144,8 +144,8 @@ THUNDER_UPGRADED_POWER = 8
 TURBO_ENERGY_KEY = "energy"
 TURBO_ENERGY = 2
 TURBO_UPGRADED_ENERGY = 3
-UPROAR_DAMAGE = 5
-UPROAR_UPGRADED_DAMAGE = 7
+UPROAR_DAMAGE = 6
+UPROAR_UPGRADED_DAMAGE = 8
 UPROAR_HITS = 2
 GENETIC_ALGORITHM_BLOCK_KEY = "block"
 GENETIC_ALGORITHM_BLOCK = 1
@@ -158,8 +158,8 @@ HELIX_DRILL_CALC_BASE_KEY = "calc_base"
 HELIX_DRILL_CALC_BASE = 0
 HELIX_DRILL_CALC_EXTRA_KEY = "calc_extra"
 HELIX_DRILL_CALC_EXTRA = 1
-HYPERBEAM_DAMAGE = 26
-HYPERBEAM_UPGRADED_DAMAGE = 34
+HYPERBEAM_DAMAGE = 30
+HYPERBEAM_UPGRADED_DAMAGE = 38
 HYPERBEAM_FOCUS_KEY = "focus_power"
 HYPERBEAM_FOCUS = 3
 METEOR_STRIKE_DAMAGE = 24
@@ -1796,11 +1796,12 @@ def make_subroutine(upgraded: bool = False) -> CardInstance:
     )
 
 
-def make_sunder() -> CardInstance:
+def make_sunder(upgraded: bool = False) -> CardInstance:
     return CardInstance(
         card_id=CardId.SUNDER, cost=3, card_type=CardType.ATTACK,
         target_type=TargetType.ANY_ENEMY, rarity=CardRarity.UNCOMMON,
-        base_damage=24, effect_vars={"energy": 3}, instance_id=_get_next_id(),
+        base_damage=34 if upgraded else 26, effect_vars={"energy": 3},
+        upgraded=upgraded, instance_id=_get_next_id(),
     )
 
 
@@ -2015,7 +2016,7 @@ def make_ice_lance(upgraded: bool = False) -> CardInstance:
 def make_ignition(upgraded: bool = False) -> CardInstance:
     return CardInstance(
         card_id=CardId.IGNITION, cost=1, card_type=CardType.SKILL,
-        target_type=TargetType.ANY_ALLY, rarity=CardRarity.RARE,
+        target_type=TargetType.ANY_ALLY, rarity=CardRarity.UNCOMMON,
         keywords=frozenset() if upgraded else frozenset({"exhaust"}),
         upgraded=upgraded, instance_id=_get_next_id(),
     )
@@ -2091,6 +2092,7 @@ def make_shatter(upgraded: bool = False) -> CardInstance:
         card_id=CardId.SHATTER, cost=1, card_type=CardType.ATTACK,
         target_type=TargetType.ALL_ENEMIES, rarity=CardRarity.RARE,
         base_damage=SHATTER_UPGRADED_DAMAGE if upgraded else SHATTER_DAMAGE,
+        keywords=frozenset({"exhaust"}),
         upgraded=upgraded,
         instance_id=_get_next_id(),
     )
@@ -2134,9 +2136,8 @@ def make_supercritical(upgraded: bool = False) -> CardInstance:
 
 def make_trash_to_treasure(upgraded: bool = False) -> CardInstance:
     return CardInstance(
-        card_id=CardId.TRASH_TO_TREASURE, cost=1, card_type=CardType.POWER,
+        card_id=CardId.TRASH_TO_TREASURE, cost=0 if upgraded else 1, card_type=CardType.POWER,
         target_type=TargetType.SELF, rarity=CardRarity.RARE,
-        keywords=frozenset({"innate"}) if upgraded else frozenset(),
         upgraded=upgraded,
         instance_id=_get_next_id(),
     )
@@ -2181,6 +2182,52 @@ def make_quadcast(upgraded: bool = False) -> CardInstance:
         upgraded=upgraded,
         instance_id=_get_next_id(),
     )
+
+
+@register_effect(CardId.HIBERNATE)
+def hibernate(card: CardInstance, combat: CombatState, target: Creature | None) -> None:
+    owner = _owner(card, combat)
+    combat.apply_power_to(owner, PowerId.HIBERNATE, 1)
+    for _ in range(card.effect_vars.get("repeat", 2)):
+        combat.channel_orb(owner, OrbType.FROST)
+
+
+@register_effect(CardId.IMITATION_LEARNING)
+def imitation_learning(card: CardInstance, combat: CombatState, target: Creature | None) -> None:
+    assert target is not None
+    power = combat.apply_power_to(
+        _owner(card, combat),
+        PowerId.IMITATION_LEARNING,
+        card.effect_vars.get("imitation_learning_power", 2),
+    )
+    if power is not None:
+        power.player_target = target
+
+
+@register_effect(CardId.ONE_FOR_ALL)
+def one_for_all(card: CardInstance, combat: CombatState, target: Creature | None) -> None:
+    amount = card.effect_vars.get("one_for_all_power", 3)
+    for state in combat.combat_player_states:
+        if state.creature.is_alive:
+            combat.apply_power_to(state.creature, PowerId.ONE_FOR_ALL, amount)
+
+
+def _make_new_reference_card(card_id: CardId, upgraded: bool) -> CardInstance:
+    from sts2_env.cards.factory import create_reference_card
+
+    return create_reference_card(card_id, upgraded=upgraded, allow_generation=True)
+
+
+def make_hibernate(upgraded: bool = False) -> CardInstance:
+    return _make_new_reference_card(CardId.HIBERNATE, upgraded)
+
+
+def make_imitation_learning(upgraded: bool = False) -> CardInstance:
+    return _make_new_reference_card(CardId.IMITATION_LEARNING, upgraded)
+
+
+def make_one_for_all(upgraded: bool = False) -> CardInstance:
+    return _make_new_reference_card(CardId.ONE_FOR_ALL, upgraded)
 
 
 def create_defect_starter_deck() -> list[CardInstance]:

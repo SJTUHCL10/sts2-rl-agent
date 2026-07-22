@@ -60,7 +60,7 @@ public class ArtConsoleCmd : AbstractConsoleCmd
 			{
 				if (!debugAffliction.HasOverlay)
 				{
-					list.Add(new MissingArt(debugAffliction, debugAffliction.OverlayPath, debugAffliction.Description.GetRawText()));
+					list.Add(new MissingArt(debugAffliction, debugAffliction.OverlayPath, debugAffliction.DynamicDescription.GetRawText()));
 				}
 			}
 			break;
@@ -73,8 +73,8 @@ public class ArtConsoleCmd : AbstractConsoleCmd
 				}
 				foreach (string allPortraitPath in allCard.AllPortraitPaths)
 				{
-					var (text3, spriteName) = AtlasResourceLoader.ParsePath(allPortraitPath);
-					if (text3 == null || !AtlasManager.HasSprite(text3, spriteName))
+					var (text5, spriteName3) = AtlasResourceLoader.ParsePath(allPortraitPath);
+					if (text5 == null || !AtlasManager.HasSprite(text5, spriteName3))
 					{
 						list.Add(new MissingArt(allCard, allCard.PortraitPath, allCard.Description.GetRawText()));
 					}
@@ -86,14 +86,15 @@ public class ArtConsoleCmd : AbstractConsoleCmd
 			{
 				if (!(debugEnchantment is DeprecatedEnchantment) && !(debugEnchantment.IconPath == debugEnchantment.IntendedIconPath))
 				{
-					list.Add(new MissingArt(debugEnchantment, debugEnchantment.IntendedIconPath, debugEnchantment.Description.GetRawText()));
+					list.Add(new MissingArt(debugEnchantment, debugEnchantment.IntendedIconPath, debugEnchantment.DynamicDescription.GetRawText()));
 				}
 			}
 			break;
 		case "power":
 			foreach (PowerModel allPower in ModelDb.AllPowers)
 			{
-				if (!(allPower.IconPath == allPower.PackedIconPath))
+				var (text4, spriteName2) = AtlasResourceLoader.ParsePath(allPower.PackedIconPath);
+				if (text4 == null || !AtlasManager.HasSprite(text4, spriteName2))
 				{
 					list.Add(new MissingArt(allPower, allPower.PackedIconPath, allPower.Description.GetRawText()));
 				}
@@ -102,9 +103,10 @@ public class ArtConsoleCmd : AbstractConsoleCmd
 		case "relic":
 			foreach (RelicModel allRelic in ModelDb.AllRelics)
 			{
-				if (!(allRelic.IconPath == allRelic.PackedIconPath))
+				var (text3, spriteName) = AtlasResourceLoader.ParsePath(allRelic.PackedIconPath);
+				if (text3 == null || !AtlasManager.HasSprite(text3, spriteName))
 				{
-					list.Add(new MissingArt(allRelic, allRelic.PackedIconPath, allRelic.Description.GetRawText()));
+					list.Add(new MissingArt(allRelic, allRelic.PackedIconPath, allRelic.DynamicDescription.GetRawText()));
 				}
 			}
 			break;

@@ -261,15 +261,24 @@ class StateAdapter:
         # For each card in hand, determine valid actions
         for i in range(min(len(hand), MAX_HAND_SIZE)):
             card = hand[i]
-            cost = card.get("cost", 0)
 
-            # Check if card is playable (enough energy, cost >= 0)
-            if cost < 0:
-                # X-cost cards (cost = -1) are always playable if energy > 0
-                if energy <= 0:
+            # Current bridge states include CardModel.CanPlay(), which already
+            # accounts for resources, Unplayable cards, card-specific rules,
+            # and hook-driven restrictions such as afflictions or card-play
+            # limits. Treat it as authoritative when present. In particular,
+            # cost == -1 is ambiguous between X-cost and unplayable cards, so
+            # reconstructing playability from cost can produce invalid masks.
+            if "playable" in card:
+                if not card["playable"]:
                     continue
-            elif cost > energy:
-                continue
+            else:
+                # Legacy bridge payload fallback.
+                cost = card.get("cost", 0)
+                if cost < 0:
+                    if energy <= 0:
+                        continue
+                elif cost > energy:
+                    continue
 
             target_type = card.get("target", "Self")
 

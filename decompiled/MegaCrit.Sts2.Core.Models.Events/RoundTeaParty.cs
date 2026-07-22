@@ -1,13 +1,16 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Creatures;
+using MegaCrit.Sts2.Core.Entities.Players;
 using MegaCrit.Sts2.Core.Events;
 using MegaCrit.Sts2.Core.Factories;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using MegaCrit.Sts2.Core.HoverTips;
 using MegaCrit.Sts2.Core.Localization.DynamicVars;
 using MegaCrit.Sts2.Core.Models.Relics;
+using MegaCrit.Sts2.Core.Runs;
 using MegaCrit.Sts2.Core.ValueProps;
 
 namespace MegaCrit.Sts2.Core.Models.Events;
@@ -20,12 +23,17 @@ public sealed class RoundTeaParty : EventModel
 		new StringVar("Relic", ModelDb.Relic<RoyalPoison>().Title.GetFormattedText())
 	});
 
+	public override bool IsAllowed(IRunState runState)
+	{
+		return runState.Players.All((Player p) => p.Creature.CurrentHp >= 12);
+	}
+
 	protected override IReadOnlyList<EventOption> GenerateInitialOptions()
 	{
 		return new global::_003C_003Ez__ReadOnlyArray<EventOption>(new EventOption[2]
 		{
 			new EventOption(this, EnjoyTea, "ROUND_TEA_PARTY.pages.INITIAL.options.ENJOY_TEA", HoverTipFactory.FromRelic<RoyalPoison>()),
-			new EventOption(this, PickFight, "ROUND_TEA_PARTY.pages.INITIAL.options.PICK_FIGHT")
+			new EventOption(this, PickFight, "ROUND_TEA_PARTY.pages.INITIAL.options.PICK_FIGHT").ThatDoesDamage(base.DynamicVars.Damage.BaseValue)
 		});
 	}
 
@@ -45,7 +53,7 @@ public sealed class RoundTeaParty : EventModel
 
 	private async Task ContinueFight()
 	{
-		await CreatureCmd.Damage(new ThrowingPlayerChoiceContext(), base.Owner.Creature, base.DynamicVars.Damage, null, null);
+		await CreatureCmd.Damage(new ThrowingPlayerChoiceContext(), base.Owner.Creature, base.DynamicVars.Damage, null, null, null);
 		await RelicCmd.Obtain(RelicFactory.PullNextRelicFromFront(base.Owner).ToMutable(), base.Owner);
 		SetEventFinished(L10NLookup("ROUND_TEA_PARTY.pages.CONTINUE_FIGHT.description"));
 	}

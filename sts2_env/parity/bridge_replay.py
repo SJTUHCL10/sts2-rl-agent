@@ -284,6 +284,39 @@ def _normalize_enemies(enemies: list[dict[str, Any]] | None) -> list[dict[str, A
     return normalized
 
 
+def _normalize_potions(potions: list[dict[str, Any]] | None) -> list[dict[str, Any]]:
+    """Normalize occupied potion slots without losing action-mask metadata."""
+    normalized: list[dict[str, Any]] = []
+    for fallback_slot, potion in enumerate(potions or []):
+        item: dict[str, Any] = {
+            "slot": int(potion.get("slot", fallback_slot)),
+            "id": str(potion.get("id", "UNKNOWN")),
+            "can_use": bool(potion.get("can_use", True)),
+        }
+        for key in ("usage", "target", "target_type"):
+            if potion.get(key) is not None:
+                item[key] = _canonical_potion_enum(potion[key])
+        if "requires_target" in potion:
+            item["requires_target"] = bool(potion.get("requires_target"))
+        normalized.append(item)
+    normalized.sort(key=lambda item: item["slot"])
+    return normalized
+
+
+def _canonical_potion_enum(value: Any) -> str:
+    """Match C# PascalCase enum text and Python UPPER_SNAKE names."""
+    compact = "".join(character for character in str(value) if character.isalnum()).lower()
+    return {
+        "combatonly": "CombatOnly",
+        "anytime": "AnyTime",
+        "automatic": "Automatic",
+        "self": "Self",
+        "anyenemy": "AnyEnemy",
+        "allenemies": "AllEnemies",
+        "anyplayer": "AnyPlayer",
+    }.get(compact, str(value))
+
+
 def _normalize_options(options: list[dict[str, Any]] | None) -> list[dict[str, Any]]:
     normalized: list[dict[str, Any]] = []
     for idx, option in enumerate(options or []):
@@ -330,7 +363,7 @@ def normalize_bridge_state(state: dict[str, Any]) -> dict[str, Any]:
     state_type = state.get("type")
     if state_type == STATE_TYPE_COMBAT:
         player = state.get("player", {})
-        return {
+        normalized = {
             "type": STATE_TYPE_COMBAT,
             "player": {
                 "hp": int(player.get("hp", 0)),
@@ -347,6 +380,15 @@ def normalize_bridge_state(state: dict[str, Any]) -> dict[str, Any]:
             "exhaust_pile_count": int(state.get("exhaust_pile_count", 0)),
             "round": int(state.get("round", 0)),
         }
+        # Potion fields were added after replay version 1 was already in use.
+        # Preserve their absence in old traces so comparisons remain backward
+        # compatible, while new raw Bridge messages retain the exact slots and
+        # mask-relevant metadata needed to reproduce policy decisions.
+        if "potions" in state:
+            normalized["potions"] = _normalize_potions(state.get("potions"))
+        if "max_potion_slots" in state:
+            normalized["max_potion_slots"] = int(state.get("max_potion_slots", 0))
+        return normalized
     if state_type == STATE_TYPE_CARD_SELECT:
         return {
             "type": STATE_TYPE_CARD_SELECT,
@@ -510,6 +552,30 @@ def combat_state_to_bridge_state(combat: CombatState) -> dict[str, Any]:
         "discard_pile_count": len(combat.discard_pile),
         "exhaust_pile_count": len(combat.exhaust_pile),
         "round": combat.round_number,
+        "potions": [
+            {
+                "slot": slot,
+                "id": potion.potion_id,
+                "usage": potion.usage_type.name,
+                "can_use": combat.can_use_potion(
+                    slot,
+                    target_index=(
+                        next(
+                            (idx for idx, enemy in enumerate(combat.enemies) if enemy.is_alive),
+                            None,
+                        )
+                        if potion.target_type.name == "ANY_ENEMY"
+                        else None
+                    ),
+                ),
+                "target": potion.target_type.name,
+                "requires_target": potion.target_type.name == "ANY_ENEMY",
+                "target_type": potion.target_type.name,
+            }
+            for slot, potion in enumerate(combat.potions)
+            if potion is not None
+        ],
+        "max_potion_slots": combat.max_potion_slots,
     })
 
 

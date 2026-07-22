@@ -259,7 +259,8 @@ class TestStatusCurseCardEffectsParity:
 
         assert combat.play_card(0)
 
-        assert combat.energy == 0
+        assert combat.energy == 1
+        assert combat.draw_pile[0].card_id == CardId.VOID
 
     def test_brightest_flame_gains_energy_before_drawing_void(self):
         """Matches BrightestFlame.cs: gain energy before Draw, so drawn Void removes one."""

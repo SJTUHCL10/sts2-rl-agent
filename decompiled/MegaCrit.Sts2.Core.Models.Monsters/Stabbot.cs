@@ -4,6 +4,7 @@ using MegaCrit.Sts2.Core.Audio;
 using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Ascension;
 using MegaCrit.Sts2.Core.Entities.Creatures;
+using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using MegaCrit.Sts2.Core.Helpers;
 using MegaCrit.Sts2.Core.Models.Encounters;
 using MegaCrit.Sts2.Core.Models.Powers;
@@ -17,23 +18,22 @@ namespace MegaCrit.Sts2.Core.Models.Monsters;
 
 public sealed class Stabbot : MonsterModel
 {
-	public override int MinInitialHp => AscensionHelper.GetValueIfAscension(AscensionLevel.ToughEnemies, 24, 23);
+	public override int MinInitialHp => AscensionHelper.GetValueIfAscension(AscensionLevel.ToughEnemies, 19, 18);
 
-	public override int MaxInitialHp => AscensionHelper.GetValueIfAscension(AscensionLevel.ToughEnemies, 29, 28);
+	public override int MaxInitialHp => AscensionHelper.GetValueIfAscension(AscensionLevel.ToughEnemies, 24, 23);
 
 	private int StabDamage => AscensionHelper.GetValueIfAscension(AscensionLevel.DeadlyEnemies, 12, 11);
 
 	public override DamageSfxType TakeDamageSfxType => DamageSfxType.Armor;
 
-	public override Task AfterAddedToRoom()
+	public override async Task AfterAddedToRoom()
 	{
-		base.AfterAddedToRoom();
+		await base.AfterAddedToRoom();
 		if (TestMode.IsOff)
 		{
 			NCreature creatureNode = NCombatRoom.Instance.GetCreatureNode(base.Creature);
 			FabricatorNormal.SetBotFallPosition(creatureNode);
 		}
-		return Task.CompletedTask;
 	}
 
 	protected override MonsterMoveStateMachine GenerateMoveStateMachine()
@@ -50,6 +50,6 @@ public sealed class Stabbot : MonsterModel
 		await DamageCmd.Attack(StabDamage).FromMonster(this).WithAttackerAnim("Attack", 0.6f)
 			.WithHitFx("vfx/vfx_attack_slash")
 			.Execute(null);
-		await PowerCmd.Apply<FrailPower>(targets, 1m, base.Creature, null);
+		await PowerCmd.Apply<FrailPower>(new ThrowingPlayerChoiceContext(), targets, 1m, base.Creature, null);
 	}
 }

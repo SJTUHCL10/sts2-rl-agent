@@ -2,15 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MegaCrit.Sts2.Core.Combat;
 using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Creatures;
 using MegaCrit.Sts2.Core.Entities.Relics;
 using MegaCrit.Sts2.Core.Extensions;
-using MegaCrit.Sts2.Core.Helpers;
+using MegaCrit.Sts2.Core.Localization;
 using MegaCrit.Sts2.Core.Localization.DynamicVars;
 using MegaCrit.Sts2.Core.Map;
 using MegaCrit.Sts2.Core.Random;
 using MegaCrit.Sts2.Core.Runs;
+using MegaCrit.Sts2.Core.Runs.History;
 using MegaCrit.Sts2.Core.Saves.Runs;
 
 namespace MegaCrit.Sts2.Core.Models.Relics;
@@ -20,6 +22,17 @@ public sealed class FurCoat : RelicModel
 	private const string _combatsKey = "Combats";
 
 	private int _furCoatActIndex = -1;
+
+	public static LocString HistoryEntry
+	{
+		get
+		{
+			FurCoat furCoat = ModelDb.Relic<FurCoat>();
+			LocString locString = new LocString("relics", furCoat.Id.Entry + ".historyEntry");
+			locString.Add("Title", furCoat.Title);
+			return locString;
+		}
+	}
 
 	public override RelicRarity Rarity => RelicRarity.Ancient;
 
@@ -74,7 +87,7 @@ public sealed class FurCoat : RelicModel
 		}
 		if (flag)
 		{
-			Rng rng = new Rng((uint)((int)base.Owner.RunState.Rng.Seed + (int)base.Owner.NetId + StringHelper.GetDeterministicHashCode("FurCoat")));
+			Rng rng = new Rng(base.Owner, base.Id, 0uL);
 			List<MapPoint> list = map.GetAllMapPoints().Where(delegate(MapPoint p)
 			{
 				MapPointType pointType = p.PointType;
@@ -118,12 +131,31 @@ public sealed class FurCoat : RelicModel
 		{
 			return;
 		}
+		MapPointHistoryEntry currentMapPointHistoryEntry = base.Owner.RunState.CurrentMapPointHistoryEntry;
+		if (currentMapPointHistoryEntry != null)
+		{
+			currentMapPointHistoryEntry.GetEntry(base.Owner.NetId).IsAffectedByFurCoat = true;
+		}
 		Flash();
 		IReadOnlyList<Creature> hittableEnemies = base.Owner.Creature.CombatState.HittableEnemies;
 		VfxCmd.PlayOnCreatureCenters(hittableEnemies, "vfx/vfx_bite");
 		foreach (Creature item in hittableEnemies)
 		{
 			await CreatureCmd.SetCurrentHp(item, 1m);
+		}
+	}
+
+	public override async Task AfterCreatureAddedToCombat(Creature creature)
+	{
+		if (creature.Side == CombatSide.Enemy)
+		{
+			List<MapCoord> markedCoords = GetMarkedCoords();
+			if (markedCoords != null && markedCoords.Contains(base.Owner.RunState.CurrentMapPoint.coord))
+			{
+				Flash();
+				VfxCmd.PlayOnCreatureCenter(creature, "vfx/vfx_bite");
+				await CreatureCmd.SetCurrentHp(creature, 1m);
+			}
 		}
 	}
 

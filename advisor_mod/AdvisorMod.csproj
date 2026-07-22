@@ -1,0 +1,65 @@
+<Project Sdk="Godot.NET.Sdk/4.5.1" InitialTargets="CheckDependencyPaths">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <AssemblyName>STS2AdvisorMod</AssemblyName>
+    <ImplicitUsings>true</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DefaultItemExcludes>packages/**</DefaultItemExcludes>
+  </PropertyGroup>
+
+  <Import Project="AdvisorMod.local.props" Condition="Exists('AdvisorMod.local.props')" />
+  <Import Project="../bridge_mod/STS2BridgeMod.local.props"
+          Condition="!Exists('AdvisorMod.local.props') and Exists('../bridge_mod/STS2BridgeMod.local.props')" />
+
+  <PropertyGroup>
+    <IsWindows Condition="$([MSBuild]::IsOSPlatform('Windows'))">true</IsWindows>
+    <SteamLibraryPath Condition="'$(SteamLibraryPath)' == ''">C:/Program Files (x86)/Steam/steamapps</SteamLibraryPath>
+    <GodotPath Condition="'$(GodotPath)' == ''">C:/megadot/Godot_v4.5.1-stable_mono_win64/Godot_v4.5.1-stable_mono_win64_console.exe</GodotPath>
+    <Sts2Path>$(SteamLibraryPath)/common/Slay the Spire 2</Sts2Path>
+    <ModsPath>$(Sts2Path)/mods/</ModsPath>
+    <Sts2DataDir>$(Sts2Path)/data_sts2_windows_x86_64</Sts2DataDir>
+    <NoWarn>$(NoWarn);MSB3270</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup Condition="Exists('$(Sts2DataDir)')">
+    <Reference Include="0Harmony">
+      <HintPath>$(Sts2DataDir)/0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="sts2">
+      <HintPath>$(Sts2DataDir)/sts2.dll</HintPath>
+      <Private>false</Private>
+      <Publicize>False</Publicize>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(BaseLibDllPath)' == ''">
+    <PackageReference Include="Alchyr.Sts2.BaseLib" Version="*" PrivateAssets="All" />
+    <PackageReference Include="Alchyr.Sts2.ModAnalyzers" Version="*" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(BaseLibDllPath)' != '' and Exists('$(BaseLibDllPath)')">
+    <Reference Include="BaseLib">
+      <HintPath>$(BaseLibDllPath)</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.3" PrivateAssets="all" />
+  </ItemGroup>
+
+  <Target Name="CheckDependencyPaths">
+    <Error Text="Slay the Spire 2 data not found at '$(Sts2DataDir)'"
+           Condition="'$(Sts2DataDir)' == '' or !Exists('$(Sts2DataDir)')" />
+  </Target>
+  <Target Name="CopyToModsFolderOnBuild" AfterTargets="PostBuildEvent">
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ModsPath)STS2AdvisorMod/" />
+    <Copy SourceFiles="STS2AdvisorMod.json" DestinationFolder="$(ModsPath)STS2AdvisorMod/" />
+    <Copy SourceFiles="mod_manifest.json" DestinationFolder="$(ModsPath)STS2AdvisorMod/" />
+  </Target>
+  <Target Name="GodotExport" AfterTargets="Build;Publish"
+          Condition="'$(GodotPath)' != '' and Exists('$(GodotPath)') and '$(IsInnerGodotExport)' != 'true'">
+    <Exec Command="&quot;$(GodotPath)&quot; --headless --path &quot;$(MSBuildProjectDirectory)/pck_project&quot; --export-pack &quot;BasicExport&quot; &quot;$(ModsPath)STS2AdvisorMod/STS2AdvisorMod.pck&quot;"
+          EnvironmentVariables="IsInnerGodotExport=true;MSBUILDDISABLENODEREUSE=1" />
+  </Target>
+</Project>

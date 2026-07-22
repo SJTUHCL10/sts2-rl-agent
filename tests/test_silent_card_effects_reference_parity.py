@@ -52,8 +52,8 @@ from sts2_env.powers.base import PowerInstance
 BLUR_BLOCK = 5
 BLUR_UPGRADED_BLOCK = 8
 BLUR_POWER_AMOUNT = 1
-OUTBREAK_POWER_AMOUNT = 11
-OUTBREAK_UPGRADED_POWER_AMOUNT = 15
+OUTBREAK_POWER_AMOUNT = 4
+OUTBREAK_UPGRADED_POWER_AMOUNT = 5
 SNEAKY_POWER_AMOUNT = 1
 SNEAKY_UPGRADED_POWER_AMOUNT = 2
 SPEEDSTER_POWER_AMOUNT = 2
@@ -473,7 +473,7 @@ class TestSilentCardEffectsReferenceParity:
         combat.draw_cards(combat.player, 1)
 
         assert [enemy.get_power_amount(PowerId.POISON) for enemy in combat.enemies] == [3, 3, 3]
-        assert [enemy.current_hp for enemy in combat.enemies] == [89, 89, 89]
+        assert [enemy.current_hp for enemy in combat.enemies] == [67, 67, 67]
 
     def test_corrosive_wave_applies_poison_only_to_hittable_enemies(self):
         combat = _make_combat(extra_enemies=1)
@@ -555,7 +555,7 @@ class TestSilentCardEffectsReferenceParity:
             combat.apply_power_to(hittable, PowerId.POISON, 1, applier=combat.player)
 
         assert blocked.current_hp == 100
-        assert hittable.current_hp == 89
+        assert hittable.current_hp == 67
 
     def test_speedster_card_applies_reference_power_amounts(self):
         combat = _make_combat()
@@ -618,7 +618,7 @@ class TestSilentCardEffectsReferenceParity:
         assert combat.play_card(0)
         assert combat.play_card(0)
         assert [enemy.get_power_amount(PowerId.POISON) for enemy in combat.enemies] == [2, 2, 2]
-        assert [enemy.current_hp for enemy in combat.enemies] == [70, 70, 70]
+        assert [enemy.current_hp for enemy in combat.enemies] == [26, 26, 26]
 
     def test_bubble_bubble_only_adds_poison_to_already_poisoned_target(self):
         combat = _make_combat()
@@ -780,7 +780,8 @@ class TestSilentCardEffectsReferenceParity:
         combat.energy = 1
 
         assert combat.play_card(0)
-        assert combat.player.block == 4
+        assert combat.player.block == 0
+        assert combat.player.get_power_amount(PowerId.ENERGY_NEXT_TURN) == 1
 
     def test_predator_and_shadowmeld_apply_reference_powers(self):
         predator_combat = _make_combat()

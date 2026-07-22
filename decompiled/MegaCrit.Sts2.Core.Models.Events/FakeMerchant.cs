@@ -15,6 +15,7 @@ using MegaCrit.Sts2.Core.Models.Relics;
 using MegaCrit.Sts2.Core.Nodes.Events.Custom;
 using MegaCrit.Sts2.Core.Rewards;
 using MegaCrit.Sts2.Core.Runs;
+using MegaCrit.Sts2.Core.Runs.History;
 
 namespace MegaCrit.Sts2.Core.Models.Events;
 
@@ -22,6 +23,9 @@ public sealed class FakeMerchant : EventModel
 {
 	public const int relicCost = 50;
 
+	/// <summary>
+	/// Note: don't add <see cref="T:MegaCrit.Sts2.Core.Models.Relics.FakeMerchantsRug" /> to this list, it's a combat reward, not a relic you can buy.
+	/// </summary>
 	private static readonly RelicModel[] _inventoryRelics = new RelicModel[9]
 	{
 		ModelDb.Relic<FakeAnchor>(),
@@ -94,7 +98,7 @@ public sealed class FakeMerchant : EventModel
 		return Array.Empty<EventOption>();
 	}
 
-	public override bool IsAllowed(RunState runState)
+	public override bool IsAllowed(IRunState runState)
 	{
 		if (runState.CurrentActIndex < 1)
 		{
@@ -107,7 +111,7 @@ public sealed class FakeMerchant : EventModel
 		return runState.Players.All((Player player) => player.Gold >= 100 || player.Potions.Any((PotionModel potion) => potion is FoulPotion));
 	}
 
-	protected override Task BeforeEventStarted()
+	protected override Task BeforeEventStarted(bool isPreFinished)
 	{
 		Inventory = new MerchantInventory(base.Owner);
 		List<RelicModel> list = _inventoryRelics.ToList().UnstableShuffle(base.Rng).Take(6)
@@ -120,20 +124,39 @@ public sealed class FakeMerchant : EventModel
 		return Task.CompletedTask;
 	}
 
+	protected override void OnEventFinished()
+	{
+		if (StartedFight)
+		{
+			return;
+		}
+		PlayerMapPointHistoryEntry playerMapPointHistoryEntry = base.Owner.RunState.CurrentMapPointHistoryEntry?.GetEntry(base.Owner.NetId);
+		if (playerMapPointHistoryEntry == null)
+		{
+			return;
+		}
+		foreach (MerchantRelicEntry relicEntry in Inventory.RelicEntries)
+		{
+			if (relicEntry.IsStocked)
+			{
+				playerMapPointHistoryEntry.RelicChoices.Add(new ModelChoiceHistoryEntry(relicEntry.Model.Id, wasPicked: false));
+			}
+		}
+	}
+
 	public async Task FoulPotionThrown(FoulPotion potion)
 	{
 		if (LocalContext.IsMine(this) && base.Node is NFakeMerchant nFakeMerchant)
 		{
-			await nFakeMerchant.FoulPotionThrown(potion);
+			await nFakeMerchant.FoulPotionThrown();
 		}
 		StartedFight = true;
-		List<RelicReward> list = new List<RelicReward>(1)
+		List<Reward> list = new List<Reward>();
+		list.Add(new RelicReward(ModelDb.Relic<FakeMerchantsRug>().ToMutable(), base.Owner));
+		FakeMerchant fakeMerchant = (FakeMerchant)RunManager.Instance.EventSynchronizer.GetEventForPlayer(base.Owner);
+		foreach (MerchantRelicEntry relicEntry in fakeMerchant.Inventory.RelicEntries)
 		{
-			new RelicReward(ModelDb.Relic<FakeMerchantsRug>().ToMutable(), base.Owner)
-		};
-		foreach (MerchantRelicEntry relicEntry in Inventory.RelicEntries)
-		{
-			if (relicEntry.IsStocked)
+			if (relicEntry.IsStocked || base.Owner.RunState.Players.Count > 1)
 			{
 				list.Add(new RelicReward(relicEntry.Model, base.Owner));
 			}

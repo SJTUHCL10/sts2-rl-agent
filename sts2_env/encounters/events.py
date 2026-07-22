@@ -60,6 +60,13 @@ def setup_battleworn_dummy_v3(combat: CombatState, rng: Rng) -> None:
     combat.add_enemy(creature, ai)
 
 
+# Names mirror the split v0.108 encounter models while retaining the original
+# public setup names used by event code.
+setup_battleworn_dummy_event_v1 = setup_battleworn_dummy_v1
+setup_battleworn_dummy_event_v2 = setup_battleworn_dummy_v2
+setup_battleworn_dummy_event_v3 = setup_battleworn_dummy_v3
+
+
 # ---- DenseVegetationEventEncounter ----
 # Spawns 4 Wrigglers in named slots (wriggler1-4).
 # All start unstunned; slot determines initial move alternation.

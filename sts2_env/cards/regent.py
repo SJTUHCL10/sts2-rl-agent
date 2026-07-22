@@ -1060,7 +1060,7 @@ def make_collision_course(upgraded: bool = False) -> CardInstance:
     return CardInstance(
         card_id=CardId.COLLISION_COURSE, cost=0, card_type=CardType.ATTACK,
         target_type=TargetType.ANY_ENEMY, rarity=CardRarity.COMMON,
-        base_damage=12 if upgraded else 9, upgraded=upgraded,
+        base_damage=14 if upgraded else 10, upgraded=upgraded,
         instance_id=_get_next_id(),
     )
 
@@ -1309,7 +1309,7 @@ def make_resonance(upgraded: bool = False) -> CardInstance:
     return CardInstance(
         card_id=CardId.RESONANCE, cost=1, card_type=CardType.SKILL,
         target_type=TargetType.ALL_ENEMIES, rarity=CardRarity.UNCOMMON,
-        upgraded=upgraded, star_cost=3,
+        upgraded=upgraded, star_cost=2,
         effect_vars={"strength": 2 if upgraded else 1},
         instance_id=_get_next_id(),
     )
@@ -1473,6 +1473,62 @@ def _make_reference_factory_card(card_id: CardId, upgraded: bool = False) -> Car
     from sts2_env.cards.factory import create_reference_card
 
     return create_reference_card(card_id, upgraded=upgraded, allow_generation=True)
+
+
+def make_devastate(upgraded: bool = False) -> CardInstance:
+    card = _make_reference_factory_card(CardId.DEVASTATE, upgraded=upgraded)
+    card.base_damage = 45 if upgraded else 35
+    return card
+
+
+def make_pillar_of_creation(upgraded: bool = False) -> CardInstance:
+    card = _make_reference_factory_card(CardId.PILLAR_OF_CREATION, upgraded=upgraded)
+    card.effect_vars["block"] = 7 if upgraded else 5
+    return card
+
+
+@register_effect(CardId.CONSTELLATION)
+def constellation(card: CardInstance, combat: CombatState, target: Creature | None) -> None:
+    assert target is not None
+    combat.draw_cards(target, card.effect_vars.get("cards", 1))
+    combat.gain_energy(target, card.effect_vars.get("energy", 1))
+    block = calculate_block(card.base_block, target, ValueProp.MOVE, combat, card_source=card)
+    target.gain_block(block)
+
+
+@register_effect(CardId.PLOT)
+def plot(card: CardInstance, combat: CombatState, target: Creature | None) -> None:
+    amount = card.effect_vars.get("cards", 2)
+    for state in combat.combat_player_states:
+        if state.creature.is_alive:
+            combat.apply_power_to(state.creature, PowerId.DRAW_CARDS_NEXT_TURN, amount)
+
+
+@register_effect(CardId.TUTOR)
+def tutor(card: CardInstance, combat: CombatState, target: Creature | None) -> None:
+    assert target is not None
+    state = combat.combat_player_state_for(target)
+    if state is None or not state.draw:
+        return
+    combat.request_card_choice(
+        prompt="Choose a draw-pile card to add to hand",
+        cards=list(state.draw),
+        source_pile="draw",
+        owner=target,
+        resolver=lambda selected: combat.move_card_to_creature_hand(target, selected),
+    )
+
+
+def make_constellation(upgraded: bool = False) -> CardInstance:
+    return _make_reference_factory_card(CardId.CONSTELLATION, upgraded=upgraded)
+
+
+def make_plot(upgraded: bool = False) -> CardInstance:
+    return _make_reference_factory_card(CardId.PLOT, upgraded=upgraded)
+
+
+def make_tutor(upgraded: bool = False) -> CardInstance:
+    return _make_reference_factory_card(CardId.TUTOR, upgraded=upgraded)
 
 
 _REFERENCE_FACTORY_CARD_IDS = (

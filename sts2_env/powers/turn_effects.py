@@ -895,18 +895,15 @@ class WellLaidPlansPower(PowerInstance):
     """
 
     power_type = PowerType.BUFF
-    stack_type = PowerStackType.COUNTER
+    stack_type = PowerStackType.SINGLE
 
     def __init__(self, amount: int):
         super().__init__(PowerId.WELL_LAID_PLANS, amount)
 
-    def before_flush_late(self, owner: Creature, flushing_owner: Creature, combat: CombatState) -> None:
+    def should_flush(self, owner: Creature, flushing_owner: Creature, combat: CombatState) -> bool | None:
         if flushing_owner is owner and owner.is_player:
-            from sts2_env.core.hooks import should_flush
-
-            if not should_flush(combat, owner):
-                return
-            combat.request_retain(owner, self.amount)
+            return False
+        return None
 
 
 class WraithFormPower(PowerInstance):

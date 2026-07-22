@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from sts2_env.cards.base import CardInstance, _get_next_id, increase_base_damage
 from sts2_env.cards.registry import (
+    register_after_card_exhausted_hook,
     register_after_card_entered_combat_hook,
     register_before_card_played_hook,
     register_before_hand_draw_hook,
@@ -524,7 +525,7 @@ def make_setup_strike(upgraded: bool = False) -> CardInstance:
         target_type=TargetType.ANY_ENEMY,
         rarity=CardRarity.COMMON,
         base_damage=9 if upgraded else 7,
-        effect_vars={"strength": 3 if upgraded else 2},
+        effect_vars={"strength": 4 if upgraded else 3},
         upgraded=upgraded,
         instance_id=_get_next_id(),
     )
@@ -1143,7 +1144,7 @@ def make_howl_from_beyond(upgraded: bool = False) -> CardInstance:
         card_type=CardType.ATTACK,
         target_type=TargetType.ALL_ENEMIES,
         rarity=CardRarity.UNCOMMON,
-        base_damage=21 if upgraded else 16,
+        base_damage=24 if upgraded else 18,
         upgraded=upgraded,
         instance_id=_get_next_id(),
     )
@@ -1498,9 +1499,9 @@ def make_taunt(upgraded: bool = False) -> CardInstance:
         cost=1,
         card_type=CardType.SKILL,
         target_type=TargetType.ANY_ENEMY,
-        rarity=CardRarity.UNCOMMON,
-        base_block=8 if upgraded else 7,
-        effect_vars={"vulnerable": 2 if upgraded else 1},
+        rarity=CardRarity.RARE,
+        base_block=7 if upgraded else 6,
+        effect_vars={"vulnerable": 2},
         upgraded=upgraded,
         instance_id=_get_next_id(),
     )
@@ -1716,7 +1717,7 @@ def make_colossus(upgraded: bool = False) -> CardInstance:
         card_type=CardType.SKILL,
         target_type=TargetType.SELF,
         rarity=CardRarity.RARE,
-        base_block=8 if upgraded else 5,
+        base_block=7 if upgraded else 4,
         effect_vars={"colossus": 1},
         upgraded=upgraded,
         instance_id=_get_next_id(),
@@ -1774,7 +1775,7 @@ def make_crimson_mantle(upgraded: bool = False) -> CardInstance:
         card_type=CardType.POWER,
         target_type=TargetType.SELF,
         rarity=CardRarity.RARE,
-        effect_vars={"crimson_mantle_power": 10 if upgraded else 8},
+        effect_vars={"crimson_mantle_power": 10 if upgraded else 7},
         upgraded=upgraded,
         instance_id=_get_next_id(),
     )
@@ -1793,7 +1794,7 @@ def make_cruelty(upgraded: bool = False) -> CardInstance:
         cost=1,
         card_type=CardType.POWER,
         target_type=TargetType.SELF,
-        rarity=CardRarity.RARE,
+        rarity=CardRarity.UNCOMMON,
         effect_vars={"cruelty_power": 50 if upgraded else 25},
         upgraded=upgraded,
         instance_id=_get_next_id(),
@@ -1832,7 +1833,7 @@ def make_demon_form(upgraded: bool = False) -> CardInstance:
         card_type=CardType.POWER,
         target_type=TargetType.SELF,
         rarity=CardRarity.RARE,
-        effect_vars={"strength": 3 if upgraded else 2},
+        effect_vars={"strength": 4 if upgraded else 3},
         upgraded=upgraded,
         instance_id=_get_next_id(),
     )
@@ -2257,6 +2258,76 @@ def make_corruption(upgraded: bool = False) -> CardInstance:
         upgraded=upgraded,
         instance_id=_get_next_id(),
     )
+
+
+# v0.108.0 multiplayer cards and v0.109.0 healing card.
+@register_effect(CardId.BLAZE)
+def blaze(card: CardInstance, combat: CombatState, target: Creature | None) -> None:
+    assert target is not None
+    combat.apply_power_to(target, PowerId.STRENGTH, card.effect_vars.get("strength", 5))
+
+
+@register_effect(CardId.MIDNIGHT)
+def midnight(card: CardInstance, combat: CombatState, target: Creature | None) -> None:
+    assert target is not None
+    _deal_damage_to_target(card, combat, target)
+
+
+@register_after_card_entered_combat_hook(CardId.MIDNIGHT)
+def midnight_after_card_entered_combat(
+    listener: CardInstance,
+    entered_card: CardInstance,
+    owner: Creature,
+    combat: CombatState,
+) -> None:
+    if listener is entered_card and not listener.combat_vars.get("_is_clone"):
+        listener.cost = max(0, listener.cost - len(combat._exhaust_events_combat))
+
+
+@register_after_card_exhausted_hook(CardId.MIDNIGHT)
+def midnight_after_card_exhausted(
+    listener: CardInstance,
+    exhausted_card: CardInstance,
+    combat: CombatState,
+) -> None:
+    listener.cost = max(0, listener.cost - 1)
+
+
+@register_effect(CardId.NOT_YET)
+def not_yet(card: CardInstance, combat: CombatState, target: Creature | None) -> None:
+    _owner(card, combat).heal(card.effect_vars.get("heal", 10))
+
+
+@register_effect(CardId.OUTRAGE)
+def outrage(card: CardInstance, combat: CombatState, target: Creature | None) -> None:
+    assert target is not None
+    _deal_damage_to_target(card, combat, target)
+    for state in combat.combat_player_states:
+        if state.creature.is_alive:
+            clone = card.clone(_get_next_id())
+            combat.add_generated_card_to_creature_discard(state.creature, clone)
+
+
+def _make_new_reference_card(card_id: CardId, upgraded: bool) -> CardInstance:
+    from sts2_env.cards.factory import create_reference_card
+
+    return create_reference_card(card_id, upgraded=upgraded, allow_generation=True)
+
+
+def make_blaze(upgraded: bool = False) -> CardInstance:
+    return _make_new_reference_card(CardId.BLAZE, upgraded)
+
+
+def make_midnight(upgraded: bool = False) -> CardInstance:
+    return _make_new_reference_card(CardId.MIDNIGHT, upgraded)
+
+
+def make_not_yet(upgraded: bool = False) -> CardInstance:
+    return _make_new_reference_card(CardId.NOT_YET, upgraded)
+
+
+def make_outrage(upgraded: bool = False) -> CardInstance:
+    return _make_new_reference_card(CardId.OUTRAGE, upgraded)
 
 
 # ========================================================================

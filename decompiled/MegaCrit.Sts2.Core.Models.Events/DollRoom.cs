@@ -76,7 +76,7 @@ public sealed class DollRoom : EventModel
 		new DamageVar("ExamineHpLoss", 15m, ValueProp.Unblockable | ValueProp.Unpowered)
 	});
 
-	public override bool IsAllowed(RunState runState)
+	public override bool IsAllowed(IRunState runState)
 	{
 		return runState.CurrentActIndex == 1;
 	}
@@ -91,7 +91,7 @@ public sealed class DollRoom : EventModel
 		});
 	}
 
-	protected override Task BeforeEventStarted()
+	protected override Task BeforeEventStarted(bool isPreFinished)
 	{
 		if (LocalContext.IsMe(base.Owner) && TestMode.IsOff)
 		{
@@ -100,14 +100,20 @@ public sealed class DollRoom : EventModel
 		return Task.CompletedTask;
 	}
 
+	/// <summary>
+	/// The top option. Get a random one without taking damage.
+	/// </summary>
 	private async Task ChooseRandom()
 	{
-		await ChooseDollAndShowDescription(base.Owner.RunState.Rng.Niche.NextItem(_dolls));
+		await ChooseDollAndShowDescription(base.Rng.NextItem(_dolls));
 	}
 
+	/// <summary>
+	/// Choose 1 of 2
+	/// </summary>
 	private async Task TakeSomeTime()
 	{
-		await CreatureCmd.Damage(new ThrowingPlayerChoiceContext(), base.Owner.Creature, (DamageVar)base.DynamicVars["TakeTimeHpLoss"], null, null);
+		await CreatureCmd.Damage(new ThrowingPlayerChoiceContext(), base.Owner.Creature, (DamageVar)base.DynamicVars["TakeTimeHpLoss"], null, null, null);
 		IEnumerable<DollChoice> enumerable = _dolls.ToList().StableShuffle(base.Rng).Take(2);
 		List<EventOption> list = new List<EventOption>();
 		foreach (DollChoice item in enumerable)
@@ -117,9 +123,12 @@ public sealed class DollRoom : EventModel
 		SetEventState(L10NLookup("DOLL_ROOM.pages.TAKE_SOME_TIME.description"), list);
 	}
 
+	/// <summary>
+	/// Choose 1 of 3
+	/// </summary>
 	private async Task Examine()
 	{
-		await CreatureCmd.Damage(new ThrowingPlayerChoiceContext(), base.Owner.Creature, (DamageVar)base.DynamicVars["ExamineHpLoss"], null, null);
+		await CreatureCmd.Damage(new ThrowingPlayerChoiceContext(), base.Owner.Creature, (DamageVar)base.DynamicVars["ExamineHpLoss"], null, null, null);
 		IEnumerable<DollChoice> enumerable = _dolls.ToList().StableShuffle(base.Rng);
 		List<EventOption> list = new List<EventOption>();
 		foreach (DollChoice item in enumerable)

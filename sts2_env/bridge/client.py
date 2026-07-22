@@ -52,7 +52,7 @@ class STS2GameClient:
         self,
         host: str = DEFAULT_HOST,
         port: int = DEFAULT_PORT,
-        timeout: float = 60.0,
+        timeout: float | None = 60.0,
         reconnect_attempts: int = 30,
         reconnect_delay: float = 2.0,
     ):
@@ -61,7 +61,8 @@ class STS2GameClient:
         Args:
             host: Game server hostname (default: 127.0.0.1).
             port: Game server port (default: 9002).
-            timeout: Socket timeout in seconds for receive operations.
+            timeout: Socket timeout in seconds for receive operations. Pass
+                ``None`` to wait indefinitely.
             reconnect_attempts: Number of reconnection attempts before giving up.
             reconnect_delay: Seconds to wait between reconnection attempts.
         """

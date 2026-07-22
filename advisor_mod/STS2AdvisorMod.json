@@ -1,0 +1,14 @@
+{
+  "id": "STS2AdvisorMod",
+  "name": "STS2 Advisor",
+  "author": "sts2-rl-agent",
+  "description": "Shows recommendations from an external RL policy while leaving every decision and input to the player.",
+  "version": "v0.1.0",
+  "has_pck": true,
+  "has_dll": true,
+  "dependencies": [
+    { "id": "BaseLib", "min_version": "3.3.0" }
+  ],
+  "affects_gameplay": false
+}
+

@@ -375,10 +375,9 @@ def bone_shards(card: CardInstance, combat: CombatState, target: Creature | None
 
 @register_effect(CardId.BORROWED_TIME)
 def borrowed_time(card: CardInstance, combat: CombatState, target: Creature | None) -> None:
-    doom = card.effect_vars.get("doom", 3)
-    combat.apply_power_to(_owner(card, combat), PowerId.DOOM, doom)
-    energy = card.effect_vars.get("energy", 1)
-    combat.gain_energy(_owner(card, combat), energy)
+    owner = _owner(card, combat)
+    combat.gain_energy(owner, card.effect_vars.get("energy", 4))
+    combat.apply_power_to(owner, PowerId.BORROWED_TIME_POWER, card.effect_vars.get("extra_cost", 1))
 
 
 @register_effect(CardId.BURY)
@@ -790,11 +789,13 @@ def devour_life_card(card: CardInstance, combat: CombatState, target: Creature |
 
 @register_effect(CardId.EIDOLON)
 def eidolon(card: CardInstance, combat: CombatState, target: Creature | None) -> None:
-    exhausted_count = len(combat.hand)
-    for hand_card in list(combat.hand):
-        combat.exhaust_card(hand_card)
-    if exhausted_count >= 9:
-        combat.apply_power_to(_owner(card, combat), PowerId.INTANGIBLE, 1)
+    owner = _owner(card, combat)
+    state = combat.combat_player_state_for(owner)
+    if state is None:
+        return
+    for exhausted in list(state.exhaust):
+        if exhausted.is_ethereal and not exhausted.is_unplayable:
+            combat.auto_play_card(exhausted)
 
 
 @register_effect(CardId.END_OF_DAYS)
@@ -1260,7 +1261,7 @@ def make_reave(upgraded: bool = False) -> CardInstance:
     return CardInstance(
         card_id=CardId.REAVE, cost=1, card_type=CardType.ATTACK,
         target_type=TargetType.ANY_ENEMY, rarity=CardRarity.COMMON,
-        base_damage=11 if upgraded else 9, upgraded=upgraded,
+        base_damage=13 if upgraded else 10, upgraded=upgraded,
         effect_vars={"cards": 1}, instance_id=_get_next_id(),
     )
 
@@ -1388,7 +1389,7 @@ def make_reanimate(upgraded: bool = False) -> CardInstance:
     return CardInstance(
         card_id=CardId.REANIMATE, cost=3, card_type=CardType.SKILL,
         target_type=TargetType.SELF, rarity=CardRarity.RARE,
-        upgraded=upgraded, keywords=frozenset({"exhaust"}),
+        upgraded=upgraded,
         effect_vars={"summon": 25 if upgraded else 20},
         instance_id=_get_next_id(),
     )
@@ -1538,9 +1539,16 @@ def make_sic_em(upgraded: bool = False) -> CardInstance:
 
 
 def make_eidolon(upgraded: bool = False) -> CardInstance:
-    from sts2_env.cards.factory import create_reference_card
-
-    return create_reference_card(CardId.EIDOLON, upgraded=upgraded, allow_generation=True)
+    return CardInstance(
+        card_id=CardId.EIDOLON,
+        cost=1 if upgraded else 2,
+        card_type=CardType.SKILL,
+        target_type=TargetType.SELF,
+        rarity=CardRarity.RARE,
+        keywords=frozenset({"exhaust"}),
+        upgraded=upgraded,
+        instance_id=_get_next_id(),
+    )
 
 
 def make_eradicate(upgraded: bool = False) -> CardInstance:
@@ -1563,7 +1571,15 @@ def make_soul_storm(upgraded: bool = False) -> CardInstance:
     card = create_reference_card(CardId.SOUL_STORM, upgraded=upgraded, allow_generation=True)
     card.base_damage = 10 if upgraded else 9
     card.effect_vars["calc_base"] = 9
-    card.effect_vars["extra_damage"] = 3 if upgraded else 2
+    card.effect_vars["extra_damage"] = 6 if upgraded else 4
+    return card
+
+
+def make_haunt(upgraded: bool = False) -> CardInstance:
+    from sts2_env.cards.factory import create_reference_card
+
+    card = create_reference_card(CardId.HAUNT, upgraded=upgraded, allow_generation=True)
+    card.effect_vars["hp_loss"] = 9 if upgraded else 7
     return card
 
 
@@ -1600,6 +1616,38 @@ def make_transfigure(upgraded: bool = False) -> CardInstance:
     from sts2_env.cards.factory import create_reference_card
 
     return create_reference_card(CardId.TRANSFIGURE, upgraded=upgraded, allow_generation=True)
+
+
+@register_effect(CardId.CACOPHONY)
+def cacophony(card: CardInstance, combat: CombatState, target: Creature | None) -> None:
+    combat.apply_power_to(
+        _owner(card, combat), PowerId.CACOPHONY, card.effect_vars.get("damage", card.base_damage or 66)
+    )
+
+
+@register_effect(CardId.SOULBOUND)
+def soulbound(card: CardInstance, combat: CombatState, target: Creature | None) -> None:
+    assert target is not None
+    power = combat.apply_power_to(target, PowerId.SOULBOUND, 1, applier=_owner(card, combat))
+    if power is not None:
+        power.soul_creator = _owner(card, combat)
+
+
+@register_effect(CardId.UNDERWORLD)
+def underworld(card: CardInstance, combat: CombatState, target: Creature | None) -> None:
+    combat.apply_power_to(_owner(card, combat), PowerId.UNDERWORLD, 1)
+
+
+def make_cacophony(upgraded: bool = False) -> CardInstance:
+    return _make_reference_factory_card(CardId.CACOPHONY, upgraded=upgraded)
+
+
+def make_soulbound(upgraded: bool = False) -> CardInstance:
+    return _make_reference_factory_card(CardId.SOULBOUND, upgraded=upgraded)
+
+
+def make_underworld(upgraded: bool = False) -> CardInstance:
+    return _make_reference_factory_card(CardId.UNDERWORLD, upgraded=upgraded)
 
 
 def make_protector(upgraded: bool = False) -> CardInstance:

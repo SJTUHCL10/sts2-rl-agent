@@ -154,4 +154,4 @@ class TestNecrobinderScytheXCostAndDebuffParity:
 
         assert card.upgraded is True
         assert card.base_damage == 16
-        assert card.effect_vars["increase"] == 4
+        assert card.effect_vars["increase"] == 5

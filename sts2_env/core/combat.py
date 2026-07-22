@@ -184,6 +184,7 @@ class CombatState:
         self._draw_events_this_turn: list[tuple[Creature, CardInstance, bool]] = []
         self._draw_events_combat: list[Creature] = []
         self._exhaust_events_this_turn: list[CardInstance] = []
+        self._exhaust_events_combat: list[CardInstance] = []
         self._discard_events_this_turn: list[CardInstance] = []
         self._stars_gained_this_turn: list[tuple[Creature, int]] = []
         self._power_events_this_turn: list[tuple[Creature, PowerId, int, Creature | None]] = []
@@ -2130,6 +2131,9 @@ class CombatState:
         card.cost -= 1
 
     def gain_energy(self, owner: Creature, amount: int) -> None:
+        from sts2_env.core.hooks import modify_energy_gain
+
+        amount = modify_energy_gain(owner, amount, self)
         state = self.combat_player_state_for(owner)
         if not self.is_over and state is not None and amount > 0:
             state.energy += amount
@@ -2361,6 +2365,7 @@ class CombatState:
 
     def record_card_exhausted(self, card: CardInstance) -> None:
         self._exhaust_events_this_turn.append(card)
+        self._exhaust_events_combat.append(card)
 
     def was_card_exhausted_this_turn(self, owner: Creature) -> bool:
         return any(getattr(card, "owner", None) is owner for card in self._exhaust_events_this_turn)

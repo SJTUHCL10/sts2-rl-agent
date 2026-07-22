@@ -35,7 +35,7 @@ public sealed class PrismaticGem : RelicModel
 		{
 			return options;
 		}
-		if (options.CustomCardPool != null)
+		if (!options.Flags.HasFlag(CardCreationFlags.IsCardReward))
 		{
 			return options;
 		}
@@ -43,7 +43,6 @@ public sealed class PrismaticGem : RelicModel
 		{
 			return options;
 		}
-		IEnumerable<CardPoolModel> pools = player.UnlockState.CharacterCardPools.Union(options.CardPools);
-		return options.WithCardPools(pools, options.CardPoolFilter);
+		return options.WithCardPools(player.UnlockState.CharacterCardPools.Union(options.CardPools));
 	}
 }

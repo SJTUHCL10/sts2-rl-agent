@@ -21,6 +21,9 @@ public sealed class Rampage : CardModel
 		new DynamicVar("Increase", 5m)
 	});
 
+	/// <summary>
+	/// Required so we can restore the extra damage amount after a downgrade (ie Magiknight)
+	/// </summary>
 	private decimal ExtraDamageFromPlays
 	{
 		get
@@ -42,7 +45,7 @@ public sealed class Rampage : CardModel
 	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
 	{
 		ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
-		await DamageCmd.Attack(base.DynamicVars.Damage.BaseValue).FromCard(this).Targeting(cardPlay.Target)
+		await DamageCmd.Attack(base.DynamicVars.Damage.BaseValue).FromCard(this, cardPlay).Targeting(cardPlay.Target)
 			.WithHitFx("vfx/vfx_attack_slash")
 			.Execute(choiceContext);
 		base.DynamicVars.Damage.BaseValue += base.DynamicVars["Increase"].BaseValue;

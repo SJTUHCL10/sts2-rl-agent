@@ -2,7 +2,10 @@ using MegaCrit.Sts2.Core.Multiplayer.Transport;
 
 namespace MegaCrit.Sts2.Core.Multiplayer.Game;
 
-public interface INetClientGameService : INetGameService
+/// <summary>
+/// Provides additional client-related methods on top of the default game service.
+/// </summary>
+public interface INetClientGameService : INetGameService, INetClientHandler, INetHandler
 {
 	NetClient? NetClient { get; }
 }

@@ -12,7 +12,7 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class CrimsonMantle : CardModel
 {
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new PowerVar<CrimsonMantlePower>(8m));
+	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new PowerVar<CrimsonMantlePower>(7m));
 
 	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.Static(StaticHoverTip.Block));
 
@@ -24,12 +24,12 @@ public sealed class CrimsonMantle : CardModel
 	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
 	{
 		NPowerUpVfx.CreateNormal(base.Owner.Creature);
-		await CreatureCmd.TriggerAnim(base.Owner.Creature, "Cast", base.Owner.Character.CastAnimDelay);
-		(await PowerCmd.Apply<CrimsonMantlePower>(base.Owner.Creature, base.DynamicVars["CrimsonMantlePower"].BaseValue, base.Owner.Creature, this))?.IncrementSelfDamage();
+		await CreatureCmd.TriggerAnim(base.Owner.Creature, "PowerUp", base.Owner.Character.PowerUpAnimDelay);
+		(await PowerCmd.Apply<CrimsonMantlePower>(choiceContext, base.Owner.Creature, base.DynamicVars["CrimsonMantlePower"].BaseValue, base.Owner.Creature, this))?.IncrementSelfDamage();
 	}
 
 	protected override void OnUpgrade()
 	{
-		base.DynamicVars["CrimsonMantlePower"].UpgradeValueBy(2m);
+		base.DynamicVars["CrimsonMantlePower"].UpgradeValueBy(3m);
 	}
 }

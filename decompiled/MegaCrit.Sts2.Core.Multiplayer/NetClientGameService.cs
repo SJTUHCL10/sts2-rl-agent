@@ -89,11 +89,7 @@ public class NetClientGameService : INetClientHandler, INetHandler, INetClientGa
 
 	public void OnPacketReceived(ulong senderId, byte[] packetBytes, NetTransferMode mode, int channel)
 	{
-		if (!_messageBus.TryDeserializeMessage(packetBytes, out INetMessage message, out ulong? overrideSenderId))
-		{
-			Log.Error($"Tried to deserialize packet of size {packetBytes.Length} as message, but we were not able to!");
-		}
-		else
+		if (_messageBus.TryDeserializeMessage(packetBytes, out INetMessage message, out ulong? overrideSenderId))
 		{
 			senderId = overrideSenderId ?? senderId;
 			_messageBus.SendMessageToAllHandlers(message, senderId);
@@ -130,6 +126,11 @@ public class NetClientGameService : INetClientHandler, INetHandler, INetClientGa
 	public void SetGameLoading(bool isLoading)
 	{
 		_qualityTracker.SetIsLoading(isLoading);
+	}
+
+	public void SetBufferMessages(bool bufferMessages)
+	{
+		_messageBus.SetBufferMessages(bufferMessages);
 	}
 
 	public string? GetRawLobbyIdentifier()

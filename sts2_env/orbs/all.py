@@ -94,13 +94,25 @@ class FrostOrb(OrbInstance):
     def on_passive(self, combat: CombatState) -> None:
         value = self.get_passive_value(combat)
         if value > 0:
-            _gain_unpowered_block(combat.player, value, combat)
+            targets = (
+                [state.creature for state in combat.combat_player_states if state.creature.is_alive]
+                if combat.player.get_power_amount(PowerId.HIBERNATE) > 0
+                else [combat.player]
+            )
+            for target in targets:
+                _gain_unpowered_block(target, value, combat)
 
     def on_evoke(self, combat: CombatState) -> list[Creature]:
         value = self.get_evoke_value(combat)
+        targets = (
+            [state.creature for state in combat.combat_player_states if state.creature.is_alive]
+            if combat.player.get_power_amount(PowerId.HIBERNATE) > 0
+            else [combat.player]
+        )
         if value > 0:
-            _gain_unpowered_block(combat.player, value, combat)
-        return [combat.player]
+            for target in targets:
+                _gain_unpowered_block(target, value, combat)
+        return targets
 
 
 # ---------------------------------------------------------------------------

@@ -47,8 +47,8 @@ class TestSilentPoisonTrackingXCostParity:
         combat.energy = 0
 
         assert combat.play_card(0)
-        assert combat.player.get_power_amount(PowerId.ANTICIPATE) == 5
-        assert combat.player.get_power_amount(PowerId.DEXTERITY) == 5
+        assert combat.player.get_power_amount(PowerId.ANTICIPATE) == 4
+        assert combat.player.get_power_amount(PowerId.DEXTERITY) == 4
 
         fire_after_turn_end(CombatSide.PLAYER, combat)
 
@@ -99,8 +99,9 @@ class TestSilentPoisonTrackingXCostParity:
         combat.energy = 1
 
         assert combat.play_card(0)
-        assert combat.hand == [kept_attack, kept_skill, draw_1, draw_2, draw_3, draw_4]
-        assert combat.draw_pile == [draw_5]
+        assert combat.hand == [kept_attack, kept_skill, draw_1, draw_2]
+        assert draw_1.single_turn_retain and draw_2.single_turn_retain
+        assert combat.draw_pile == [draw_3, draw_4, draw_5]
 
         combat = _make_combat()
         combat.hand = [make_expertise()] + [make_strike_silent() for _ in range(6)]
@@ -108,8 +109,8 @@ class TestSilentPoisonTrackingXCostParity:
         combat.energy = 1
 
         assert combat.play_card(0)
-        assert len(combat.hand) == 6
-        assert len(combat.draw_pile) == 1
+        assert len(combat.hand) == 7
+        assert len(combat.draw_pile) == 0
 
     def test_noxious_fumes_applies_poison_to_all_enemies_at_player_turn_start(self):
         combat = _make_combat(extra_enemies=1)
@@ -135,7 +136,7 @@ class TestSilentPoisonTrackingXCostParity:
         fire_after_side_turn_start(CombatSide.PLAYER, combat)
 
         assert [enemy.get_power_amount(PowerId.POISON) for enemy in combat.enemies] == [2, 2, 2]
-        assert [enemy.current_hp for enemy in combat.enemies] == [89, 89, 89]
+        assert [enemy.current_hp for enemy in combat.enemies] == [67, 67, 67]
 
     def test_phantom_blades_applies_power_and_buffs_only_first_shiv_each_turn(self):
         combat = _make_combat()

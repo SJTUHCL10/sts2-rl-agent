@@ -131,8 +131,8 @@ class TestSilentDrawRetainDiscardParity:
         fire_before_turn_end(CombatSide.PLAYER, combat)
         combat._resolve_end_of_turn_hand()  # noqa: SLF001
 
-        assert combat.hand == [keep]
-        assert combat.discard_pile == [toss]
+        assert combat.hand == [keep, toss]
+        assert combat.discard_pile == []
 
     def test_well_laid_plans_retains_extra_cards_beyond_existing_single_turn_retain(self):
         combat = _make_combat()
@@ -151,8 +151,8 @@ class TestSilentDrawRetainDiscardParity:
         fire_before_turn_end(CombatSide.PLAYER, combat)
         combat._resolve_end_of_turn_hand()  # noqa: SLF001
 
-        assert combat.hand == [already_retained, keep_a, keep_b]
-        assert combat.discard_pile == [toss]
+        assert combat.hand == [already_retained, keep_a, keep_b, toss]
+        assert combat.discard_pile == []
 
     def test_hand_trick_does_not_offer_already_sly_skills(self):
         combat = _make_combat()

@@ -16,6 +16,7 @@ using MegaCrit.Sts2.Core.Localization;
 using MegaCrit.Sts2.Core.Map;
 using MegaCrit.Sts2.Core.Modding;
 using MegaCrit.Sts2.Core.Models;
+using MegaCrit.Sts2.Core.Models.Badges;
 using MegaCrit.Sts2.Core.Nodes.Screens.FeedbackScreen;
 using MegaCrit.Sts2.Core.Platform;
 using MegaCrit.Sts2.Core.Platform.Null;
@@ -50,7 +51,8 @@ namespace MegaCrit.Sts2.Core.Saves;
 	typeof(SnakeCaseJsonStringEnumConverter<FastModeType>),
 	typeof(SnakeCaseJsonStringEnumConverter<CardCreationSource>),
 	typeof(SnakeCaseJsonStringEnumConverter<CardRarityOddsType>),
-	typeof(SnakeCaseJsonStringEnumConverter<ControllerMappingType>)
+	typeof(SnakeCaseJsonStringEnumConverter<ControllerMappingType>),
+	typeof(SnakeCaseJsonStringEnumConverter<BadgeRarity>)
 }, UnmappedMemberHandling = JsonUnmappedMemberHandling.Skip, GenerationMode = JsonSourceGenerationMode.Metadata)]
 [JsonSerializable(typeof(NullLeaderboardFile))]
 [JsonSerializable(typeof(SerializableRun))]
@@ -96,13 +98,17 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 
 	private JsonTypeInfo<MapPointType>? _MapPointType;
 
-	private JsonTypeInfo<DisabledMod>? _DisabledMod;
+	private JsonTypeInfo<ModDependency>? _ModDependency;
 
 	private JsonTypeInfo<ModManifest>? _ModManifest;
 
 	private JsonTypeInfo<ModSettings>? _ModSettings;
 
 	private JsonTypeInfo<ModSource>? _ModSource;
+
+	private JsonTypeInfo<SettingsSaveMod>? _SettingsSaveMod;
+
+	private JsonTypeInfo<BadgeRarity>? _BadgeRarity;
 
 	private JsonTypeInfo<ModelId>? _ModelId;
 
@@ -154,6 +160,8 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 
 	private JsonTypeInfo<AncientStats>? _AncientStats;
 
+	private JsonTypeInfo<BadgeStats>? _BadgeStats;
+
 	private JsonTypeInfo<CardStats>? _CardStats;
 
 	private JsonTypeInfo<CharacterStats>? _CharacterStats;
@@ -198,6 +206,8 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 
 	private JsonTypeInfo<SerializableActModel>? _SerializableActModel;
 
+	private JsonTypeInfo<SerializableBadge>? _SerializableBadge;
+
 	private JsonTypeInfo<SerializableCard>? _SerializableCard;
 
 	private JsonTypeInfo<SerializableCard[]>? _SerializableCardArray;
@@ -238,6 +248,8 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 
 	private JsonTypeInfo<SerializableProgress>? _SerializableProgress;
 
+	private JsonTypeInfo<SerializableRng>? _SerializableRng;
+
 	private JsonTypeInfo<SerializableRun>? _SerializableRun;
 
 	private JsonTypeInfo<SerializableUnlockedAchievement>? _SerializableUnlockedAchievement;
@@ -254,15 +266,17 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 
 	private JsonTypeInfo<Dictionary<RelicRarity, List<ModelId>>>? _DictionaryRelicRarityListModelId;
 
-	private JsonTypeInfo<Dictionary<PlayerRngType, int>>? _DictionaryPlayerRngTypeInt32;
+	private JsonTypeInfo<Dictionary<PlayerRngType, SerializableRng>>? _DictionaryPlayerRngTypeSerializableRng;
 
-	private JsonTypeInfo<Dictionary<RunRngType, int>>? _DictionaryRunRngTypeInt32;
+	private JsonTypeInfo<Dictionary<RunRngType, SerializableRng>>? _DictionaryRunRngTypeSerializableRng;
 
 	private JsonTypeInfo<Dictionary<string, object>>? _DictionaryStringObject;
 
 	private JsonTypeInfo<Dictionary<string, string>>? _DictionaryStringString;
 
 	private JsonTypeInfo<Dictionary<ulong, List<SerializableReward>>>? _DictionaryUInt64ListSerializableReward;
+
+	private JsonTypeInfo<IEnumerable<SerializableBadge>>? _IEnumerableSerializableBadge;
 
 	private JsonTypeInfo<IEnumerable<SerializableCard>>? _IEnumerableSerializableCard;
 
@@ -274,7 +288,9 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 
 	private JsonTypeInfo<List<MapCoord>>? _ListMapCoord;
 
-	private JsonTypeInfo<List<DisabledMod>>? _ListDisabledMod;
+	private JsonTypeInfo<List<ModDependency>>? _ListModDependency;
+
+	private JsonTypeInfo<List<SettingsSaveMod>>? _ListSettingsSaveMod;
 
 	private JsonTypeInfo<List<ModelId>>? _ListModelId;
 
@@ -307,6 +323,8 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private JsonTypeInfo<List<AncientCharacterStats>>? _ListAncientCharacterStats;
 
 	private JsonTypeInfo<List<AncientStats>>? _ListAncientStats;
+
+	private JsonTypeInfo<List<BadgeStats>>? _ListBadgeStats;
 
 	private JsonTypeInfo<List<CardStats>>? _ListCardStats;
 
@@ -390,8 +408,6 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 
 	private JsonTypeInfo<string>? _String;
 
-	private JsonTypeInfo<uint>? _UInt32;
-
 	private JsonTypeInfo<ulong>? _UInt64;
 
 	private static readonly JsonSerializerOptions s_defaultOptions = new JsonSerializerOptions
@@ -415,7 +431,8 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 			(JsonConverter)new SnakeCaseJsonStringEnumConverter<FastModeType>(),
 			(JsonConverter)new SnakeCaseJsonStringEnumConverter<CardCreationSource>(),
 			(JsonConverter)new SnakeCaseJsonStringEnumConverter<CardRarityOddsType>(),
-			(JsonConverter)new SnakeCaseJsonStringEnumConverter<ControllerMappingType>()
+			(JsonConverter)new SnakeCaseJsonStringEnumConverter<ControllerMappingType>(),
+			(JsonConverter)new SnakeCaseJsonStringEnumConverter<BadgeRarity>()
 		},
 		IncludeFields = true,
 		ReadCommentHandling = JsonCommentHandling.Skip,
@@ -427,330 +444,854 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 
 	public static JsonSerializerOptions DefaultGeneratedSerializerOptions => Default.GeneratedSerializerOptions;
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<bool> Boolean => _Boolean ?? (_Boolean = (JsonTypeInfo<bool>)base.Options.GetTypeInfo(typeof(bool)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<double> Double => _Double ?? (_Double = (JsonTypeInfo<double>)base.Options.GetTypeInfo(typeof(double)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<float> Single => _Single ?? (_Single = (JsonTypeInfo<float>)base.Options.GetTypeInfo(typeof(float)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<Vector2> Vector2 => _Vector2 ?? (_Vector2 = (JsonTypeInfo<Vector2>)base.Options.GetTypeInfo(typeof(Vector2)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<Vector2I> Vector2I => _Vector2I ?? (_Vector2I = (JsonTypeInfo<Vector2I>)base.Options.GetTypeInfo(typeof(Vector2I)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<ControllerMappingType> ControllerMappingType => _ControllerMappingType ?? (_ControllerMappingType = (JsonTypeInfo<ControllerMappingType>)base.Options.GetTypeInfo(typeof(ControllerMappingType)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<RelicRarity> RelicRarity => _RelicRarity ?? (_RelicRarity = (JsonTypeInfo<RelicRarity>)base.Options.GetTypeInfo(typeof(RelicRarity)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<PlayerRngType> PlayerRngType => _PlayerRngType ?? (_PlayerRngType = (JsonTypeInfo<PlayerRngType>)base.Options.GetTypeInfo(typeof(PlayerRngType)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<RunRngType> RunRngType => _RunRngType ?? (_RunRngType = (JsonTypeInfo<RunRngType>)base.Options.GetTypeInfo(typeof(RunRngType)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<LocString> LocString => _LocString ?? (_LocString = (JsonTypeInfo<LocString>)base.Options.GetTypeInfo(typeof(LocString)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<MapCoord> MapCoord => _MapCoord ?? (_MapCoord = (JsonTypeInfo<MapCoord>)base.Options.GetTypeInfo(typeof(MapCoord)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<MapPointType> MapPointType => _MapPointType ?? (_MapPointType = (JsonTypeInfo<MapPointType>)base.Options.GetTypeInfo(typeof(MapPointType)));
 
-	public JsonTypeInfo<DisabledMod> DisabledMod => _DisabledMod ?? (_DisabledMod = (JsonTypeInfo<DisabledMod>)base.Options.GetTypeInfo(typeof(DisabledMod)));
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
+	public JsonTypeInfo<ModDependency> ModDependency => _ModDependency ?? (_ModDependency = (JsonTypeInfo<ModDependency>)base.Options.GetTypeInfo(typeof(ModDependency)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<ModManifest> ModManifest => _ModManifest ?? (_ModManifest = (JsonTypeInfo<ModManifest>)base.Options.GetTypeInfo(typeof(ModManifest)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<ModSettings> ModSettings => _ModSettings ?? (_ModSettings = (JsonTypeInfo<ModSettings>)base.Options.GetTypeInfo(typeof(ModSettings)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<ModSource> ModSource => _ModSource ?? (_ModSource = (JsonTypeInfo<ModSource>)base.Options.GetTypeInfo(typeof(ModSource)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
+	public JsonTypeInfo<SettingsSaveMod> SettingsSaveMod => _SettingsSaveMod ?? (_SettingsSaveMod = (JsonTypeInfo<SettingsSaveMod>)base.Options.GetTypeInfo(typeof(SettingsSaveMod)));
+
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
+	public JsonTypeInfo<BadgeRarity> BadgeRarity => _BadgeRarity ?? (_BadgeRarity = (JsonTypeInfo<BadgeRarity>)base.Options.GetTypeInfo(typeof(BadgeRarity)));
+
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<ModelId> ModelId => _ModelId ?? (_ModelId = (JsonTypeInfo<ModelId>)base.Options.GetTypeInfo(typeof(ModelId)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<FeedbackData> FeedbackData => _FeedbackData ?? (_FeedbackData = (JsonTypeInfo<FeedbackData>)base.Options.GetTypeInfo(typeof(FeedbackData)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<NullLeaderboard> NullLeaderboard => _NullLeaderboard ?? (_NullLeaderboard = (JsonTypeInfo<NullLeaderboard>)base.Options.GetTypeInfo(typeof(NullLeaderboard)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<NullLeaderboardFile> NullLeaderboardFile => _NullLeaderboardFile ?? (_NullLeaderboardFile = (JsonTypeInfo<NullLeaderboardFile>)base.Options.GetTypeInfo(typeof(NullLeaderboardFile)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<NullLeaderboardFileEntry> NullLeaderboardFileEntry => _NullLeaderboardFileEntry ?? (_NullLeaderboardFileEntry = (JsonTypeInfo<NullLeaderboardFileEntry>)base.Options.GetTypeInfo(typeof(NullLeaderboardFileEntry)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<NullMultiplayerName> NullMultiplayerName => _NullMultiplayerName ?? (_NullMultiplayerName = (JsonTypeInfo<NullMultiplayerName>)base.Options.GetTypeInfo(typeof(NullMultiplayerName)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<PlatformType> PlatformType => _PlatformType ?? (_PlatformType = (JsonTypeInfo<PlatformType>)base.Options.GetTypeInfo(typeof(PlatformType)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<RewardType> RewardType => _RewardType ?? (_RewardType = (JsonTypeInfo<RewardType>)base.Options.GetTypeInfo(typeof(RewardType)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<RoomType> RoomType => _RoomType ?? (_RoomType = (JsonTypeInfo<RoomType>)base.Options.GetTypeInfo(typeof(RoomType)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<CardCreationSource> CardCreationSource => _CardCreationSource ?? (_CardCreationSource = (JsonTypeInfo<CardCreationSource>)base.Options.GetTypeInfo(typeof(CardCreationSource)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<CardRarityOddsType> CardRarityOddsType => _CardRarityOddsType ?? (_CardRarityOddsType = (JsonTypeInfo<CardRarityOddsType>)base.Options.GetTypeInfo(typeof(CardRarityOddsType)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<GameMode> GameMode => _GameMode ?? (_GameMode = (JsonTypeInfo<GameMode>)base.Options.GetTypeInfo(typeof(GameMode)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<AncientChoiceHistoryEntry> AncientChoiceHistoryEntry => _AncientChoiceHistoryEntry ?? (_AncientChoiceHistoryEntry = (JsonTypeInfo<AncientChoiceHistoryEntry>)base.Options.GetTypeInfo(typeof(AncientChoiceHistoryEntry)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<CardChoiceHistoryEntry> CardChoiceHistoryEntry => _CardChoiceHistoryEntry ?? (_CardChoiceHistoryEntry = (JsonTypeInfo<CardChoiceHistoryEntry>)base.Options.GetTypeInfo(typeof(CardChoiceHistoryEntry)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<CardEnchantmentHistoryEntry> CardEnchantmentHistoryEntry => _CardEnchantmentHistoryEntry ?? (_CardEnchantmentHistoryEntry = (JsonTypeInfo<CardEnchantmentHistoryEntry>)base.Options.GetTypeInfo(typeof(CardEnchantmentHistoryEntry)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<CardTransformationHistoryEntry> CardTransformationHistoryEntry => _CardTransformationHistoryEntry ?? (_CardTransformationHistoryEntry = (JsonTypeInfo<CardTransformationHistoryEntry>)base.Options.GetTypeInfo(typeof(CardTransformationHistoryEntry)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<EventOptionHistoryEntry> EventOptionHistoryEntry => _EventOptionHistoryEntry ?? (_EventOptionHistoryEntry = (JsonTypeInfo<EventOptionHistoryEntry>)base.Options.GetTypeInfo(typeof(EventOptionHistoryEntry)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<MapPointHistoryEntry> MapPointHistoryEntry => _MapPointHistoryEntry ?? (_MapPointHistoryEntry = (JsonTypeInfo<MapPointHistoryEntry>)base.Options.GetTypeInfo(typeof(MapPointHistoryEntry)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<MapPointRoomHistoryEntry> MapPointRoomHistoryEntry => _MapPointRoomHistoryEntry ?? (_MapPointRoomHistoryEntry = (JsonTypeInfo<MapPointRoomHistoryEntry>)base.Options.GetTypeInfo(typeof(MapPointRoomHistoryEntry)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<ModelChoiceHistoryEntry> ModelChoiceHistoryEntry => _ModelChoiceHistoryEntry ?? (_ModelChoiceHistoryEntry = (JsonTypeInfo<ModelChoiceHistoryEntry>)base.Options.GetTypeInfo(typeof(ModelChoiceHistoryEntry)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<PlayerMapPointHistoryEntry> PlayerMapPointHistoryEntry => _PlayerMapPointHistoryEntry ?? (_PlayerMapPointHistoryEntry = (JsonTypeInfo<PlayerMapPointHistoryEntry>)base.Options.GetTypeInfo(typeof(PlayerMapPointHistoryEntry)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<RunHistory> RunHistory => _RunHistory ?? (_RunHistory = (JsonTypeInfo<RunHistory>)base.Options.GetTypeInfo(typeof(RunHistory)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<RunHistoryPlayer> RunHistoryPlayer => _RunHistoryPlayer ?? (_RunHistoryPlayer = (JsonTypeInfo<RunHistoryPlayer>)base.Options.GetTypeInfo(typeof(RunHistoryPlayer)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<AncientCharacterStats> AncientCharacterStats => _AncientCharacterStats ?? (_AncientCharacterStats = (JsonTypeInfo<AncientCharacterStats>)base.Options.GetTypeInfo(typeof(AncientCharacterStats)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<AncientStats> AncientStats => _AncientStats ?? (_AncientStats = (JsonTypeInfo<AncientStats>)base.Options.GetTypeInfo(typeof(AncientStats)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
+	public JsonTypeInfo<BadgeStats> BadgeStats => _BadgeStats ?? (_BadgeStats = (JsonTypeInfo<BadgeStats>)base.Options.GetTypeInfo(typeof(BadgeStats)));
+
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<CardStats> CardStats => _CardStats ?? (_CardStats = (JsonTypeInfo<CardStats>)base.Options.GetTypeInfo(typeof(CardStats)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<CharacterStats> CharacterStats => _CharacterStats ?? (_CharacterStats = (JsonTypeInfo<CharacterStats>)base.Options.GetTypeInfo(typeof(CharacterStats)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<EncounterStats> EncounterStats => _EncounterStats ?? (_EncounterStats = (JsonTypeInfo<EncounterStats>)base.Options.GetTypeInfo(typeof(EncounterStats)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<EnemyStats> EnemyStats => _EnemyStats ?? (_EnemyStats = (JsonTypeInfo<EnemyStats>)base.Options.GetTypeInfo(typeof(EnemyStats)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<EpochState> EpochState => _EpochState ?? (_EpochState = (JsonTypeInfo<EpochState>)base.Options.GetTypeInfo(typeof(EpochState)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<FightStats> FightStats => _FightStats ?? (_FightStats = (JsonTypeInfo<FightStats>)base.Options.GetTypeInfo(typeof(FightStats)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<SerializableMapDrawingLine> SerializableMapDrawingLine => _SerializableMapDrawingLine ?? (_SerializableMapDrawingLine = (JsonTypeInfo<SerializableMapDrawingLine>)base.Options.GetTypeInfo(typeof(SerializableMapDrawingLine)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<SerializableMapDrawings> SerializableMapDrawings => _SerializableMapDrawings ?? (_SerializableMapDrawings = (JsonTypeInfo<SerializableMapDrawings>)base.Options.GetTypeInfo(typeof(SerializableMapDrawings)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<SerializablePlayerMapDrawings> SerializablePlayerMapDrawings => _SerializablePlayerMapDrawings ?? (_SerializablePlayerMapDrawings = (JsonTypeInfo<SerializablePlayerMapDrawings>)base.Options.GetTypeInfo(typeof(SerializablePlayerMapDrawings)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<MigratingData> MigratingData => _MigratingData ?? (_MigratingData = (JsonTypeInfo<MigratingData>)base.Options.GetTypeInfo(typeof(MigratingData)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<PrefsSave> PrefsSave => _PrefsSave ?? (_PrefsSave = (JsonTypeInfo<PrefsSave>)base.Options.GetTypeInfo(typeof(PrefsSave)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<ProfileSave> ProfileSave => _ProfileSave ?? (_ProfileSave = (JsonTypeInfo<ProfileSave>)base.Options.GetTypeInfo(typeof(ProfileSave)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<SavedProperties> SavedProperties => _SavedProperties ?? (_SavedProperties = (JsonTypeInfo<SavedProperties>)base.Options.GetTypeInfo(typeof(SavedProperties)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<SavedProperties.SavedProperty<bool>> SavedPropertyBoolean => _SavedPropertyBoolean ?? (_SavedPropertyBoolean = (JsonTypeInfo<SavedProperties.SavedProperty<bool>>)base.Options.GetTypeInfo(typeof(SavedProperties.SavedProperty<bool>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<SavedProperties.SavedProperty<ModelId>> SavedPropertyModelId => _SavedPropertyModelId ?? (_SavedPropertyModelId = (JsonTypeInfo<SavedProperties.SavedProperty<ModelId>>)base.Options.GetTypeInfo(typeof(SavedProperties.SavedProperty<ModelId>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<SavedProperties.SavedProperty<SerializableCard[]>> SavedPropertySerializableCardArray => _SavedPropertySerializableCardArray ?? (_SavedPropertySerializableCardArray = (JsonTypeInfo<SavedProperties.SavedProperty<SerializableCard[]>>)base.Options.GetTypeInfo(typeof(SavedProperties.SavedProperty<SerializableCard[]>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<SavedProperties.SavedProperty<SerializableCard>> SavedPropertySerializableCard => _SavedPropertySerializableCard ?? (_SavedPropertySerializableCard = (JsonTypeInfo<SavedProperties.SavedProperty<SerializableCard>>)base.Options.GetTypeInfo(typeof(SavedProperties.SavedProperty<SerializableCard>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<SavedProperties.SavedProperty<int[]>> SavedPropertyInt32Array => _SavedPropertyInt32Array ?? (_SavedPropertyInt32Array = (JsonTypeInfo<SavedProperties.SavedProperty<int[]>>)base.Options.GetTypeInfo(typeof(SavedProperties.SavedProperty<int[]>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<SavedProperties.SavedProperty<int>> SavedPropertyInt32 => _SavedPropertyInt32 ?? (_SavedPropertyInt32 = (JsonTypeInfo<SavedProperties.SavedProperty<int>>)base.Options.GetTypeInfo(typeof(SavedProperties.SavedProperty<int>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<SavedProperties.SavedProperty<string>> SavedPropertyString => _SavedPropertyString ?? (_SavedPropertyString = (JsonTypeInfo<SavedProperties.SavedProperty<string>>)base.Options.GetTypeInfo(typeof(SavedProperties.SavedProperty<string>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<SerializableActMap> SerializableActMap => _SerializableActMap ?? (_SerializableActMap = (JsonTypeInfo<SerializableActMap>)base.Options.GetTypeInfo(typeof(SerializableActMap)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<SerializableActModel> SerializableActModel => _SerializableActModel ?? (_SerializableActModel = (JsonTypeInfo<SerializableActModel>)base.Options.GetTypeInfo(typeof(SerializableActModel)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
+	public JsonTypeInfo<SerializableBadge> SerializableBadge => _SerializableBadge ?? (_SerializableBadge = (JsonTypeInfo<SerializableBadge>)base.Options.GetTypeInfo(typeof(SerializableBadge)));
+
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<SerializableCard> SerializableCard => _SerializableCard ?? (_SerializableCard = (JsonTypeInfo<SerializableCard>)base.Options.GetTypeInfo(typeof(SerializableCard)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<SerializableCard[]> SerializableCardArray => _SerializableCardArray ?? (_SerializableCardArray = (JsonTypeInfo<SerializableCard[]>)base.Options.GetTypeInfo(typeof(SerializableCard[])));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<SerializableEnchantment> SerializableEnchantment => _SerializableEnchantment ?? (_SerializableEnchantment = (JsonTypeInfo<SerializableEnchantment>)base.Options.GetTypeInfo(typeof(SerializableEnchantment)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<SerializableExtraRunFields> SerializableExtraRunFields => _SerializableExtraRunFields ?? (_SerializableExtraRunFields = (JsonTypeInfo<SerializableExtraRunFields>)base.Options.GetTypeInfo(typeof(SerializableExtraRunFields)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<SerializableMapPoint> SerializableMapPoint => _SerializableMapPoint ?? (_SerializableMapPoint = (JsonTypeInfo<SerializableMapPoint>)base.Options.GetTypeInfo(typeof(SerializableMapPoint)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<SerializableModifier> SerializableModifier => _SerializableModifier ?? (_SerializableModifier = (JsonTypeInfo<SerializableModifier>)base.Options.GetTypeInfo(typeof(SerializableModifier)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<SerializablePlayer> SerializablePlayer => _SerializablePlayer ?? (_SerializablePlayer = (JsonTypeInfo<SerializablePlayer>)base.Options.GetTypeInfo(typeof(SerializablePlayer)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<SerializablePlayerOddsSet> SerializablePlayerOddsSet => _SerializablePlayerOddsSet ?? (_SerializablePlayerOddsSet = (JsonTypeInfo<SerializablePlayerOddsSet>)base.Options.GetTypeInfo(typeof(SerializablePlayerOddsSet)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<SerializablePotion> SerializablePotion => _SerializablePotion ?? (_SerializablePotion = (JsonTypeInfo<SerializablePotion>)base.Options.GetTypeInfo(typeof(SerializablePotion)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<SerializableRelic> SerializableRelic => _SerializableRelic ?? (_SerializableRelic = (JsonTypeInfo<SerializableRelic>)base.Options.GetTypeInfo(typeof(SerializableRelic)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<SerializableRelicGrabBag> SerializableRelicGrabBag => _SerializableRelicGrabBag ?? (_SerializableRelicGrabBag = (JsonTypeInfo<SerializableRelicGrabBag>)base.Options.GetTypeInfo(typeof(SerializableRelicGrabBag)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<SerializableReward> SerializableReward => _SerializableReward ?? (_SerializableReward = (JsonTypeInfo<SerializableReward>)base.Options.GetTypeInfo(typeof(SerializableReward)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<SerializableRoom> SerializableRoom => _SerializableRoom ?? (_SerializableRoom = (JsonTypeInfo<SerializableRoom>)base.Options.GetTypeInfo(typeof(SerializableRoom)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<SerializableRoomSet> SerializableRoomSet => _SerializableRoomSet ?? (_SerializableRoomSet = (JsonTypeInfo<SerializableRoomSet>)base.Options.GetTypeInfo(typeof(SerializableRoomSet)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<SerializableRunOddsSet> SerializableRunOddsSet => _SerializableRunOddsSet ?? (_SerializableRunOddsSet = (JsonTypeInfo<SerializableRunOddsSet>)base.Options.GetTypeInfo(typeof(SerializableRunOddsSet)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<SerializableRunRngSet> SerializableRunRngSet => _SerializableRunRngSet ?? (_SerializableRunRngSet = (JsonTypeInfo<SerializableRunRngSet>)base.Options.GetTypeInfo(typeof(SerializableRunRngSet)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<SerializableEpoch> SerializableEpoch => _SerializableEpoch ?? (_SerializableEpoch = (JsonTypeInfo<SerializableEpoch>)base.Options.GetTypeInfo(typeof(SerializableEpoch)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<SerializableExtraPlayerFields> SerializableExtraPlayerFields => _SerializableExtraPlayerFields ?? (_SerializableExtraPlayerFields = (JsonTypeInfo<SerializableExtraPlayerFields>)base.Options.GetTypeInfo(typeof(SerializableExtraPlayerFields)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<SerializablePlayerRngSet> SerializablePlayerRngSet => _SerializablePlayerRngSet ?? (_SerializablePlayerRngSet = (JsonTypeInfo<SerializablePlayerRngSet>)base.Options.GetTypeInfo(typeof(SerializablePlayerRngSet)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<SerializableProgress> SerializableProgress => _SerializableProgress ?? (_SerializableProgress = (JsonTypeInfo<SerializableProgress>)base.Options.GetTypeInfo(typeof(SerializableProgress)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
+	public JsonTypeInfo<SerializableRng> SerializableRng => _SerializableRng ?? (_SerializableRng = (JsonTypeInfo<SerializableRng>)base.Options.GetTypeInfo(typeof(SerializableRng)));
+
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<SerializableRun> SerializableRun => _SerializableRun ?? (_SerializableRun = (JsonTypeInfo<SerializableRun>)base.Options.GetTypeInfo(typeof(SerializableRun)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<SerializableUnlockedAchievement> SerializableUnlockedAchievement => _SerializableUnlockedAchievement ?? (_SerializableUnlockedAchievement = (JsonTypeInfo<SerializableUnlockedAchievement>)base.Options.GetTypeInfo(typeof(SerializableUnlockedAchievement)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<SettingsSave> SettingsSave => _SettingsSave ?? (_SettingsSave = (JsonTypeInfo<SettingsSave>)base.Options.GetTypeInfo(typeof(SettingsSave)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<AspectRatioSetting> AspectRatioSetting => _AspectRatioSetting ?? (_AspectRatioSetting = (JsonTypeInfo<AspectRatioSetting>)base.Options.GetTypeInfo(typeof(AspectRatioSetting)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<FastModeType> FastModeType => _FastModeType ?? (_FastModeType = (JsonTypeInfo<FastModeType>)base.Options.GetTypeInfo(typeof(FastModeType)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<VSyncType> VSyncType => _VSyncType ?? (_VSyncType = (JsonTypeInfo<VSyncType>)base.Options.GetTypeInfo(typeof(VSyncType)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<SerializableUnlockState> SerializableUnlockState => _SerializableUnlockState ?? (_SerializableUnlockState = (JsonTypeInfo<SerializableUnlockState>)base.Options.GetTypeInfo(typeof(SerializableUnlockState)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<Dictionary<RelicRarity, List<ModelId>>> DictionaryRelicRarityListModelId => _DictionaryRelicRarityListModelId ?? (_DictionaryRelicRarityListModelId = (JsonTypeInfo<Dictionary<RelicRarity, List<ModelId>>>)base.Options.GetTypeInfo(typeof(Dictionary<RelicRarity, List<ModelId>>)));
 
-	public JsonTypeInfo<Dictionary<PlayerRngType, int>> DictionaryPlayerRngTypeInt32 => _DictionaryPlayerRngTypeInt32 ?? (_DictionaryPlayerRngTypeInt32 = (JsonTypeInfo<Dictionary<PlayerRngType, int>>)base.Options.GetTypeInfo(typeof(Dictionary<PlayerRngType, int>)));
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
+	public JsonTypeInfo<Dictionary<PlayerRngType, SerializableRng>> DictionaryPlayerRngTypeSerializableRng => _DictionaryPlayerRngTypeSerializableRng ?? (_DictionaryPlayerRngTypeSerializableRng = (JsonTypeInfo<Dictionary<PlayerRngType, SerializableRng>>)base.Options.GetTypeInfo(typeof(Dictionary<PlayerRngType, SerializableRng>)));
 
-	public JsonTypeInfo<Dictionary<RunRngType, int>> DictionaryRunRngTypeInt32 => _DictionaryRunRngTypeInt32 ?? (_DictionaryRunRngTypeInt32 = (JsonTypeInfo<Dictionary<RunRngType, int>>)base.Options.GetTypeInfo(typeof(Dictionary<RunRngType, int>)));
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
+	public JsonTypeInfo<Dictionary<RunRngType, SerializableRng>> DictionaryRunRngTypeSerializableRng => _DictionaryRunRngTypeSerializableRng ?? (_DictionaryRunRngTypeSerializableRng = (JsonTypeInfo<Dictionary<RunRngType, SerializableRng>>)base.Options.GetTypeInfo(typeof(Dictionary<RunRngType, SerializableRng>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<Dictionary<string, object>> DictionaryStringObject => _DictionaryStringObject ?? (_DictionaryStringObject = (JsonTypeInfo<Dictionary<string, object>>)base.Options.GetTypeInfo(typeof(Dictionary<string, object>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<Dictionary<string, string>> DictionaryStringString => _DictionaryStringString ?? (_DictionaryStringString = (JsonTypeInfo<Dictionary<string, string>>)base.Options.GetTypeInfo(typeof(Dictionary<string, string>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<Dictionary<ulong, List<SerializableReward>>> DictionaryUInt64ListSerializableReward => _DictionaryUInt64ListSerializableReward ?? (_DictionaryUInt64ListSerializableReward = (JsonTypeInfo<Dictionary<ulong, List<SerializableReward>>>)base.Options.GetTypeInfo(typeof(Dictionary<ulong, List<SerializableReward>>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
+	public JsonTypeInfo<IEnumerable<SerializableBadge>> IEnumerableSerializableBadge => _IEnumerableSerializableBadge ?? (_IEnumerableSerializableBadge = (JsonTypeInfo<IEnumerable<SerializableBadge>>)base.Options.GetTypeInfo(typeof(IEnumerable<SerializableBadge>)));
+
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<IEnumerable<SerializableCard>> IEnumerableSerializableCard => _IEnumerableSerializableCard ?? (_IEnumerableSerializableCard = (JsonTypeInfo<IEnumerable<SerializableCard>>)base.Options.GetTypeInfo(typeof(IEnumerable<SerializableCard>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<IEnumerable<SerializablePotion>> IEnumerableSerializablePotion => _IEnumerableSerializablePotion ?? (_IEnumerableSerializablePotion = (JsonTypeInfo<IEnumerable<SerializablePotion>>)base.Options.GetTypeInfo(typeof(IEnumerable<SerializablePotion>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<IEnumerable<SerializableRelic>> IEnumerableSerializableRelic => _IEnumerableSerializableRelic ?? (_IEnumerableSerializableRelic = (JsonTypeInfo<IEnumerable<SerializableRelic>>)base.Options.GetTypeInfo(typeof(IEnumerable<SerializableRelic>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<Vector2>> ListVector2 => _ListVector2 ?? (_ListVector2 = (JsonTypeInfo<List<Vector2>>)base.Options.GetTypeInfo(typeof(List<Vector2>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<MapCoord>> ListMapCoord => _ListMapCoord ?? (_ListMapCoord = (JsonTypeInfo<List<MapCoord>>)base.Options.GetTypeInfo(typeof(List<MapCoord>)));
 
-	public JsonTypeInfo<List<DisabledMod>> ListDisabledMod => _ListDisabledMod ?? (_ListDisabledMod = (JsonTypeInfo<List<DisabledMod>>)base.Options.GetTypeInfo(typeof(List<DisabledMod>)));
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
+	public JsonTypeInfo<List<ModDependency>> ListModDependency => _ListModDependency ?? (_ListModDependency = (JsonTypeInfo<List<ModDependency>>)base.Options.GetTypeInfo(typeof(List<ModDependency>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
+	public JsonTypeInfo<List<SettingsSaveMod>> ListSettingsSaveMod => _ListSettingsSaveMod ?? (_ListSettingsSaveMod = (JsonTypeInfo<List<SettingsSaveMod>>)base.Options.GetTypeInfo(typeof(List<SettingsSaveMod>)));
+
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<ModelId>> ListModelId => _ListModelId ?? (_ListModelId = (JsonTypeInfo<List<ModelId>>)base.Options.GetTypeInfo(typeof(List<ModelId>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<NullLeaderboard>> ListNullLeaderboard => _ListNullLeaderboard ?? (_ListNullLeaderboard = (JsonTypeInfo<List<NullLeaderboard>>)base.Options.GetTypeInfo(typeof(List<NullLeaderboard>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<NullLeaderboardFileEntry>> ListNullLeaderboardFileEntry => _ListNullLeaderboardFileEntry ?? (_ListNullLeaderboardFileEntry = (JsonTypeInfo<List<NullLeaderboardFileEntry>>)base.Options.GetTypeInfo(typeof(List<NullLeaderboardFileEntry>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<NullMultiplayerName>> ListNullMultiplayerName => _ListNullMultiplayerName ?? (_ListNullMultiplayerName = (JsonTypeInfo<List<NullMultiplayerName>>)base.Options.GetTypeInfo(typeof(List<NullMultiplayerName>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<AncientChoiceHistoryEntry>> ListAncientChoiceHistoryEntry => _ListAncientChoiceHistoryEntry ?? (_ListAncientChoiceHistoryEntry = (JsonTypeInfo<List<AncientChoiceHistoryEntry>>)base.Options.GetTypeInfo(typeof(List<AncientChoiceHistoryEntry>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<CardChoiceHistoryEntry>> ListCardChoiceHistoryEntry => _ListCardChoiceHistoryEntry ?? (_ListCardChoiceHistoryEntry = (JsonTypeInfo<List<CardChoiceHistoryEntry>>)base.Options.GetTypeInfo(typeof(List<CardChoiceHistoryEntry>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<CardEnchantmentHistoryEntry>> ListCardEnchantmentHistoryEntry => _ListCardEnchantmentHistoryEntry ?? (_ListCardEnchantmentHistoryEntry = (JsonTypeInfo<List<CardEnchantmentHistoryEntry>>)base.Options.GetTypeInfo(typeof(List<CardEnchantmentHistoryEntry>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<CardTransformationHistoryEntry>> ListCardTransformationHistoryEntry => _ListCardTransformationHistoryEntry ?? (_ListCardTransformationHistoryEntry = (JsonTypeInfo<List<CardTransformationHistoryEntry>>)base.Options.GetTypeInfo(typeof(List<CardTransformationHistoryEntry>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<EventOptionHistoryEntry>> ListEventOptionHistoryEntry => _ListEventOptionHistoryEntry ?? (_ListEventOptionHistoryEntry = (JsonTypeInfo<List<EventOptionHistoryEntry>>)base.Options.GetTypeInfo(typeof(List<EventOptionHistoryEntry>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<MapPointHistoryEntry>> ListMapPointHistoryEntry => _ListMapPointHistoryEntry ?? (_ListMapPointHistoryEntry = (JsonTypeInfo<List<MapPointHistoryEntry>>)base.Options.GetTypeInfo(typeof(List<MapPointHistoryEntry>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<MapPointRoomHistoryEntry>> ListMapPointRoomHistoryEntry => _ListMapPointRoomHistoryEntry ?? (_ListMapPointRoomHistoryEntry = (JsonTypeInfo<List<MapPointRoomHistoryEntry>>)base.Options.GetTypeInfo(typeof(List<MapPointRoomHistoryEntry>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<ModelChoiceHistoryEntry>> ListModelChoiceHistoryEntry => _ListModelChoiceHistoryEntry ?? (_ListModelChoiceHistoryEntry = (JsonTypeInfo<List<ModelChoiceHistoryEntry>>)base.Options.GetTypeInfo(typeof(List<ModelChoiceHistoryEntry>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<PlayerMapPointHistoryEntry>> ListPlayerMapPointHistoryEntry => _ListPlayerMapPointHistoryEntry ?? (_ListPlayerMapPointHistoryEntry = (JsonTypeInfo<List<PlayerMapPointHistoryEntry>>)base.Options.GetTypeInfo(typeof(List<PlayerMapPointHistoryEntry>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<RunHistoryPlayer>> ListRunHistoryPlayer => _ListRunHistoryPlayer ?? (_ListRunHistoryPlayer = (JsonTypeInfo<List<RunHistoryPlayer>>)base.Options.GetTypeInfo(typeof(List<RunHistoryPlayer>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<AncientCharacterStats>> ListAncientCharacterStats => _ListAncientCharacterStats ?? (_ListAncientCharacterStats = (JsonTypeInfo<List<AncientCharacterStats>>)base.Options.GetTypeInfo(typeof(List<AncientCharacterStats>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<AncientStats>> ListAncientStats => _ListAncientStats ?? (_ListAncientStats = (JsonTypeInfo<List<AncientStats>>)base.Options.GetTypeInfo(typeof(List<AncientStats>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
+	public JsonTypeInfo<List<BadgeStats>> ListBadgeStats => _ListBadgeStats ?? (_ListBadgeStats = (JsonTypeInfo<List<BadgeStats>>)base.Options.GetTypeInfo(typeof(List<BadgeStats>)));
+
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<CardStats>> ListCardStats => _ListCardStats ?? (_ListCardStats = (JsonTypeInfo<List<CardStats>>)base.Options.GetTypeInfo(typeof(List<CardStats>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<CharacterStats>> ListCharacterStats => _ListCharacterStats ?? (_ListCharacterStats = (JsonTypeInfo<List<CharacterStats>>)base.Options.GetTypeInfo(typeof(List<CharacterStats>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<EncounterStats>> ListEncounterStats => _ListEncounterStats ?? (_ListEncounterStats = (JsonTypeInfo<List<EncounterStats>>)base.Options.GetTypeInfo(typeof(List<EncounterStats>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<EnemyStats>> ListEnemyStats => _ListEnemyStats ?? (_ListEnemyStats = (JsonTypeInfo<List<EnemyStats>>)base.Options.GetTypeInfo(typeof(List<EnemyStats>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<FightStats>> ListFightStats => _ListFightStats ?? (_ListFightStats = (JsonTypeInfo<List<FightStats>>)base.Options.GetTypeInfo(typeof(List<FightStats>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<SerializableMapDrawingLine>> ListSerializableMapDrawingLine => _ListSerializableMapDrawingLine ?? (_ListSerializableMapDrawingLine = (JsonTypeInfo<List<SerializableMapDrawingLine>>)base.Options.GetTypeInfo(typeof(List<SerializableMapDrawingLine>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<SerializablePlayerMapDrawings>> ListSerializablePlayerMapDrawings => _ListSerializablePlayerMapDrawings ?? (_ListSerializablePlayerMapDrawings = (JsonTypeInfo<List<SerializablePlayerMapDrawings>>)base.Options.GetTypeInfo(typeof(List<SerializablePlayerMapDrawings>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<MigratingData>> ListMigratingData => _ListMigratingData ?? (_ListMigratingData = (JsonTypeInfo<List<MigratingData>>)base.Options.GetTypeInfo(typeof(List<MigratingData>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<SavedProperties.SavedProperty<bool>>> ListSavedPropertyBoolean => _ListSavedPropertyBoolean ?? (_ListSavedPropertyBoolean = (JsonTypeInfo<List<SavedProperties.SavedProperty<bool>>>)base.Options.GetTypeInfo(typeof(List<SavedProperties.SavedProperty<bool>>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<SavedProperties.SavedProperty<ModelId>>> ListSavedPropertyModelId => _ListSavedPropertyModelId ?? (_ListSavedPropertyModelId = (JsonTypeInfo<List<SavedProperties.SavedProperty<ModelId>>>)base.Options.GetTypeInfo(typeof(List<SavedProperties.SavedProperty<ModelId>>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<SavedProperties.SavedProperty<SerializableCard[]>>> ListSavedPropertySerializableCardArray => _ListSavedPropertySerializableCardArray ?? (_ListSavedPropertySerializableCardArray = (JsonTypeInfo<List<SavedProperties.SavedProperty<SerializableCard[]>>>)base.Options.GetTypeInfo(typeof(List<SavedProperties.SavedProperty<SerializableCard[]>>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<SavedProperties.SavedProperty<SerializableCard>>> ListSavedPropertySerializableCard => _ListSavedPropertySerializableCard ?? (_ListSavedPropertySerializableCard = (JsonTypeInfo<List<SavedProperties.SavedProperty<SerializableCard>>>)base.Options.GetTypeInfo(typeof(List<SavedProperties.SavedProperty<SerializableCard>>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<SavedProperties.SavedProperty<int[]>>> ListSavedPropertyInt32Array => _ListSavedPropertyInt32Array ?? (_ListSavedPropertyInt32Array = (JsonTypeInfo<List<SavedProperties.SavedProperty<int[]>>>)base.Options.GetTypeInfo(typeof(List<SavedProperties.SavedProperty<int[]>>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<SavedProperties.SavedProperty<int>>> ListSavedPropertyInt32 => _ListSavedPropertyInt32 ?? (_ListSavedPropertyInt32 = (JsonTypeInfo<List<SavedProperties.SavedProperty<int>>>)base.Options.GetTypeInfo(typeof(List<SavedProperties.SavedProperty<int>>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<SavedProperties.SavedProperty<string>>> ListSavedPropertyString => _ListSavedPropertyString ?? (_ListSavedPropertyString = (JsonTypeInfo<List<SavedProperties.SavedProperty<string>>>)base.Options.GetTypeInfo(typeof(List<SavedProperties.SavedProperty<string>>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<SerializableActModel>> ListSerializableActModel => _ListSerializableActModel ?? (_ListSerializableActModel = (JsonTypeInfo<List<SerializableActModel>>)base.Options.GetTypeInfo(typeof(List<SerializableActModel>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<SerializableCard>> ListSerializableCard => _ListSerializableCard ?? (_ListSerializableCard = (JsonTypeInfo<List<SerializableCard>>)base.Options.GetTypeInfo(typeof(List<SerializableCard>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<SerializableMapPoint>> ListSerializableMapPoint => _ListSerializableMapPoint ?? (_ListSerializableMapPoint = (JsonTypeInfo<List<SerializableMapPoint>>)base.Options.GetTypeInfo(typeof(List<SerializableMapPoint>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<SerializableModifier>> ListSerializableModifier => _ListSerializableModifier ?? (_ListSerializableModifier = (JsonTypeInfo<List<SerializableModifier>>)base.Options.GetTypeInfo(typeof(List<SerializableModifier>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<SerializablePlayer>> ListSerializablePlayer => _ListSerializablePlayer ?? (_ListSerializablePlayer = (JsonTypeInfo<List<SerializablePlayer>>)base.Options.GetTypeInfo(typeof(List<SerializablePlayer>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<SerializablePotion>> ListSerializablePotion => _ListSerializablePotion ?? (_ListSerializablePotion = (JsonTypeInfo<List<SerializablePotion>>)base.Options.GetTypeInfo(typeof(List<SerializablePotion>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<SerializableRelic>> ListSerializableRelic => _ListSerializableRelic ?? (_ListSerializableRelic = (JsonTypeInfo<List<SerializableRelic>>)base.Options.GetTypeInfo(typeof(List<SerializableRelic>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<SerializableReward>> ListSerializableReward => _ListSerializableReward ?? (_ListSerializableReward = (JsonTypeInfo<List<SerializableReward>>)base.Options.GetTypeInfo(typeof(List<SerializableReward>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<SerializableEpoch>> ListSerializableEpoch => _ListSerializableEpoch ?? (_ListSerializableEpoch = (JsonTypeInfo<List<SerializableEpoch>>)base.Options.GetTypeInfo(typeof(List<SerializableEpoch>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<SerializableUnlockedAchievement>> ListSerializableUnlockedAchievement => _ListSerializableUnlockedAchievement ?? (_ListSerializableUnlockedAchievement = (JsonTypeInfo<List<SerializableUnlockedAchievement>>)base.Options.GetTypeInfo(typeof(List<SerializableUnlockedAchievement>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<Dictionary<string, object>>> ListDictionaryStringObject => _ListDictionaryStringObject ?? (_ListDictionaryStringObject = (JsonTypeInfo<List<Dictionary<string, object>>>)base.Options.GetTypeInfo(typeof(List<Dictionary<string, object>>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<List<MapPointHistoryEntry>>> ListListMapPointHistoryEntry => _ListListMapPointHistoryEntry ?? (_ListListMapPointHistoryEntry = (JsonTypeInfo<List<List<MapPointHistoryEntry>>>)base.Options.GetTypeInfo(typeof(List<List<MapPointHistoryEntry>>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<List<PlayerMapPointHistoryEntry>>> ListListPlayerMapPointHistoryEntry => _ListListPlayerMapPointHistoryEntry ?? (_ListListPlayerMapPointHistoryEntry = (JsonTypeInfo<List<List<PlayerMapPointHistoryEntry>>>)base.Options.GetTypeInfo(typeof(List<List<PlayerMapPointHistoryEntry>>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<JsonNode>> ListJsonNode => _ListJsonNode ?? (_ListJsonNode = (JsonTypeInfo<List<JsonNode>>)base.Options.GetTypeInfo(typeof(List<JsonNode>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<string>> ListString => _ListString ?? (_ListString = (JsonTypeInfo<List<string>>)base.Options.GetTypeInfo(typeof(List<string>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<List<ulong>> ListUInt64 => _ListUInt64 ?? (_ListUInt64 = (JsonTypeInfo<List<ulong>>)base.Options.GetTypeInfo(typeof(List<ulong>)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<DateTimeOffset> DateTimeOffset => _DateTimeOffset ?? (_DateTimeOffset = (JsonTypeInfo<DateTimeOffset>)base.Options.GetTypeInfo(typeof(DateTimeOffset)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<DateTimeOffset?> NullableDateTimeOffset => _NullableDateTimeOffset ?? (_NullableDateTimeOffset = (JsonTypeInfo<DateTimeOffset?>)base.Options.GetTypeInfo(typeof(DateTimeOffset?)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<JsonNode> JsonNode => _JsonNode ?? (_JsonNode = (JsonTypeInfo<JsonNode>)base.Options.GetTypeInfo(typeof(JsonNode)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<JsonObject> JsonObject => _JsonObject ?? (_JsonObject = (JsonTypeInfo<JsonObject>)base.Options.GetTypeInfo(typeof(JsonObject)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<int> Int32 => _Int32 ?? (_Int32 = (JsonTypeInfo<int>)base.Options.GetTypeInfo(typeof(int)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<int?> NullableInt32 => _NullableInt32 ?? (_NullableInt32 = (JsonTypeInfo<int?>)base.Options.GetTypeInfo(typeof(int?)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<int[]> Int32Array => _Int32Array ?? (_Int32Array = (JsonTypeInfo<int[]>)base.Options.GetTypeInfo(typeof(int[])));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<long> Int64 => _Int64 ?? (_Int64 = (JsonTypeInfo<long>)base.Options.GetTypeInfo(typeof(long)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<object> Object => _Object ?? (_Object = (JsonTypeInfo<object>)base.Options.GetTypeInfo(typeof(object)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<string> String => _String ?? (_String = (JsonTypeInfo<string>)base.Options.GetTypeInfo(typeof(string)));
 
-	public JsonTypeInfo<uint> UInt32 => _UInt32 ?? (_UInt32 = (JsonTypeInfo<uint>)base.Options.GetTypeInfo(typeof(uint)));
-
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<ulong> UInt64 => _UInt64 ?? (_UInt64 = (JsonTypeInfo<ulong>)base.Options.GetTypeInfo(typeof(ulong)));
 
+	/// <summary>
+	/// The default <see cref="T:System.Text.Json.Serialization.JsonSerializerContext" /> associated with a default <see cref="T:System.Text.Json.JsonSerializerOptions" /> instance.
+	/// </summary>
 	public static MegaCritSerializerContext Default { get; } = new MegaCritSerializerContext(new JsonSerializerOptions(s_defaultOptions));
 
+	/// <summary>
+	/// The source-generated options associated with this context.
+	/// </summary>
 	protected override JsonSerializerOptions? GeneratedSerializerOptions { get; } = s_defaultOptions;
 
 	private JsonTypeInfo<bool> Create_Boolean(JsonSerializerOptions options)
@@ -806,45 +1347,47 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] Vector2PropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[2];
-		JsonPropertyInfoValues<float> jsonPropertyInfoValues = new JsonPropertyInfoValues<float>();
-		jsonPropertyInfoValues.IsProperty = false;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(Vector2);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((Vector2)obj).X;
-		jsonPropertyInfoValues.Setter = delegate(object obj, float value)
+		JsonPropertyInfoValues<float> propertyInfo = new JsonPropertyInfoValues<float>
 		{
-			Unsafe.Unbox<Vector2>(obj).X = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(Vector2),
+			Converter = null,
+			Getter = (object obj) => ((Vector2)obj).X,
+			Setter = delegate(object obj, float value)
+			{
+				Unsafe.Unbox<Vector2>(obj).X = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "X",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(Vector2).GetField("X", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "X";
-		jsonPropertyInfoValues.JsonPropertyName = null;
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(Vector2).GetField("X", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<float> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<float>();
-		jsonPropertyInfoValues.IsProperty = false;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(Vector2);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((Vector2)obj).Y;
-		jsonPropertyInfoValues.Setter = delegate(object obj, float value)
+		JsonPropertyInfoValues<float> propertyInfo2 = new JsonPropertyInfoValues<float>
 		{
-			Unsafe.Unbox<Vector2>(obj).Y = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(Vector2),
+			Converter = null,
+			Getter = (object obj) => ((Vector2)obj).Y,
+			Setter = delegate(object obj, float value)
+			{
+				Unsafe.Unbox<Vector2>(obj).Y = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Y",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(Vector2).GetField("Y", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "Y";
-		jsonPropertyInfoValues.JsonPropertyName = null;
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(Vector2).GetField("Y", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<float> propertyInfo2 = jsonPropertyInfoValues;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		return array;
 	}
@@ -872,45 +1415,47 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] Vector2IPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[2];
-		JsonPropertyInfoValues<int> jsonPropertyInfoValues = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues.IsProperty = false;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(Vector2I);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((Vector2I)obj).X;
-		jsonPropertyInfoValues.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo = new JsonPropertyInfoValues<int>
 		{
-			Unsafe.Unbox<Vector2I>(obj).X = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(Vector2I),
+			Converter = null,
+			Getter = (object obj) => ((Vector2I)obj).X,
+			Setter = delegate(object obj, int value)
+			{
+				Unsafe.Unbox<Vector2I>(obj).X = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "X",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(Vector2I).GetField("X", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "X";
-		jsonPropertyInfoValues.JsonPropertyName = null;
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(Vector2I).GetField("X", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<int> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues.IsProperty = false;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(Vector2I);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((Vector2I)obj).Y;
-		jsonPropertyInfoValues.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo2 = new JsonPropertyInfoValues<int>
 		{
-			Unsafe.Unbox<Vector2I>(obj).Y = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(Vector2I),
+			Converter = null,
+			Getter = (object obj) => ((Vector2I)obj).Y,
+			Setter = delegate(object obj, int value)
+			{
+				Unsafe.Unbox<Vector2I>(obj).Y = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Y",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(Vector2I).GetField("Y", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "Y";
-		jsonPropertyInfoValues.JsonPropertyName = null;
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(Vector2I).GetField("Y", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<int> propertyInfo2 = jsonPropertyInfoValues;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		return array;
 	}
@@ -959,18 +1504,19 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	{
 		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<LocString> jsonTypeInfo))
 		{
-			JsonObjectInfoValues<LocString> jsonObjectInfoValues = new JsonObjectInfoValues<LocString>();
-			jsonObjectInfoValues.ObjectCreator = null;
-			jsonObjectInfoValues.ObjectWithParameterizedConstructorCreator = (object[] args) => new LocString((string)args[0], (string)args[1]);
-			jsonObjectInfoValues.PropertyMetadataInitializer = (JsonSerializerContext _) => LocStringPropInit(options);
-			jsonObjectInfoValues.ConstructorParameterMetadataInitializer = LocStringCtorParamInit;
-			jsonObjectInfoValues.ConstructorAttributeProviderFactory = () => typeof(LocString).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new Type[2]
+			JsonObjectInfoValues<LocString> objectInfo = new JsonObjectInfoValues<LocString>
 			{
-				typeof(string),
-				typeof(string)
-			}, null);
-			jsonObjectInfoValues.SerializeHandler = null;
-			JsonObjectInfoValues<LocString> objectInfo = jsonObjectInfoValues;
+				ObjectCreator = null,
+				ObjectWithParameterizedConstructorCreator = (object[] args) => new LocString((string)args[0], (string)args[1]),
+				PropertyMetadataInitializer = (JsonSerializerContext _) => LocStringPropInit(options),
+				ConstructorParameterMetadataInitializer = LocStringCtorParamInit,
+				ConstructorAttributeProviderFactory = () => typeof(LocString).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new Type[2]
+				{
+					typeof(string),
+					typeof(string)
+				}, null),
+				SerializeHandler = null
+			};
 			jsonTypeInfo = JsonMetadataServices.CreateObjectInfo(options, objectInfo);
 			jsonTypeInfo.NumberHandling = null;
 		}
@@ -981,75 +1527,79 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] LocStringPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[4];
-		JsonPropertyInfoValues<string> jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(LocString);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((LocString)obj).LocTable;
-		jsonPropertyInfoValues.Setter = null;
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "LocTable";
-		jsonPropertyInfoValues.JsonPropertyName = "table";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(LocString).GetProperty("LocTable", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<string> propertyInfo = jsonPropertyInfoValues;
+		JsonPropertyInfoValues<string> propertyInfo = new JsonPropertyInfoValues<string>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(LocString),
+			Converter = null,
+			Getter = (object obj) => ((LocString)obj).LocTable,
+			Setter = null,
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "LocTable",
+			JsonPropertyName = "table",
+			AttributeProviderFactory = () => typeof(LocString).GetProperty("LocTable", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null)
+		};
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsGetNullable = false;
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(LocString);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((LocString)obj).LocEntryKey;
-		jsonPropertyInfoValues.Setter = null;
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "LocEntryKey";
-		jsonPropertyInfoValues.JsonPropertyName = "key";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(LocString).GetProperty("LocEntryKey", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<string> propertyInfo2 = jsonPropertyInfoValues;
+		JsonPropertyInfoValues<string> propertyInfo2 = new JsonPropertyInfoValues<string>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(LocString),
+			Converter = null,
+			Getter = (object obj) => ((LocString)obj).LocEntryKey,
+			Setter = null,
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "LocEntryKey",
+			JsonPropertyName = "key",
+			AttributeProviderFactory = () => typeof(LocString).GetProperty("LocEntryKey", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null)
+		};
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		array[1].IsGetNullable = false;
-		JsonPropertyInfoValues<bool> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<bool>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(LocString);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = null;
-		jsonPropertyInfoValues2.Setter = null;
-		jsonPropertyInfoValues2.IgnoreCondition = JsonIgnoreCondition.Always;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "IsEmpty";
-		jsonPropertyInfoValues2.JsonPropertyName = null;
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(LocString).GetProperty("IsEmpty", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<bool> propertyInfo3 = jsonPropertyInfoValues2;
+		JsonPropertyInfoValues<bool> propertyInfo3 = new JsonPropertyInfoValues<bool>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(LocString),
+			Converter = null,
+			Getter = null,
+			Setter = null,
+			IgnoreCondition = JsonIgnoreCondition.Always,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "IsEmpty",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(LocString).GetProperty("IsEmpty", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
+		};
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
-		JsonPropertyInfoValues<IReadOnlyDictionary<string, object>> jsonPropertyInfoValues3 = new JsonPropertyInfoValues<IReadOnlyDictionary<string, object>>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(LocString);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = null;
-		jsonPropertyInfoValues3.Setter = null;
-		jsonPropertyInfoValues3.IgnoreCondition = JsonIgnoreCondition.Always;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "Variables";
-		jsonPropertyInfoValues3.JsonPropertyName = null;
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(LocString).GetProperty("Variables", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(IReadOnlyDictionary<string, object>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<IReadOnlyDictionary<string, object>> propertyInfo4 = jsonPropertyInfoValues3;
+		JsonPropertyInfoValues<IReadOnlyDictionary<string, object>> propertyInfo4 = new JsonPropertyInfoValues<IReadOnlyDictionary<string, object>>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(LocString),
+			Converter = null,
+			Getter = null,
+			Setter = null,
+			IgnoreCondition = JsonIgnoreCondition.Always,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Variables",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(LocString).GetProperty("Variables", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(IReadOnlyDictionary<string, object>), Array.Empty<Type>(), null)
+		};
 		array[3] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo4);
 		array[3].IsGetNullable = false;
 		return array;
@@ -1103,45 +1653,47 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] MapCoordPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[2];
-		JsonPropertyInfoValues<int> jsonPropertyInfoValues = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues.IsProperty = false;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(MapCoord);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((MapCoord)obj).col;
-		jsonPropertyInfoValues.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo = new JsonPropertyInfoValues<int>
 		{
-			Unsafe.Unbox<MapCoord>(obj).col = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(MapCoord),
+			Converter = null,
+			Getter = (object obj) => ((MapCoord)obj).col,
+			Setter = delegate(object obj, int value)
+			{
+				Unsafe.Unbox<MapCoord>(obj).col = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = true,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "col",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(MapCoord).GetField("col", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = true;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "col";
-		jsonPropertyInfoValues.JsonPropertyName = null;
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(MapCoord).GetField("col", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<int> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues.IsProperty = false;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(MapCoord);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((MapCoord)obj).row;
-		jsonPropertyInfoValues.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo2 = new JsonPropertyInfoValues<int>
 		{
-			Unsafe.Unbox<MapCoord>(obj).row = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(MapCoord),
+			Converter = null,
+			Getter = (object obj) => ((MapCoord)obj).row,
+			Setter = delegate(object obj, int value)
+			{
+				Unsafe.Unbox<MapCoord>(obj).row = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = true,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "row",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(MapCoord).GetField("row", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = true;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "row";
-		jsonPropertyInfoValues.JsonPropertyName = null;
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(MapCoord).GetField("row", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<int> propertyInfo2 = jsonPropertyInfoValues;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		return array;
 	}
@@ -1156,17 +1708,21 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 		return jsonTypeInfo;
 	}
 
-	private JsonTypeInfo<DisabledMod> Create_DisabledMod(JsonSerializerOptions options)
+	private JsonTypeInfo<ModDependency> Create_ModDependency(JsonSerializerOptions options)
 	{
-		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<DisabledMod> jsonTypeInfo))
+		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<ModDependency> jsonTypeInfo))
 		{
-			JsonObjectInfoValues<DisabledMod> objectInfo = new JsonObjectInfoValues<DisabledMod>
+			JsonObjectInfoValues<ModDependency> objectInfo = new JsonObjectInfoValues<ModDependency>
 			{
-				ObjectCreator = () => new DisabledMod(),
-				ObjectWithParameterizedConstructorCreator = null,
-				PropertyMetadataInitializer = (JsonSerializerContext _) => DisabledModPropInit(options),
-				ConstructorParameterMetadataInitializer = null,
-				ConstructorAttributeProviderFactory = () => typeof(DisabledMod).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null),
+				ObjectCreator = null,
+				ObjectWithParameterizedConstructorCreator = (object[] args) => new ModDependency((string)args[0], (string)args[1]),
+				PropertyMetadataInitializer = (JsonSerializerContext _) => ModDependencyPropInit(options),
+				ConstructorParameterMetadataInitializer = ModDependencyCtorParamInit,
+				ConstructorAttributeProviderFactory = () => typeof(ModDependency).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new Type[2]
+				{
+					typeof(string),
+					typeof(string)
+				}, null),
 				SerializeHandler = null
 			};
 			jsonTypeInfo = JsonMetadataServices.CreateObjectInfo(options, objectInfo);
@@ -1176,52 +1732,79 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 		return jsonTypeInfo;
 	}
 
-	private static JsonPropertyInfo[] DisabledModPropInit(JsonSerializerOptions options)
+	private static JsonPropertyInfo[] ModDependencyPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[2];
-		JsonPropertyInfoValues<string> jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(DisabledMod);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((DisabledMod)obj).Name;
-		jsonPropertyInfoValues.Setter = delegate(object obj, string? value)
+		JsonPropertyInfoValues<string> propertyInfo = new JsonPropertyInfoValues<string>
 		{
-			((DisabledMod)obj).Name = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(ModDependency),
+			Converter = null,
+			Getter = (object obj) => ((ModDependency)obj).id,
+			Setter = delegate(object obj, string? value)
+			{
+				((ModDependency)obj).id = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "id",
+			JsonPropertyName = "id",
+			AttributeProviderFactory = () => typeof(ModDependency).GetField("id", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "Name";
-		jsonPropertyInfoValues.JsonPropertyName = "name";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(DisabledMod).GetProperty("Name", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<string> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsGetNullable = false;
 		array[0].IsSetNullable = false;
-		JsonPropertyInfoValues<ModSource> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<ModSource>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(DisabledMod);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((DisabledMod)obj).Source;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, ModSource value)
+		JsonPropertyInfoValues<string> propertyInfo2 = new JsonPropertyInfoValues<string>
 		{
-			((DisabledMod)obj).Source = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(ModDependency),
+			Converter = null,
+			Getter = (object obj) => ((ModDependency)obj).minVersion,
+			Setter = delegate(object obj, string? value)
+			{
+				((ModDependency)obj).minVersion = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "minVersion",
+			JsonPropertyName = "min_version",
+			AttributeProviderFactory = () => typeof(ModDependency).GetField("minVersion", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "Source";
-		jsonPropertyInfoValues2.JsonPropertyName = "source";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(DisabledMod).GetProperty("Source", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModSource), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<ModSource> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		return array;
+	}
+
+	private static JsonParameterInfoValues[] ModDependencyCtorParamInit()
+	{
+		return new JsonParameterInfoValues[2]
+		{
+			new JsonParameterInfoValues
+			{
+				Name = "id",
+				ParameterType = typeof(string),
+				Position = 0,
+				HasDefaultValue = false,
+				DefaultValue = null,
+				IsNullable = false
+			},
+			new JsonParameterInfoValues
+			{
+				Name = "minVersion",
+				ParameterType = typeof(string),
+				Position = 1,
+				HasDefaultValue = true,
+				DefaultValue = null,
+				IsNullable = true
+			}
+		};
 	}
 
 	private JsonTypeInfo<ModManifest> Create_ModManifest(JsonSerializerOptions options)
@@ -1246,107 +1829,217 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 
 	private static JsonPropertyInfo[] ModManifestPropInit(JsonSerializerOptions options)
 	{
-		JsonPropertyInfo[] array = new JsonPropertyInfo[5];
-		JsonPropertyInfoValues<string> jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
-		jsonPropertyInfoValues.IsProperty = false;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(ModManifest);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((ModManifest)obj).pckName;
-		jsonPropertyInfoValues.Setter = delegate(object obj, string? value)
+		JsonPropertyInfo[] array = new JsonPropertyInfo[10];
+		JsonPropertyInfoValues<string> propertyInfo = new JsonPropertyInfoValues<string>
 		{
-			((ModManifest)obj).pckName = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(ModManifest),
+			Converter = null,
+			Getter = (object obj) => ((ModManifest)obj).id,
+			Setter = delegate(object obj, string? value)
+			{
+				((ModManifest)obj).id = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "id",
+			JsonPropertyName = "id",
+			AttributeProviderFactory = () => typeof(ModManifest).GetField("id", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "pckName";
-		jsonPropertyInfoValues.JsonPropertyName = "pck_name";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(ModManifest).GetField("pckName", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<string> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
-		jsonPropertyInfoValues.IsProperty = false;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(ModManifest);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((ModManifest)obj).name;
-		jsonPropertyInfoValues.Setter = delegate(object obj, string? value)
+		JsonPropertyInfoValues<string> propertyInfo2 = new JsonPropertyInfoValues<string>
 		{
-			((ModManifest)obj).name = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(ModManifest),
+			Converter = null,
+			Getter = (object obj) => ((ModManifest)obj).name,
+			Setter = delegate(object obj, string? value)
+			{
+				((ModManifest)obj).name = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "name",
+			JsonPropertyName = "name",
+			AttributeProviderFactory = () => typeof(ModManifest).GetField("name", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "name";
-		jsonPropertyInfoValues.JsonPropertyName = "name";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(ModManifest).GetField("name", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<string> propertyInfo2 = jsonPropertyInfoValues;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
-		jsonPropertyInfoValues.IsProperty = false;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(ModManifest);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((ModManifest)obj).author;
-		jsonPropertyInfoValues.Setter = delegate(object obj, string? value)
+		JsonPropertyInfoValues<string> propertyInfo3 = new JsonPropertyInfoValues<string>
 		{
-			((ModManifest)obj).author = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(ModManifest),
+			Converter = null,
+			Getter = (object obj) => ((ModManifest)obj).author,
+			Setter = delegate(object obj, string? value)
+			{
+				((ModManifest)obj).author = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "author",
+			JsonPropertyName = "author",
+			AttributeProviderFactory = () => typeof(ModManifest).GetField("author", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "author";
-		jsonPropertyInfoValues.JsonPropertyName = "author";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(ModManifest).GetField("author", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<string> propertyInfo3 = jsonPropertyInfoValues;
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
-		jsonPropertyInfoValues.IsProperty = false;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(ModManifest);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((ModManifest)obj).description;
-		jsonPropertyInfoValues.Setter = delegate(object obj, string? value)
+		JsonPropertyInfoValues<string> propertyInfo4 = new JsonPropertyInfoValues<string>
 		{
-			((ModManifest)obj).description = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(ModManifest),
+			Converter = null,
+			Getter = (object obj) => ((ModManifest)obj).description,
+			Setter = delegate(object obj, string? value)
+			{
+				((ModManifest)obj).description = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "description",
+			JsonPropertyName = "description",
+			AttributeProviderFactory = () => typeof(ModManifest).GetField("description", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "description";
-		jsonPropertyInfoValues.JsonPropertyName = "description";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(ModManifest).GetField("description", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<string> propertyInfo4 = jsonPropertyInfoValues;
 		array[3] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo4);
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
-		jsonPropertyInfoValues.IsProperty = false;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(ModManifest);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((ModManifest)obj).version;
-		jsonPropertyInfoValues.Setter = delegate(object obj, string? value)
+		JsonPropertyInfoValues<string> propertyInfo5 = new JsonPropertyInfoValues<string>
 		{
-			((ModManifest)obj).version = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(ModManifest),
+			Converter = null,
+			Getter = (object obj) => ((ModManifest)obj).version,
+			Setter = delegate(object obj, string? value)
+			{
+				((ModManifest)obj).version = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "version",
+			JsonPropertyName = "version",
+			AttributeProviderFactory = () => typeof(ModManifest).GetField("version", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "version";
-		jsonPropertyInfoValues.JsonPropertyName = "version";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(ModManifest).GetField("version", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<string> propertyInfo5 = jsonPropertyInfoValues;
 		array[4] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo5);
+		JsonPropertyInfoValues<bool> propertyInfo6 = new JsonPropertyInfoValues<bool>
+		{
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(ModManifest),
+			Converter = null,
+			Getter = (object obj) => ((ModManifest)obj).hasPck,
+			Setter = delegate(object obj, bool value)
+			{
+				((ModManifest)obj).hasPck = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "hasPck",
+			JsonPropertyName = "has_pck",
+			AttributeProviderFactory = () => typeof(ModManifest).GetField("hasPck", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+		};
+		array[5] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo6);
+		JsonPropertyInfoValues<bool> propertyInfo7 = new JsonPropertyInfoValues<bool>
+		{
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(ModManifest),
+			Converter = null,
+			Getter = (object obj) => ((ModManifest)obj).hasDll,
+			Setter = delegate(object obj, bool value)
+			{
+				((ModManifest)obj).hasDll = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "hasDll",
+			JsonPropertyName = "has_dll",
+			AttributeProviderFactory = () => typeof(ModManifest).GetField("hasDll", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+		};
+		array[6] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo7);
+		JsonPropertyInfoValues<List<ModDependency>> propertyInfo8 = new JsonPropertyInfoValues<List<ModDependency>>
+		{
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(ModManifest),
+			Converter = null,
+			Getter = (object obj) => ((ModManifest)obj).dependencies,
+			Setter = delegate(object obj, List<ModDependency>? value)
+			{
+				((ModManifest)obj).dependencies = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "dependencies",
+			JsonPropertyName = "dependencies",
+			AttributeProviderFactory = () => typeof(ModManifest).GetField("dependencies", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+		};
+		array[7] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo8);
+		JsonPropertyInfoValues<bool> propertyInfo9 = new JsonPropertyInfoValues<bool>
+		{
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(ModManifest),
+			Converter = null,
+			Getter = (object obj) => ((ModManifest)obj).affectsGameplay,
+			Setter = delegate(object obj, bool value)
+			{
+				((ModManifest)obj).affectsGameplay = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "affectsGameplay",
+			JsonPropertyName = "affects_gameplay",
+			AttributeProviderFactory = () => typeof(ModManifest).GetField("affectsGameplay", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+		};
+		array[8] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo9);
+		JsonPropertyInfoValues<string> propertyInfo10 = new JsonPropertyInfoValues<string>
+		{
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(ModManifest),
+			Converter = null,
+			Getter = (object obj) => ((ModManifest)obj).minGameVersion,
+			Setter = delegate(object obj, string? value)
+			{
+				((ModManifest)obj).minGameVersion = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "minGameVersion",
+			JsonPropertyName = "min_game_version",
+			AttributeProviderFactory = () => typeof(ModManifest).GetField("minGameVersion", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+		};
+		array[9] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo10);
 		return array;
 	}
 
@@ -1373,45 +2066,47 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] ModSettingsPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[2];
-		JsonPropertyInfoValues<bool> jsonPropertyInfoValues = new JsonPropertyInfoValues<bool>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(ModSettings);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((ModSettings)obj).PlayerAgreedToModLoading;
-		jsonPropertyInfoValues.Setter = delegate(object obj, bool value)
+		JsonPropertyInfoValues<bool> propertyInfo = new JsonPropertyInfoValues<bool>
 		{
-			((ModSettings)obj).PlayerAgreedToModLoading = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(ModSettings),
+			Converter = null,
+			Getter = (object obj) => ((ModSettings)obj).PlayerAgreedToModLoading,
+			Setter = delegate(object obj, bool value)
+			{
+				((ModSettings)obj).PlayerAgreedToModLoading = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "PlayerAgreedToModLoading",
+			JsonPropertyName = "mods_enabled",
+			AttributeProviderFactory = () => typeof(ModSettings).GetProperty("PlayerAgreedToModLoading", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "PlayerAgreedToModLoading";
-		jsonPropertyInfoValues.JsonPropertyName = "mods_enabled";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(ModSettings).GetProperty("PlayerAgreedToModLoading", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<bool> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
-		JsonPropertyInfoValues<List<DisabledMod>> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<List<DisabledMod>>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(ModSettings);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((ModSettings)obj).DisabledMods;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, List<DisabledMod>? value)
+		JsonPropertyInfoValues<List<SettingsSaveMod>> propertyInfo2 = new JsonPropertyInfoValues<List<SettingsSaveMod>>
 		{
-			((ModSettings)obj).DisabledMods = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(ModSettings),
+			Converter = null,
+			Getter = (object obj) => ((ModSettings)obj).ModList,
+			Setter = delegate(object obj, List<SettingsSaveMod>? value)
+			{
+				((ModSettings)obj).ModList = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "ModList",
+			JsonPropertyName = "mod_list",
+			AttributeProviderFactory = () => typeof(ModSettings).GetProperty("ModList", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<SettingsSaveMod>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "DisabledMods";
-		jsonPropertyInfoValues2.JsonPropertyName = "disabled_mods";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(ModSettings).GetProperty("DisabledMods", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<DisabledMod>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<DisabledMod>> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		array[1].IsGetNullable = false;
 		array[1].IsSetNullable = false;
@@ -1428,22 +2123,124 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 		return jsonTypeInfo;
 	}
 
+	private JsonTypeInfo<SettingsSaveMod> Create_SettingsSaveMod(JsonSerializerOptions options)
+	{
+		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<SettingsSaveMod> jsonTypeInfo))
+		{
+			JsonObjectInfoValues<SettingsSaveMod> objectInfo = new JsonObjectInfoValues<SettingsSaveMod>
+			{
+				ObjectCreator = () => new SettingsSaveMod(),
+				ObjectWithParameterizedConstructorCreator = null,
+				PropertyMetadataInitializer = (JsonSerializerContext _) => SettingsSaveModPropInit(options),
+				ConstructorParameterMetadataInitializer = null,
+				ConstructorAttributeProviderFactory = () => typeof(SettingsSaveMod).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null),
+				SerializeHandler = null
+			};
+			jsonTypeInfo = JsonMetadataServices.CreateObjectInfo(options, objectInfo);
+			jsonTypeInfo.NumberHandling = null;
+		}
+		jsonTypeInfo.OriginatingResolver = this;
+		return jsonTypeInfo;
+	}
+
+	private static JsonPropertyInfo[] SettingsSaveModPropInit(JsonSerializerOptions options)
+	{
+		JsonPropertyInfo[] array = new JsonPropertyInfo[3];
+		JsonPropertyInfoValues<string> propertyInfo = new JsonPropertyInfoValues<string>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SettingsSaveMod),
+			Converter = null,
+			Getter = (object obj) => ((SettingsSaveMod)obj).Id,
+			Setter = delegate(object obj, string? value)
+			{
+				((SettingsSaveMod)obj).Id = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Id",
+			JsonPropertyName = "id",
+			AttributeProviderFactory = () => typeof(SettingsSaveMod).GetProperty("Id", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null)
+		};
+		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
+		array[0].IsGetNullable = false;
+		array[0].IsSetNullable = false;
+		JsonPropertyInfoValues<ModSource> propertyInfo2 = new JsonPropertyInfoValues<ModSource>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SettingsSaveMod),
+			Converter = null,
+			Getter = (object obj) => ((SettingsSaveMod)obj).Source,
+			Setter = delegate(object obj, ModSource value)
+			{
+				((SettingsSaveMod)obj).Source = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Source",
+			JsonPropertyName = "source",
+			AttributeProviderFactory = () => typeof(SettingsSaveMod).GetProperty("Source", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModSource), Array.Empty<Type>(), null)
+		};
+		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
+		JsonPropertyInfoValues<bool> propertyInfo3 = new JsonPropertyInfoValues<bool>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SettingsSaveMod),
+			Converter = null,
+			Getter = (object obj) => ((SettingsSaveMod)obj).IsEnabled,
+			Setter = delegate(object obj, bool value)
+			{
+				((SettingsSaveMod)obj).IsEnabled = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "IsEnabled",
+			JsonPropertyName = "is_enabled",
+			AttributeProviderFactory = () => typeof(SettingsSaveMod).GetProperty("IsEnabled", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
+		};
+		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
+		return array;
+	}
+
+	private JsonTypeInfo<BadgeRarity> Create_BadgeRarity(JsonSerializerOptions options)
+	{
+		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<BadgeRarity> jsonTypeInfo))
+		{
+			jsonTypeInfo = JsonMetadataServices.CreateValueInfo<BadgeRarity>(options, JsonMetadataServices.GetEnumConverter<BadgeRarity>(options));
+		}
+		jsonTypeInfo.OriginatingResolver = this;
+		return jsonTypeInfo;
+	}
+
 	private JsonTypeInfo<ModelId> Create_ModelId(JsonSerializerOptions options)
 	{
 		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<ModelId> jsonTypeInfo))
 		{
-			JsonObjectInfoValues<ModelId> jsonObjectInfoValues = new JsonObjectInfoValues<ModelId>();
-			jsonObjectInfoValues.ObjectCreator = null;
-			jsonObjectInfoValues.ObjectWithParameterizedConstructorCreator = (object[] args) => new ModelId((string)args[0], (string)args[1]);
-			jsonObjectInfoValues.PropertyMetadataInitializer = (JsonSerializerContext _) => ModelIdPropInit(options);
-			jsonObjectInfoValues.ConstructorParameterMetadataInitializer = ModelIdCtorParamInit;
-			jsonObjectInfoValues.ConstructorAttributeProviderFactory = () => typeof(ModelId).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new Type[2]
+			JsonObjectInfoValues<ModelId> objectInfo = new JsonObjectInfoValues<ModelId>
 			{
-				typeof(string),
-				typeof(string)
-			}, null);
-			jsonObjectInfoValues.SerializeHandler = null;
-			JsonObjectInfoValues<ModelId> objectInfo = jsonObjectInfoValues;
+				ObjectCreator = null,
+				ObjectWithParameterizedConstructorCreator = (object[] args) => new ModelId((string)args[0], (string)args[1]),
+				PropertyMetadataInitializer = (JsonSerializerContext _) => ModelIdPropInit(options),
+				ConstructorParameterMetadataInitializer = ModelIdCtorParamInit,
+				ConstructorAttributeProviderFactory = () => typeof(ModelId).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new Type[2]
+				{
+					typeof(string),
+					typeof(string)
+				}, null),
+				SerializeHandler = null
+			};
 			jsonTypeInfo = JsonMetadataServices.CreateObjectInfo(options, objectInfo);
 			jsonTypeInfo.NumberHandling = null;
 		}
@@ -1454,40 +2251,42 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] ModelIdPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[2];
-		JsonPropertyInfoValues<string> jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(ModelId);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((ModelId)obj).Category;
-		jsonPropertyInfoValues.Setter = null;
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "Category";
-		jsonPropertyInfoValues.JsonPropertyName = null;
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(ModelId).GetProperty("Category", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<string> propertyInfo = jsonPropertyInfoValues;
+		JsonPropertyInfoValues<string> propertyInfo = new JsonPropertyInfoValues<string>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(ModelId),
+			Converter = null,
+			Getter = (object obj) => ((ModelId)obj).Category,
+			Setter = null,
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Category",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(ModelId).GetProperty("Category", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null)
+		};
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsGetNullable = false;
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(ModelId);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((ModelId)obj).Entry;
-		jsonPropertyInfoValues.Setter = null;
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "Entry";
-		jsonPropertyInfoValues.JsonPropertyName = null;
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(ModelId).GetProperty("Entry", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<string> propertyInfo2 = jsonPropertyInfoValues;
+		JsonPropertyInfoValues<string> propertyInfo2 = new JsonPropertyInfoValues<string>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(ModelId),
+			Converter = null,
+			Getter = (object obj) => ((ModelId)obj).Entry,
+			Setter = null,
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Entry",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(ModelId).GetProperty("Entry", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null)
+		};
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		array[1].IsGetNullable = false;
 		return array;
@@ -1540,137 +2339,231 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 
 	private static JsonPropertyInfo[] FeedbackDataPropInit(JsonSerializerOptions options)
 	{
-		JsonPropertyInfo[] array = new JsonPropertyInfo[6];
-		JsonPropertyInfoValues<string> jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
-		jsonPropertyInfoValues.IsProperty = false;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(FeedbackData);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((FeedbackData)obj).description;
-		jsonPropertyInfoValues.Setter = delegate(object obj, string? value)
+		JsonPropertyInfo[] array = new JsonPropertyInfo[10];
+		JsonPropertyInfoValues<string> propertyInfo = new JsonPropertyInfoValues<string>
 		{
-			Unsafe.Unbox<FeedbackData>(obj).description = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(FeedbackData),
+			Converter = null,
+			Getter = (object obj) => ((FeedbackData)obj).description,
+			Setter = delegate(object obj, string? value)
+			{
+				Unsafe.Unbox<FeedbackData>(obj).description = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "description",
+			JsonPropertyName = "description",
+			AttributeProviderFactory = () => typeof(FeedbackData).GetField("description", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "description";
-		jsonPropertyInfoValues.JsonPropertyName = "description";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(FeedbackData).GetField("description", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<string> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsGetNullable = false;
 		array[0].IsSetNullable = false;
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
-		jsonPropertyInfoValues.IsProperty = false;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(FeedbackData);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((FeedbackData)obj).category;
-		jsonPropertyInfoValues.Setter = delegate(object obj, string? value)
+		JsonPropertyInfoValues<string> propertyInfo2 = new JsonPropertyInfoValues<string>
 		{
-			Unsafe.Unbox<FeedbackData>(obj).category = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(FeedbackData),
+			Converter = null,
+			Getter = (object obj) => ((FeedbackData)obj).category,
+			Setter = delegate(object obj, string? value)
+			{
+				Unsafe.Unbox<FeedbackData>(obj).category = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "category",
+			JsonPropertyName = "category",
+			AttributeProviderFactory = () => typeof(FeedbackData).GetField("category", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "category";
-		jsonPropertyInfoValues.JsonPropertyName = "category";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(FeedbackData).GetField("category", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<string> propertyInfo2 = jsonPropertyInfoValues;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		array[1].IsGetNullable = false;
 		array[1].IsSetNullable = false;
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
-		jsonPropertyInfoValues.IsProperty = false;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(FeedbackData);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((FeedbackData)obj).gameVersion;
-		jsonPropertyInfoValues.Setter = delegate(object obj, string? value)
+		JsonPropertyInfoValues<string> propertyInfo3 = new JsonPropertyInfoValues<string>
 		{
-			Unsafe.Unbox<FeedbackData>(obj).gameVersion = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(FeedbackData),
+			Converter = null,
+			Getter = (object obj) => ((FeedbackData)obj).gameVersion,
+			Setter = delegate(object obj, string? value)
+			{
+				Unsafe.Unbox<FeedbackData>(obj).gameVersion = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "gameVersion",
+			JsonPropertyName = "game_version",
+			AttributeProviderFactory = () => typeof(FeedbackData).GetField("gameVersion", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "gameVersion";
-		jsonPropertyInfoValues.JsonPropertyName = "game_version";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(FeedbackData).GetField("gameVersion", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<string> propertyInfo3 = jsonPropertyInfoValues;
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
 		array[2].IsGetNullable = false;
 		array[2].IsSetNullable = false;
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
-		jsonPropertyInfoValues.IsProperty = false;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(FeedbackData);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((FeedbackData)obj).uniqueId;
-		jsonPropertyInfoValues.Setter = delegate(object obj, string? value)
+		JsonPropertyInfoValues<string> propertyInfo4 = new JsonPropertyInfoValues<string>
 		{
-			Unsafe.Unbox<FeedbackData>(obj).uniqueId = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(FeedbackData),
+			Converter = null,
+			Getter = (object obj) => ((FeedbackData)obj).uniqueId,
+			Setter = delegate(object obj, string? value)
+			{
+				Unsafe.Unbox<FeedbackData>(obj).uniqueId = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "uniqueId",
+			JsonPropertyName = "unique_id",
+			AttributeProviderFactory = () => typeof(FeedbackData).GetField("uniqueId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "uniqueId";
-		jsonPropertyInfoValues.JsonPropertyName = "unique_id";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(FeedbackData).GetField("uniqueId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<string> propertyInfo4 = jsonPropertyInfoValues;
 		array[3] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo4);
 		array[3].IsGetNullable = false;
 		array[3].IsSetNullable = false;
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
-		jsonPropertyInfoValues.IsProperty = false;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(FeedbackData);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((FeedbackData)obj).commit;
-		jsonPropertyInfoValues.Setter = delegate(object obj, string? value)
+		JsonPropertyInfoValues<string> propertyInfo5 = new JsonPropertyInfoValues<string>
 		{
-			Unsafe.Unbox<FeedbackData>(obj).commit = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(FeedbackData),
+			Converter = null,
+			Getter = (object obj) => ((FeedbackData)obj).commit,
+			Setter = delegate(object obj, string? value)
+			{
+				Unsafe.Unbox<FeedbackData>(obj).commit = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "commit",
+			JsonPropertyName = "commit",
+			AttributeProviderFactory = () => typeof(FeedbackData).GetField("commit", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "commit";
-		jsonPropertyInfoValues.JsonPropertyName = "commit";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(FeedbackData).GetField("commit", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<string> propertyInfo5 = jsonPropertyInfoValues;
 		array[4] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo5);
 		array[4].IsGetNullable = false;
 		array[4].IsSetNullable = false;
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
-		jsonPropertyInfoValues.IsProperty = false;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(FeedbackData);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((FeedbackData)obj).platformBranch;
-		jsonPropertyInfoValues.Setter = delegate(object obj, string? value)
+		JsonPropertyInfoValues<string> propertyInfo6 = new JsonPropertyInfoValues<string>
 		{
-			Unsafe.Unbox<FeedbackData>(obj).platformBranch = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(FeedbackData),
+			Converter = null,
+			Getter = (object obj) => ((FeedbackData)obj).platformBranch,
+			Setter = delegate(object obj, string? value)
+			{
+				Unsafe.Unbox<FeedbackData>(obj).platformBranch = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "platformBranch",
+			JsonPropertyName = "platform_branch",
+			AttributeProviderFactory = () => typeof(FeedbackData).GetField("platformBranch", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "platformBranch";
-		jsonPropertyInfoValues.JsonPropertyName = "platform_branch";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(FeedbackData).GetField("platformBranch", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<string> propertyInfo6 = jsonPropertyInfoValues;
 		array[5] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo6);
+		JsonPropertyInfoValues<string> propertyInfo7 = new JsonPropertyInfoValues<string>
+		{
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(FeedbackData),
+			Converter = null,
+			Getter = (object obj) => ((FeedbackData)obj).sessionId,
+			Setter = delegate(object obj, string? value)
+			{
+				Unsafe.Unbox<FeedbackData>(obj).sessionId = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "sessionId",
+			JsonPropertyName = "session_id",
+			AttributeProviderFactory = () => typeof(FeedbackData).GetField("sessionId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+		};
+		array[6] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo7);
+		array[6].IsGetNullable = false;
+		array[6].IsSetNullable = false;
+		JsonPropertyInfoValues<bool> propertyInfo8 = new JsonPropertyInfoValues<bool>
+		{
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(FeedbackData),
+			Converter = null,
+			Getter = (object obj) => ((FeedbackData)obj).isModded,
+			Setter = delegate(object obj, bool value)
+			{
+				Unsafe.Unbox<FeedbackData>(obj).isModded = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "isModded",
+			JsonPropertyName = "is_modded",
+			AttributeProviderFactory = () => typeof(FeedbackData).GetField("isModded", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+		};
+		array[7] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo8);
+		JsonPropertyInfoValues<bool> propertyInfo9 = new JsonPropertyInfoValues<bool>
+		{
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(FeedbackData),
+			Converter = null,
+			Getter = (object obj) => ((FeedbackData)obj).isFullConsole,
+			Setter = delegate(object obj, bool value)
+			{
+				Unsafe.Unbox<FeedbackData>(obj).isFullConsole = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "isFullConsole",
+			JsonPropertyName = "is_full_console",
+			AttributeProviderFactory = () => typeof(FeedbackData).GetField("isFullConsole", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+		};
+		array[8] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo9);
+		JsonPropertyInfoValues<string> propertyInfo10 = new JsonPropertyInfoValues<string>
+		{
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(FeedbackData),
+			Converter = null,
+			Getter = (object obj) => ((FeedbackData)obj).lang,
+			Setter = delegate(object obj, string? value)
+			{
+				Unsafe.Unbox<FeedbackData>(obj).lang = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "lang",
+			JsonPropertyName = "lang",
+			AttributeProviderFactory = () => typeof(FeedbackData).GetField("lang", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+		};
+		array[9] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo10);
+		array[9].IsGetNullable = false;
+		array[9].IsSetNullable = false;
 		return array;
 	}
 
@@ -1697,47 +2590,49 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] NullLeaderboardPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[2];
-		JsonPropertyInfoValues<string> jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
-		jsonPropertyInfoValues.IsProperty = false;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(NullLeaderboard);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((NullLeaderboard)obj).name;
-		jsonPropertyInfoValues.Setter = delegate(object obj, string? value)
+		JsonPropertyInfoValues<string> propertyInfo = new JsonPropertyInfoValues<string>
 		{
-			((NullLeaderboard)obj).name = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(NullLeaderboard),
+			Converter = null,
+			Getter = (object obj) => ((NullLeaderboard)obj).name,
+			Setter = delegate(object obj, string? value)
+			{
+				((NullLeaderboard)obj).name = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "name",
+			JsonPropertyName = "name",
+			AttributeProviderFactory = () => typeof(NullLeaderboard).GetField("name", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "name";
-		jsonPropertyInfoValues.JsonPropertyName = "name";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(NullLeaderboard).GetField("name", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<string> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsGetNullable = false;
 		array[0].IsSetNullable = false;
-		JsonPropertyInfoValues<List<NullLeaderboardFileEntry>> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<List<NullLeaderboardFileEntry>>();
-		jsonPropertyInfoValues2.IsProperty = false;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(NullLeaderboard);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((NullLeaderboard)obj).entries;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, List<NullLeaderboardFileEntry>? value)
+		JsonPropertyInfoValues<List<NullLeaderboardFileEntry>> propertyInfo2 = new JsonPropertyInfoValues<List<NullLeaderboardFileEntry>>
 		{
-			((NullLeaderboard)obj).entries = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(NullLeaderboard),
+			Converter = null,
+			Getter = (object obj) => ((NullLeaderboard)obj).entries,
+			Setter = delegate(object obj, List<NullLeaderboardFileEntry>? value)
+			{
+				((NullLeaderboard)obj).entries = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "entries",
+			JsonPropertyName = "entries",
+			AttributeProviderFactory = () => typeof(NullLeaderboard).GetField("entries", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "entries";
-		jsonPropertyInfoValues2.JsonPropertyName = "entries";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(NullLeaderboard).GetField("entries", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<List<NullLeaderboardFileEntry>> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		array[1].IsGetNullable = false;
 		array[1].IsSetNullable = false;
@@ -1767,45 +2662,47 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] NullLeaderboardFilePropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[2];
-		JsonPropertyInfoValues<int> jsonPropertyInfoValues = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(NullLeaderboardFile);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((NullLeaderboardFile)obj).SchemaVersion;
-		jsonPropertyInfoValues.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo = new JsonPropertyInfoValues<int>
 		{
-			((NullLeaderboardFile)obj).SchemaVersion = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(NullLeaderboardFile),
+			Converter = null,
+			Getter = (object obj) => ((NullLeaderboardFile)obj).SchemaVersion,
+			Setter = delegate(object obj, int value)
+			{
+				((NullLeaderboardFile)obj).SchemaVersion = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "SchemaVersion",
+			JsonPropertyName = "version",
+			AttributeProviderFactory = () => typeof(NullLeaderboardFile).GetProperty("SchemaVersion", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "SchemaVersion";
-		jsonPropertyInfoValues.JsonPropertyName = "version";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(NullLeaderboardFile).GetProperty("SchemaVersion", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
-		JsonPropertyInfoValues<List<NullLeaderboard>> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<List<NullLeaderboard>>();
-		jsonPropertyInfoValues2.IsProperty = false;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(NullLeaderboardFile);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((NullLeaderboardFile)obj).leaderboards;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, List<NullLeaderboard>? value)
+		JsonPropertyInfoValues<List<NullLeaderboard>> propertyInfo2 = new JsonPropertyInfoValues<List<NullLeaderboard>>
 		{
-			((NullLeaderboardFile)obj).leaderboards = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(NullLeaderboardFile),
+			Converter = null,
+			Getter = (object obj) => ((NullLeaderboardFile)obj).leaderboards,
+			Setter = delegate(object obj, List<NullLeaderboard>? value)
+			{
+				((NullLeaderboardFile)obj).leaderboards = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "leaderboards",
+			JsonPropertyName = "leaderboards",
+			AttributeProviderFactory = () => typeof(NullLeaderboardFile).GetField("leaderboards", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "leaderboards";
-		jsonPropertyInfoValues2.JsonPropertyName = "leaderboards";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(NullLeaderboardFile).GetField("leaderboards", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<List<NullLeaderboard>> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		array[1].IsGetNullable = false;
 		array[1].IsSetNullable = false;
@@ -1816,17 +2713,18 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	{
 		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<NullLeaderboardFileEntry> jsonTypeInfo))
 		{
-			JsonObjectInfoValues<NullLeaderboardFileEntry> jsonObjectInfoValues = new JsonObjectInfoValues<NullLeaderboardFileEntry>();
-			jsonObjectInfoValues.ObjectCreator = null;
-			jsonObjectInfoValues.ObjectWithParameterizedConstructorCreator = (object[] args) => new NullLeaderboardFileEntry
+			JsonObjectInfoValues<NullLeaderboardFileEntry> objectInfo = new JsonObjectInfoValues<NullLeaderboardFileEntry>
 			{
-				name = (string)args[0]
+				ObjectCreator = null,
+				ObjectWithParameterizedConstructorCreator = (object[] args) => new NullLeaderboardFileEntry
+				{
+					name = (string)args[0]
+				},
+				PropertyMetadataInitializer = (JsonSerializerContext _) => NullLeaderboardFileEntryPropInit(options),
+				ConstructorParameterMetadataInitializer = NullLeaderboardFileEntryCtorParamInit,
+				ConstructorAttributeProviderFactory = () => typeof(NullLeaderboardFileEntry).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null),
+				SerializeHandler = null
 			};
-			jsonObjectInfoValues.PropertyMetadataInitializer = (JsonSerializerContext _) => NullLeaderboardFileEntryPropInit(options);
-			jsonObjectInfoValues.ConstructorParameterMetadataInitializer = NullLeaderboardFileEntryCtorParamInit;
-			jsonObjectInfoValues.ConstructorAttributeProviderFactory = () => typeof(NullLeaderboardFileEntry).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null);
-			jsonObjectInfoValues.SerializeHandler = null;
-			JsonObjectInfoValues<NullLeaderboardFileEntry> objectInfo = jsonObjectInfoValues;
 			jsonTypeInfo = JsonMetadataServices.CreateObjectInfo(options, objectInfo);
 			jsonTypeInfo.NumberHandling = null;
 		}
@@ -1837,88 +2735,92 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] NullLeaderboardFileEntryPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[4];
-		JsonPropertyInfoValues<string> jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
-		jsonPropertyInfoValues.IsProperty = false;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(NullLeaderboardFileEntry);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((NullLeaderboardFileEntry)obj).name;
-		jsonPropertyInfoValues.Setter = delegate(object obj, string? value)
+		JsonPropertyInfoValues<string> propertyInfo = new JsonPropertyInfoValues<string>
 		{
-			((NullLeaderboardFileEntry)obj).name = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(NullLeaderboardFileEntry),
+			Converter = null,
+			Getter = (object obj) => ((NullLeaderboardFileEntry)obj).name,
+			Setter = delegate(object obj, string? value)
+			{
+				((NullLeaderboardFileEntry)obj).name = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "name",
+			JsonPropertyName = "name",
+			AttributeProviderFactory = () => typeof(NullLeaderboardFileEntry).GetField("name", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "name";
-		jsonPropertyInfoValues.JsonPropertyName = "name";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(NullLeaderboardFileEntry).GetField("name", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<string> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsRequired = true;
 		array[0].IsGetNullable = false;
 		array[0].IsSetNullable = false;
-		JsonPropertyInfoValues<int> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues2.IsProperty = false;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(NullLeaderboardFileEntry);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((NullLeaderboardFileEntry)obj).score;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo2 = new JsonPropertyInfoValues<int>
 		{
-			((NullLeaderboardFileEntry)obj).score = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(NullLeaderboardFileEntry),
+			Converter = null,
+			Getter = (object obj) => ((NullLeaderboardFileEntry)obj).score,
+			Setter = delegate(object obj, int value)
+			{
+				((NullLeaderboardFileEntry)obj).score = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "score",
+			JsonPropertyName = "score",
+			AttributeProviderFactory = () => typeof(NullLeaderboardFileEntry).GetField("score", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "score";
-		jsonPropertyInfoValues2.JsonPropertyName = "score";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(NullLeaderboardFileEntry).GetField("score", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<int> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
-		JsonPropertyInfoValues<ulong> jsonPropertyInfoValues3 = new JsonPropertyInfoValues<ulong>();
-		jsonPropertyInfoValues3.IsProperty = false;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(NullLeaderboardFileEntry);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = (object obj) => ((NullLeaderboardFileEntry)obj).id;
-		jsonPropertyInfoValues3.Setter = delegate(object obj, ulong value)
+		JsonPropertyInfoValues<ulong> propertyInfo3 = new JsonPropertyInfoValues<ulong>
 		{
-			((NullLeaderboardFileEntry)obj).id = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(NullLeaderboardFileEntry),
+			Converter = null,
+			Getter = (object obj) => ((NullLeaderboardFileEntry)obj).id,
+			Setter = delegate(object obj, ulong value)
+			{
+				((NullLeaderboardFileEntry)obj).id = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "id",
+			JsonPropertyName = "id",
+			AttributeProviderFactory = () => typeof(NullLeaderboardFileEntry).GetField("id", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues3.IgnoreCondition = null;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "id";
-		jsonPropertyInfoValues3.JsonPropertyName = "id";
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(NullLeaderboardFileEntry).GetField("id", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<ulong> propertyInfo3 = jsonPropertyInfoValues3;
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
-		JsonPropertyInfoValues<List<ulong>> jsonPropertyInfoValues4 = new JsonPropertyInfoValues<List<ulong>>();
-		jsonPropertyInfoValues4.IsProperty = false;
-		jsonPropertyInfoValues4.IsPublic = true;
-		jsonPropertyInfoValues4.IsVirtual = false;
-		jsonPropertyInfoValues4.DeclaringType = typeof(NullLeaderboardFileEntry);
-		jsonPropertyInfoValues4.Converter = null;
-		jsonPropertyInfoValues4.Getter = (object obj) => ((NullLeaderboardFileEntry)obj).userIds;
-		jsonPropertyInfoValues4.Setter = delegate(object obj, List<ulong>? value)
+		JsonPropertyInfoValues<List<ulong>> propertyInfo4 = new JsonPropertyInfoValues<List<ulong>>
 		{
-			((NullLeaderboardFileEntry)obj).userIds = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(NullLeaderboardFileEntry),
+			Converter = null,
+			Getter = (object obj) => ((NullLeaderboardFileEntry)obj).userIds,
+			Setter = delegate(object obj, List<ulong>? value)
+			{
+				((NullLeaderboardFileEntry)obj).userIds = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "userIds",
+			JsonPropertyName = "other_ids",
+			AttributeProviderFactory = () => typeof(NullLeaderboardFileEntry).GetField("userIds", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues4.IgnoreCondition = null;
-		jsonPropertyInfoValues4.HasJsonInclude = false;
-		jsonPropertyInfoValues4.IsExtensionData = false;
-		jsonPropertyInfoValues4.NumberHandling = null;
-		jsonPropertyInfoValues4.PropertyName = "userIds";
-		jsonPropertyInfoValues4.JsonPropertyName = "other_ids";
-		jsonPropertyInfoValues4.AttributeProviderFactory = () => typeof(NullLeaderboardFileEntry).GetField("userIds", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<List<ulong>> propertyInfo4 = jsonPropertyInfoValues4;
 		array[3] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo4);
 		array[3].IsGetNullable = false;
 		array[3].IsSetNullable = false;
@@ -1963,45 +2865,47 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] NullMultiplayerNamePropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[2];
-		JsonPropertyInfoValues<ulong> jsonPropertyInfoValues = new JsonPropertyInfoValues<ulong>();
-		jsonPropertyInfoValues.IsProperty = false;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(NullMultiplayerName);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((NullMultiplayerName)obj).netId;
-		jsonPropertyInfoValues.Setter = delegate(object obj, ulong value)
+		JsonPropertyInfoValues<ulong> propertyInfo = new JsonPropertyInfoValues<ulong>
 		{
-			((NullMultiplayerName)obj).netId = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(NullMultiplayerName),
+			Converter = null,
+			Getter = (object obj) => ((NullMultiplayerName)obj).netId,
+			Setter = delegate(object obj, ulong value)
+			{
+				((NullMultiplayerName)obj).netId = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "netId",
+			JsonPropertyName = "net_id",
+			AttributeProviderFactory = () => typeof(NullMultiplayerName).GetField("netId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "netId";
-		jsonPropertyInfoValues.JsonPropertyName = "net_id";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(NullMultiplayerName).GetField("netId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<ulong> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
-		JsonPropertyInfoValues<string> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<string>();
-		jsonPropertyInfoValues2.IsProperty = false;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(NullMultiplayerName);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((NullMultiplayerName)obj).name;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, string? value)
+		JsonPropertyInfoValues<string> propertyInfo2 = new JsonPropertyInfoValues<string>
 		{
-			((NullMultiplayerName)obj).name = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(NullMultiplayerName),
+			Converter = null,
+			Getter = (object obj) => ((NullMultiplayerName)obj).name,
+			Setter = delegate(object obj, string? value)
+			{
+				((NullMultiplayerName)obj).name = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "name",
+			JsonPropertyName = "name",
+			AttributeProviderFactory = () => typeof(NullMultiplayerName).GetField("name", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "name";
-		jsonPropertyInfoValues2.JsonPropertyName = "name";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(NullMultiplayerName).GetField("name", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<string> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		array[1].IsGetNullable = false;
 		array[1].IsSetNullable = false;
@@ -2091,64 +2995,67 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] AncientChoiceHistoryEntryPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[3];
-		JsonPropertyInfoValues<LocString> jsonPropertyInfoValues = new JsonPropertyInfoValues<LocString>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(AncientChoiceHistoryEntry);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((AncientChoiceHistoryEntry)obj).Title;
-		jsonPropertyInfoValues.Setter = delegate(object obj, LocString? value)
+		JsonPropertyInfoValues<LocString> propertyInfo = new JsonPropertyInfoValues<LocString>
 		{
-			((AncientChoiceHistoryEntry)obj).Title = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(AncientChoiceHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((AncientChoiceHistoryEntry)obj).Title,
+			Setter = delegate(object obj, LocString? value)
+			{
+				((AncientChoiceHistoryEntry)obj).Title = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Title",
+			JsonPropertyName = "title",
+			AttributeProviderFactory = () => typeof(AncientChoiceHistoryEntry).GetProperty("Title", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(LocString), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "Title";
-		jsonPropertyInfoValues.JsonPropertyName = "title";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(AncientChoiceHistoryEntry).GetProperty("Title", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(LocString), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<LocString> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsGetNullable = false;
 		array[0].IsSetNullable = false;
-		JsonPropertyInfoValues<bool> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<bool>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(AncientChoiceHistoryEntry);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((AncientChoiceHistoryEntry)obj).WasChosen;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, bool value)
+		JsonPropertyInfoValues<bool> propertyInfo2 = new JsonPropertyInfoValues<bool>
 		{
-			((AncientChoiceHistoryEntry)obj).WasChosen = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(AncientChoiceHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((AncientChoiceHistoryEntry)obj).WasChosen,
+			Setter = delegate(object obj, bool value)
+			{
+				((AncientChoiceHistoryEntry)obj).WasChosen = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "WasChosen",
+			JsonPropertyName = "was_chosen",
+			AttributeProviderFactory = () => typeof(AncientChoiceHistoryEntry).GetProperty("WasChosen", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "WasChosen";
-		jsonPropertyInfoValues2.JsonPropertyName = "was_chosen";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(AncientChoiceHistoryEntry).GetProperty("WasChosen", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<bool> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
-		JsonPropertyInfoValues<string> jsonPropertyInfoValues3 = new JsonPropertyInfoValues<string>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(AncientChoiceHistoryEntry);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = (object obj) => ((AncientChoiceHistoryEntry)obj).TextKey;
-		jsonPropertyInfoValues3.Setter = null;
-		jsonPropertyInfoValues3.IgnoreCondition = null;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "TextKey";
-		jsonPropertyInfoValues3.JsonPropertyName = "TextKey";
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(AncientChoiceHistoryEntry).GetProperty("TextKey", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<string> propertyInfo3 = jsonPropertyInfoValues3;
+		JsonPropertyInfoValues<string> propertyInfo3 = new JsonPropertyInfoValues<string>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(AncientChoiceHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((AncientChoiceHistoryEntry)obj).TextKey,
+			Setter = null,
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "TextKey",
+			JsonPropertyName = "TextKey",
+			AttributeProviderFactory = () => typeof(AncientChoiceHistoryEntry).GetProperty("TextKey", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null)
+		};
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
 		array[2].IsGetNullable = false;
 		return array;
@@ -2177,47 +3084,49 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] CardChoiceHistoryEntryPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[2];
-		JsonPropertyInfoValues<SerializableCard> jsonPropertyInfoValues = new JsonPropertyInfoValues<SerializableCard>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(CardChoiceHistoryEntry);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((CardChoiceHistoryEntry)obj).Card;
-		jsonPropertyInfoValues.Setter = delegate(object obj, SerializableCard? value)
+		JsonPropertyInfoValues<SerializableCard> propertyInfo = new JsonPropertyInfoValues<SerializableCard>
 		{
-			Unsafe.Unbox<CardChoiceHistoryEntry>(obj).Card = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(CardChoiceHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((CardChoiceHistoryEntry)obj).Card,
+			Setter = delegate(object obj, SerializableCard? value)
+			{
+				Unsafe.Unbox<CardChoiceHistoryEntry>(obj).Card = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Card",
+			JsonPropertyName = "card",
+			AttributeProviderFactory = () => typeof(CardChoiceHistoryEntry).GetProperty("Card", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializableCard), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "Card";
-		jsonPropertyInfoValues.JsonPropertyName = "card";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(CardChoiceHistoryEntry).GetProperty("Card", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializableCard), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<SerializableCard> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsGetNullable = false;
 		array[0].IsSetNullable = false;
-		JsonPropertyInfoValues<bool> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<bool>();
-		jsonPropertyInfoValues2.IsProperty = false;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(CardChoiceHistoryEntry);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((CardChoiceHistoryEntry)obj).wasPicked;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, bool value)
+		JsonPropertyInfoValues<bool> propertyInfo2 = new JsonPropertyInfoValues<bool>
 		{
-			Unsafe.Unbox<CardChoiceHistoryEntry>(obj).wasPicked = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(CardChoiceHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((CardChoiceHistoryEntry)obj).wasPicked,
+			Setter = delegate(object obj, bool value)
+			{
+				Unsafe.Unbox<CardChoiceHistoryEntry>(obj).wasPicked = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "wasPicked",
+			JsonPropertyName = "was_picked",
+			AttributeProviderFactory = () => typeof(CardChoiceHistoryEntry).GetField("wasPicked", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "wasPicked";
-		jsonPropertyInfoValues2.JsonPropertyName = "was_picked";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(CardChoiceHistoryEntry).GetField("wasPicked", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<bool> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		return array;
 	}
@@ -2245,47 +3154,49 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] CardEnchantmentHistoryEntryPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[2];
-		JsonPropertyInfoValues<SerializableCard> jsonPropertyInfoValues = new JsonPropertyInfoValues<SerializableCard>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(CardEnchantmentHistoryEntry);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((CardEnchantmentHistoryEntry)obj).Card;
-		jsonPropertyInfoValues.Setter = delegate(object obj, SerializableCard? value)
+		JsonPropertyInfoValues<SerializableCard> propertyInfo = new JsonPropertyInfoValues<SerializableCard>
 		{
-			Unsafe.Unbox<CardEnchantmentHistoryEntry>(obj).Card = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(CardEnchantmentHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((CardEnchantmentHistoryEntry)obj).Card,
+			Setter = delegate(object obj, SerializableCard? value)
+			{
+				Unsafe.Unbox<CardEnchantmentHistoryEntry>(obj).Card = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Card",
+			JsonPropertyName = "card",
+			AttributeProviderFactory = () => typeof(CardEnchantmentHistoryEntry).GetProperty("Card", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializableCard), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "Card";
-		jsonPropertyInfoValues.JsonPropertyName = "card";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(CardEnchantmentHistoryEntry).GetProperty("Card", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializableCard), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<SerializableCard> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsGetNullable = false;
 		array[0].IsSetNullable = false;
-		JsonPropertyInfoValues<ModelId> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<ModelId>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(CardEnchantmentHistoryEntry);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((CardEnchantmentHistoryEntry)obj).Enchantment;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, ModelId? value)
+		JsonPropertyInfoValues<ModelId> propertyInfo2 = new JsonPropertyInfoValues<ModelId>
 		{
-			Unsafe.Unbox<CardEnchantmentHistoryEntry>(obj).Enchantment = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(CardEnchantmentHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((CardEnchantmentHistoryEntry)obj).Enchantment,
+			Setter = delegate(object obj, ModelId? value)
+			{
+				Unsafe.Unbox<CardEnchantmentHistoryEntry>(obj).Enchantment = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Enchantment",
+			JsonPropertyName = "enchantment",
+			AttributeProviderFactory = () => typeof(CardEnchantmentHistoryEntry).GetProperty("Enchantment", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "Enchantment";
-		jsonPropertyInfoValues2.JsonPropertyName = "enchantment";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(CardEnchantmentHistoryEntry).GetProperty("Enchantment", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<ModelId> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		array[1].IsGetNullable = false;
 		array[1].IsSetNullable = false;
@@ -2315,47 +3226,49 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] CardTransformationHistoryEntryPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[2];
-		JsonPropertyInfoValues<SerializableCard> jsonPropertyInfoValues = new JsonPropertyInfoValues<SerializableCard>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(CardTransformationHistoryEntry);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((CardTransformationHistoryEntry)obj).OriginalCard;
-		jsonPropertyInfoValues.Setter = delegate(object obj, SerializableCard? value)
+		JsonPropertyInfoValues<SerializableCard> propertyInfo = new JsonPropertyInfoValues<SerializableCard>
 		{
-			Unsafe.Unbox<CardTransformationHistoryEntry>(obj).OriginalCard = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(CardTransformationHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((CardTransformationHistoryEntry)obj).OriginalCard,
+			Setter = delegate(object obj, SerializableCard? value)
+			{
+				Unsafe.Unbox<CardTransformationHistoryEntry>(obj).OriginalCard = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "OriginalCard",
+			JsonPropertyName = "original_card",
+			AttributeProviderFactory = () => typeof(CardTransformationHistoryEntry).GetProperty("OriginalCard", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializableCard), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "OriginalCard";
-		jsonPropertyInfoValues.JsonPropertyName = "original_card";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(CardTransformationHistoryEntry).GetProperty("OriginalCard", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializableCard), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<SerializableCard> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsGetNullable = false;
 		array[0].IsSetNullable = false;
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<SerializableCard>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(CardTransformationHistoryEntry);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((CardTransformationHistoryEntry)obj).FinalCard;
-		jsonPropertyInfoValues.Setter = delegate(object obj, SerializableCard? value)
+		JsonPropertyInfoValues<SerializableCard> propertyInfo2 = new JsonPropertyInfoValues<SerializableCard>
 		{
-			Unsafe.Unbox<CardTransformationHistoryEntry>(obj).FinalCard = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(CardTransformationHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((CardTransformationHistoryEntry)obj).FinalCard,
+			Setter = delegate(object obj, SerializableCard? value)
+			{
+				Unsafe.Unbox<CardTransformationHistoryEntry>(obj).FinalCard = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "FinalCard",
+			JsonPropertyName = "final_card",
+			AttributeProviderFactory = () => typeof(CardTransformationHistoryEntry).GetProperty("FinalCard", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializableCard), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "FinalCard";
-		jsonPropertyInfoValues.JsonPropertyName = "final_card";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(CardTransformationHistoryEntry).GetProperty("FinalCard", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializableCard), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<SerializableCard> propertyInfo2 = jsonPropertyInfoValues;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		array[1].IsGetNullable = false;
 		array[1].IsSetNullable = false;
@@ -2385,47 +3298,49 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] EventOptionHistoryEntryPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[2];
-		JsonPropertyInfoValues<LocString> jsonPropertyInfoValues = new JsonPropertyInfoValues<LocString>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(EventOptionHistoryEntry);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((EventOptionHistoryEntry)obj).Title;
-		jsonPropertyInfoValues.Setter = delegate(object obj, LocString? value)
+		JsonPropertyInfoValues<LocString> propertyInfo = new JsonPropertyInfoValues<LocString>
 		{
-			Unsafe.Unbox<EventOptionHistoryEntry>(obj).Title = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(EventOptionHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((EventOptionHistoryEntry)obj).Title,
+			Setter = delegate(object obj, LocString? value)
+			{
+				Unsafe.Unbox<EventOptionHistoryEntry>(obj).Title = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Title",
+			JsonPropertyName = "title",
+			AttributeProviderFactory = () => typeof(EventOptionHistoryEntry).GetProperty("Title", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(LocString), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "Title";
-		jsonPropertyInfoValues.JsonPropertyName = "title";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(EventOptionHistoryEntry).GetProperty("Title", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(LocString), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<LocString> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsGetNullable = false;
 		array[0].IsSetNullable = false;
-		JsonPropertyInfoValues<Dictionary<string, object>> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<Dictionary<string, object>>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(EventOptionHistoryEntry);
-		jsonPropertyInfoValues2.Converter = (JsonConverter<Dictionary<string, object>>)ExpandConverter(typeof(Dictionary<string, object>), new LocStringVariablesJsonConverter(), options);
-		jsonPropertyInfoValues2.Getter = (object obj) => ((EventOptionHistoryEntry)obj).Variables;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, Dictionary<string, object>? value)
+		JsonPropertyInfoValues<Dictionary<string, object>> propertyInfo2 = new JsonPropertyInfoValues<Dictionary<string, object>>
 		{
-			Unsafe.Unbox<EventOptionHistoryEntry>(obj).Variables = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(EventOptionHistoryEntry),
+			Converter = (JsonConverter<Dictionary<string, object>>)ExpandConverter(typeof(Dictionary<string, object>), new LocStringVariablesJsonConverter(), options),
+			Getter = (object obj) => ((EventOptionHistoryEntry)obj).Variables,
+			Setter = delegate(object obj, Dictionary<string, object>? value)
+			{
+				Unsafe.Unbox<EventOptionHistoryEntry>(obj).Variables = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = true,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Variables",
+			JsonPropertyName = "variables",
+			AttributeProviderFactory = () => typeof(EventOptionHistoryEntry).GetProperty("Variables", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(Dictionary<string, object>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = true;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "Variables";
-		jsonPropertyInfoValues2.JsonPropertyName = "variables";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(EventOptionHistoryEntry).GetProperty("Variables", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(Dictionary<string, object>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<Dictionary<string, object>> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		return array;
 	}
@@ -2453,67 +3368,70 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] MapPointHistoryEntryPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[3];
-		JsonPropertyInfoValues<MapPointType> jsonPropertyInfoValues = new JsonPropertyInfoValues<MapPointType>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(MapPointHistoryEntry);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((MapPointHistoryEntry)obj).MapPointType;
-		jsonPropertyInfoValues.Setter = delegate(object obj, MapPointType value)
+		JsonPropertyInfoValues<MapPointType> propertyInfo = new JsonPropertyInfoValues<MapPointType>
 		{
-			((MapPointHistoryEntry)obj).MapPointType = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(MapPointHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((MapPointHistoryEntry)obj).MapPointType,
+			Setter = delegate(object obj, MapPointType value)
+			{
+				((MapPointHistoryEntry)obj).MapPointType = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "MapPointType",
+			JsonPropertyName = "map_point_type",
+			AttributeProviderFactory = () => typeof(MapPointHistoryEntry).GetProperty("MapPointType", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(MapPointType), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "MapPointType";
-		jsonPropertyInfoValues.JsonPropertyName = "map_point_type";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(MapPointHistoryEntry).GetProperty("MapPointType", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(MapPointType), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<MapPointType> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
-		JsonPropertyInfoValues<List<MapPointRoomHistoryEntry>> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<List<MapPointRoomHistoryEntry>>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(MapPointHistoryEntry);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((MapPointHistoryEntry)obj).Rooms;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, List<MapPointRoomHistoryEntry>? value)
+		JsonPropertyInfoValues<List<MapPointRoomHistoryEntry>> propertyInfo2 = new JsonPropertyInfoValues<List<MapPointRoomHistoryEntry>>
 		{
-			((MapPointHistoryEntry)obj).Rooms = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(MapPointHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((MapPointHistoryEntry)obj).Rooms,
+			Setter = delegate(object obj, List<MapPointRoomHistoryEntry>? value)
+			{
+				((MapPointHistoryEntry)obj).Rooms = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Rooms",
+			JsonPropertyName = "rooms",
+			AttributeProviderFactory = () => typeof(MapPointHistoryEntry).GetProperty("Rooms", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<MapPointRoomHistoryEntry>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "Rooms";
-		jsonPropertyInfoValues2.JsonPropertyName = "rooms";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(MapPointHistoryEntry).GetProperty("Rooms", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<MapPointRoomHistoryEntry>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<MapPointRoomHistoryEntry>> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		array[1].IsGetNullable = false;
 		array[1].IsSetNullable = false;
-		JsonPropertyInfoValues<List<PlayerMapPointHistoryEntry>> jsonPropertyInfoValues3 = new JsonPropertyInfoValues<List<PlayerMapPointHistoryEntry>>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(MapPointHistoryEntry);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = (object obj) => ((MapPointHistoryEntry)obj).PlayerStats;
-		jsonPropertyInfoValues3.Setter = delegate(object obj, List<PlayerMapPointHistoryEntry>? value)
+		JsonPropertyInfoValues<List<PlayerMapPointHistoryEntry>> propertyInfo3 = new JsonPropertyInfoValues<List<PlayerMapPointHistoryEntry>>
 		{
-			((MapPointHistoryEntry)obj).PlayerStats = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(MapPointHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((MapPointHistoryEntry)obj).PlayerStats,
+			Setter = delegate(object obj, List<PlayerMapPointHistoryEntry>? value)
+			{
+				((MapPointHistoryEntry)obj).PlayerStats = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "PlayerStats",
+			JsonPropertyName = "player_stats",
+			AttributeProviderFactory = () => typeof(MapPointHistoryEntry).GetProperty("PlayerStats", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<PlayerMapPointHistoryEntry>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues3.IgnoreCondition = null;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "PlayerStats";
-		jsonPropertyInfoValues3.JsonPropertyName = "player_stats";
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(MapPointHistoryEntry).GetProperty("PlayerStats", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<PlayerMapPointHistoryEntry>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<PlayerMapPointHistoryEntry>> propertyInfo3 = jsonPropertyInfoValues3;
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
 		array[2].IsGetNullable = false;
 		array[2].IsSetNullable = false;
@@ -2543,87 +3461,91 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] MapPointRoomHistoryEntryPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[4];
-		JsonPropertyInfoValues<RoomType> jsonPropertyInfoValues = new JsonPropertyInfoValues<RoomType>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(MapPointRoomHistoryEntry);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((MapPointRoomHistoryEntry)obj).RoomType;
-		jsonPropertyInfoValues.Setter = delegate(object obj, RoomType value)
+		JsonPropertyInfoValues<RoomType> propertyInfo = new JsonPropertyInfoValues<RoomType>
 		{
-			((MapPointRoomHistoryEntry)obj).RoomType = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(MapPointRoomHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((MapPointRoomHistoryEntry)obj).RoomType,
+			Setter = delegate(object obj, RoomType value)
+			{
+				((MapPointRoomHistoryEntry)obj).RoomType = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "RoomType",
+			JsonPropertyName = "room_type",
+			AttributeProviderFactory = () => typeof(MapPointRoomHistoryEntry).GetProperty("RoomType", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(RoomType), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "RoomType";
-		jsonPropertyInfoValues.JsonPropertyName = "room_type";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(MapPointRoomHistoryEntry).GetProperty("RoomType", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(RoomType), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<RoomType> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
-		JsonPropertyInfoValues<ModelId> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<ModelId>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(MapPointRoomHistoryEntry);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((MapPointRoomHistoryEntry)obj).ModelId;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, ModelId? value)
+		JsonPropertyInfoValues<ModelId> propertyInfo2 = new JsonPropertyInfoValues<ModelId>
 		{
-			((MapPointRoomHistoryEntry)obj).ModelId = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(MapPointRoomHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((MapPointRoomHistoryEntry)obj).ModelId,
+			Setter = delegate(object obj, ModelId? value)
+			{
+				((MapPointRoomHistoryEntry)obj).ModelId = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "ModelId",
+			JsonPropertyName = "model_id",
+			AttributeProviderFactory = () => typeof(MapPointRoomHistoryEntry).GetProperty("ModelId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "ModelId";
-		jsonPropertyInfoValues2.JsonPropertyName = "model_id";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(MapPointRoomHistoryEntry).GetProperty("ModelId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<ModelId> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
-		JsonPropertyInfoValues<List<ModelId>> jsonPropertyInfoValues3 = new JsonPropertyInfoValues<List<ModelId>>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(MapPointRoomHistoryEntry);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = (object obj) => ((MapPointRoomHistoryEntry)obj).MonsterIds;
-		jsonPropertyInfoValues3.Setter = delegate(object obj, List<ModelId>? value)
+		JsonPropertyInfoValues<List<ModelId>> propertyInfo3 = new JsonPropertyInfoValues<List<ModelId>>
 		{
-			((MapPointRoomHistoryEntry)obj).MonsterIds = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(MapPointRoomHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((MapPointRoomHistoryEntry)obj).MonsterIds,
+			Setter = delegate(object obj, List<ModelId>? value)
+			{
+				((MapPointRoomHistoryEntry)obj).MonsterIds = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "MonsterIds",
+			JsonPropertyName = "monster_ids",
+			AttributeProviderFactory = () => typeof(MapPointRoomHistoryEntry).GetProperty("MonsterIds", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues3.IgnoreCondition = null;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "MonsterIds";
-		jsonPropertyInfoValues3.JsonPropertyName = "monster_ids";
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(MapPointRoomHistoryEntry).GetProperty("MonsterIds", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<ModelId>> propertyInfo3 = jsonPropertyInfoValues3;
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
 		array[2].IsGetNullable = false;
 		array[2].IsSetNullable = false;
-		JsonPropertyInfoValues<int> jsonPropertyInfoValues4 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues4.IsProperty = true;
-		jsonPropertyInfoValues4.IsPublic = true;
-		jsonPropertyInfoValues4.IsVirtual = false;
-		jsonPropertyInfoValues4.DeclaringType = typeof(MapPointRoomHistoryEntry);
-		jsonPropertyInfoValues4.Converter = null;
-		jsonPropertyInfoValues4.Getter = (object obj) => ((MapPointRoomHistoryEntry)obj).TurnsTaken;
-		jsonPropertyInfoValues4.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo4 = new JsonPropertyInfoValues<int>
 		{
-			((MapPointRoomHistoryEntry)obj).TurnsTaken = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(MapPointRoomHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((MapPointRoomHistoryEntry)obj).TurnsTaken,
+			Setter = delegate(object obj, int value)
+			{
+				((MapPointRoomHistoryEntry)obj).TurnsTaken = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "TurnsTaken",
+			JsonPropertyName = "turns_taken",
+			AttributeProviderFactory = () => typeof(MapPointRoomHistoryEntry).GetProperty("TurnsTaken", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues4.IgnoreCondition = null;
-		jsonPropertyInfoValues4.HasJsonInclude = false;
-		jsonPropertyInfoValues4.IsExtensionData = false;
-		jsonPropertyInfoValues4.NumberHandling = null;
-		jsonPropertyInfoValues4.PropertyName = "TurnsTaken";
-		jsonPropertyInfoValues4.JsonPropertyName = "turns_taken";
-		jsonPropertyInfoValues4.AttributeProviderFactory = () => typeof(MapPointRoomHistoryEntry).GetProperty("TurnsTaken", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo4 = jsonPropertyInfoValues4;
 		array[3] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo4);
 		return array;
 	}
@@ -2651,47 +3573,49 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] ModelChoiceHistoryEntryPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[2];
-		JsonPropertyInfoValues<ModelId> jsonPropertyInfoValues = new JsonPropertyInfoValues<ModelId>();
-		jsonPropertyInfoValues.IsProperty = false;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(ModelChoiceHistoryEntry);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((ModelChoiceHistoryEntry)obj).choice;
-		jsonPropertyInfoValues.Setter = delegate(object obj, ModelId? value)
+		JsonPropertyInfoValues<ModelId> propertyInfo = new JsonPropertyInfoValues<ModelId>
 		{
-			Unsafe.Unbox<ModelChoiceHistoryEntry>(obj).choice = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(ModelChoiceHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((ModelChoiceHistoryEntry)obj).choice,
+			Setter = delegate(object obj, ModelId? value)
+			{
+				Unsafe.Unbox<ModelChoiceHistoryEntry>(obj).choice = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "choice",
+			JsonPropertyName = "choice",
+			AttributeProviderFactory = () => typeof(ModelChoiceHistoryEntry).GetField("choice", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "choice";
-		jsonPropertyInfoValues.JsonPropertyName = "choice";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(ModelChoiceHistoryEntry).GetField("choice", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<ModelId> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsGetNullable = false;
 		array[0].IsSetNullable = false;
-		JsonPropertyInfoValues<bool> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<bool>();
-		jsonPropertyInfoValues2.IsProperty = false;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(ModelChoiceHistoryEntry);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((ModelChoiceHistoryEntry)obj).wasPicked;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, bool value)
+		JsonPropertyInfoValues<bool> propertyInfo2 = new JsonPropertyInfoValues<bool>
 		{
-			Unsafe.Unbox<ModelChoiceHistoryEntry>(obj).wasPicked = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(ModelChoiceHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((ModelChoiceHistoryEntry)obj).wasPicked,
+			Setter = delegate(object obj, bool value)
+			{
+				Unsafe.Unbox<ModelChoiceHistoryEntry>(obj).wasPicked = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "wasPicked",
+			JsonPropertyName = "was_picked",
+			AttributeProviderFactory = () => typeof(ModelChoiceHistoryEntry).GetField("wasPicked", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "wasPicked";
-		jsonPropertyInfoValues2.JsonPropertyName = "was_picked";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(ModelChoiceHistoryEntry).GetField("wasPicked", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<bool> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		return array;
 	}
@@ -2718,665 +3642,756 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 
 	private static JsonPropertyInfo[] PlayerMapPointHistoryEntryPropInit(JsonSerializerOptions options)
 	{
-		JsonPropertyInfo[] array = new JsonPropertyInfo[31];
-		JsonPropertyInfoValues<ulong> jsonPropertyInfoValues = new JsonPropertyInfoValues<ulong>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(PlayerMapPointHistoryEntry);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).PlayerId;
-		jsonPropertyInfoValues.Setter = delegate(object obj, ulong value)
+		JsonPropertyInfo[] array = new JsonPropertyInfo[34];
+		JsonPropertyInfoValues<ulong> propertyInfo = new JsonPropertyInfoValues<ulong>
 		{
-			((PlayerMapPointHistoryEntry)obj).PlayerId = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PlayerMapPointHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).PlayerId,
+			Setter = delegate(object obj, ulong value)
+			{
+				((PlayerMapPointHistoryEntry)obj).PlayerId = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "PlayerId",
+			JsonPropertyName = "player_id",
+			AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("PlayerId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ulong), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "PlayerId";
-		jsonPropertyInfoValues.JsonPropertyName = "player_id";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("PlayerId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ulong), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<ulong> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
-		JsonPropertyInfoValues<int> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(PlayerMapPointHistoryEntry);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).GoldGained;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo2 = new JsonPropertyInfoValues<int>
 		{
-			((PlayerMapPointHistoryEntry)obj).GoldGained = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PlayerMapPointHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).GoldGained,
+			Setter = delegate(object obj, int value)
+			{
+				((PlayerMapPointHistoryEntry)obj).GoldGained = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "GoldGained",
+			JsonPropertyName = "gold_gained",
+			AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("GoldGained", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "GoldGained";
-		jsonPropertyInfoValues2.JsonPropertyName = "gold_gained";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("GoldGained", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
-		jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(PlayerMapPointHistoryEntry);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).GoldSpent;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo3 = new JsonPropertyInfoValues<int>
 		{
-			((PlayerMapPointHistoryEntry)obj).GoldSpent = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PlayerMapPointHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).GoldSpent,
+			Setter = delegate(object obj, int value)
+			{
+				((PlayerMapPointHistoryEntry)obj).GoldSpent = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "GoldSpent",
+			JsonPropertyName = "gold_spent",
+			AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("GoldSpent", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "GoldSpent";
-		jsonPropertyInfoValues2.JsonPropertyName = "gold_spent";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("GoldSpent", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo3 = jsonPropertyInfoValues2;
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
-		jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(PlayerMapPointHistoryEntry);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).GoldLost;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo4 = new JsonPropertyInfoValues<int>
 		{
-			((PlayerMapPointHistoryEntry)obj).GoldLost = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PlayerMapPointHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).GoldLost,
+			Setter = delegate(object obj, int value)
+			{
+				((PlayerMapPointHistoryEntry)obj).GoldLost = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "GoldLost",
+			JsonPropertyName = "gold_lost",
+			AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("GoldLost", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "GoldLost";
-		jsonPropertyInfoValues2.JsonPropertyName = "gold_lost";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("GoldLost", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo4 = jsonPropertyInfoValues2;
 		array[3] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo4);
-		jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(PlayerMapPointHistoryEntry);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).GoldStolen;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo5 = new JsonPropertyInfoValues<int>
 		{
-			((PlayerMapPointHistoryEntry)obj).GoldStolen = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PlayerMapPointHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).GoldStolen,
+			Setter = delegate(object obj, int value)
+			{
+				((PlayerMapPointHistoryEntry)obj).GoldStolen = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "GoldStolen",
+			JsonPropertyName = "gold_stolen",
+			AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("GoldStolen", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "GoldStolen";
-		jsonPropertyInfoValues2.JsonPropertyName = "gold_stolen";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("GoldStolen", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo5 = jsonPropertyInfoValues2;
 		array[4] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo5);
-		jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(PlayerMapPointHistoryEntry);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).CurrentGold;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo6 = new JsonPropertyInfoValues<int>
 		{
-			((PlayerMapPointHistoryEntry)obj).CurrentGold = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PlayerMapPointHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).StolenLoot,
+			Setter = delegate(object obj, int value)
+			{
+				((PlayerMapPointHistoryEntry)obj).StolenLoot = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "StolenLoot",
+			JsonPropertyName = "stolen_loot",
+			AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("StolenLoot", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "CurrentGold";
-		jsonPropertyInfoValues2.JsonPropertyName = "current_gold";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("CurrentGold", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo6 = jsonPropertyInfoValues2;
 		array[5] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo6);
-		jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(PlayerMapPointHistoryEntry);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).CurrentHp;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo7 = new JsonPropertyInfoValues<int>
 		{
-			((PlayerMapPointHistoryEntry)obj).CurrentHp = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PlayerMapPointHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).CurrentGold,
+			Setter = delegate(object obj, int value)
+			{
+				((PlayerMapPointHistoryEntry)obj).CurrentGold = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "CurrentGold",
+			JsonPropertyName = "current_gold",
+			AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("CurrentGold", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "CurrentHp";
-		jsonPropertyInfoValues2.JsonPropertyName = "current_hp";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("CurrentHp", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo7 = jsonPropertyInfoValues2;
 		array[6] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo7);
-		jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(PlayerMapPointHistoryEntry);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).MaxHp;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo8 = new JsonPropertyInfoValues<int>
 		{
-			((PlayerMapPointHistoryEntry)obj).MaxHp = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PlayerMapPointHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).CurrentHp,
+			Setter = delegate(object obj, int value)
+			{
+				((PlayerMapPointHistoryEntry)obj).CurrentHp = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "CurrentHp",
+			JsonPropertyName = "current_hp",
+			AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("CurrentHp", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "MaxHp";
-		jsonPropertyInfoValues2.JsonPropertyName = "max_hp";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("MaxHp", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo8 = jsonPropertyInfoValues2;
 		array[7] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo8);
-		jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(PlayerMapPointHistoryEntry);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).DamageTaken;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo9 = new JsonPropertyInfoValues<int>
 		{
-			((PlayerMapPointHistoryEntry)obj).DamageTaken = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PlayerMapPointHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).MaxHp,
+			Setter = delegate(object obj, int value)
+			{
+				((PlayerMapPointHistoryEntry)obj).MaxHp = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "MaxHp",
+			JsonPropertyName = "max_hp",
+			AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("MaxHp", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "DamageTaken";
-		jsonPropertyInfoValues2.JsonPropertyName = "damage_taken";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("DamageTaken", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo9 = jsonPropertyInfoValues2;
 		array[8] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo9);
-		jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(PlayerMapPointHistoryEntry);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).HpHealed;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo10 = new JsonPropertyInfoValues<int>
 		{
-			((PlayerMapPointHistoryEntry)obj).HpHealed = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PlayerMapPointHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).DamageTaken,
+			Setter = delegate(object obj, int value)
+			{
+				((PlayerMapPointHistoryEntry)obj).DamageTaken = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "DamageTaken",
+			JsonPropertyName = "damage_taken",
+			AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("DamageTaken", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "HpHealed";
-		jsonPropertyInfoValues2.JsonPropertyName = "hp_healed";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("HpHealed", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo10 = jsonPropertyInfoValues2;
 		array[9] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo10);
-		jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(PlayerMapPointHistoryEntry);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).MaxHpLost;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo11 = new JsonPropertyInfoValues<int>
 		{
-			((PlayerMapPointHistoryEntry)obj).MaxHpLost = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PlayerMapPointHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).HpHealed,
+			Setter = delegate(object obj, int value)
+			{
+				((PlayerMapPointHistoryEntry)obj).HpHealed = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "HpHealed",
+			JsonPropertyName = "hp_healed",
+			AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("HpHealed", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "MaxHpLost";
-		jsonPropertyInfoValues2.JsonPropertyName = "max_hp_lost";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("MaxHpLost", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo11 = jsonPropertyInfoValues2;
 		array[10] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo11);
-		jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(PlayerMapPointHistoryEntry);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).MaxHpGained;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo12 = new JsonPropertyInfoValues<int>
 		{
-			((PlayerMapPointHistoryEntry)obj).MaxHpGained = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PlayerMapPointHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).MaxHpLost,
+			Setter = delegate(object obj, int value)
+			{
+				((PlayerMapPointHistoryEntry)obj).MaxHpLost = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "MaxHpLost",
+			JsonPropertyName = "max_hp_lost",
+			AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("MaxHpLost", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "MaxHpGained";
-		jsonPropertyInfoValues2.JsonPropertyName = "max_hp_gained";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("MaxHpGained", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo12 = jsonPropertyInfoValues2;
 		array[11] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo12);
-		JsonPropertyInfoValues<List<AncientChoiceHistoryEntry>> jsonPropertyInfoValues3 = new JsonPropertyInfoValues<List<AncientChoiceHistoryEntry>>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(PlayerMapPointHistoryEntry);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).AncientChoices;
-		jsonPropertyInfoValues3.Setter = delegate(object obj, List<AncientChoiceHistoryEntry>? value)
+		JsonPropertyInfoValues<int> propertyInfo13 = new JsonPropertyInfoValues<int>
 		{
-			((PlayerMapPointHistoryEntry)obj).AncientChoices = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PlayerMapPointHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).MaxHpGained,
+			Setter = delegate(object obj, int value)
+			{
+				((PlayerMapPointHistoryEntry)obj).MaxHpGained = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "MaxHpGained",
+			JsonPropertyName = "max_hp_gained",
+			AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("MaxHpGained", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues3.IgnoreCondition = null;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "AncientChoices";
-		jsonPropertyInfoValues3.JsonPropertyName = "ancient_choice";
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("AncientChoices", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<AncientChoiceHistoryEntry>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<AncientChoiceHistoryEntry>> propertyInfo13 = jsonPropertyInfoValues3;
 		array[12] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo13);
-		array[12].IsGetNullable = false;
-		array[12].IsSetNullable = false;
-		JsonPropertyInfoValues<List<SerializableCard>> jsonPropertyInfoValues4 = new JsonPropertyInfoValues<List<SerializableCard>>();
-		jsonPropertyInfoValues4.IsProperty = true;
-		jsonPropertyInfoValues4.IsPublic = true;
-		jsonPropertyInfoValues4.IsVirtual = false;
-		jsonPropertyInfoValues4.DeclaringType = typeof(PlayerMapPointHistoryEntry);
-		jsonPropertyInfoValues4.Converter = null;
-		jsonPropertyInfoValues4.Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).CardsGained;
-		jsonPropertyInfoValues4.Setter = delegate(object obj, List<SerializableCard>? value)
+		JsonPropertyInfoValues<List<AncientChoiceHistoryEntry>> propertyInfo14 = new JsonPropertyInfoValues<List<AncientChoiceHistoryEntry>>
 		{
-			((PlayerMapPointHistoryEntry)obj).CardsGained = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PlayerMapPointHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).AncientChoices,
+			Setter = delegate(object obj, List<AncientChoiceHistoryEntry>? value)
+			{
+				((PlayerMapPointHistoryEntry)obj).AncientChoices = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "AncientChoices",
+			JsonPropertyName = "ancient_choice",
+			AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("AncientChoices", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<AncientChoiceHistoryEntry>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues4.IgnoreCondition = null;
-		jsonPropertyInfoValues4.HasJsonInclude = false;
-		jsonPropertyInfoValues4.IsExtensionData = false;
-		jsonPropertyInfoValues4.NumberHandling = null;
-		jsonPropertyInfoValues4.PropertyName = "CardsGained";
-		jsonPropertyInfoValues4.JsonPropertyName = "cards_gained";
-		jsonPropertyInfoValues4.AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("CardsGained", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<SerializableCard>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<SerializableCard>> propertyInfo14 = jsonPropertyInfoValues4;
 		array[13] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo14);
 		array[13].IsGetNullable = false;
 		array[13].IsSetNullable = false;
-		JsonPropertyInfoValues<List<CardChoiceHistoryEntry>> jsonPropertyInfoValues5 = new JsonPropertyInfoValues<List<CardChoiceHistoryEntry>>();
-		jsonPropertyInfoValues5.IsProperty = true;
-		jsonPropertyInfoValues5.IsPublic = true;
-		jsonPropertyInfoValues5.IsVirtual = false;
-		jsonPropertyInfoValues5.DeclaringType = typeof(PlayerMapPointHistoryEntry);
-		jsonPropertyInfoValues5.Converter = null;
-		jsonPropertyInfoValues5.Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).CardChoices;
-		jsonPropertyInfoValues5.Setter = delegate(object obj, List<CardChoiceHistoryEntry>? value)
+		JsonPropertyInfoValues<List<SerializableCard>> propertyInfo15 = new JsonPropertyInfoValues<List<SerializableCard>>
 		{
-			((PlayerMapPointHistoryEntry)obj).CardChoices = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PlayerMapPointHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).CardsGained,
+			Setter = delegate(object obj, List<SerializableCard>? value)
+			{
+				((PlayerMapPointHistoryEntry)obj).CardsGained = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "CardsGained",
+			JsonPropertyName = "cards_gained",
+			AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("CardsGained", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<SerializableCard>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues5.IgnoreCondition = null;
-		jsonPropertyInfoValues5.HasJsonInclude = false;
-		jsonPropertyInfoValues5.IsExtensionData = false;
-		jsonPropertyInfoValues5.NumberHandling = null;
-		jsonPropertyInfoValues5.PropertyName = "CardChoices";
-		jsonPropertyInfoValues5.JsonPropertyName = "card_choices";
-		jsonPropertyInfoValues5.AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("CardChoices", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<CardChoiceHistoryEntry>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<CardChoiceHistoryEntry>> propertyInfo15 = jsonPropertyInfoValues5;
 		array[14] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo15);
 		array[14].IsGetNullable = false;
 		array[14].IsSetNullable = false;
-		JsonPropertyInfoValues<List<ModelChoiceHistoryEntry>> jsonPropertyInfoValues6 = new JsonPropertyInfoValues<List<ModelChoiceHistoryEntry>>();
-		jsonPropertyInfoValues6.IsProperty = true;
-		jsonPropertyInfoValues6.IsPublic = true;
-		jsonPropertyInfoValues6.IsVirtual = false;
-		jsonPropertyInfoValues6.DeclaringType = typeof(PlayerMapPointHistoryEntry);
-		jsonPropertyInfoValues6.Converter = null;
-		jsonPropertyInfoValues6.Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).RelicChoices;
-		jsonPropertyInfoValues6.Setter = delegate(object obj, List<ModelChoiceHistoryEntry>? value)
+		JsonPropertyInfoValues<List<CardChoiceHistoryEntry>> propertyInfo16 = new JsonPropertyInfoValues<List<CardChoiceHistoryEntry>>
 		{
-			((PlayerMapPointHistoryEntry)obj).RelicChoices = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PlayerMapPointHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).CardChoices,
+			Setter = delegate(object obj, List<CardChoiceHistoryEntry>? value)
+			{
+				((PlayerMapPointHistoryEntry)obj).CardChoices = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "CardChoices",
+			JsonPropertyName = "card_choices",
+			AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("CardChoices", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<CardChoiceHistoryEntry>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues6.IgnoreCondition = null;
-		jsonPropertyInfoValues6.HasJsonInclude = false;
-		jsonPropertyInfoValues6.IsExtensionData = false;
-		jsonPropertyInfoValues6.NumberHandling = null;
-		jsonPropertyInfoValues6.PropertyName = "RelicChoices";
-		jsonPropertyInfoValues6.JsonPropertyName = "relic_choices";
-		jsonPropertyInfoValues6.AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("RelicChoices", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelChoiceHistoryEntry>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<ModelChoiceHistoryEntry>> propertyInfo16 = jsonPropertyInfoValues6;
 		array[15] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo16);
 		array[15].IsGetNullable = false;
 		array[15].IsSetNullable = false;
-		jsonPropertyInfoValues6 = new JsonPropertyInfoValues<List<ModelChoiceHistoryEntry>>();
-		jsonPropertyInfoValues6.IsProperty = true;
-		jsonPropertyInfoValues6.IsPublic = true;
-		jsonPropertyInfoValues6.IsVirtual = false;
-		jsonPropertyInfoValues6.DeclaringType = typeof(PlayerMapPointHistoryEntry);
-		jsonPropertyInfoValues6.Converter = null;
-		jsonPropertyInfoValues6.Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).PotionChoices;
-		jsonPropertyInfoValues6.Setter = delegate(object obj, List<ModelChoiceHistoryEntry>? value)
+		JsonPropertyInfoValues<List<ModelChoiceHistoryEntry>> propertyInfo17 = new JsonPropertyInfoValues<List<ModelChoiceHistoryEntry>>
 		{
-			((PlayerMapPointHistoryEntry)obj).PotionChoices = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PlayerMapPointHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).RelicChoices,
+			Setter = delegate(object obj, List<ModelChoiceHistoryEntry>? value)
+			{
+				((PlayerMapPointHistoryEntry)obj).RelicChoices = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "RelicChoices",
+			JsonPropertyName = "relic_choices",
+			AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("RelicChoices", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelChoiceHistoryEntry>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues6.IgnoreCondition = null;
-		jsonPropertyInfoValues6.HasJsonInclude = false;
-		jsonPropertyInfoValues6.IsExtensionData = false;
-		jsonPropertyInfoValues6.NumberHandling = null;
-		jsonPropertyInfoValues6.PropertyName = "PotionChoices";
-		jsonPropertyInfoValues6.JsonPropertyName = "potion_choices";
-		jsonPropertyInfoValues6.AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("PotionChoices", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelChoiceHistoryEntry>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<ModelChoiceHistoryEntry>> propertyInfo17 = jsonPropertyInfoValues6;
 		array[16] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo17);
 		array[16].IsGetNullable = false;
 		array[16].IsSetNullable = false;
-		JsonPropertyInfoValues<List<ModelId>> jsonPropertyInfoValues7 = new JsonPropertyInfoValues<List<ModelId>>();
-		jsonPropertyInfoValues7.IsProperty = true;
-		jsonPropertyInfoValues7.IsPublic = true;
-		jsonPropertyInfoValues7.IsVirtual = false;
-		jsonPropertyInfoValues7.DeclaringType = typeof(PlayerMapPointHistoryEntry);
-		jsonPropertyInfoValues7.Converter = null;
-		jsonPropertyInfoValues7.Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).PotionDiscarded;
-		jsonPropertyInfoValues7.Setter = delegate(object obj, List<ModelId>? value)
+		JsonPropertyInfoValues<List<ModelChoiceHistoryEntry>> propertyInfo18 = new JsonPropertyInfoValues<List<ModelChoiceHistoryEntry>>
 		{
-			((PlayerMapPointHistoryEntry)obj).PotionDiscarded = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PlayerMapPointHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).PotionChoices,
+			Setter = delegate(object obj, List<ModelChoiceHistoryEntry>? value)
+			{
+				((PlayerMapPointHistoryEntry)obj).PotionChoices = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "PotionChoices",
+			JsonPropertyName = "potion_choices",
+			AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("PotionChoices", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelChoiceHistoryEntry>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues7.IgnoreCondition = null;
-		jsonPropertyInfoValues7.HasJsonInclude = false;
-		jsonPropertyInfoValues7.IsExtensionData = false;
-		jsonPropertyInfoValues7.NumberHandling = null;
-		jsonPropertyInfoValues7.PropertyName = "PotionDiscarded";
-		jsonPropertyInfoValues7.JsonPropertyName = "potion_discarded";
-		jsonPropertyInfoValues7.AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("PotionDiscarded", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<ModelId>> propertyInfo18 = jsonPropertyInfoValues7;
 		array[17] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo18);
 		array[17].IsGetNullable = false;
 		array[17].IsSetNullable = false;
-		jsonPropertyInfoValues7 = new JsonPropertyInfoValues<List<ModelId>>();
-		jsonPropertyInfoValues7.IsProperty = true;
-		jsonPropertyInfoValues7.IsPublic = true;
-		jsonPropertyInfoValues7.IsVirtual = false;
-		jsonPropertyInfoValues7.DeclaringType = typeof(PlayerMapPointHistoryEntry);
-		jsonPropertyInfoValues7.Converter = null;
-		jsonPropertyInfoValues7.Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).PotionUsed;
-		jsonPropertyInfoValues7.Setter = delegate(object obj, List<ModelId>? value)
+		JsonPropertyInfoValues<List<ModelId>> propertyInfo19 = new JsonPropertyInfoValues<List<ModelId>>
 		{
-			((PlayerMapPointHistoryEntry)obj).PotionUsed = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PlayerMapPointHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).PotionDiscarded,
+			Setter = delegate(object obj, List<ModelId>? value)
+			{
+				((PlayerMapPointHistoryEntry)obj).PotionDiscarded = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "PotionDiscarded",
+			JsonPropertyName = "potion_discarded",
+			AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("PotionDiscarded", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues7.IgnoreCondition = null;
-		jsonPropertyInfoValues7.HasJsonInclude = false;
-		jsonPropertyInfoValues7.IsExtensionData = false;
-		jsonPropertyInfoValues7.NumberHandling = null;
-		jsonPropertyInfoValues7.PropertyName = "PotionUsed";
-		jsonPropertyInfoValues7.JsonPropertyName = "potion_used";
-		jsonPropertyInfoValues7.AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("PotionUsed", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<ModelId>> propertyInfo19 = jsonPropertyInfoValues7;
 		array[18] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo19);
 		array[18].IsGetNullable = false;
 		array[18].IsSetNullable = false;
-		jsonPropertyInfoValues4 = new JsonPropertyInfoValues<List<SerializableCard>>();
-		jsonPropertyInfoValues4.IsProperty = true;
-		jsonPropertyInfoValues4.IsPublic = true;
-		jsonPropertyInfoValues4.IsVirtual = false;
-		jsonPropertyInfoValues4.DeclaringType = typeof(PlayerMapPointHistoryEntry);
-		jsonPropertyInfoValues4.Converter = null;
-		jsonPropertyInfoValues4.Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).CardsRemoved;
-		jsonPropertyInfoValues4.Setter = delegate(object obj, List<SerializableCard>? value)
+		JsonPropertyInfoValues<List<ModelId>> propertyInfo20 = new JsonPropertyInfoValues<List<ModelId>>
 		{
-			((PlayerMapPointHistoryEntry)obj).CardsRemoved = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PlayerMapPointHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).PotionUsed,
+			Setter = delegate(object obj, List<ModelId>? value)
+			{
+				((PlayerMapPointHistoryEntry)obj).PotionUsed = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "PotionUsed",
+			JsonPropertyName = "potion_used",
+			AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("PotionUsed", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues4.IgnoreCondition = null;
-		jsonPropertyInfoValues4.HasJsonInclude = false;
-		jsonPropertyInfoValues4.IsExtensionData = false;
-		jsonPropertyInfoValues4.NumberHandling = null;
-		jsonPropertyInfoValues4.PropertyName = "CardsRemoved";
-		jsonPropertyInfoValues4.JsonPropertyName = "cards_removed";
-		jsonPropertyInfoValues4.AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("CardsRemoved", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<SerializableCard>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<SerializableCard>> propertyInfo20 = jsonPropertyInfoValues4;
 		array[19] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo20);
 		array[19].IsGetNullable = false;
 		array[19].IsSetNullable = false;
-		jsonPropertyInfoValues7 = new JsonPropertyInfoValues<List<ModelId>>();
-		jsonPropertyInfoValues7.IsProperty = true;
-		jsonPropertyInfoValues7.IsPublic = true;
-		jsonPropertyInfoValues7.IsVirtual = false;
-		jsonPropertyInfoValues7.DeclaringType = typeof(PlayerMapPointHistoryEntry);
-		jsonPropertyInfoValues7.Converter = null;
-		jsonPropertyInfoValues7.Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).RelicsRemoved;
-		jsonPropertyInfoValues7.Setter = delegate(object obj, List<ModelId>? value)
+		JsonPropertyInfoValues<List<SerializableCard>> propertyInfo21 = new JsonPropertyInfoValues<List<SerializableCard>>
 		{
-			((PlayerMapPointHistoryEntry)obj).RelicsRemoved = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PlayerMapPointHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).CardsRemoved,
+			Setter = delegate(object obj, List<SerializableCard>? value)
+			{
+				((PlayerMapPointHistoryEntry)obj).CardsRemoved = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "CardsRemoved",
+			JsonPropertyName = "cards_removed",
+			AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("CardsRemoved", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<SerializableCard>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues7.IgnoreCondition = null;
-		jsonPropertyInfoValues7.HasJsonInclude = false;
-		jsonPropertyInfoValues7.IsExtensionData = false;
-		jsonPropertyInfoValues7.NumberHandling = null;
-		jsonPropertyInfoValues7.PropertyName = "RelicsRemoved";
-		jsonPropertyInfoValues7.JsonPropertyName = "relics_removed";
-		jsonPropertyInfoValues7.AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("RelicsRemoved", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<ModelId>> propertyInfo21 = jsonPropertyInfoValues7;
 		array[20] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo21);
 		array[20].IsGetNullable = false;
 		array[20].IsSetNullable = false;
-		JsonPropertyInfoValues<List<CardEnchantmentHistoryEntry>> jsonPropertyInfoValues8 = new JsonPropertyInfoValues<List<CardEnchantmentHistoryEntry>>();
-		jsonPropertyInfoValues8.IsProperty = true;
-		jsonPropertyInfoValues8.IsPublic = true;
-		jsonPropertyInfoValues8.IsVirtual = false;
-		jsonPropertyInfoValues8.DeclaringType = typeof(PlayerMapPointHistoryEntry);
-		jsonPropertyInfoValues8.Converter = null;
-		jsonPropertyInfoValues8.Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).CardsEnchanted;
-		jsonPropertyInfoValues8.Setter = delegate(object obj, List<CardEnchantmentHistoryEntry>? value)
+		JsonPropertyInfoValues<List<ModelId>> propertyInfo22 = new JsonPropertyInfoValues<List<ModelId>>
 		{
-			((PlayerMapPointHistoryEntry)obj).CardsEnchanted = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PlayerMapPointHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).RelicsRemoved,
+			Setter = delegate(object obj, List<ModelId>? value)
+			{
+				((PlayerMapPointHistoryEntry)obj).RelicsRemoved = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "RelicsRemoved",
+			JsonPropertyName = "relics_removed",
+			AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("RelicsRemoved", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues8.IgnoreCondition = null;
-		jsonPropertyInfoValues8.HasJsonInclude = false;
-		jsonPropertyInfoValues8.IsExtensionData = false;
-		jsonPropertyInfoValues8.NumberHandling = null;
-		jsonPropertyInfoValues8.PropertyName = "CardsEnchanted";
-		jsonPropertyInfoValues8.JsonPropertyName = "cards_enchanted";
-		jsonPropertyInfoValues8.AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("CardsEnchanted", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<CardEnchantmentHistoryEntry>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<CardEnchantmentHistoryEntry>> propertyInfo22 = jsonPropertyInfoValues8;
 		array[21] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo22);
 		array[21].IsGetNullable = false;
 		array[21].IsSetNullable = false;
-		JsonPropertyInfoValues<List<CardTransformationHistoryEntry>> jsonPropertyInfoValues9 = new JsonPropertyInfoValues<List<CardTransformationHistoryEntry>>();
-		jsonPropertyInfoValues9.IsProperty = true;
-		jsonPropertyInfoValues9.IsPublic = true;
-		jsonPropertyInfoValues9.IsVirtual = false;
-		jsonPropertyInfoValues9.DeclaringType = typeof(PlayerMapPointHistoryEntry);
-		jsonPropertyInfoValues9.Converter = null;
-		jsonPropertyInfoValues9.Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).CardsTransformed;
-		jsonPropertyInfoValues9.Setter = delegate(object obj, List<CardTransformationHistoryEntry>? value)
+		JsonPropertyInfoValues<List<CardEnchantmentHistoryEntry>> propertyInfo23 = new JsonPropertyInfoValues<List<CardEnchantmentHistoryEntry>>
 		{
-			((PlayerMapPointHistoryEntry)obj).CardsTransformed = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PlayerMapPointHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).CardsEnchanted,
+			Setter = delegate(object obj, List<CardEnchantmentHistoryEntry>? value)
+			{
+				((PlayerMapPointHistoryEntry)obj).CardsEnchanted = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "CardsEnchanted",
+			JsonPropertyName = "cards_enchanted",
+			AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("CardsEnchanted", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<CardEnchantmentHistoryEntry>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues9.IgnoreCondition = null;
-		jsonPropertyInfoValues9.HasJsonInclude = false;
-		jsonPropertyInfoValues9.IsExtensionData = false;
-		jsonPropertyInfoValues9.NumberHandling = null;
-		jsonPropertyInfoValues9.PropertyName = "CardsTransformed";
-		jsonPropertyInfoValues9.JsonPropertyName = "cards_transformed";
-		jsonPropertyInfoValues9.AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("CardsTransformed", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<CardTransformationHistoryEntry>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<CardTransformationHistoryEntry>> propertyInfo23 = jsonPropertyInfoValues9;
 		array[22] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo23);
 		array[22].IsGetNullable = false;
 		array[22].IsSetNullable = false;
-		jsonPropertyInfoValues7 = new JsonPropertyInfoValues<List<ModelId>>();
-		jsonPropertyInfoValues7.IsProperty = true;
-		jsonPropertyInfoValues7.IsPublic = true;
-		jsonPropertyInfoValues7.IsVirtual = false;
-		jsonPropertyInfoValues7.DeclaringType = typeof(PlayerMapPointHistoryEntry);
-		jsonPropertyInfoValues7.Converter = null;
-		jsonPropertyInfoValues7.Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).UpgradedCards;
-		jsonPropertyInfoValues7.Setter = delegate(object obj, List<ModelId>? value)
+		JsonPropertyInfoValues<List<CardTransformationHistoryEntry>> propertyInfo24 = new JsonPropertyInfoValues<List<CardTransformationHistoryEntry>>
 		{
-			((PlayerMapPointHistoryEntry)obj).UpgradedCards = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PlayerMapPointHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).CardsTransformed,
+			Setter = delegate(object obj, List<CardTransformationHistoryEntry>? value)
+			{
+				((PlayerMapPointHistoryEntry)obj).CardsTransformed = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "CardsTransformed",
+			JsonPropertyName = "cards_transformed",
+			AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("CardsTransformed", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<CardTransformationHistoryEntry>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues7.IgnoreCondition = null;
-		jsonPropertyInfoValues7.HasJsonInclude = false;
-		jsonPropertyInfoValues7.IsExtensionData = false;
-		jsonPropertyInfoValues7.NumberHandling = null;
-		jsonPropertyInfoValues7.PropertyName = "UpgradedCards";
-		jsonPropertyInfoValues7.JsonPropertyName = "upgraded_cards";
-		jsonPropertyInfoValues7.AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("UpgradedCards", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<ModelId>> propertyInfo24 = jsonPropertyInfoValues7;
 		array[23] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo24);
 		array[23].IsGetNullable = false;
 		array[23].IsSetNullable = false;
-		jsonPropertyInfoValues7 = new JsonPropertyInfoValues<List<ModelId>>();
-		jsonPropertyInfoValues7.IsProperty = true;
-		jsonPropertyInfoValues7.IsPublic = true;
-		jsonPropertyInfoValues7.IsVirtual = false;
-		jsonPropertyInfoValues7.DeclaringType = typeof(PlayerMapPointHistoryEntry);
-		jsonPropertyInfoValues7.Converter = null;
-		jsonPropertyInfoValues7.Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).DowngradedCards;
-		jsonPropertyInfoValues7.Setter = delegate(object obj, List<ModelId>? value)
+		JsonPropertyInfoValues<List<ModelId>> propertyInfo25 = new JsonPropertyInfoValues<List<ModelId>>
 		{
-			((PlayerMapPointHistoryEntry)obj).DowngradedCards = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PlayerMapPointHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).UpgradedCards,
+			Setter = delegate(object obj, List<ModelId>? value)
+			{
+				((PlayerMapPointHistoryEntry)obj).UpgradedCards = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "UpgradedCards",
+			JsonPropertyName = "upgraded_cards",
+			AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("UpgradedCards", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues7.IgnoreCondition = null;
-		jsonPropertyInfoValues7.HasJsonInclude = false;
-		jsonPropertyInfoValues7.IsExtensionData = false;
-		jsonPropertyInfoValues7.NumberHandling = null;
-		jsonPropertyInfoValues7.PropertyName = "DowngradedCards";
-		jsonPropertyInfoValues7.JsonPropertyName = "downgraded_cards";
-		jsonPropertyInfoValues7.AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("DowngradedCards", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<ModelId>> propertyInfo25 = jsonPropertyInfoValues7;
 		array[24] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo25);
 		array[24].IsGetNullable = false;
 		array[24].IsSetNullable = false;
-		JsonPropertyInfoValues<List<EventOptionHistoryEntry>> jsonPropertyInfoValues10 = new JsonPropertyInfoValues<List<EventOptionHistoryEntry>>();
-		jsonPropertyInfoValues10.IsProperty = true;
-		jsonPropertyInfoValues10.IsPublic = true;
-		jsonPropertyInfoValues10.IsVirtual = false;
-		jsonPropertyInfoValues10.DeclaringType = typeof(PlayerMapPointHistoryEntry);
-		jsonPropertyInfoValues10.Converter = null;
-		jsonPropertyInfoValues10.Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).EventChoices;
-		jsonPropertyInfoValues10.Setter = delegate(object obj, List<EventOptionHistoryEntry>? value)
+		JsonPropertyInfoValues<List<ModelId>> propertyInfo26 = new JsonPropertyInfoValues<List<ModelId>>
 		{
-			((PlayerMapPointHistoryEntry)obj).EventChoices = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PlayerMapPointHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).DowngradedCards,
+			Setter = delegate(object obj, List<ModelId>? value)
+			{
+				((PlayerMapPointHistoryEntry)obj).DowngradedCards = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "DowngradedCards",
+			JsonPropertyName = "downgraded_cards",
+			AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("DowngradedCards", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues10.IgnoreCondition = null;
-		jsonPropertyInfoValues10.HasJsonInclude = false;
-		jsonPropertyInfoValues10.IsExtensionData = false;
-		jsonPropertyInfoValues10.NumberHandling = null;
-		jsonPropertyInfoValues10.PropertyName = "EventChoices";
-		jsonPropertyInfoValues10.JsonPropertyName = "event_choices";
-		jsonPropertyInfoValues10.AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("EventChoices", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<EventOptionHistoryEntry>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<EventOptionHistoryEntry>> propertyInfo26 = jsonPropertyInfoValues10;
 		array[25] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo26);
 		array[25].IsGetNullable = false;
 		array[25].IsSetNullable = false;
-		JsonPropertyInfoValues<List<string>> jsonPropertyInfoValues11 = new JsonPropertyInfoValues<List<string>>();
-		jsonPropertyInfoValues11.IsProperty = true;
-		jsonPropertyInfoValues11.IsPublic = true;
-		jsonPropertyInfoValues11.IsVirtual = false;
-		jsonPropertyInfoValues11.DeclaringType = typeof(PlayerMapPointHistoryEntry);
-		jsonPropertyInfoValues11.Converter = null;
-		jsonPropertyInfoValues11.Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).RestSiteChoices;
-		jsonPropertyInfoValues11.Setter = delegate(object obj, List<string>? value)
+		JsonPropertyInfoValues<List<EventOptionHistoryEntry>> propertyInfo27 = new JsonPropertyInfoValues<List<EventOptionHistoryEntry>>
 		{
-			((PlayerMapPointHistoryEntry)obj).RestSiteChoices = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PlayerMapPointHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).EventChoices,
+			Setter = delegate(object obj, List<EventOptionHistoryEntry>? value)
+			{
+				((PlayerMapPointHistoryEntry)obj).EventChoices = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "EventChoices",
+			JsonPropertyName = "event_choices",
+			AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("EventChoices", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<EventOptionHistoryEntry>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues11.IgnoreCondition = null;
-		jsonPropertyInfoValues11.HasJsonInclude = false;
-		jsonPropertyInfoValues11.IsExtensionData = false;
-		jsonPropertyInfoValues11.NumberHandling = null;
-		jsonPropertyInfoValues11.PropertyName = "RestSiteChoices";
-		jsonPropertyInfoValues11.JsonPropertyName = "rest_site_choices";
-		jsonPropertyInfoValues11.AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("RestSiteChoices", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<string>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<string>> propertyInfo27 = jsonPropertyInfoValues11;
 		array[26] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo27);
 		array[26].IsGetNullable = false;
 		array[26].IsSetNullable = false;
-		jsonPropertyInfoValues7 = new JsonPropertyInfoValues<List<ModelId>>();
-		jsonPropertyInfoValues7.IsProperty = true;
-		jsonPropertyInfoValues7.IsPublic = true;
-		jsonPropertyInfoValues7.IsVirtual = false;
-		jsonPropertyInfoValues7.DeclaringType = typeof(PlayerMapPointHistoryEntry);
-		jsonPropertyInfoValues7.Converter = null;
-		jsonPropertyInfoValues7.Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).BoughtRelics;
-		jsonPropertyInfoValues7.Setter = delegate(object obj, List<ModelId>? value)
+		JsonPropertyInfoValues<List<string>> propertyInfo28 = new JsonPropertyInfoValues<List<string>>
 		{
-			((PlayerMapPointHistoryEntry)obj).BoughtRelics = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PlayerMapPointHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).RestSiteChoices,
+			Setter = delegate(object obj, List<string>? value)
+			{
+				((PlayerMapPointHistoryEntry)obj).RestSiteChoices = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "RestSiteChoices",
+			JsonPropertyName = "rest_site_choices",
+			AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("RestSiteChoices", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<string>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues7.IgnoreCondition = null;
-		jsonPropertyInfoValues7.HasJsonInclude = false;
-		jsonPropertyInfoValues7.IsExtensionData = false;
-		jsonPropertyInfoValues7.NumberHandling = null;
-		jsonPropertyInfoValues7.PropertyName = "BoughtRelics";
-		jsonPropertyInfoValues7.JsonPropertyName = "bought_relics";
-		jsonPropertyInfoValues7.AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("BoughtRelics", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<ModelId>> propertyInfo28 = jsonPropertyInfoValues7;
 		array[27] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo28);
 		array[27].IsGetNullable = false;
 		array[27].IsSetNullable = false;
-		jsonPropertyInfoValues7 = new JsonPropertyInfoValues<List<ModelId>>();
-		jsonPropertyInfoValues7.IsProperty = true;
-		jsonPropertyInfoValues7.IsPublic = true;
-		jsonPropertyInfoValues7.IsVirtual = false;
-		jsonPropertyInfoValues7.DeclaringType = typeof(PlayerMapPointHistoryEntry);
-		jsonPropertyInfoValues7.Converter = null;
-		jsonPropertyInfoValues7.Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).BoughtPotions;
-		jsonPropertyInfoValues7.Setter = delegate(object obj, List<ModelId>? value)
+		JsonPropertyInfoValues<List<ModelId>> propertyInfo29 = new JsonPropertyInfoValues<List<ModelId>>
 		{
-			((PlayerMapPointHistoryEntry)obj).BoughtPotions = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PlayerMapPointHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).BoughtRelics,
+			Setter = delegate(object obj, List<ModelId>? value)
+			{
+				((PlayerMapPointHistoryEntry)obj).BoughtRelics = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "BoughtRelics",
+			JsonPropertyName = "bought_relics",
+			AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("BoughtRelics", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues7.IgnoreCondition = null;
-		jsonPropertyInfoValues7.HasJsonInclude = false;
-		jsonPropertyInfoValues7.IsExtensionData = false;
-		jsonPropertyInfoValues7.NumberHandling = null;
-		jsonPropertyInfoValues7.PropertyName = "BoughtPotions";
-		jsonPropertyInfoValues7.JsonPropertyName = "bought_potions";
-		jsonPropertyInfoValues7.AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("BoughtPotions", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<ModelId>> propertyInfo29 = jsonPropertyInfoValues7;
 		array[28] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo29);
 		array[28].IsGetNullable = false;
 		array[28].IsSetNullable = false;
-		jsonPropertyInfoValues7 = new JsonPropertyInfoValues<List<ModelId>>();
-		jsonPropertyInfoValues7.IsProperty = true;
-		jsonPropertyInfoValues7.IsPublic = true;
-		jsonPropertyInfoValues7.IsVirtual = false;
-		jsonPropertyInfoValues7.DeclaringType = typeof(PlayerMapPointHistoryEntry);
-		jsonPropertyInfoValues7.Converter = null;
-		jsonPropertyInfoValues7.Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).BoughtColorless;
-		jsonPropertyInfoValues7.Setter = delegate(object obj, List<ModelId>? value)
+		JsonPropertyInfoValues<List<ModelId>> propertyInfo30 = new JsonPropertyInfoValues<List<ModelId>>
 		{
-			((PlayerMapPointHistoryEntry)obj).BoughtColorless = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PlayerMapPointHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).BoughtPotions,
+			Setter = delegate(object obj, List<ModelId>? value)
+			{
+				((PlayerMapPointHistoryEntry)obj).BoughtPotions = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "BoughtPotions",
+			JsonPropertyName = "bought_potions",
+			AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("BoughtPotions", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues7.IgnoreCondition = null;
-		jsonPropertyInfoValues7.HasJsonInclude = false;
-		jsonPropertyInfoValues7.IsExtensionData = false;
-		jsonPropertyInfoValues7.NumberHandling = null;
-		jsonPropertyInfoValues7.PropertyName = "BoughtColorless";
-		jsonPropertyInfoValues7.JsonPropertyName = "bought_colorless";
-		jsonPropertyInfoValues7.AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("BoughtColorless", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<ModelId>> propertyInfo30 = jsonPropertyInfoValues7;
 		array[29] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo30);
 		array[29].IsGetNullable = false;
 		array[29].IsSetNullable = false;
-		jsonPropertyInfoValues7 = new JsonPropertyInfoValues<List<ModelId>>();
-		jsonPropertyInfoValues7.IsProperty = true;
-		jsonPropertyInfoValues7.IsPublic = true;
-		jsonPropertyInfoValues7.IsVirtual = false;
-		jsonPropertyInfoValues7.DeclaringType = typeof(PlayerMapPointHistoryEntry);
-		jsonPropertyInfoValues7.Converter = null;
-		jsonPropertyInfoValues7.Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).CompletedQuests;
-		jsonPropertyInfoValues7.Setter = delegate(object obj, List<ModelId>? value)
+		JsonPropertyInfoValues<List<ModelId>> propertyInfo31 = new JsonPropertyInfoValues<List<ModelId>>
 		{
-			((PlayerMapPointHistoryEntry)obj).CompletedQuests = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PlayerMapPointHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).BoughtColorless,
+			Setter = delegate(object obj, List<ModelId>? value)
+			{
+				((PlayerMapPointHistoryEntry)obj).BoughtColorless = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "BoughtColorless",
+			JsonPropertyName = "bought_colorless",
+			AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("BoughtColorless", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues7.IgnoreCondition = null;
-		jsonPropertyInfoValues7.HasJsonInclude = false;
-		jsonPropertyInfoValues7.IsExtensionData = false;
-		jsonPropertyInfoValues7.NumberHandling = null;
-		jsonPropertyInfoValues7.PropertyName = "CompletedQuests";
-		jsonPropertyInfoValues7.JsonPropertyName = "completed_quests";
-		jsonPropertyInfoValues7.AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("CompletedQuests", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<ModelId>> propertyInfo31 = jsonPropertyInfoValues7;
 		array[30] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo31);
 		array[30].IsGetNullable = false;
 		array[30].IsSetNullable = false;
+		JsonPropertyInfoValues<List<ModelId>> propertyInfo32 = new JsonPropertyInfoValues<List<ModelId>>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PlayerMapPointHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).CompletedQuests,
+			Setter = delegate(object obj, List<ModelId>? value)
+			{
+				((PlayerMapPointHistoryEntry)obj).CompletedQuests = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "CompletedQuests",
+			JsonPropertyName = "completed_quests",
+			AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("CompletedQuests", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null)
+		};
+		array[31] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo32);
+		array[31].IsGetNullable = false;
+		array[31].IsSetNullable = false;
+		JsonPropertyInfoValues<bool> propertyInfo33 = new JsonPropertyInfoValues<bool>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PlayerMapPointHistoryEntry),
+			Converter = null,
+			Getter = (object obj) => ((PlayerMapPointHistoryEntry)obj).IsAffectedByFurCoat,
+			Setter = delegate(object obj, bool value)
+			{
+				((PlayerMapPointHistoryEntry)obj).IsAffectedByFurCoat = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "IsAffectedByFurCoat",
+			JsonPropertyName = "is_affected_by_fur_coat",
+			AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("IsAffectedByFurCoat", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
+		};
+		array[32] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo33);
+		JsonPropertyInfoValues<bool> propertyInfo34 = new JsonPropertyInfoValues<bool>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PlayerMapPointHistoryEntry),
+			Converter = null,
+			Getter = null,
+			Setter = null,
+			IgnoreCondition = JsonIgnoreCondition.Always,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "WasMugged",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(PlayerMapPointHistoryEntry).GetProperty("WasMugged", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
+		};
+		array[33] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo34);
 		return array;
 	}
 
@@ -3384,31 +4399,32 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	{
 		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<RunHistory> jsonTypeInfo))
 		{
-			JsonObjectInfoValues<RunHistory> jsonObjectInfoValues = new JsonObjectInfoValues<RunHistory>();
-			jsonObjectInfoValues.ObjectCreator = null;
-			jsonObjectInfoValues.ObjectWithParameterizedConstructorCreator = (object[] args) => new RunHistory
+			JsonObjectInfoValues<RunHistory> objectInfo = new JsonObjectInfoValues<RunHistory>
 			{
-				PlatformType = (PlatformType)args[0],
-				GameMode = (GameMode)args[1],
-				Win = (bool)args[2],
-				Seed = (string)args[3],
-				StartTime = (long)args[4],
-				RunTime = (float)args[5],
-				Ascension = (int)args[6],
-				BuildId = (string)args[7],
-				WasAbandoned = (bool)args[8],
-				KilledByEncounter = (ModelId)args[9],
-				KilledByEvent = (ModelId)args[10],
-				Players = (List<RunHistoryPlayer>)args[11],
-				Acts = (List<ModelId>)args[12],
-				Modifiers = (List<SerializableModifier>)args[13],
-				MapPointHistory = (List<List<MapPointHistoryEntry>>)args[14]
+				ObjectCreator = null,
+				ObjectWithParameterizedConstructorCreator = (object[] args) => new RunHistory
+				{
+					PlatformType = (PlatformType)args[0],
+					GameMode = (GameMode)args[1],
+					Win = (bool)args[2],
+					Seed = (string)args[3],
+					StartTime = (long)args[4],
+					RunTime = (float)args[5],
+					Ascension = (int)args[6],
+					BuildId = (string)args[7],
+					WasAbandoned = (bool)args[8],
+					KilledByEncounter = (ModelId)args[9],
+					KilledByEvent = (ModelId)args[10],
+					Players = (List<RunHistoryPlayer>)args[11],
+					Acts = (List<ModelId>)args[12],
+					Modifiers = (List<SerializableModifier>)args[13],
+					MapPointHistory = (List<List<MapPointHistoryEntry>>)args[14]
+				},
+				PropertyMetadataInitializer = (JsonSerializerContext _) => RunHistoryPropInit(options),
+				ConstructorParameterMetadataInitializer = RunHistoryCtorParamInit,
+				ConstructorAttributeProviderFactory = () => typeof(RunHistory).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null),
+				SerializeHandler = null
 			};
-			jsonObjectInfoValues.PropertyMetadataInitializer = (JsonSerializerContext _) => RunHistoryPropInit(options);
-			jsonObjectInfoValues.ConstructorParameterMetadataInitializer = RunHistoryCtorParamInit;
-			jsonObjectInfoValues.ConstructorAttributeProviderFactory = () => typeof(RunHistory).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null);
-			jsonObjectInfoValues.SerializeHandler = null;
-			JsonObjectInfoValues<RunHistory> objectInfo = jsonObjectInfoValues;
 			jsonTypeInfo = JsonMetadataServices.CreateObjectInfo(options, objectInfo);
 			jsonTypeInfo.NumberHandling = null;
 		}
@@ -3419,339 +4435,355 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] RunHistoryPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[16];
-		JsonPropertyInfoValues<int> jsonPropertyInfoValues = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(RunHistory);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((RunHistory)obj).SchemaVersion;
-		jsonPropertyInfoValues.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo = new JsonPropertyInfoValues<int>
 		{
-			((RunHistory)obj).SchemaVersion = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(RunHistory),
+			Converter = null,
+			Getter = (object obj) => ((RunHistory)obj).SchemaVersion,
+			Setter = delegate(object obj, int value)
+			{
+				((RunHistory)obj).SchemaVersion = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "SchemaVersion",
+			JsonPropertyName = "schema_version",
+			AttributeProviderFactory = () => typeof(RunHistory).GetProperty("SchemaVersion", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "SchemaVersion";
-		jsonPropertyInfoValues.JsonPropertyName = "schema_version";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(RunHistory).GetProperty("SchemaVersion", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
-		JsonPropertyInfoValues<PlatformType> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<PlatformType>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(RunHistory);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((RunHistory)obj).PlatformType;
-		jsonPropertyInfoValues2.Setter = delegate
+		JsonPropertyInfoValues<PlatformType> propertyInfo2 = new JsonPropertyInfoValues<PlatformType>
 		{
-			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(RunHistory),
+			Converter = null,
+			Getter = (object obj) => ((RunHistory)obj).PlatformType,
+			Setter = delegate
+			{
+				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "PlatformType",
+			JsonPropertyName = "platform_type",
+			AttributeProviderFactory = () => typeof(RunHistory).GetProperty("PlatformType", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(PlatformType), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "PlatformType";
-		jsonPropertyInfoValues2.JsonPropertyName = "platform_type";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(RunHistory).GetProperty("PlatformType", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(PlatformType), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<PlatformType> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
-		JsonPropertyInfoValues<GameMode> jsonPropertyInfoValues3 = new JsonPropertyInfoValues<GameMode>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(RunHistory);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = (object obj) => ((RunHistory)obj).GameMode;
-		jsonPropertyInfoValues3.Setter = delegate
+		JsonPropertyInfoValues<GameMode> propertyInfo3 = new JsonPropertyInfoValues<GameMode>
 		{
-			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(RunHistory),
+			Converter = null,
+			Getter = (object obj) => ((RunHistory)obj).GameMode,
+			Setter = delegate
+			{
+				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "GameMode",
+			JsonPropertyName = "game_mode",
+			AttributeProviderFactory = () => typeof(RunHistory).GetProperty("GameMode", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(GameMode), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues3.IgnoreCondition = null;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "GameMode";
-		jsonPropertyInfoValues3.JsonPropertyName = "game_mode";
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(RunHistory).GetProperty("GameMode", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(GameMode), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<GameMode> propertyInfo3 = jsonPropertyInfoValues3;
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
-		JsonPropertyInfoValues<bool> jsonPropertyInfoValues4 = new JsonPropertyInfoValues<bool>();
-		jsonPropertyInfoValues4.IsProperty = true;
-		jsonPropertyInfoValues4.IsPublic = true;
-		jsonPropertyInfoValues4.IsVirtual = false;
-		jsonPropertyInfoValues4.DeclaringType = typeof(RunHistory);
-		jsonPropertyInfoValues4.Converter = null;
-		jsonPropertyInfoValues4.Getter = (object obj) => ((RunHistory)obj).Win;
-		jsonPropertyInfoValues4.Setter = delegate
+		JsonPropertyInfoValues<bool> propertyInfo4 = new JsonPropertyInfoValues<bool>
 		{
-			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(RunHistory),
+			Converter = null,
+			Getter = (object obj) => ((RunHistory)obj).Win,
+			Setter = delegate
+			{
+				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Win",
+			JsonPropertyName = "win",
+			AttributeProviderFactory = () => typeof(RunHistory).GetProperty("Win", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues4.IgnoreCondition = null;
-		jsonPropertyInfoValues4.HasJsonInclude = false;
-		jsonPropertyInfoValues4.IsExtensionData = false;
-		jsonPropertyInfoValues4.NumberHandling = null;
-		jsonPropertyInfoValues4.PropertyName = "Win";
-		jsonPropertyInfoValues4.JsonPropertyName = "win";
-		jsonPropertyInfoValues4.AttributeProviderFactory = () => typeof(RunHistory).GetProperty("Win", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<bool> propertyInfo4 = jsonPropertyInfoValues4;
 		array[3] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo4);
-		JsonPropertyInfoValues<string> jsonPropertyInfoValues5 = new JsonPropertyInfoValues<string>();
-		jsonPropertyInfoValues5.IsProperty = true;
-		jsonPropertyInfoValues5.IsPublic = true;
-		jsonPropertyInfoValues5.IsVirtual = false;
-		jsonPropertyInfoValues5.DeclaringType = typeof(RunHistory);
-		jsonPropertyInfoValues5.Converter = null;
-		jsonPropertyInfoValues5.Getter = (object obj) => ((RunHistory)obj).Seed;
-		jsonPropertyInfoValues5.Setter = delegate
+		JsonPropertyInfoValues<string> propertyInfo5 = new JsonPropertyInfoValues<string>
 		{
-			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(RunHistory),
+			Converter = null,
+			Getter = (object obj) => ((RunHistory)obj).Seed,
+			Setter = delegate
+			{
+				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Seed",
+			JsonPropertyName = "seed",
+			AttributeProviderFactory = () => typeof(RunHistory).GetProperty("Seed", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues5.IgnoreCondition = null;
-		jsonPropertyInfoValues5.HasJsonInclude = false;
-		jsonPropertyInfoValues5.IsExtensionData = false;
-		jsonPropertyInfoValues5.NumberHandling = null;
-		jsonPropertyInfoValues5.PropertyName = "Seed";
-		jsonPropertyInfoValues5.JsonPropertyName = "seed";
-		jsonPropertyInfoValues5.AttributeProviderFactory = () => typeof(RunHistory).GetProperty("Seed", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<string> propertyInfo5 = jsonPropertyInfoValues5;
 		array[4] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo5);
 		array[4].IsGetNullable = false;
 		array[4].IsSetNullable = false;
-		JsonPropertyInfoValues<long> jsonPropertyInfoValues6 = new JsonPropertyInfoValues<long>();
-		jsonPropertyInfoValues6.IsProperty = true;
-		jsonPropertyInfoValues6.IsPublic = true;
-		jsonPropertyInfoValues6.IsVirtual = false;
-		jsonPropertyInfoValues6.DeclaringType = typeof(RunHistory);
-		jsonPropertyInfoValues6.Converter = null;
-		jsonPropertyInfoValues6.Getter = (object obj) => ((RunHistory)obj).StartTime;
-		jsonPropertyInfoValues6.Setter = delegate
+		JsonPropertyInfoValues<long> propertyInfo6 = new JsonPropertyInfoValues<long>
 		{
-			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(RunHistory),
+			Converter = null,
+			Getter = (object obj) => ((RunHistory)obj).StartTime,
+			Setter = delegate
+			{
+				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "StartTime",
+			JsonPropertyName = "start_time",
+			AttributeProviderFactory = () => typeof(RunHistory).GetProperty("StartTime", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues6.IgnoreCondition = null;
-		jsonPropertyInfoValues6.HasJsonInclude = false;
-		jsonPropertyInfoValues6.IsExtensionData = false;
-		jsonPropertyInfoValues6.NumberHandling = null;
-		jsonPropertyInfoValues6.PropertyName = "StartTime";
-		jsonPropertyInfoValues6.JsonPropertyName = "start_time";
-		jsonPropertyInfoValues6.AttributeProviderFactory = () => typeof(RunHistory).GetProperty("StartTime", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<long> propertyInfo6 = jsonPropertyInfoValues6;
 		array[5] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo6);
-		JsonPropertyInfoValues<float> jsonPropertyInfoValues7 = new JsonPropertyInfoValues<float>();
-		jsonPropertyInfoValues7.IsProperty = true;
-		jsonPropertyInfoValues7.IsPublic = true;
-		jsonPropertyInfoValues7.IsVirtual = false;
-		jsonPropertyInfoValues7.DeclaringType = typeof(RunHistory);
-		jsonPropertyInfoValues7.Converter = null;
-		jsonPropertyInfoValues7.Getter = (object obj) => ((RunHistory)obj).RunTime;
-		jsonPropertyInfoValues7.Setter = delegate
+		JsonPropertyInfoValues<float> propertyInfo7 = new JsonPropertyInfoValues<float>
 		{
-			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(RunHistory),
+			Converter = null,
+			Getter = (object obj) => ((RunHistory)obj).RunTime,
+			Setter = delegate
+			{
+				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "RunTime",
+			JsonPropertyName = "run_time",
+			AttributeProviderFactory = () => typeof(RunHistory).GetProperty("RunTime", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(float), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues7.IgnoreCondition = null;
-		jsonPropertyInfoValues7.HasJsonInclude = false;
-		jsonPropertyInfoValues7.IsExtensionData = false;
-		jsonPropertyInfoValues7.NumberHandling = null;
-		jsonPropertyInfoValues7.PropertyName = "RunTime";
-		jsonPropertyInfoValues7.JsonPropertyName = "run_time";
-		jsonPropertyInfoValues7.AttributeProviderFactory = () => typeof(RunHistory).GetProperty("RunTime", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(float), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<float> propertyInfo7 = jsonPropertyInfoValues7;
 		array[6] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo7);
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(RunHistory);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((RunHistory)obj).Ascension;
-		jsonPropertyInfoValues.Setter = delegate
+		JsonPropertyInfoValues<int> propertyInfo8 = new JsonPropertyInfoValues<int>
 		{
-			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(RunHistory),
+			Converter = null,
+			Getter = (object obj) => ((RunHistory)obj).Ascension,
+			Setter = delegate
+			{
+				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Ascension",
+			JsonPropertyName = "ascension",
+			AttributeProviderFactory = () => typeof(RunHistory).GetProperty("Ascension", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "Ascension";
-		jsonPropertyInfoValues.JsonPropertyName = "ascension";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(RunHistory).GetProperty("Ascension", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo8 = jsonPropertyInfoValues;
 		array[7] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo8);
-		jsonPropertyInfoValues5 = new JsonPropertyInfoValues<string>();
-		jsonPropertyInfoValues5.IsProperty = true;
-		jsonPropertyInfoValues5.IsPublic = true;
-		jsonPropertyInfoValues5.IsVirtual = false;
-		jsonPropertyInfoValues5.DeclaringType = typeof(RunHistory);
-		jsonPropertyInfoValues5.Converter = null;
-		jsonPropertyInfoValues5.Getter = (object obj) => ((RunHistory)obj).BuildId;
-		jsonPropertyInfoValues5.Setter = delegate
+		JsonPropertyInfoValues<string> propertyInfo9 = new JsonPropertyInfoValues<string>
 		{
-			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(RunHistory),
+			Converter = null,
+			Getter = (object obj) => ((RunHistory)obj).BuildId,
+			Setter = delegate
+			{
+				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "BuildId",
+			JsonPropertyName = "build_id",
+			AttributeProviderFactory = () => typeof(RunHistory).GetProperty("BuildId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues5.IgnoreCondition = null;
-		jsonPropertyInfoValues5.HasJsonInclude = false;
-		jsonPropertyInfoValues5.IsExtensionData = false;
-		jsonPropertyInfoValues5.NumberHandling = null;
-		jsonPropertyInfoValues5.PropertyName = "BuildId";
-		jsonPropertyInfoValues5.JsonPropertyName = "build_id";
-		jsonPropertyInfoValues5.AttributeProviderFactory = () => typeof(RunHistory).GetProperty("BuildId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<string> propertyInfo9 = jsonPropertyInfoValues5;
 		array[8] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo9);
 		array[8].IsGetNullable = false;
 		array[8].IsSetNullable = false;
-		jsonPropertyInfoValues4 = new JsonPropertyInfoValues<bool>();
-		jsonPropertyInfoValues4.IsProperty = true;
-		jsonPropertyInfoValues4.IsPublic = true;
-		jsonPropertyInfoValues4.IsVirtual = false;
-		jsonPropertyInfoValues4.DeclaringType = typeof(RunHistory);
-		jsonPropertyInfoValues4.Converter = null;
-		jsonPropertyInfoValues4.Getter = (object obj) => ((RunHistory)obj).WasAbandoned;
-		jsonPropertyInfoValues4.Setter = delegate
+		JsonPropertyInfoValues<bool> propertyInfo10 = new JsonPropertyInfoValues<bool>
 		{
-			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(RunHistory),
+			Converter = null,
+			Getter = (object obj) => ((RunHistory)obj).WasAbandoned,
+			Setter = delegate
+			{
+				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "WasAbandoned",
+			JsonPropertyName = "was_abandoned",
+			AttributeProviderFactory = () => typeof(RunHistory).GetProperty("WasAbandoned", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues4.IgnoreCondition = null;
-		jsonPropertyInfoValues4.HasJsonInclude = false;
-		jsonPropertyInfoValues4.IsExtensionData = false;
-		jsonPropertyInfoValues4.NumberHandling = null;
-		jsonPropertyInfoValues4.PropertyName = "WasAbandoned";
-		jsonPropertyInfoValues4.JsonPropertyName = "was_abandoned";
-		jsonPropertyInfoValues4.AttributeProviderFactory = () => typeof(RunHistory).GetProperty("WasAbandoned", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<bool> propertyInfo10 = jsonPropertyInfoValues4;
 		array[9] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo10);
-		JsonPropertyInfoValues<ModelId> jsonPropertyInfoValues8 = new JsonPropertyInfoValues<ModelId>();
-		jsonPropertyInfoValues8.IsProperty = true;
-		jsonPropertyInfoValues8.IsPublic = true;
-		jsonPropertyInfoValues8.IsVirtual = false;
-		jsonPropertyInfoValues8.DeclaringType = typeof(RunHistory);
-		jsonPropertyInfoValues8.Converter = null;
-		jsonPropertyInfoValues8.Getter = (object obj) => ((RunHistory)obj).KilledByEncounter;
-		jsonPropertyInfoValues8.Setter = delegate
+		JsonPropertyInfoValues<ModelId> propertyInfo11 = new JsonPropertyInfoValues<ModelId>
 		{
-			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(RunHistory),
+			Converter = null,
+			Getter = (object obj) => ((RunHistory)obj).KilledByEncounter,
+			Setter = delegate
+			{
+				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "KilledByEncounter",
+			JsonPropertyName = "killed_by_encounter",
+			AttributeProviderFactory = () => typeof(RunHistory).GetProperty("KilledByEncounter", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues8.IgnoreCondition = null;
-		jsonPropertyInfoValues8.HasJsonInclude = false;
-		jsonPropertyInfoValues8.IsExtensionData = false;
-		jsonPropertyInfoValues8.NumberHandling = null;
-		jsonPropertyInfoValues8.PropertyName = "KilledByEncounter";
-		jsonPropertyInfoValues8.JsonPropertyName = "killed_by_encounter";
-		jsonPropertyInfoValues8.AttributeProviderFactory = () => typeof(RunHistory).GetProperty("KilledByEncounter", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<ModelId> propertyInfo11 = jsonPropertyInfoValues8;
 		array[10] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo11);
 		array[10].IsGetNullable = false;
 		array[10].IsSetNullable = false;
-		jsonPropertyInfoValues8 = new JsonPropertyInfoValues<ModelId>();
-		jsonPropertyInfoValues8.IsProperty = true;
-		jsonPropertyInfoValues8.IsPublic = true;
-		jsonPropertyInfoValues8.IsVirtual = false;
-		jsonPropertyInfoValues8.DeclaringType = typeof(RunHistory);
-		jsonPropertyInfoValues8.Converter = null;
-		jsonPropertyInfoValues8.Getter = (object obj) => ((RunHistory)obj).KilledByEvent;
-		jsonPropertyInfoValues8.Setter = delegate
+		JsonPropertyInfoValues<ModelId> propertyInfo12 = new JsonPropertyInfoValues<ModelId>
 		{
-			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(RunHistory),
+			Converter = null,
+			Getter = (object obj) => ((RunHistory)obj).KilledByEvent,
+			Setter = delegate
+			{
+				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "KilledByEvent",
+			JsonPropertyName = "killed_by_event",
+			AttributeProviderFactory = () => typeof(RunHistory).GetProperty("KilledByEvent", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues8.IgnoreCondition = null;
-		jsonPropertyInfoValues8.HasJsonInclude = false;
-		jsonPropertyInfoValues8.IsExtensionData = false;
-		jsonPropertyInfoValues8.NumberHandling = null;
-		jsonPropertyInfoValues8.PropertyName = "KilledByEvent";
-		jsonPropertyInfoValues8.JsonPropertyName = "killed_by_event";
-		jsonPropertyInfoValues8.AttributeProviderFactory = () => typeof(RunHistory).GetProperty("KilledByEvent", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<ModelId> propertyInfo12 = jsonPropertyInfoValues8;
 		array[11] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo12);
 		array[11].IsGetNullable = false;
 		array[11].IsSetNullable = false;
-		JsonPropertyInfoValues<List<RunHistoryPlayer>> jsonPropertyInfoValues9 = new JsonPropertyInfoValues<List<RunHistoryPlayer>>();
-		jsonPropertyInfoValues9.IsProperty = true;
-		jsonPropertyInfoValues9.IsPublic = true;
-		jsonPropertyInfoValues9.IsVirtual = false;
-		jsonPropertyInfoValues9.DeclaringType = typeof(RunHistory);
-		jsonPropertyInfoValues9.Converter = null;
-		jsonPropertyInfoValues9.Getter = (object obj) => ((RunHistory)obj).Players;
-		jsonPropertyInfoValues9.Setter = delegate
+		JsonPropertyInfoValues<List<RunHistoryPlayer>> propertyInfo13 = new JsonPropertyInfoValues<List<RunHistoryPlayer>>
 		{
-			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(RunHistory),
+			Converter = null,
+			Getter = (object obj) => ((RunHistory)obj).Players,
+			Setter = delegate
+			{
+				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Players",
+			JsonPropertyName = "players",
+			AttributeProviderFactory = () => typeof(RunHistory).GetProperty("Players", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<RunHistoryPlayer>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues9.IgnoreCondition = null;
-		jsonPropertyInfoValues9.HasJsonInclude = false;
-		jsonPropertyInfoValues9.IsExtensionData = false;
-		jsonPropertyInfoValues9.NumberHandling = null;
-		jsonPropertyInfoValues9.PropertyName = "Players";
-		jsonPropertyInfoValues9.JsonPropertyName = "players";
-		jsonPropertyInfoValues9.AttributeProviderFactory = () => typeof(RunHistory).GetProperty("Players", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<RunHistoryPlayer>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<RunHistoryPlayer>> propertyInfo13 = jsonPropertyInfoValues9;
 		array[12] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo13);
 		array[12].IsGetNullable = false;
 		array[12].IsSetNullable = false;
-		JsonPropertyInfoValues<List<ModelId>> jsonPropertyInfoValues10 = new JsonPropertyInfoValues<List<ModelId>>();
-		jsonPropertyInfoValues10.IsProperty = true;
-		jsonPropertyInfoValues10.IsPublic = true;
-		jsonPropertyInfoValues10.IsVirtual = false;
-		jsonPropertyInfoValues10.DeclaringType = typeof(RunHistory);
-		jsonPropertyInfoValues10.Converter = null;
-		jsonPropertyInfoValues10.Getter = (object obj) => ((RunHistory)obj).Acts;
-		jsonPropertyInfoValues10.Setter = delegate
+		JsonPropertyInfoValues<List<ModelId>> propertyInfo14 = new JsonPropertyInfoValues<List<ModelId>>
 		{
-			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(RunHistory),
+			Converter = null,
+			Getter = (object obj) => ((RunHistory)obj).Acts,
+			Setter = delegate
+			{
+				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Acts",
+			JsonPropertyName = "acts",
+			AttributeProviderFactory = () => typeof(RunHistory).GetProperty("Acts", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues10.IgnoreCondition = null;
-		jsonPropertyInfoValues10.HasJsonInclude = false;
-		jsonPropertyInfoValues10.IsExtensionData = false;
-		jsonPropertyInfoValues10.NumberHandling = null;
-		jsonPropertyInfoValues10.PropertyName = "Acts";
-		jsonPropertyInfoValues10.JsonPropertyName = "acts";
-		jsonPropertyInfoValues10.AttributeProviderFactory = () => typeof(RunHistory).GetProperty("Acts", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<ModelId>> propertyInfo14 = jsonPropertyInfoValues10;
 		array[13] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo14);
 		array[13].IsGetNullable = false;
 		array[13].IsSetNullable = false;
-		JsonPropertyInfoValues<List<SerializableModifier>> jsonPropertyInfoValues11 = new JsonPropertyInfoValues<List<SerializableModifier>>();
-		jsonPropertyInfoValues11.IsProperty = true;
-		jsonPropertyInfoValues11.IsPublic = true;
-		jsonPropertyInfoValues11.IsVirtual = false;
-		jsonPropertyInfoValues11.DeclaringType = typeof(RunHistory);
-		jsonPropertyInfoValues11.Converter = null;
-		jsonPropertyInfoValues11.Getter = (object obj) => ((RunHistory)obj).Modifiers;
-		jsonPropertyInfoValues11.Setter = delegate
+		JsonPropertyInfoValues<List<SerializableModifier>> propertyInfo15 = new JsonPropertyInfoValues<List<SerializableModifier>>
 		{
-			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(RunHistory),
+			Converter = null,
+			Getter = (object obj) => ((RunHistory)obj).Modifiers,
+			Setter = delegate
+			{
+				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Modifiers",
+			JsonPropertyName = "modifiers",
+			AttributeProviderFactory = () => typeof(RunHistory).GetProperty("Modifiers", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<SerializableModifier>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues11.IgnoreCondition = null;
-		jsonPropertyInfoValues11.HasJsonInclude = false;
-		jsonPropertyInfoValues11.IsExtensionData = false;
-		jsonPropertyInfoValues11.NumberHandling = null;
-		jsonPropertyInfoValues11.PropertyName = "Modifiers";
-		jsonPropertyInfoValues11.JsonPropertyName = "modifiers";
-		jsonPropertyInfoValues11.AttributeProviderFactory = () => typeof(RunHistory).GetProperty("Modifiers", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<SerializableModifier>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<SerializableModifier>> propertyInfo15 = jsonPropertyInfoValues11;
 		array[14] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo15);
 		array[14].IsGetNullable = false;
 		array[14].IsSetNullable = false;
-		JsonPropertyInfoValues<List<List<MapPointHistoryEntry>>> jsonPropertyInfoValues12 = new JsonPropertyInfoValues<List<List<MapPointHistoryEntry>>>();
-		jsonPropertyInfoValues12.IsProperty = true;
-		jsonPropertyInfoValues12.IsPublic = true;
-		jsonPropertyInfoValues12.IsVirtual = false;
-		jsonPropertyInfoValues12.DeclaringType = typeof(RunHistory);
-		jsonPropertyInfoValues12.Converter = null;
-		jsonPropertyInfoValues12.Getter = (object obj) => ((RunHistory)obj).MapPointHistory;
-		jsonPropertyInfoValues12.Setter = delegate
+		JsonPropertyInfoValues<List<List<MapPointHistoryEntry>>> propertyInfo16 = new JsonPropertyInfoValues<List<List<MapPointHistoryEntry>>>
 		{
-			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(RunHistory),
+			Converter = null,
+			Getter = (object obj) => ((RunHistory)obj).MapPointHistory,
+			Setter = delegate
+			{
+				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "MapPointHistory",
+			JsonPropertyName = "map_point_history",
+			AttributeProviderFactory = () => typeof(RunHistory).GetProperty("MapPointHistory", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<List<MapPointHistoryEntry>>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues12.IgnoreCondition = null;
-		jsonPropertyInfoValues12.HasJsonInclude = false;
-		jsonPropertyInfoValues12.IsExtensionData = false;
-		jsonPropertyInfoValues12.NumberHandling = null;
-		jsonPropertyInfoValues12.PropertyName = "MapPointHistory";
-		jsonPropertyInfoValues12.JsonPropertyName = "map_point_history";
-		jsonPropertyInfoValues12.AttributeProviderFactory = () => typeof(RunHistory).GetProperty("MapPointHistory", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<List<MapPointHistoryEntry>>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<List<MapPointHistoryEntry>>> propertyInfo16 = jsonPropertyInfoValues12;
 		array[15] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo16);
 		array[15].IsGetNullable = false;
 		array[15].IsSetNullable = false;
@@ -3889,21 +4921,19 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	{
 		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<RunHistoryPlayer> jsonTypeInfo))
 		{
-			JsonObjectInfoValues<RunHistoryPlayer> jsonObjectInfoValues = new JsonObjectInfoValues<RunHistoryPlayer>();
-			jsonObjectInfoValues.ObjectCreator = null;
-			jsonObjectInfoValues.ObjectWithParameterizedConstructorCreator = (object[] args) => new RunHistoryPlayer
+			JsonObjectInfoValues<RunHistoryPlayer> objectInfo = new JsonObjectInfoValues<RunHistoryPlayer>
 			{
-				Id = (ulong)args[0],
-				Character = (ModelId)args[1],
-				Deck = (IEnumerable<SerializableCard>)args[2],
-				Relics = (IEnumerable<SerializableRelic>)args[3],
-				Potions = (IEnumerable<SerializablePotion>)args[4]
+				ObjectCreator = null,
+				ObjectWithParameterizedConstructorCreator = (object[] args) => new RunHistoryPlayer
+				{
+					Id = (ulong)args[0],
+					Character = (ModelId)args[1]
+				},
+				PropertyMetadataInitializer = (JsonSerializerContext _) => RunHistoryPlayerPropInit(options),
+				ConstructorParameterMetadataInitializer = RunHistoryPlayerCtorParamInit,
+				ConstructorAttributeProviderFactory = () => typeof(RunHistoryPlayer).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null),
+				SerializeHandler = null
 			};
-			jsonObjectInfoValues.PropertyMetadataInitializer = (JsonSerializerContext _) => RunHistoryPlayerPropInit(options);
-			jsonObjectInfoValues.ConstructorParameterMetadataInitializer = RunHistoryPlayerCtorParamInit;
-			jsonObjectInfoValues.ConstructorAttributeProviderFactory = () => typeof(RunHistoryPlayer).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null);
-			jsonObjectInfoValues.SerializeHandler = null;
-			JsonObjectInfoValues<RunHistoryPlayer> objectInfo = jsonObjectInfoValues;
 			jsonTypeInfo = JsonMetadataServices.CreateObjectInfo(options, objectInfo);
 			jsonTypeInfo.NumberHandling = null;
 		}
@@ -3913,141 +4943,170 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 
 	private static JsonPropertyInfo[] RunHistoryPlayerPropInit(JsonSerializerOptions options)
 	{
-		JsonPropertyInfo[] array = new JsonPropertyInfo[6];
-		JsonPropertyInfoValues<ulong> jsonPropertyInfoValues = new JsonPropertyInfoValues<ulong>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(RunHistoryPlayer);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((RunHistoryPlayer)obj).Id;
-		jsonPropertyInfoValues.Setter = delegate
+		JsonPropertyInfo[] array = new JsonPropertyInfo[7];
+		JsonPropertyInfoValues<ulong> propertyInfo = new JsonPropertyInfoValues<ulong>
 		{
-			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(RunHistoryPlayer),
+			Converter = null,
+			Getter = (object obj) => ((RunHistoryPlayer)obj).Id,
+			Setter = delegate
+			{
+				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Id",
+			JsonPropertyName = "id",
+			AttributeProviderFactory = () => typeof(RunHistoryPlayer).GetProperty("Id", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ulong), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "Id";
-		jsonPropertyInfoValues.JsonPropertyName = "id";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(RunHistoryPlayer).GetProperty("Id", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ulong), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<ulong> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
-		JsonPropertyInfoValues<ModelId> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<ModelId>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(RunHistoryPlayer);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((RunHistoryPlayer)obj).Character;
-		jsonPropertyInfoValues2.Setter = delegate
+		JsonPropertyInfoValues<ModelId> propertyInfo2 = new JsonPropertyInfoValues<ModelId>
 		{
-			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(RunHistoryPlayer),
+			Converter = null,
+			Getter = (object obj) => ((RunHistoryPlayer)obj).Character,
+			Setter = delegate
+			{
+				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Character",
+			JsonPropertyName = "character",
+			AttributeProviderFactory = () => typeof(RunHistoryPlayer).GetProperty("Character", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "Character";
-		jsonPropertyInfoValues2.JsonPropertyName = "character";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(RunHistoryPlayer).GetProperty("Character", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<ModelId> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		array[1].IsGetNullable = false;
 		array[1].IsSetNullable = false;
-		JsonPropertyInfoValues<IEnumerable<SerializableCard>> jsonPropertyInfoValues3 = new JsonPropertyInfoValues<IEnumerable<SerializableCard>>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(RunHistoryPlayer);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = (object obj) => ((RunHistoryPlayer)obj).Deck;
-		jsonPropertyInfoValues3.Setter = delegate
+		JsonPropertyInfoValues<IEnumerable<SerializableCard>> propertyInfo3 = new JsonPropertyInfoValues<IEnumerable<SerializableCard>>
 		{
-			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(RunHistoryPlayer),
+			Converter = null,
+			Getter = (object obj) => ((RunHistoryPlayer)obj).Deck,
+			Setter = delegate(object obj, IEnumerable<SerializableCard>? value)
+			{
+				((RunHistoryPlayer)obj).Deck = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Deck",
+			JsonPropertyName = "deck",
+			AttributeProviderFactory = () => typeof(RunHistoryPlayer).GetProperty("Deck", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(IEnumerable<SerializableCard>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues3.IgnoreCondition = null;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "Deck";
-		jsonPropertyInfoValues3.JsonPropertyName = "deck";
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(RunHistoryPlayer).GetProperty("Deck", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(IEnumerable<SerializableCard>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<IEnumerable<SerializableCard>> propertyInfo3 = jsonPropertyInfoValues3;
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
 		array[2].IsGetNullable = false;
 		array[2].IsSetNullable = false;
-		JsonPropertyInfoValues<IEnumerable<SerializableRelic>> jsonPropertyInfoValues4 = new JsonPropertyInfoValues<IEnumerable<SerializableRelic>>();
-		jsonPropertyInfoValues4.IsProperty = true;
-		jsonPropertyInfoValues4.IsPublic = true;
-		jsonPropertyInfoValues4.IsVirtual = false;
-		jsonPropertyInfoValues4.DeclaringType = typeof(RunHistoryPlayer);
-		jsonPropertyInfoValues4.Converter = null;
-		jsonPropertyInfoValues4.Getter = (object obj) => ((RunHistoryPlayer)obj).Relics;
-		jsonPropertyInfoValues4.Setter = delegate
+		JsonPropertyInfoValues<IEnumerable<SerializableRelic>> propertyInfo4 = new JsonPropertyInfoValues<IEnumerable<SerializableRelic>>
 		{
-			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(RunHistoryPlayer),
+			Converter = null,
+			Getter = (object obj) => ((RunHistoryPlayer)obj).Relics,
+			Setter = delegate(object obj, IEnumerable<SerializableRelic>? value)
+			{
+				((RunHistoryPlayer)obj).Relics = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Relics",
+			JsonPropertyName = "relics",
+			AttributeProviderFactory = () => typeof(RunHistoryPlayer).GetProperty("Relics", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(IEnumerable<SerializableRelic>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues4.IgnoreCondition = null;
-		jsonPropertyInfoValues4.HasJsonInclude = false;
-		jsonPropertyInfoValues4.IsExtensionData = false;
-		jsonPropertyInfoValues4.NumberHandling = null;
-		jsonPropertyInfoValues4.PropertyName = "Relics";
-		jsonPropertyInfoValues4.JsonPropertyName = "relics";
-		jsonPropertyInfoValues4.AttributeProviderFactory = () => typeof(RunHistoryPlayer).GetProperty("Relics", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(IEnumerable<SerializableRelic>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<IEnumerable<SerializableRelic>> propertyInfo4 = jsonPropertyInfoValues4;
 		array[3] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo4);
 		array[3].IsGetNullable = false;
 		array[3].IsSetNullable = false;
-		JsonPropertyInfoValues<IEnumerable<SerializablePotion>> jsonPropertyInfoValues5 = new JsonPropertyInfoValues<IEnumerable<SerializablePotion>>();
-		jsonPropertyInfoValues5.IsProperty = true;
-		jsonPropertyInfoValues5.IsPublic = true;
-		jsonPropertyInfoValues5.IsVirtual = false;
-		jsonPropertyInfoValues5.DeclaringType = typeof(RunHistoryPlayer);
-		jsonPropertyInfoValues5.Converter = null;
-		jsonPropertyInfoValues5.Getter = (object obj) => ((RunHistoryPlayer)obj).Potions;
-		jsonPropertyInfoValues5.Setter = delegate
+		JsonPropertyInfoValues<IEnumerable<SerializablePotion>> propertyInfo5 = new JsonPropertyInfoValues<IEnumerable<SerializablePotion>>
 		{
-			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(RunHistoryPlayer),
+			Converter = null,
+			Getter = (object obj) => ((RunHistoryPlayer)obj).Potions,
+			Setter = delegate(object obj, IEnumerable<SerializablePotion>? value)
+			{
+				((RunHistoryPlayer)obj).Potions = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Potions",
+			JsonPropertyName = "potions",
+			AttributeProviderFactory = () => typeof(RunHistoryPlayer).GetProperty("Potions", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(IEnumerable<SerializablePotion>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues5.IgnoreCondition = null;
-		jsonPropertyInfoValues5.HasJsonInclude = false;
-		jsonPropertyInfoValues5.IsExtensionData = false;
-		jsonPropertyInfoValues5.NumberHandling = null;
-		jsonPropertyInfoValues5.PropertyName = "Potions";
-		jsonPropertyInfoValues5.JsonPropertyName = "potions";
-		jsonPropertyInfoValues5.AttributeProviderFactory = () => typeof(RunHistoryPlayer).GetProperty("Potions", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(IEnumerable<SerializablePotion>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<IEnumerable<SerializablePotion>> propertyInfo5 = jsonPropertyInfoValues5;
 		array[4] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo5);
 		array[4].IsGetNullable = false;
 		array[4].IsSetNullable = false;
-		JsonPropertyInfoValues<int> jsonPropertyInfoValues6 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues6.IsProperty = true;
-		jsonPropertyInfoValues6.IsPublic = true;
-		jsonPropertyInfoValues6.IsVirtual = false;
-		jsonPropertyInfoValues6.DeclaringType = typeof(RunHistoryPlayer);
-		jsonPropertyInfoValues6.Converter = null;
-		jsonPropertyInfoValues6.Getter = (object obj) => ((RunHistoryPlayer)obj).MaxPotionSlotCount;
-		jsonPropertyInfoValues6.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<IEnumerable<SerializableBadge>> propertyInfo6 = new JsonPropertyInfoValues<IEnumerable<SerializableBadge>>
 		{
-			((RunHistoryPlayer)obj).MaxPotionSlotCount = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(RunHistoryPlayer),
+			Converter = null,
+			Getter = (object obj) => ((RunHistoryPlayer)obj).Badges,
+			Setter = delegate(object obj, IEnumerable<SerializableBadge>? value)
+			{
+				((RunHistoryPlayer)obj).Badges = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Badges",
+			JsonPropertyName = "badges",
+			AttributeProviderFactory = () => typeof(RunHistoryPlayer).GetProperty("Badges", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(IEnumerable<SerializableBadge>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues6.IgnoreCondition = null;
-		jsonPropertyInfoValues6.HasJsonInclude = false;
-		jsonPropertyInfoValues6.IsExtensionData = false;
-		jsonPropertyInfoValues6.NumberHandling = null;
-		jsonPropertyInfoValues6.PropertyName = "MaxPotionSlotCount";
-		jsonPropertyInfoValues6.JsonPropertyName = "max_potion_slot_count";
-		jsonPropertyInfoValues6.AttributeProviderFactory = () => typeof(RunHistoryPlayer).GetProperty("MaxPotionSlotCount", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo6 = jsonPropertyInfoValues6;
 		array[5] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo6);
+		array[5].IsGetNullable = false;
+		array[5].IsSetNullable = false;
+		JsonPropertyInfoValues<int> propertyInfo7 = new JsonPropertyInfoValues<int>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(RunHistoryPlayer),
+			Converter = null,
+			Getter = (object obj) => ((RunHistoryPlayer)obj).MaxPotionSlotCount,
+			Setter = delegate(object obj, int value)
+			{
+				((RunHistoryPlayer)obj).MaxPotionSlotCount = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "MaxPotionSlotCount",
+			JsonPropertyName = "max_potion_slot_count",
+			AttributeProviderFactory = () => typeof(RunHistoryPlayer).GetProperty("MaxPotionSlotCount", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
+		};
+		array[6] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo7);
 		return array;
 	}
 
 	private static JsonParameterInfoValues[] RunHistoryPlayerCtorParamInit()
 	{
-		return new JsonParameterInfoValues[5]
+		return new JsonParameterInfoValues[2]
 		{
 			new JsonParameterInfoValues
 			{
@@ -4064,30 +5123,6 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 				Position = 1,
 				IsNullable = false,
 				IsMemberInitializer = true
-			},
-			new JsonParameterInfoValues
-			{
-				Name = "Deck",
-				ParameterType = typeof(IEnumerable<SerializableCard>),
-				Position = 2,
-				IsNullable = false,
-				IsMemberInitializer = true
-			},
-			new JsonParameterInfoValues
-			{
-				Name = "Relics",
-				ParameterType = typeof(IEnumerable<SerializableRelic>),
-				Position = 3,
-				IsNullable = false,
-				IsMemberInitializer = true
-			},
-			new JsonParameterInfoValues
-			{
-				Name = "Potions",
-				ParameterType = typeof(IEnumerable<SerializablePotion>),
-				Position = 4,
-				IsNullable = false,
-				IsMemberInitializer = true
 			}
 		};
 	}
@@ -4096,17 +5131,18 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	{
 		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<AncientCharacterStats> jsonTypeInfo))
 		{
-			JsonObjectInfoValues<AncientCharacterStats> jsonObjectInfoValues = new JsonObjectInfoValues<AncientCharacterStats>();
-			jsonObjectInfoValues.ObjectCreator = null;
-			jsonObjectInfoValues.ObjectWithParameterizedConstructorCreator = (object[] args) => new AncientCharacterStats
+			JsonObjectInfoValues<AncientCharacterStats> objectInfo = new JsonObjectInfoValues<AncientCharacterStats>
 			{
-				Character = (ModelId)args[0]
+				ObjectCreator = null,
+				ObjectWithParameterizedConstructorCreator = (object[] args) => new AncientCharacterStats
+				{
+					Character = (ModelId)args[0]
+				},
+				PropertyMetadataInitializer = (JsonSerializerContext _) => AncientCharacterStatsPropInit(options),
+				ConstructorParameterMetadataInitializer = AncientCharacterStatsCtorParamInit,
+				ConstructorAttributeProviderFactory = () => typeof(AncientCharacterStats).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null),
+				SerializeHandler = null
 			};
-			jsonObjectInfoValues.PropertyMetadataInitializer = (JsonSerializerContext _) => AncientCharacterStatsPropInit(options);
-			jsonObjectInfoValues.ConstructorParameterMetadataInitializer = AncientCharacterStatsCtorParamInit;
-			jsonObjectInfoValues.ConstructorAttributeProviderFactory = () => typeof(AncientCharacterStats).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null);
-			jsonObjectInfoValues.SerializeHandler = null;
-			JsonObjectInfoValues<AncientCharacterStats> objectInfo = jsonObjectInfoValues;
 			jsonTypeInfo = JsonMetadataServices.CreateObjectInfo(options, objectInfo);
 			jsonTypeInfo.NumberHandling = null;
 		}
@@ -4117,85 +5153,89 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] AncientCharacterStatsPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[4];
-		JsonPropertyInfoValues<ModelId> jsonPropertyInfoValues = new JsonPropertyInfoValues<ModelId>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(AncientCharacterStats);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((AncientCharacterStats)obj).Character;
-		jsonPropertyInfoValues.Setter = delegate
+		JsonPropertyInfoValues<ModelId> propertyInfo = new JsonPropertyInfoValues<ModelId>
 		{
-			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(AncientCharacterStats),
+			Converter = null,
+			Getter = (object obj) => ((AncientCharacterStats)obj).Character,
+			Setter = delegate
+			{
+				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Character",
+			JsonPropertyName = "character",
+			AttributeProviderFactory = () => typeof(AncientCharacterStats).GetProperty("Character", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "Character";
-		jsonPropertyInfoValues.JsonPropertyName = "character";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(AncientCharacterStats).GetProperty("Character", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<ModelId> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsRequired = true;
 		array[0].IsGetNullable = false;
 		array[0].IsSetNullable = false;
-		JsonPropertyInfoValues<int> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(AncientCharacterStats);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((AncientCharacterStats)obj).Wins;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo2 = new JsonPropertyInfoValues<int>
 		{
-			((AncientCharacterStats)obj).Wins = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(AncientCharacterStats),
+			Converter = null,
+			Getter = (object obj) => ((AncientCharacterStats)obj).Wins,
+			Setter = delegate(object obj, int value)
+			{
+				((AncientCharacterStats)obj).Wins = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Wins",
+			JsonPropertyName = "wins",
+			AttributeProviderFactory = () => typeof(AncientCharacterStats).GetProperty("Wins", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "Wins";
-		jsonPropertyInfoValues2.JsonPropertyName = "wins";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(AncientCharacterStats).GetProperty("Wins", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
-		jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(AncientCharacterStats);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((AncientCharacterStats)obj).Losses;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo3 = new JsonPropertyInfoValues<int>
 		{
-			((AncientCharacterStats)obj).Losses = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(AncientCharacterStats),
+			Converter = null,
+			Getter = (object obj) => ((AncientCharacterStats)obj).Losses,
+			Setter = delegate(object obj, int value)
+			{
+				((AncientCharacterStats)obj).Losses = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Losses",
+			JsonPropertyName = "losses",
+			AttributeProviderFactory = () => typeof(AncientCharacterStats).GetProperty("Losses", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "Losses";
-		jsonPropertyInfoValues2.JsonPropertyName = "losses";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(AncientCharacterStats).GetProperty("Losses", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo3 = jsonPropertyInfoValues2;
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
-		jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(AncientCharacterStats);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = null;
-		jsonPropertyInfoValues2.Setter = null;
-		jsonPropertyInfoValues2.IgnoreCondition = JsonIgnoreCondition.Always;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "Visits";
-		jsonPropertyInfoValues2.JsonPropertyName = null;
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(AncientCharacterStats).GetProperty("Visits", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo4 = jsonPropertyInfoValues2;
+		JsonPropertyInfoValues<int> propertyInfo4 = new JsonPropertyInfoValues<int>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(AncientCharacterStats),
+			Converter = null,
+			Getter = null,
+			Setter = null,
+			IgnoreCondition = JsonIgnoreCondition.Always,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Visits",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(AncientCharacterStats).GetProperty("Visits", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
+		};
 		array[3] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo4);
 		return array;
 	}
@@ -4219,18 +5259,19 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	{
 		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<AncientStats> jsonTypeInfo))
 		{
-			JsonObjectInfoValues<AncientStats> jsonObjectInfoValues = new JsonObjectInfoValues<AncientStats>();
-			jsonObjectInfoValues.ObjectCreator = null;
-			jsonObjectInfoValues.ObjectWithParameterizedConstructorCreator = (object[] args) => new AncientStats
+			JsonObjectInfoValues<AncientStats> objectInfo = new JsonObjectInfoValues<AncientStats>
 			{
-				Id = (ModelId)args[0],
-				CharStats = (List<AncientCharacterStats>)args[1]
+				ObjectCreator = null,
+				ObjectWithParameterizedConstructorCreator = (object[] args) => new AncientStats
+				{
+					Id = (ModelId)args[0],
+					CharStats = (List<AncientCharacterStats>)args[1]
+				},
+				PropertyMetadataInitializer = (JsonSerializerContext _) => AncientStatsPropInit(options),
+				ConstructorParameterMetadataInitializer = AncientStatsCtorParamInit,
+				ConstructorAttributeProviderFactory = () => typeof(AncientStats).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null),
+				SerializeHandler = null
 			};
-			jsonObjectInfoValues.PropertyMetadataInitializer = (JsonSerializerContext _) => AncientStatsPropInit(options);
-			jsonObjectInfoValues.ConstructorParameterMetadataInitializer = AncientStatsCtorParamInit;
-			jsonObjectInfoValues.ConstructorAttributeProviderFactory = () => typeof(AncientStats).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null);
-			jsonObjectInfoValues.SerializeHandler = null;
-			JsonObjectInfoValues<AncientStats> objectInfo = jsonObjectInfoValues;
 			jsonTypeInfo = JsonMetadataServices.CreateObjectInfo(options, objectInfo);
 			jsonTypeInfo.NumberHandling = null;
 		}
@@ -4241,101 +5282,106 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] AncientStatsPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[5];
-		JsonPropertyInfoValues<ModelId> jsonPropertyInfoValues = new JsonPropertyInfoValues<ModelId>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(AncientStats);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((AncientStats)obj).Id;
-		jsonPropertyInfoValues.Setter = delegate
+		JsonPropertyInfoValues<ModelId> propertyInfo = new JsonPropertyInfoValues<ModelId>
 		{
-			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(AncientStats),
+			Converter = null,
+			Getter = (object obj) => ((AncientStats)obj).Id,
+			Setter = delegate
+			{
+				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Id",
+			JsonPropertyName = "ancient_id",
+			AttributeProviderFactory = () => typeof(AncientStats).GetProperty("Id", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "Id";
-		jsonPropertyInfoValues.JsonPropertyName = "ancient_id";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(AncientStats).GetProperty("Id", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<ModelId> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsRequired = true;
 		array[0].IsGetNullable = false;
 		array[0].IsSetNullable = false;
-		JsonPropertyInfoValues<List<AncientCharacterStats>> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<List<AncientCharacterStats>>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(AncientStats);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((AncientStats)obj).CharStats;
-		jsonPropertyInfoValues2.Setter = delegate
+		JsonPropertyInfoValues<List<AncientCharacterStats>> propertyInfo2 = new JsonPropertyInfoValues<List<AncientCharacterStats>>
 		{
-			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(AncientStats),
+			Converter = null,
+			Getter = (object obj) => ((AncientStats)obj).CharStats,
+			Setter = delegate
+			{
+				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "CharStats",
+			JsonPropertyName = "character_stats",
+			AttributeProviderFactory = () => typeof(AncientStats).GetProperty("CharStats", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<AncientCharacterStats>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "CharStats";
-		jsonPropertyInfoValues2.JsonPropertyName = "character_stats";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(AncientStats).GetProperty("CharStats", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<AncientCharacterStats>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<AncientCharacterStats>> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		array[1].IsGetNullable = false;
 		array[1].IsSetNullable = false;
-		JsonPropertyInfoValues<int> jsonPropertyInfoValues3 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(AncientStats);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = null;
-		jsonPropertyInfoValues3.Setter = null;
-		jsonPropertyInfoValues3.IgnoreCondition = JsonIgnoreCondition.Always;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "TotalVisits";
-		jsonPropertyInfoValues3.JsonPropertyName = null;
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(AncientStats).GetProperty("TotalVisits", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo3 = jsonPropertyInfoValues3;
+		JsonPropertyInfoValues<int> propertyInfo3 = new JsonPropertyInfoValues<int>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(AncientStats),
+			Converter = null,
+			Getter = null,
+			Setter = null,
+			IgnoreCondition = JsonIgnoreCondition.Always,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "TotalVisits",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(AncientStats).GetProperty("TotalVisits", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
+		};
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
-		jsonPropertyInfoValues3 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(AncientStats);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = null;
-		jsonPropertyInfoValues3.Setter = null;
-		jsonPropertyInfoValues3.IgnoreCondition = JsonIgnoreCondition.Always;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "TotalWins";
-		jsonPropertyInfoValues3.JsonPropertyName = null;
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(AncientStats).GetProperty("TotalWins", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo4 = jsonPropertyInfoValues3;
+		JsonPropertyInfoValues<int> propertyInfo4 = new JsonPropertyInfoValues<int>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(AncientStats),
+			Converter = null,
+			Getter = null,
+			Setter = null,
+			IgnoreCondition = JsonIgnoreCondition.Always,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "TotalWins",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(AncientStats).GetProperty("TotalWins", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
+		};
 		array[3] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo4);
-		jsonPropertyInfoValues3 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(AncientStats);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = null;
-		jsonPropertyInfoValues3.Setter = null;
-		jsonPropertyInfoValues3.IgnoreCondition = JsonIgnoreCondition.Always;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "TotalLosses";
-		jsonPropertyInfoValues3.JsonPropertyName = null;
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(AncientStats).GetProperty("TotalLosses", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo5 = jsonPropertyInfoValues3;
+		JsonPropertyInfoValues<int> propertyInfo5 = new JsonPropertyInfoValues<int>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(AncientStats),
+			Converter = null,
+			Getter = null,
+			Setter = null,
+			IgnoreCondition = JsonIgnoreCondition.Always,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "TotalLosses",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(AncientStats).GetProperty("TotalLosses", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
+		};
 		array[4] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo5);
 		return array;
 	}
@@ -4363,21 +5409,152 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 		};
 	}
 
+	private JsonTypeInfo<BadgeStats> Create_BadgeStats(JsonSerializerOptions options)
+	{
+		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<BadgeStats> jsonTypeInfo))
+		{
+			JsonObjectInfoValues<BadgeStats> objectInfo = new JsonObjectInfoValues<BadgeStats>
+			{
+				ObjectCreator = null,
+				ObjectWithParameterizedConstructorCreator = (object[] args) => new BadgeStats
+				{
+					Id = (string)args[0],
+					Count = (int)args[1],
+					Rarity = (BadgeRarity)args[2]
+				},
+				PropertyMetadataInitializer = (JsonSerializerContext _) => BadgeStatsPropInit(options),
+				ConstructorParameterMetadataInitializer = BadgeStatsCtorParamInit,
+				ConstructorAttributeProviderFactory = () => typeof(BadgeStats).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null),
+				SerializeHandler = null
+			};
+			jsonTypeInfo = JsonMetadataServices.CreateObjectInfo(options, objectInfo);
+			jsonTypeInfo.NumberHandling = null;
+		}
+		jsonTypeInfo.OriginatingResolver = this;
+		return jsonTypeInfo;
+	}
+
+	private static JsonPropertyInfo[] BadgeStatsPropInit(JsonSerializerOptions options)
+	{
+		JsonPropertyInfo[] array = new JsonPropertyInfo[3];
+		JsonPropertyInfoValues<string> propertyInfo = new JsonPropertyInfoValues<string>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(BadgeStats),
+			Converter = null,
+			Getter = (object obj) => ((BadgeStats)obj).Id,
+			Setter = delegate
+			{
+				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Id",
+			JsonPropertyName = "id",
+			AttributeProviderFactory = () => typeof(BadgeStats).GetProperty("Id", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null)
+		};
+		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
+		array[0].IsRequired = true;
+		array[0].IsGetNullable = false;
+		array[0].IsSetNullable = false;
+		JsonPropertyInfoValues<int> propertyInfo2 = new JsonPropertyInfoValues<int>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(BadgeStats),
+			Converter = null,
+			Getter = (object obj) => ((BadgeStats)obj).Count,
+			Setter = delegate(object obj, int value)
+			{
+				((BadgeStats)obj).Count = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Count",
+			JsonPropertyName = "count",
+			AttributeProviderFactory = () => typeof(BadgeStats).GetProperty("Count", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
+		};
+		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
+		array[1].IsRequired = true;
+		JsonPropertyInfoValues<BadgeRarity> propertyInfo3 = new JsonPropertyInfoValues<BadgeRarity>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(BadgeStats),
+			Converter = null,
+			Getter = (object obj) => ((BadgeStats)obj).Rarity,
+			Setter = delegate(object obj, BadgeRarity value)
+			{
+				((BadgeStats)obj).Rarity = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Rarity",
+			JsonPropertyName = "rarity",
+			AttributeProviderFactory = () => typeof(BadgeStats).GetProperty("Rarity", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(BadgeRarity), Array.Empty<Type>(), null)
+		};
+		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
+		array[2].IsRequired = true;
+		return array;
+	}
+
+	private static JsonParameterInfoValues[] BadgeStatsCtorParamInit()
+	{
+		return new JsonParameterInfoValues[3]
+		{
+			new JsonParameterInfoValues
+			{
+				Name = "Id",
+				ParameterType = typeof(string),
+				Position = 0,
+				IsNullable = false,
+				IsMemberInitializer = true
+			},
+			new JsonParameterInfoValues
+			{
+				Name = "Count",
+				ParameterType = typeof(int),
+				Position = 1,
+				IsNullable = false,
+				IsMemberInitializer = true
+			},
+			new JsonParameterInfoValues
+			{
+				Name = "Rarity",
+				ParameterType = typeof(BadgeRarity),
+				Position = 2,
+				IsNullable = false,
+				IsMemberInitializer = true
+			}
+		};
+	}
+
 	private JsonTypeInfo<CardStats> Create_CardStats(JsonSerializerOptions options)
 	{
 		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<CardStats> jsonTypeInfo))
 		{
-			JsonObjectInfoValues<CardStats> jsonObjectInfoValues = new JsonObjectInfoValues<CardStats>();
-			jsonObjectInfoValues.ObjectCreator = null;
-			jsonObjectInfoValues.ObjectWithParameterizedConstructorCreator = (object[] args) => new CardStats
+			JsonObjectInfoValues<CardStats> objectInfo = new JsonObjectInfoValues<CardStats>
 			{
-				Id = (ModelId)args[0]
+				ObjectCreator = null,
+				ObjectWithParameterizedConstructorCreator = (object[] args) => new CardStats
+				{
+					Id = (ModelId)args[0]
+				},
+				PropertyMetadataInitializer = (JsonSerializerContext _) => CardStatsPropInit(options),
+				ConstructorParameterMetadataInitializer = CardStatsCtorParamInit,
+				ConstructorAttributeProviderFactory = () => typeof(CardStats).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null),
+				SerializeHandler = null
 			};
-			jsonObjectInfoValues.PropertyMetadataInitializer = (JsonSerializerContext _) => CardStatsPropInit(options);
-			jsonObjectInfoValues.ConstructorParameterMetadataInitializer = CardStatsCtorParamInit;
-			jsonObjectInfoValues.ConstructorAttributeProviderFactory = () => typeof(CardStats).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null);
-			jsonObjectInfoValues.SerializeHandler = null;
-			JsonObjectInfoValues<CardStats> objectInfo = jsonObjectInfoValues;
 			jsonTypeInfo = JsonMetadataServices.CreateObjectInfo(options, objectInfo);
 			jsonTypeInfo.NumberHandling = null;
 		}
@@ -4388,105 +5565,110 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] CardStatsPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[5];
-		JsonPropertyInfoValues<ModelId> jsonPropertyInfoValues = new JsonPropertyInfoValues<ModelId>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(CardStats);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((CardStats)obj).Id;
-		jsonPropertyInfoValues.Setter = delegate
+		JsonPropertyInfoValues<ModelId> propertyInfo = new JsonPropertyInfoValues<ModelId>
 		{
-			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(CardStats),
+			Converter = null,
+			Getter = (object obj) => ((CardStats)obj).Id,
+			Setter = delegate
+			{
+				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Id",
+			JsonPropertyName = "id",
+			AttributeProviderFactory = () => typeof(CardStats).GetProperty("Id", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "Id";
-		jsonPropertyInfoValues.JsonPropertyName = "id";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(CardStats).GetProperty("Id", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<ModelId> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
-		JsonPropertyInfoValues<long> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<long>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(CardStats);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((CardStats)obj).TimesPicked;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, long value)
+		JsonPropertyInfoValues<long> propertyInfo2 = new JsonPropertyInfoValues<long>
 		{
-			((CardStats)obj).TimesPicked = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(CardStats),
+			Converter = null,
+			Getter = (object obj) => ((CardStats)obj).TimesPicked,
+			Setter = delegate(object obj, long value)
+			{
+				((CardStats)obj).TimesPicked = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "TimesPicked",
+			JsonPropertyName = "times_picked",
+			AttributeProviderFactory = () => typeof(CardStats).GetProperty("TimesPicked", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "TimesPicked";
-		jsonPropertyInfoValues2.JsonPropertyName = "times_picked";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(CardStats).GetProperty("TimesPicked", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<long> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
-		jsonPropertyInfoValues2 = new JsonPropertyInfoValues<long>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(CardStats);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((CardStats)obj).TimesSkipped;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, long value)
+		JsonPropertyInfoValues<long> propertyInfo3 = new JsonPropertyInfoValues<long>
 		{
-			((CardStats)obj).TimesSkipped = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(CardStats),
+			Converter = null,
+			Getter = (object obj) => ((CardStats)obj).TimesSkipped,
+			Setter = delegate(object obj, long value)
+			{
+				((CardStats)obj).TimesSkipped = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "TimesSkipped",
+			JsonPropertyName = "times_skipped",
+			AttributeProviderFactory = () => typeof(CardStats).GetProperty("TimesSkipped", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "TimesSkipped";
-		jsonPropertyInfoValues2.JsonPropertyName = "times_skipped";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(CardStats).GetProperty("TimesSkipped", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<long> propertyInfo3 = jsonPropertyInfoValues2;
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
-		jsonPropertyInfoValues2 = new JsonPropertyInfoValues<long>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(CardStats);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((CardStats)obj).TimesWon;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, long value)
+		JsonPropertyInfoValues<long> propertyInfo4 = new JsonPropertyInfoValues<long>
 		{
-			((CardStats)obj).TimesWon = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(CardStats),
+			Converter = null,
+			Getter = (object obj) => ((CardStats)obj).TimesWon,
+			Setter = delegate(object obj, long value)
+			{
+				((CardStats)obj).TimesWon = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "TimesWon",
+			JsonPropertyName = "times_won",
+			AttributeProviderFactory = () => typeof(CardStats).GetProperty("TimesWon", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "TimesWon";
-		jsonPropertyInfoValues2.JsonPropertyName = "times_won";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(CardStats).GetProperty("TimesWon", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<long> propertyInfo4 = jsonPropertyInfoValues2;
 		array[3] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo4);
-		jsonPropertyInfoValues2 = new JsonPropertyInfoValues<long>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(CardStats);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((CardStats)obj).TimesLost;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, long value)
+		JsonPropertyInfoValues<long> propertyInfo5 = new JsonPropertyInfoValues<long>
 		{
-			((CardStats)obj).TimesLost = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(CardStats),
+			Converter = null,
+			Getter = (object obj) => ((CardStats)obj).TimesLost,
+			Setter = delegate(object obj, long value)
+			{
+				((CardStats)obj).TimesLost = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "TimesLost",
+			JsonPropertyName = "times_lost",
+			AttributeProviderFactory = () => typeof(CardStats).GetProperty("TimesLost", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "TimesLost";
-		jsonPropertyInfoValues2.JsonPropertyName = "times_lost";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(CardStats).GetProperty("TimesLost", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<long> propertyInfo5 = jsonPropertyInfoValues2;
 		array[4] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo5);
 		return array;
 	}
@@ -4510,17 +5692,18 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	{
 		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<CharacterStats> jsonTypeInfo))
 		{
-			JsonObjectInfoValues<CharacterStats> jsonObjectInfoValues = new JsonObjectInfoValues<CharacterStats>();
-			jsonObjectInfoValues.ObjectCreator = null;
-			jsonObjectInfoValues.ObjectWithParameterizedConstructorCreator = (object[] args) => new CharacterStats
+			JsonObjectInfoValues<CharacterStats> objectInfo = new JsonObjectInfoValues<CharacterStats>
 			{
-				Id = (ModelId)args[0]
+				ObjectCreator = null,
+				ObjectWithParameterizedConstructorCreator = (object[] args) => new CharacterStats
+				{
+					Id = (ModelId)args[0]
+				},
+				PropertyMetadataInitializer = (JsonSerializerContext _) => CharacterStatsPropInit(options),
+				ConstructorParameterMetadataInitializer = CharacterStatsCtorParamInit,
+				ConstructorAttributeProviderFactory = () => typeof(CharacterStats).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null),
+				SerializeHandler = null
 			};
-			jsonObjectInfoValues.PropertyMetadataInitializer = (JsonSerializerContext _) => CharacterStatsPropInit(options);
-			jsonObjectInfoValues.ConstructorParameterMetadataInitializer = CharacterStatsCtorParamInit;
-			jsonObjectInfoValues.ConstructorAttributeProviderFactory = () => typeof(CharacterStats).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null);
-			jsonObjectInfoValues.SerializeHandler = null;
-			JsonObjectInfoValues<CharacterStats> objectInfo = jsonObjectInfoValues;
 			jsonTypeInfo = JsonMetadataServices.CreateObjectInfo(options, objectInfo);
 			jsonTypeInfo.NumberHandling = null;
 		}
@@ -4530,187 +5713,219 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 
 	private static JsonPropertyInfo[] CharacterStatsPropInit(JsonSerializerOptions options)
 	{
-		JsonPropertyInfo[] array = new JsonPropertyInfo[9];
-		JsonPropertyInfoValues<ModelId> jsonPropertyInfoValues = new JsonPropertyInfoValues<ModelId>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(CharacterStats);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((CharacterStats)obj).Id;
-		jsonPropertyInfoValues.Setter = delegate
+		JsonPropertyInfo[] array = new JsonPropertyInfo[10];
+		JsonPropertyInfoValues<ModelId> propertyInfo = new JsonPropertyInfoValues<ModelId>
 		{
-			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(CharacterStats),
+			Converter = null,
+			Getter = (object obj) => ((CharacterStats)obj).Id,
+			Setter = delegate
+			{
+				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Id",
+			JsonPropertyName = "id",
+			AttributeProviderFactory = () => typeof(CharacterStats).GetProperty("Id", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "Id";
-		jsonPropertyInfoValues.JsonPropertyName = "id";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(CharacterStats).GetProperty("Id", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<ModelId> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
-		JsonPropertyInfoValues<int> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(CharacterStats);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((CharacterStats)obj).MaxAscension;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo2 = new JsonPropertyInfoValues<int>
 		{
-			((CharacterStats)obj).MaxAscension = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(CharacterStats),
+			Converter = null,
+			Getter = (object obj) => ((CharacterStats)obj).MaxAscension,
+			Setter = delegate(object obj, int value)
+			{
+				((CharacterStats)obj).MaxAscension = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "MaxAscension",
+			JsonPropertyName = "max_ascension",
+			AttributeProviderFactory = () => typeof(CharacterStats).GetProperty("MaxAscension", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "MaxAscension";
-		jsonPropertyInfoValues2.JsonPropertyName = "max_ascension";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(CharacterStats).GetProperty("MaxAscension", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
-		jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(CharacterStats);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((CharacterStats)obj).PreferredAscension;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo3 = new JsonPropertyInfoValues<int>
 		{
-			((CharacterStats)obj).PreferredAscension = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(CharacterStats),
+			Converter = null,
+			Getter = (object obj) => ((CharacterStats)obj).PreferredAscension,
+			Setter = delegate(object obj, int value)
+			{
+				((CharacterStats)obj).PreferredAscension = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "PreferredAscension",
+			JsonPropertyName = "preferred_ascension",
+			AttributeProviderFactory = () => typeof(CharacterStats).GetProperty("PreferredAscension", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "PreferredAscension";
-		jsonPropertyInfoValues2.JsonPropertyName = "preferred_ascension";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(CharacterStats).GetProperty("PreferredAscension", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo3 = jsonPropertyInfoValues2;
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
-		jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(CharacterStats);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((CharacterStats)obj).TotalWins;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo4 = new JsonPropertyInfoValues<int>
 		{
-			((CharacterStats)obj).TotalWins = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(CharacterStats),
+			Converter = null,
+			Getter = (object obj) => ((CharacterStats)obj).TotalWins,
+			Setter = delegate(object obj, int value)
+			{
+				((CharacterStats)obj).TotalWins = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "TotalWins",
+			JsonPropertyName = "total_wins",
+			AttributeProviderFactory = () => typeof(CharacterStats).GetProperty("TotalWins", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "TotalWins";
-		jsonPropertyInfoValues2.JsonPropertyName = "total_wins";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(CharacterStats).GetProperty("TotalWins", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo4 = jsonPropertyInfoValues2;
 		array[3] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo4);
-		jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(CharacterStats);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((CharacterStats)obj).TotalLosses;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo5 = new JsonPropertyInfoValues<int>
 		{
-			((CharacterStats)obj).TotalLosses = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(CharacterStats),
+			Converter = null,
+			Getter = (object obj) => ((CharacterStats)obj).TotalLosses,
+			Setter = delegate(object obj, int value)
+			{
+				((CharacterStats)obj).TotalLosses = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "TotalLosses",
+			JsonPropertyName = "total_losses",
+			AttributeProviderFactory = () => typeof(CharacterStats).GetProperty("TotalLosses", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "TotalLosses";
-		jsonPropertyInfoValues2.JsonPropertyName = "total_losses";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(CharacterStats).GetProperty("TotalLosses", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo5 = jsonPropertyInfoValues2;
 		array[4] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo5);
-		JsonPropertyInfoValues<long> jsonPropertyInfoValues3 = new JsonPropertyInfoValues<long>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(CharacterStats);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = (object obj) => ((CharacterStats)obj).FastestWinTime;
-		jsonPropertyInfoValues3.Setter = delegate(object obj, long value)
+		JsonPropertyInfoValues<long> propertyInfo6 = new JsonPropertyInfoValues<long>
 		{
-			((CharacterStats)obj).FastestWinTime = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(CharacterStats),
+			Converter = null,
+			Getter = (object obj) => ((CharacterStats)obj).FastestWinTime,
+			Setter = delegate(object obj, long value)
+			{
+				((CharacterStats)obj).FastestWinTime = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "FastestWinTime",
+			JsonPropertyName = "fastest_win_time",
+			AttributeProviderFactory = () => typeof(CharacterStats).GetProperty("FastestWinTime", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues3.IgnoreCondition = null;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "FastestWinTime";
-		jsonPropertyInfoValues3.JsonPropertyName = "fastest_win_time";
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(CharacterStats).GetProperty("FastestWinTime", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<long> propertyInfo6 = jsonPropertyInfoValues3;
 		array[5] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo6);
-		jsonPropertyInfoValues3 = new JsonPropertyInfoValues<long>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(CharacterStats);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = (object obj) => ((CharacterStats)obj).BestWinStreak;
-		jsonPropertyInfoValues3.Setter = delegate(object obj, long value)
+		JsonPropertyInfoValues<long> propertyInfo7 = new JsonPropertyInfoValues<long>
 		{
-			((CharacterStats)obj).BestWinStreak = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(CharacterStats),
+			Converter = null,
+			Getter = (object obj) => ((CharacterStats)obj).BestWinStreak,
+			Setter = delegate(object obj, long value)
+			{
+				((CharacterStats)obj).BestWinStreak = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "BestWinStreak",
+			JsonPropertyName = "best_win_streak",
+			AttributeProviderFactory = () => typeof(CharacterStats).GetProperty("BestWinStreak", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues3.IgnoreCondition = null;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "BestWinStreak";
-		jsonPropertyInfoValues3.JsonPropertyName = "best_win_streak";
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(CharacterStats).GetProperty("BestWinStreak", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<long> propertyInfo7 = jsonPropertyInfoValues3;
 		array[6] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo7);
-		jsonPropertyInfoValues3 = new JsonPropertyInfoValues<long>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(CharacterStats);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = (object obj) => ((CharacterStats)obj).CurrentWinStreak;
-		jsonPropertyInfoValues3.Setter = delegate(object obj, long value)
+		JsonPropertyInfoValues<long> propertyInfo8 = new JsonPropertyInfoValues<long>
 		{
-			((CharacterStats)obj).CurrentWinStreak = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(CharacterStats),
+			Converter = null,
+			Getter = (object obj) => ((CharacterStats)obj).CurrentWinStreak,
+			Setter = delegate(object obj, long value)
+			{
+				((CharacterStats)obj).CurrentWinStreak = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "CurrentWinStreak",
+			JsonPropertyName = "current_streak",
+			AttributeProviderFactory = () => typeof(CharacterStats).GetProperty("CurrentWinStreak", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues3.IgnoreCondition = null;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "CurrentWinStreak";
-		jsonPropertyInfoValues3.JsonPropertyName = "current_streak";
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(CharacterStats).GetProperty("CurrentWinStreak", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<long> propertyInfo8 = jsonPropertyInfoValues3;
 		array[7] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo8);
-		jsonPropertyInfoValues3 = new JsonPropertyInfoValues<long>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(CharacterStats);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = (object obj) => ((CharacterStats)obj).Playtime;
-		jsonPropertyInfoValues3.Setter = delegate(object obj, long value)
+		JsonPropertyInfoValues<long> propertyInfo9 = new JsonPropertyInfoValues<long>
 		{
-			((CharacterStats)obj).Playtime = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(CharacterStats),
+			Converter = null,
+			Getter = (object obj) => ((CharacterStats)obj).Playtime,
+			Setter = delegate(object obj, long value)
+			{
+				((CharacterStats)obj).Playtime = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Playtime",
+			JsonPropertyName = "playtime",
+			AttributeProviderFactory = () => typeof(CharacterStats).GetProperty("Playtime", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues3.IgnoreCondition = null;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "Playtime";
-		jsonPropertyInfoValues3.JsonPropertyName = "playtime";
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(CharacterStats).GetProperty("Playtime", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<long> propertyInfo9 = jsonPropertyInfoValues3;
 		array[8] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo9);
+		JsonPropertyInfoValues<List<BadgeStats>> propertyInfo10 = new JsonPropertyInfoValues<List<BadgeStats>>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(CharacterStats),
+			Converter = null,
+			Getter = (object obj) => ((CharacterStats)obj).Badges,
+			Setter = delegate(object obj, List<BadgeStats>? value)
+			{
+				((CharacterStats)obj).Badges = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Badges",
+			JsonPropertyName = "badges",
+			AttributeProviderFactory = () => typeof(CharacterStats).GetProperty("Badges", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<BadgeStats>), Array.Empty<Type>(), null)
+		};
+		array[9] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo10);
+		array[9].IsGetNullable = false;
+		array[9].IsSetNullable = false;
 		return array;
 	}
 
@@ -4733,18 +5948,19 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	{
 		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<EncounterStats> jsonTypeInfo))
 		{
-			JsonObjectInfoValues<EncounterStats> jsonObjectInfoValues = new JsonObjectInfoValues<EncounterStats>();
-			jsonObjectInfoValues.ObjectCreator = null;
-			jsonObjectInfoValues.ObjectWithParameterizedConstructorCreator = (object[] args) => new EncounterStats
+			JsonObjectInfoValues<EncounterStats> objectInfo = new JsonObjectInfoValues<EncounterStats>
 			{
-				Id = (ModelId)args[0],
-				FightStats = (List<FightStats>)args[1]
+				ObjectCreator = null,
+				ObjectWithParameterizedConstructorCreator = (object[] args) => new EncounterStats
+				{
+					Id = (ModelId)args[0],
+					FightStats = (List<FightStats>)args[1]
+				},
+				PropertyMetadataInitializer = (JsonSerializerContext _) => EncounterStatsPropInit(options),
+				ConstructorParameterMetadataInitializer = EncounterStatsCtorParamInit,
+				ConstructorAttributeProviderFactory = () => typeof(EncounterStats).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null),
+				SerializeHandler = null
 			};
-			jsonObjectInfoValues.PropertyMetadataInitializer = (JsonSerializerContext _) => EncounterStatsPropInit(options);
-			jsonObjectInfoValues.ConstructorParameterMetadataInitializer = EncounterStatsCtorParamInit;
-			jsonObjectInfoValues.ConstructorAttributeProviderFactory = () => typeof(EncounterStats).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null);
-			jsonObjectInfoValues.SerializeHandler = null;
-			JsonObjectInfoValues<EncounterStats> objectInfo = jsonObjectInfoValues;
 			jsonTypeInfo = JsonMetadataServices.CreateObjectInfo(options, objectInfo);
 			jsonTypeInfo.NumberHandling = null;
 		}
@@ -4755,84 +5971,88 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] EncounterStatsPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[4];
-		JsonPropertyInfoValues<ModelId> jsonPropertyInfoValues = new JsonPropertyInfoValues<ModelId>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(EncounterStats);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((EncounterStats)obj).Id;
-		jsonPropertyInfoValues.Setter = delegate
+		JsonPropertyInfoValues<ModelId> propertyInfo = new JsonPropertyInfoValues<ModelId>
 		{
-			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(EncounterStats),
+			Converter = null,
+			Getter = (object obj) => ((EncounterStats)obj).Id,
+			Setter = delegate
+			{
+				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Id",
+			JsonPropertyName = "encounter_id",
+			AttributeProviderFactory = () => typeof(EncounterStats).GetProperty("Id", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "Id";
-		jsonPropertyInfoValues.JsonPropertyName = "encounter_id";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(EncounterStats).GetProperty("Id", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<ModelId> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsRequired = true;
 		array[0].IsGetNullable = false;
 		array[0].IsSetNullable = false;
-		JsonPropertyInfoValues<List<FightStats>> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<List<FightStats>>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(EncounterStats);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((EncounterStats)obj).FightStats;
-		jsonPropertyInfoValues2.Setter = delegate
+		JsonPropertyInfoValues<List<FightStats>> propertyInfo2 = new JsonPropertyInfoValues<List<FightStats>>
 		{
-			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(EncounterStats),
+			Converter = null,
+			Getter = (object obj) => ((EncounterStats)obj).FightStats,
+			Setter = delegate
+			{
+				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "FightStats",
+			JsonPropertyName = "fight_stats",
+			AttributeProviderFactory = () => typeof(EncounterStats).GetProperty("FightStats", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<FightStats>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "FightStats";
-		jsonPropertyInfoValues2.JsonPropertyName = "fight_stats";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(EncounterStats).GetProperty("FightStats", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<FightStats>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<FightStats>> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		array[1].IsGetNullable = false;
 		array[1].IsSetNullable = false;
-		JsonPropertyInfoValues<int> jsonPropertyInfoValues3 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(EncounterStats);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = null;
-		jsonPropertyInfoValues3.Setter = null;
-		jsonPropertyInfoValues3.IgnoreCondition = JsonIgnoreCondition.Always;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "TotalWins";
-		jsonPropertyInfoValues3.JsonPropertyName = null;
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(EncounterStats).GetProperty("TotalWins", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo3 = jsonPropertyInfoValues3;
+		JsonPropertyInfoValues<int> propertyInfo3 = new JsonPropertyInfoValues<int>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(EncounterStats),
+			Converter = null,
+			Getter = null,
+			Setter = null,
+			IgnoreCondition = JsonIgnoreCondition.Always,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "TotalWins",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(EncounterStats).GetProperty("TotalWins", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
+		};
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
-		jsonPropertyInfoValues3 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(EncounterStats);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = null;
-		jsonPropertyInfoValues3.Setter = null;
-		jsonPropertyInfoValues3.IgnoreCondition = JsonIgnoreCondition.Always;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "TotalLosses";
-		jsonPropertyInfoValues3.JsonPropertyName = null;
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(EncounterStats).GetProperty("TotalLosses", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo4 = jsonPropertyInfoValues3;
+		JsonPropertyInfoValues<int> propertyInfo4 = new JsonPropertyInfoValues<int>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(EncounterStats),
+			Converter = null,
+			Getter = null,
+			Setter = null,
+			IgnoreCondition = JsonIgnoreCondition.Always,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "TotalLosses",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(EncounterStats).GetProperty("TotalLosses", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
+		};
 		array[3] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo4);
 		return array;
 	}
@@ -4864,18 +6084,19 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	{
 		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<EnemyStats> jsonTypeInfo))
 		{
-			JsonObjectInfoValues<EnemyStats> jsonObjectInfoValues = new JsonObjectInfoValues<EnemyStats>();
-			jsonObjectInfoValues.ObjectCreator = null;
-			jsonObjectInfoValues.ObjectWithParameterizedConstructorCreator = (object[] args) => new EnemyStats
+			JsonObjectInfoValues<EnemyStats> objectInfo = new JsonObjectInfoValues<EnemyStats>
 			{
-				Id = (ModelId)args[0],
-				FightStats = (List<FightStats>)args[1]
+				ObjectCreator = null,
+				ObjectWithParameterizedConstructorCreator = (object[] args) => new EnemyStats
+				{
+					Id = (ModelId)args[0],
+					FightStats = (List<FightStats>)args[1]
+				},
+				PropertyMetadataInitializer = (JsonSerializerContext _) => EnemyStatsPropInit(options),
+				ConstructorParameterMetadataInitializer = EnemyStatsCtorParamInit,
+				ConstructorAttributeProviderFactory = () => typeof(EnemyStats).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null),
+				SerializeHandler = null
 			};
-			jsonObjectInfoValues.PropertyMetadataInitializer = (JsonSerializerContext _) => EnemyStatsPropInit(options);
-			jsonObjectInfoValues.ConstructorParameterMetadataInitializer = EnemyStatsCtorParamInit;
-			jsonObjectInfoValues.ConstructorAttributeProviderFactory = () => typeof(EnemyStats).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null);
-			jsonObjectInfoValues.SerializeHandler = null;
-			JsonObjectInfoValues<EnemyStats> objectInfo = jsonObjectInfoValues;
 			jsonTypeInfo = JsonMetadataServices.CreateObjectInfo(options, objectInfo);
 			jsonTypeInfo.NumberHandling = null;
 		}
@@ -4886,84 +6107,88 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] EnemyStatsPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[4];
-		JsonPropertyInfoValues<ModelId> jsonPropertyInfoValues = new JsonPropertyInfoValues<ModelId>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(EnemyStats);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((EnemyStats)obj).Id;
-		jsonPropertyInfoValues.Setter = delegate
+		JsonPropertyInfoValues<ModelId> propertyInfo = new JsonPropertyInfoValues<ModelId>
 		{
-			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(EnemyStats),
+			Converter = null,
+			Getter = (object obj) => ((EnemyStats)obj).Id,
+			Setter = delegate
+			{
+				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Id",
+			JsonPropertyName = "enemy_id",
+			AttributeProviderFactory = () => typeof(EnemyStats).GetProperty("Id", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "Id";
-		jsonPropertyInfoValues.JsonPropertyName = "enemy_id";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(EnemyStats).GetProperty("Id", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<ModelId> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsRequired = true;
 		array[0].IsGetNullable = false;
 		array[0].IsSetNullable = false;
-		JsonPropertyInfoValues<List<FightStats>> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<List<FightStats>>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(EnemyStats);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((EnemyStats)obj).FightStats;
-		jsonPropertyInfoValues2.Setter = delegate
+		JsonPropertyInfoValues<List<FightStats>> propertyInfo2 = new JsonPropertyInfoValues<List<FightStats>>
 		{
-			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(EnemyStats),
+			Converter = null,
+			Getter = (object obj) => ((EnemyStats)obj).FightStats,
+			Setter = delegate
+			{
+				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "FightStats",
+			JsonPropertyName = "fight_stats",
+			AttributeProviderFactory = () => typeof(EnemyStats).GetProperty("FightStats", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<FightStats>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "FightStats";
-		jsonPropertyInfoValues2.JsonPropertyName = "fight_stats";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(EnemyStats).GetProperty("FightStats", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<FightStats>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<FightStats>> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		array[1].IsGetNullable = false;
 		array[1].IsSetNullable = false;
-		JsonPropertyInfoValues<int> jsonPropertyInfoValues3 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(EnemyStats);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = null;
-		jsonPropertyInfoValues3.Setter = null;
-		jsonPropertyInfoValues3.IgnoreCondition = JsonIgnoreCondition.Always;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "TotalWins";
-		jsonPropertyInfoValues3.JsonPropertyName = null;
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(EnemyStats).GetProperty("TotalWins", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo3 = jsonPropertyInfoValues3;
+		JsonPropertyInfoValues<int> propertyInfo3 = new JsonPropertyInfoValues<int>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(EnemyStats),
+			Converter = null,
+			Getter = null,
+			Setter = null,
+			IgnoreCondition = JsonIgnoreCondition.Always,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "TotalWins",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(EnemyStats).GetProperty("TotalWins", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
+		};
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
-		jsonPropertyInfoValues3 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(EnemyStats);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = null;
-		jsonPropertyInfoValues3.Setter = null;
-		jsonPropertyInfoValues3.IgnoreCondition = JsonIgnoreCondition.Always;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "TotalLosses";
-		jsonPropertyInfoValues3.JsonPropertyName = null;
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(EnemyStats).GetProperty("TotalLosses", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo4 = jsonPropertyInfoValues3;
+		JsonPropertyInfoValues<int> propertyInfo4 = new JsonPropertyInfoValues<int>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(EnemyStats),
+			Converter = null,
+			Getter = null,
+			Setter = null,
+			IgnoreCondition = JsonIgnoreCondition.Always,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "TotalLosses",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(EnemyStats).GetProperty("TotalLosses", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
+		};
 		array[3] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo4);
 		return array;
 	}
@@ -5005,17 +6230,18 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	{
 		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<FightStats> jsonTypeInfo))
 		{
-			JsonObjectInfoValues<FightStats> jsonObjectInfoValues = new JsonObjectInfoValues<FightStats>();
-			jsonObjectInfoValues.ObjectCreator = null;
-			jsonObjectInfoValues.ObjectWithParameterizedConstructorCreator = (object[] args) => new FightStats
+			JsonObjectInfoValues<FightStats> objectInfo = new JsonObjectInfoValues<FightStats>
 			{
-				Character = (ModelId)args[0]
+				ObjectCreator = null,
+				ObjectWithParameterizedConstructorCreator = (object[] args) => new FightStats
+				{
+					Character = (ModelId)args[0]
+				},
+				PropertyMetadataInitializer = (JsonSerializerContext _) => FightStatsPropInit(options),
+				ConstructorParameterMetadataInitializer = FightStatsCtorParamInit,
+				ConstructorAttributeProviderFactory = () => typeof(FightStats).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null),
+				SerializeHandler = null
 			};
-			jsonObjectInfoValues.PropertyMetadataInitializer = (JsonSerializerContext _) => FightStatsPropInit(options);
-			jsonObjectInfoValues.ConstructorParameterMetadataInitializer = FightStatsCtorParamInit;
-			jsonObjectInfoValues.ConstructorAttributeProviderFactory = () => typeof(FightStats).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null);
-			jsonObjectInfoValues.SerializeHandler = null;
-			JsonObjectInfoValues<FightStats> objectInfo = jsonObjectInfoValues;
 			jsonTypeInfo = JsonMetadataServices.CreateObjectInfo(options, objectInfo);
 			jsonTypeInfo.NumberHandling = null;
 		}
@@ -5026,68 +6252,71 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] FightStatsPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[3];
-		JsonPropertyInfoValues<ModelId> jsonPropertyInfoValues = new JsonPropertyInfoValues<ModelId>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(FightStats);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((FightStats)obj).Character;
-		jsonPropertyInfoValues.Setter = delegate
+		JsonPropertyInfoValues<ModelId> propertyInfo = new JsonPropertyInfoValues<ModelId>
 		{
-			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(FightStats),
+			Converter = null,
+			Getter = (object obj) => ((FightStats)obj).Character,
+			Setter = delegate
+			{
+				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Character",
+			JsonPropertyName = "character",
+			AttributeProviderFactory = () => typeof(FightStats).GetProperty("Character", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "Character";
-		jsonPropertyInfoValues.JsonPropertyName = "character";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(FightStats).GetProperty("Character", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<ModelId> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsRequired = true;
 		array[0].IsGetNullable = false;
 		array[0].IsSetNullable = false;
-		JsonPropertyInfoValues<int> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(FightStats);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((FightStats)obj).Wins;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo2 = new JsonPropertyInfoValues<int>
 		{
-			((FightStats)obj).Wins = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(FightStats),
+			Converter = null,
+			Getter = (object obj) => ((FightStats)obj).Wins,
+			Setter = delegate(object obj, int value)
+			{
+				((FightStats)obj).Wins = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Wins",
+			JsonPropertyName = "wins",
+			AttributeProviderFactory = () => typeof(FightStats).GetProperty("Wins", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "Wins";
-		jsonPropertyInfoValues2.JsonPropertyName = "wins";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(FightStats).GetProperty("Wins", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
-		jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(FightStats);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((FightStats)obj).Losses;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo3 = new JsonPropertyInfoValues<int>
 		{
-			((FightStats)obj).Losses = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(FightStats),
+			Converter = null,
+			Getter = (object obj) => ((FightStats)obj).Losses,
+			Setter = delegate(object obj, int value)
+			{
+				((FightStats)obj).Losses = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Losses",
+			JsonPropertyName = "losses",
+			AttributeProviderFactory = () => typeof(FightStats).GetProperty("Losses", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "Losses";
-		jsonPropertyInfoValues2.JsonPropertyName = "losses";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(FightStats).GetProperty("Losses", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo3 = jsonPropertyInfoValues2;
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
 		return array;
 	}
@@ -5130,45 +6359,47 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] SerializableMapDrawingLinePropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[2];
-		JsonPropertyInfoValues<bool> jsonPropertyInfoValues = new JsonPropertyInfoValues<bool>();
-		jsonPropertyInfoValues.IsProperty = false;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializableMapDrawingLine);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializableMapDrawingLine)obj).isEraser;
-		jsonPropertyInfoValues.Setter = delegate(object obj, bool value)
+		JsonPropertyInfoValues<bool> propertyInfo = new JsonPropertyInfoValues<bool>
 		{
-			((SerializableMapDrawingLine)obj).isEraser = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableMapDrawingLine),
+			Converter = null,
+			Getter = (object obj) => ((SerializableMapDrawingLine)obj).isEraser,
+			Setter = delegate(object obj, bool value)
+			{
+				((SerializableMapDrawingLine)obj).isEraser = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "isEraser",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(SerializableMapDrawingLine).GetField("isEraser", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "isEraser";
-		jsonPropertyInfoValues.JsonPropertyName = null;
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableMapDrawingLine).GetField("isEraser", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<bool> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
-		JsonPropertyInfoValues<List<Vector2>> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<List<Vector2>>();
-		jsonPropertyInfoValues2.IsProperty = false;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SerializableMapDrawingLine);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SerializableMapDrawingLine)obj).mapPoints;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, List<Vector2>? value)
+		JsonPropertyInfoValues<List<Vector2>> propertyInfo2 = new JsonPropertyInfoValues<List<Vector2>>
 		{
-			((SerializableMapDrawingLine)obj).mapPoints = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableMapDrawingLine),
+			Converter = null,
+			Getter = (object obj) => ((SerializableMapDrawingLine)obj).mapPoints,
+			Setter = delegate(object obj, List<Vector2>? value)
+			{
+				((SerializableMapDrawingLine)obj).mapPoints = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "mapPoints",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(SerializableMapDrawingLine).GetField("mapPoints", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "mapPoints";
-		jsonPropertyInfoValues2.JsonPropertyName = null;
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SerializableMapDrawingLine).GetField("mapPoints", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<List<Vector2>> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		array[1].IsGetNullable = false;
 		array[1].IsSetNullable = false;
@@ -5198,25 +6429,26 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] SerializableMapDrawingsPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[1];
-		JsonPropertyInfoValues<List<SerializablePlayerMapDrawings>> jsonPropertyInfoValues = new JsonPropertyInfoValues<List<SerializablePlayerMapDrawings>>();
-		jsonPropertyInfoValues.IsProperty = false;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializableMapDrawings);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializableMapDrawings)obj).drawings;
-		jsonPropertyInfoValues.Setter = delegate(object obj, List<SerializablePlayerMapDrawings>? value)
+		JsonPropertyInfoValues<List<SerializablePlayerMapDrawings>> propertyInfo = new JsonPropertyInfoValues<List<SerializablePlayerMapDrawings>>
 		{
-			((SerializableMapDrawings)obj).drawings = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableMapDrawings),
+			Converter = null,
+			Getter = (object obj) => ((SerializableMapDrawings)obj).drawings,
+			Setter = delegate(object obj, List<SerializablePlayerMapDrawings>? value)
+			{
+				((SerializableMapDrawings)obj).drawings = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "drawings",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(SerializableMapDrawings).GetField("drawings", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "drawings";
-		jsonPropertyInfoValues.JsonPropertyName = null;
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableMapDrawings).GetField("drawings", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<List<SerializablePlayerMapDrawings>> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsGetNullable = false;
 		array[0].IsSetNullable = false;
@@ -5246,45 +6478,47 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] SerializablePlayerMapDrawingsPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[2];
-		JsonPropertyInfoValues<ulong> jsonPropertyInfoValues = new JsonPropertyInfoValues<ulong>();
-		jsonPropertyInfoValues.IsProperty = false;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializablePlayerMapDrawings);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializablePlayerMapDrawings)obj).playerId;
-		jsonPropertyInfoValues.Setter = delegate(object obj, ulong value)
+		JsonPropertyInfoValues<ulong> propertyInfo = new JsonPropertyInfoValues<ulong>
 		{
-			((SerializablePlayerMapDrawings)obj).playerId = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializablePlayerMapDrawings),
+			Converter = null,
+			Getter = (object obj) => ((SerializablePlayerMapDrawings)obj).playerId,
+			Setter = delegate(object obj, ulong value)
+			{
+				((SerializablePlayerMapDrawings)obj).playerId = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "playerId",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(SerializablePlayerMapDrawings).GetField("playerId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "playerId";
-		jsonPropertyInfoValues.JsonPropertyName = null;
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializablePlayerMapDrawings).GetField("playerId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<ulong> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
-		JsonPropertyInfoValues<List<SerializableMapDrawingLine>> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<List<SerializableMapDrawingLine>>();
-		jsonPropertyInfoValues2.IsProperty = false;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SerializablePlayerMapDrawings);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SerializablePlayerMapDrawings)obj).lines;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, List<SerializableMapDrawingLine>? value)
+		JsonPropertyInfoValues<List<SerializableMapDrawingLine>> propertyInfo2 = new JsonPropertyInfoValues<List<SerializableMapDrawingLine>>
 		{
-			((SerializablePlayerMapDrawings)obj).lines = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializablePlayerMapDrawings),
+			Converter = null,
+			Getter = (object obj) => ((SerializablePlayerMapDrawings)obj).lines,
+			Setter = delegate(object obj, List<SerializableMapDrawingLine>? value)
+			{
+				((SerializablePlayerMapDrawings)obj).lines = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "lines",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(SerializablePlayerMapDrawings).GetField("lines", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "lines";
-		jsonPropertyInfoValues2.JsonPropertyName = null;
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SerializablePlayerMapDrawings).GetField("lines", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<List<SerializableMapDrawingLine>> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		array[1].IsGetNullable = false;
 		array[1].IsSetNullable = false;
@@ -5338,187 +6572,259 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 
 	private static JsonPropertyInfo[] PrefsSavePropInit(JsonSerializerOptions options)
 	{
-		JsonPropertyInfo[] array = new JsonPropertyInfo[9];
-		JsonPropertyInfoValues<int> jsonPropertyInfoValues = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(PrefsSave);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((PrefsSave)obj).SchemaVersion;
-		jsonPropertyInfoValues.Setter = delegate(object obj, int value)
+		JsonPropertyInfo[] array = new JsonPropertyInfo[12];
+		JsonPropertyInfoValues<int> propertyInfo = new JsonPropertyInfoValues<int>
 		{
-			((PrefsSave)obj).SchemaVersion = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PrefsSave),
+			Converter = null,
+			Getter = (object obj) => ((PrefsSave)obj).SchemaVersion,
+			Setter = delegate(object obj, int value)
+			{
+				((PrefsSave)obj).SchemaVersion = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "SchemaVersion",
+			JsonPropertyName = "schema_version",
+			AttributeProviderFactory = () => typeof(PrefsSave).GetProperty("SchemaVersion", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "SchemaVersion";
-		jsonPropertyInfoValues.JsonPropertyName = "schema_version";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(PrefsSave).GetProperty("SchemaVersion", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
-		JsonPropertyInfoValues<FastModeType> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<FastModeType>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(PrefsSave);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((PrefsSave)obj).FastMode;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, FastModeType value)
+		JsonPropertyInfoValues<FastModeType> propertyInfo2 = new JsonPropertyInfoValues<FastModeType>
 		{
-			((PrefsSave)obj).FastMode = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PrefsSave),
+			Converter = null,
+			Getter = (object obj) => ((PrefsSave)obj).FastMode,
+			Setter = delegate(object obj, FastModeType value)
+			{
+				((PrefsSave)obj).FastMode = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "FastMode",
+			JsonPropertyName = "fast_mode",
+			AttributeProviderFactory = () => typeof(PrefsSave).GetProperty("FastMode", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(FastModeType), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "FastMode";
-		jsonPropertyInfoValues2.JsonPropertyName = "fast_mode";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(PrefsSave).GetProperty("FastMode", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(FastModeType), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<FastModeType> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(PrefsSave);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((PrefsSave)obj).ScreenShakeOptionIndex;
-		jsonPropertyInfoValues.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<bool> propertyInfo3 = new JsonPropertyInfoValues<bool>
 		{
-			((PrefsSave)obj).ScreenShakeOptionIndex = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PrefsSave),
+			Converter = null,
+			Getter = (object obj) => ((PrefsSave)obj).PhobiaMode,
+			Setter = delegate(object obj, bool value)
+			{
+				((PrefsSave)obj).PhobiaMode = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "PhobiaMode",
+			JsonPropertyName = "phobia_mode",
+			AttributeProviderFactory = () => typeof(PrefsSave).GetProperty("PhobiaMode", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "ScreenShakeOptionIndex";
-		jsonPropertyInfoValues.JsonPropertyName = "screenshake";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(PrefsSave).GetProperty("ScreenShakeOptionIndex", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo3 = jsonPropertyInfoValues;
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
-		JsonPropertyInfoValues<bool> jsonPropertyInfoValues3 = new JsonPropertyInfoValues<bool>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(PrefsSave);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = (object obj) => ((PrefsSave)obj).ShowRunTimer;
-		jsonPropertyInfoValues3.Setter = delegate(object obj, bool value)
+		JsonPropertyInfoValues<int> propertyInfo4 = new JsonPropertyInfoValues<int>
 		{
-			((PrefsSave)obj).ShowRunTimer = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PrefsSave),
+			Converter = null,
+			Getter = (object obj) => ((PrefsSave)obj).ScreenShakeOptionIndex,
+			Setter = delegate(object obj, int value)
+			{
+				((PrefsSave)obj).ScreenShakeOptionIndex = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "ScreenShakeOptionIndex",
+			JsonPropertyName = "screenshake",
+			AttributeProviderFactory = () => typeof(PrefsSave).GetProperty("ScreenShakeOptionIndex", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues3.IgnoreCondition = null;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "ShowRunTimer";
-		jsonPropertyInfoValues3.JsonPropertyName = "show_run_timer";
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(PrefsSave).GetProperty("ShowRunTimer", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<bool> propertyInfo4 = jsonPropertyInfoValues3;
 		array[3] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo4);
-		jsonPropertyInfoValues3 = new JsonPropertyInfoValues<bool>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(PrefsSave);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = (object obj) => ((PrefsSave)obj).ShowCardIndices;
-		jsonPropertyInfoValues3.Setter = delegate(object obj, bool value)
+		JsonPropertyInfoValues<bool> propertyInfo5 = new JsonPropertyInfoValues<bool>
 		{
-			((PrefsSave)obj).ShowCardIndices = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PrefsSave),
+			Converter = null,
+			Getter = (object obj) => ((PrefsSave)obj).ShowRunTimer,
+			Setter = delegate(object obj, bool value)
+			{
+				((PrefsSave)obj).ShowRunTimer = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "ShowRunTimer",
+			JsonPropertyName = "show_run_timer",
+			AttributeProviderFactory = () => typeof(PrefsSave).GetProperty("ShowRunTimer", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues3.IgnoreCondition = null;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "ShowCardIndices";
-		jsonPropertyInfoValues3.JsonPropertyName = "show_card_indices";
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(PrefsSave).GetProperty("ShowCardIndices", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<bool> propertyInfo5 = jsonPropertyInfoValues3;
 		array[4] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo5);
-		jsonPropertyInfoValues3 = new JsonPropertyInfoValues<bool>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(PrefsSave);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = (object obj) => ((PrefsSave)obj).UploadData;
-		jsonPropertyInfoValues3.Setter = delegate(object obj, bool value)
+		JsonPropertyInfoValues<bool> propertyInfo6 = new JsonPropertyInfoValues<bool>
 		{
-			((PrefsSave)obj).UploadData = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PrefsSave),
+			Converter = null,
+			Getter = (object obj) => ((PrefsSave)obj).ShowCardIndices,
+			Setter = delegate(object obj, bool value)
+			{
+				((PrefsSave)obj).ShowCardIndices = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "ShowCardIndices",
+			JsonPropertyName = "show_card_indices",
+			AttributeProviderFactory = () => typeof(PrefsSave).GetProperty("ShowCardIndices", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues3.IgnoreCondition = null;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "UploadData";
-		jsonPropertyInfoValues3.JsonPropertyName = "upload_data";
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(PrefsSave).GetProperty("UploadData", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<bool> propertyInfo6 = jsonPropertyInfoValues3;
 		array[5] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo6);
-		jsonPropertyInfoValues3 = new JsonPropertyInfoValues<bool>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(PrefsSave);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = (object obj) => ((PrefsSave)obj).MuteInBackground;
-		jsonPropertyInfoValues3.Setter = delegate(object obj, bool value)
+		JsonPropertyInfoValues<bool> propertyInfo7 = new JsonPropertyInfoValues<bool>
 		{
-			((PrefsSave)obj).MuteInBackground = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PrefsSave),
+			Converter = null,
+			Getter = (object obj) => ((PrefsSave)obj).UploadData,
+			Setter = delegate(object obj, bool value)
+			{
+				((PrefsSave)obj).UploadData = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "UploadData",
+			JsonPropertyName = "upload_data",
+			AttributeProviderFactory = () => typeof(PrefsSave).GetProperty("UploadData", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues3.IgnoreCondition = null;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "MuteInBackground";
-		jsonPropertyInfoValues3.JsonPropertyName = "mute_in_background";
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(PrefsSave).GetProperty("MuteInBackground", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<bool> propertyInfo7 = jsonPropertyInfoValues3;
 		array[6] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo7);
-		jsonPropertyInfoValues3 = new JsonPropertyInfoValues<bool>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(PrefsSave);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = (object obj) => ((PrefsSave)obj).IsLongPressEnabled;
-		jsonPropertyInfoValues3.Setter = delegate(object obj, bool value)
+		JsonPropertyInfoValues<bool> propertyInfo8 = new JsonPropertyInfoValues<bool>
 		{
-			((PrefsSave)obj).IsLongPressEnabled = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PrefsSave),
+			Converter = null,
+			Getter = (object obj) => ((PrefsSave)obj).MuteInBackground,
+			Setter = delegate(object obj, bool value)
+			{
+				((PrefsSave)obj).MuteInBackground = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "MuteInBackground",
+			JsonPropertyName = "mute_in_background",
+			AttributeProviderFactory = () => typeof(PrefsSave).GetProperty("MuteInBackground", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues3.IgnoreCondition = null;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "IsLongPressEnabled";
-		jsonPropertyInfoValues3.JsonPropertyName = "long_press";
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(PrefsSave).GetProperty("IsLongPressEnabled", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<bool> propertyInfo8 = jsonPropertyInfoValues3;
 		array[7] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo8);
-		jsonPropertyInfoValues3 = new JsonPropertyInfoValues<bool>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(PrefsSave);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = (object obj) => ((PrefsSave)obj).TextEffectsEnabled;
-		jsonPropertyInfoValues3.Setter = delegate(object obj, bool value)
+		JsonPropertyInfoValues<bool> propertyInfo9 = new JsonPropertyInfoValues<bool>
 		{
-			((PrefsSave)obj).TextEffectsEnabled = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PrefsSave),
+			Converter = null,
+			Getter = (object obj) => ((PrefsSave)obj).IsLongPressEnabled,
+			Setter = delegate(object obj, bool value)
+			{
+				((PrefsSave)obj).IsLongPressEnabled = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "IsLongPressEnabled",
+			JsonPropertyName = "long_press",
+			AttributeProviderFactory = () => typeof(PrefsSave).GetProperty("IsLongPressEnabled", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues3.IgnoreCondition = null;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "TextEffectsEnabled";
-		jsonPropertyInfoValues3.JsonPropertyName = "text_effects_enabled";
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(PrefsSave).GetProperty("TextEffectsEnabled", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<bool> propertyInfo9 = jsonPropertyInfoValues3;
 		array[8] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo9);
+		JsonPropertyInfoValues<bool> propertyInfo10 = new JsonPropertyInfoValues<bool>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PrefsSave),
+			Converter = null,
+			Getter = (object obj) => ((PrefsSave)obj).TextEffectsEnabled,
+			Setter = delegate(object obj, bool value)
+			{
+				((PrefsSave)obj).TextEffectsEnabled = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "TextEffectsEnabled",
+			JsonPropertyName = "text_effects_enabled",
+			AttributeProviderFactory = () => typeof(PrefsSave).GetProperty("TextEffectsEnabled", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
+		};
+		array[9] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo10);
+		JsonPropertyInfoValues<bool> propertyInfo11 = new JsonPropertyInfoValues<bool>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PrefsSave),
+			Converter = null,
+			Getter = (object obj) => ((PrefsSave)obj).ShowMultiplayerDrawings,
+			Setter = delegate(object obj, bool value)
+			{
+				((PrefsSave)obj).ShowMultiplayerDrawings = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "ShowMultiplayerDrawings",
+			JsonPropertyName = "show_mp_drawings",
+			AttributeProviderFactory = () => typeof(PrefsSave).GetProperty("ShowMultiplayerDrawings", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
+		};
+		array[10] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo11);
+		JsonPropertyInfoValues<bool> propertyInfo12 = new JsonPropertyInfoValues<bool>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PrefsSave),
+			Converter = null,
+			Getter = (object obj) => ((PrefsSave)obj).IsBestiaryActionsPreferred,
+			Setter = delegate(object obj, bool value)
+			{
+				((PrefsSave)obj).IsBestiaryActionsPreferred = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "IsBestiaryActionsPreferred",
+			JsonPropertyName = "bestiary_actions_preferred",
+			AttributeProviderFactory = () => typeof(PrefsSave).GetProperty("IsBestiaryActionsPreferred", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
+		};
+		array[11] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo12);
 		return array;
 	}
 
@@ -5545,45 +6851,47 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] ProfileSavePropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[2];
-		JsonPropertyInfoValues<int> jsonPropertyInfoValues = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(ProfileSave);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((ProfileSave)obj).SchemaVersion;
-		jsonPropertyInfoValues.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo = new JsonPropertyInfoValues<int>
 		{
-			((ProfileSave)obj).SchemaVersion = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(ProfileSave),
+			Converter = null,
+			Getter = (object obj) => ((ProfileSave)obj).SchemaVersion,
+			Setter = delegate(object obj, int value)
+			{
+				((ProfileSave)obj).SchemaVersion = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "SchemaVersion",
+			JsonPropertyName = "schema_version",
+			AttributeProviderFactory = () => typeof(ProfileSave).GetProperty("SchemaVersion", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "SchemaVersion";
-		jsonPropertyInfoValues.JsonPropertyName = "schema_version";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(ProfileSave).GetProperty("SchemaVersion", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(ProfileSave);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((ProfileSave)obj).LastProfileId;
-		jsonPropertyInfoValues.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo2 = new JsonPropertyInfoValues<int>
 		{
-			((ProfileSave)obj).LastProfileId = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(ProfileSave),
+			Converter = null,
+			Getter = (object obj) => ((ProfileSave)obj).LastProfileId,
+			Setter = delegate(object obj, int value)
+			{
+				((ProfileSave)obj).LastProfileId = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "LastProfileId",
+			JsonPropertyName = "last_profile_id",
+			AttributeProviderFactory = () => typeof(ProfileSave).GetProperty("LastProfileId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "LastProfileId";
-		jsonPropertyInfoValues.JsonPropertyName = "last_profile_id";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(ProfileSave).GetProperty("LastProfileId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo2 = jsonPropertyInfoValues;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		return array;
 	}
@@ -5611,145 +6919,152 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] SavedPropertiesPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[7];
-		JsonPropertyInfoValues<List<SavedProperties.SavedProperty<int>>> jsonPropertyInfoValues = new JsonPropertyInfoValues<List<SavedProperties.SavedProperty<int>>>();
-		jsonPropertyInfoValues.IsProperty = false;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SavedProperties);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SavedProperties)obj).ints;
-		jsonPropertyInfoValues.Setter = delegate(object obj, List<SavedProperties.SavedProperty<int>>? value)
+		JsonPropertyInfoValues<List<SavedProperties.SavedProperty<int>>> propertyInfo = new JsonPropertyInfoValues<List<SavedProperties.SavedProperty<int>>>
 		{
-			((SavedProperties)obj).ints = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SavedProperties),
+			Converter = null,
+			Getter = (object obj) => ((SavedProperties)obj).ints,
+			Setter = delegate(object obj, List<SavedProperties.SavedProperty<int>>? value)
+			{
+				((SavedProperties)obj).ints = value;
+			},
+			IgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "ints",
+			JsonPropertyName = "ints",
+			AttributeProviderFactory = () => typeof(SavedProperties).GetField("ints", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "ints";
-		jsonPropertyInfoValues.JsonPropertyName = "ints";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SavedProperties).GetField("ints", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<List<SavedProperties.SavedProperty<int>>> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
-		JsonPropertyInfoValues<List<SavedProperties.SavedProperty<bool>>> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<List<SavedProperties.SavedProperty<bool>>>();
-		jsonPropertyInfoValues2.IsProperty = false;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SavedProperties);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SavedProperties)obj).bools;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, List<SavedProperties.SavedProperty<bool>>? value)
+		JsonPropertyInfoValues<List<SavedProperties.SavedProperty<bool>>> propertyInfo2 = new JsonPropertyInfoValues<List<SavedProperties.SavedProperty<bool>>>
 		{
-			((SavedProperties)obj).bools = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SavedProperties),
+			Converter = null,
+			Getter = (object obj) => ((SavedProperties)obj).bools,
+			Setter = delegate(object obj, List<SavedProperties.SavedProperty<bool>>? value)
+			{
+				((SavedProperties)obj).bools = value;
+			},
+			IgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "bools",
+			JsonPropertyName = "bools",
+			AttributeProviderFactory = () => typeof(SavedProperties).GetField("bools", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "bools";
-		jsonPropertyInfoValues2.JsonPropertyName = "bools";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SavedProperties).GetField("bools", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<List<SavedProperties.SavedProperty<bool>>> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
-		JsonPropertyInfoValues<List<SavedProperties.SavedProperty<string>>> jsonPropertyInfoValues3 = new JsonPropertyInfoValues<List<SavedProperties.SavedProperty<string>>>();
-		jsonPropertyInfoValues3.IsProperty = false;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(SavedProperties);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = (object obj) => ((SavedProperties)obj).strings;
-		jsonPropertyInfoValues3.Setter = delegate(object obj, List<SavedProperties.SavedProperty<string>>? value)
+		JsonPropertyInfoValues<List<SavedProperties.SavedProperty<string>>> propertyInfo3 = new JsonPropertyInfoValues<List<SavedProperties.SavedProperty<string>>>
 		{
-			((SavedProperties)obj).strings = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SavedProperties),
+			Converter = null,
+			Getter = (object obj) => ((SavedProperties)obj).strings,
+			Setter = delegate(object obj, List<SavedProperties.SavedProperty<string>>? value)
+			{
+				((SavedProperties)obj).strings = value;
+			},
+			IgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "strings",
+			JsonPropertyName = "strings",
+			AttributeProviderFactory = () => typeof(SavedProperties).GetField("strings", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues3.IgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "strings";
-		jsonPropertyInfoValues3.JsonPropertyName = "strings";
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(SavedProperties).GetField("strings", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<List<SavedProperties.SavedProperty<string>>> propertyInfo3 = jsonPropertyInfoValues3;
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
-		JsonPropertyInfoValues<List<SavedProperties.SavedProperty<int[]>>> jsonPropertyInfoValues4 = new JsonPropertyInfoValues<List<SavedProperties.SavedProperty<int[]>>>();
-		jsonPropertyInfoValues4.IsProperty = false;
-		jsonPropertyInfoValues4.IsPublic = true;
-		jsonPropertyInfoValues4.IsVirtual = false;
-		jsonPropertyInfoValues4.DeclaringType = typeof(SavedProperties);
-		jsonPropertyInfoValues4.Converter = null;
-		jsonPropertyInfoValues4.Getter = (object obj) => ((SavedProperties)obj).intArrays;
-		jsonPropertyInfoValues4.Setter = delegate(object obj, List<SavedProperties.SavedProperty<int[]>>? value)
+		JsonPropertyInfoValues<List<SavedProperties.SavedProperty<int[]>>> propertyInfo4 = new JsonPropertyInfoValues<List<SavedProperties.SavedProperty<int[]>>>
 		{
-			((SavedProperties)obj).intArrays = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SavedProperties),
+			Converter = null,
+			Getter = (object obj) => ((SavedProperties)obj).intArrays,
+			Setter = delegate(object obj, List<SavedProperties.SavedProperty<int[]>>? value)
+			{
+				((SavedProperties)obj).intArrays = value;
+			},
+			IgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "intArrays",
+			JsonPropertyName = "int_arrays",
+			AttributeProviderFactory = () => typeof(SavedProperties).GetField("intArrays", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues4.IgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-		jsonPropertyInfoValues4.HasJsonInclude = false;
-		jsonPropertyInfoValues4.IsExtensionData = false;
-		jsonPropertyInfoValues4.NumberHandling = null;
-		jsonPropertyInfoValues4.PropertyName = "intArrays";
-		jsonPropertyInfoValues4.JsonPropertyName = "int_arrays";
-		jsonPropertyInfoValues4.AttributeProviderFactory = () => typeof(SavedProperties).GetField("intArrays", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<List<SavedProperties.SavedProperty<int[]>>> propertyInfo4 = jsonPropertyInfoValues4;
 		array[3] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo4);
-		JsonPropertyInfoValues<List<SavedProperties.SavedProperty<ModelId>>> jsonPropertyInfoValues5 = new JsonPropertyInfoValues<List<SavedProperties.SavedProperty<ModelId>>>();
-		jsonPropertyInfoValues5.IsProperty = false;
-		jsonPropertyInfoValues5.IsPublic = true;
-		jsonPropertyInfoValues5.IsVirtual = false;
-		jsonPropertyInfoValues5.DeclaringType = typeof(SavedProperties);
-		jsonPropertyInfoValues5.Converter = null;
-		jsonPropertyInfoValues5.Getter = (object obj) => ((SavedProperties)obj).modelIds;
-		jsonPropertyInfoValues5.Setter = delegate(object obj, List<SavedProperties.SavedProperty<ModelId>>? value)
+		JsonPropertyInfoValues<List<SavedProperties.SavedProperty<ModelId>>> propertyInfo5 = new JsonPropertyInfoValues<List<SavedProperties.SavedProperty<ModelId>>>
 		{
-			((SavedProperties)obj).modelIds = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SavedProperties),
+			Converter = null,
+			Getter = (object obj) => ((SavedProperties)obj).modelIds,
+			Setter = delegate(object obj, List<SavedProperties.SavedProperty<ModelId>>? value)
+			{
+				((SavedProperties)obj).modelIds = value;
+			},
+			IgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "modelIds",
+			JsonPropertyName = "model_ids",
+			AttributeProviderFactory = () => typeof(SavedProperties).GetField("modelIds", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues5.IgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-		jsonPropertyInfoValues5.HasJsonInclude = false;
-		jsonPropertyInfoValues5.IsExtensionData = false;
-		jsonPropertyInfoValues5.NumberHandling = null;
-		jsonPropertyInfoValues5.PropertyName = "modelIds";
-		jsonPropertyInfoValues5.JsonPropertyName = "model_ids";
-		jsonPropertyInfoValues5.AttributeProviderFactory = () => typeof(SavedProperties).GetField("modelIds", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<List<SavedProperties.SavedProperty<ModelId>>> propertyInfo5 = jsonPropertyInfoValues5;
 		array[4] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo5);
-		JsonPropertyInfoValues<List<SavedProperties.SavedProperty<SerializableCard>>> jsonPropertyInfoValues6 = new JsonPropertyInfoValues<List<SavedProperties.SavedProperty<SerializableCard>>>();
-		jsonPropertyInfoValues6.IsProperty = false;
-		jsonPropertyInfoValues6.IsPublic = true;
-		jsonPropertyInfoValues6.IsVirtual = false;
-		jsonPropertyInfoValues6.DeclaringType = typeof(SavedProperties);
-		jsonPropertyInfoValues6.Converter = null;
-		jsonPropertyInfoValues6.Getter = (object obj) => ((SavedProperties)obj).cards;
-		jsonPropertyInfoValues6.Setter = delegate(object obj, List<SavedProperties.SavedProperty<SerializableCard>>? value)
+		JsonPropertyInfoValues<List<SavedProperties.SavedProperty<SerializableCard>>> propertyInfo6 = new JsonPropertyInfoValues<List<SavedProperties.SavedProperty<SerializableCard>>>
 		{
-			((SavedProperties)obj).cards = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SavedProperties),
+			Converter = null,
+			Getter = (object obj) => ((SavedProperties)obj).cards,
+			Setter = delegate(object obj, List<SavedProperties.SavedProperty<SerializableCard>>? value)
+			{
+				((SavedProperties)obj).cards = value;
+			},
+			IgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "cards",
+			JsonPropertyName = "cards",
+			AttributeProviderFactory = () => typeof(SavedProperties).GetField("cards", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues6.IgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-		jsonPropertyInfoValues6.HasJsonInclude = false;
-		jsonPropertyInfoValues6.IsExtensionData = false;
-		jsonPropertyInfoValues6.NumberHandling = null;
-		jsonPropertyInfoValues6.PropertyName = "cards";
-		jsonPropertyInfoValues6.JsonPropertyName = "cards";
-		jsonPropertyInfoValues6.AttributeProviderFactory = () => typeof(SavedProperties).GetField("cards", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<List<SavedProperties.SavedProperty<SerializableCard>>> propertyInfo6 = jsonPropertyInfoValues6;
 		array[5] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo6);
-		JsonPropertyInfoValues<List<SavedProperties.SavedProperty<SerializableCard[]>>> jsonPropertyInfoValues7 = new JsonPropertyInfoValues<List<SavedProperties.SavedProperty<SerializableCard[]>>>();
-		jsonPropertyInfoValues7.IsProperty = false;
-		jsonPropertyInfoValues7.IsPublic = true;
-		jsonPropertyInfoValues7.IsVirtual = false;
-		jsonPropertyInfoValues7.DeclaringType = typeof(SavedProperties);
-		jsonPropertyInfoValues7.Converter = null;
-		jsonPropertyInfoValues7.Getter = (object obj) => ((SavedProperties)obj).cardArrays;
-		jsonPropertyInfoValues7.Setter = delegate(object obj, List<SavedProperties.SavedProperty<SerializableCard[]>>? value)
+		JsonPropertyInfoValues<List<SavedProperties.SavedProperty<SerializableCard[]>>> propertyInfo7 = new JsonPropertyInfoValues<List<SavedProperties.SavedProperty<SerializableCard[]>>>
 		{
-			((SavedProperties)obj).cardArrays = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SavedProperties),
+			Converter = null,
+			Getter = (object obj) => ((SavedProperties)obj).cardArrays,
+			Setter = delegate(object obj, List<SavedProperties.SavedProperty<SerializableCard[]>>? value)
+			{
+				((SavedProperties)obj).cardArrays = value;
+			},
+			IgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "cardArrays",
+			JsonPropertyName = "card_arrays",
+			AttributeProviderFactory = () => typeof(SavedProperties).GetField("cardArrays", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues7.IgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-		jsonPropertyInfoValues7.HasJsonInclude = false;
-		jsonPropertyInfoValues7.IsExtensionData = false;
-		jsonPropertyInfoValues7.NumberHandling = null;
-		jsonPropertyInfoValues7.PropertyName = "cardArrays";
-		jsonPropertyInfoValues7.JsonPropertyName = "card_arrays";
-		jsonPropertyInfoValues7.AttributeProviderFactory = () => typeof(SavedProperties).GetField("cardArrays", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<List<SavedProperties.SavedProperty<SerializableCard[]>>> propertyInfo7 = jsonPropertyInfoValues7;
 		array[6] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo7);
 		return array;
 	}
@@ -5777,47 +7092,49 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] SavedPropertyBooleanPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[2];
-		JsonPropertyInfoValues<string> jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
-		jsonPropertyInfoValues.IsProperty = false;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SavedProperties.SavedProperty<bool>);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SavedProperties.SavedProperty<bool>)obj).name;
-		jsonPropertyInfoValues.Setter = delegate(object obj, string? value)
+		JsonPropertyInfoValues<string> propertyInfo = new JsonPropertyInfoValues<string>
 		{
-			Unsafe.Unbox<SavedProperties.SavedProperty<bool>>(obj).name = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SavedProperties.SavedProperty<bool>),
+			Converter = null,
+			Getter = (object obj) => ((SavedProperties.SavedProperty<bool>)obj).name,
+			Setter = delegate(object obj, string? value)
+			{
+				Unsafe.Unbox<SavedProperties.SavedProperty<bool>>(obj).name = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "name",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(SavedProperties.SavedProperty<bool>).GetField("name", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "name";
-		jsonPropertyInfoValues.JsonPropertyName = null;
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SavedProperties.SavedProperty<bool>).GetField("name", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<string> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsGetNullable = false;
 		array[0].IsSetNullable = false;
-		JsonPropertyInfoValues<bool> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<bool>();
-		jsonPropertyInfoValues2.IsProperty = false;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SavedProperties.SavedProperty<bool>);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SavedProperties.SavedProperty<bool>)obj).value;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, bool value)
+		JsonPropertyInfoValues<bool> propertyInfo2 = new JsonPropertyInfoValues<bool>
 		{
-			Unsafe.Unbox<SavedProperties.SavedProperty<bool>>(obj).value = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SavedProperties.SavedProperty<bool>),
+			Converter = null,
+			Getter = (object obj) => ((SavedProperties.SavedProperty<bool>)obj).value,
+			Setter = delegate(object obj, bool value)
+			{
+				Unsafe.Unbox<SavedProperties.SavedProperty<bool>>(obj).value = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "value",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(SavedProperties.SavedProperty<bool>).GetField("value", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "value";
-		jsonPropertyInfoValues2.JsonPropertyName = null;
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SavedProperties.SavedProperty<bool>).GetField("value", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<bool> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		return array;
 	}
@@ -5845,47 +7162,49 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] SavedPropertyModelIdPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[2];
-		JsonPropertyInfoValues<string> jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
-		jsonPropertyInfoValues.IsProperty = false;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SavedProperties.SavedProperty<ModelId>);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SavedProperties.SavedProperty<ModelId>)obj).name;
-		jsonPropertyInfoValues.Setter = delegate(object obj, string? value)
+		JsonPropertyInfoValues<string> propertyInfo = new JsonPropertyInfoValues<string>
 		{
-			Unsafe.Unbox<SavedProperties.SavedProperty<ModelId>>(obj).name = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SavedProperties.SavedProperty<ModelId>),
+			Converter = null,
+			Getter = (object obj) => ((SavedProperties.SavedProperty<ModelId>)obj).name,
+			Setter = delegate(object obj, string? value)
+			{
+				Unsafe.Unbox<SavedProperties.SavedProperty<ModelId>>(obj).name = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "name",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(SavedProperties.SavedProperty<ModelId>).GetField("name", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "name";
-		jsonPropertyInfoValues.JsonPropertyName = null;
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SavedProperties.SavedProperty<ModelId>).GetField("name", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<string> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsGetNullable = false;
 		array[0].IsSetNullable = false;
-		JsonPropertyInfoValues<ModelId> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<ModelId>();
-		jsonPropertyInfoValues2.IsProperty = false;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SavedProperties.SavedProperty<ModelId>);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SavedProperties.SavedProperty<ModelId>)obj).value;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, ModelId? value)
+		JsonPropertyInfoValues<ModelId> propertyInfo2 = new JsonPropertyInfoValues<ModelId>
 		{
-			Unsafe.Unbox<SavedProperties.SavedProperty<ModelId>>(obj).value = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SavedProperties.SavedProperty<ModelId>),
+			Converter = null,
+			Getter = (object obj) => ((SavedProperties.SavedProperty<ModelId>)obj).value,
+			Setter = delegate(object obj, ModelId? value)
+			{
+				Unsafe.Unbox<SavedProperties.SavedProperty<ModelId>>(obj).value = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "value",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(SavedProperties.SavedProperty<ModelId>).GetField("value", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "value";
-		jsonPropertyInfoValues2.JsonPropertyName = null;
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SavedProperties.SavedProperty<ModelId>).GetField("value", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<ModelId> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		return array;
 	}
@@ -5913,47 +7232,49 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] SavedPropertySerializableCardArrayPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[2];
-		JsonPropertyInfoValues<string> jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
-		jsonPropertyInfoValues.IsProperty = false;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SavedProperties.SavedProperty<SerializableCard[]>);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SavedProperties.SavedProperty<SerializableCard[]>)obj).name;
-		jsonPropertyInfoValues.Setter = delegate(object obj, string? value)
+		JsonPropertyInfoValues<string> propertyInfo = new JsonPropertyInfoValues<string>
 		{
-			Unsafe.Unbox<SavedProperties.SavedProperty<SerializableCard[]>>(obj).name = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SavedProperties.SavedProperty<SerializableCard[]>),
+			Converter = null,
+			Getter = (object obj) => ((SavedProperties.SavedProperty<SerializableCard[]>)obj).name,
+			Setter = delegate(object obj, string? value)
+			{
+				Unsafe.Unbox<SavedProperties.SavedProperty<SerializableCard[]>>(obj).name = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "name",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(SavedProperties.SavedProperty<SerializableCard[]>).GetField("name", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "name";
-		jsonPropertyInfoValues.JsonPropertyName = null;
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SavedProperties.SavedProperty<SerializableCard[]>).GetField("name", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<string> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsGetNullable = false;
 		array[0].IsSetNullable = false;
-		JsonPropertyInfoValues<SerializableCard[]> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<SerializableCard[]>();
-		jsonPropertyInfoValues2.IsProperty = false;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SavedProperties.SavedProperty<SerializableCard[]>);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SavedProperties.SavedProperty<SerializableCard[]>)obj).value;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, SerializableCard[]? value)
+		JsonPropertyInfoValues<SerializableCard[]> propertyInfo2 = new JsonPropertyInfoValues<SerializableCard[]>
 		{
-			Unsafe.Unbox<SavedProperties.SavedProperty<SerializableCard[]>>(obj).value = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SavedProperties.SavedProperty<SerializableCard[]>),
+			Converter = null,
+			Getter = (object obj) => ((SavedProperties.SavedProperty<SerializableCard[]>)obj).value,
+			Setter = delegate(object obj, SerializableCard[]? value)
+			{
+				Unsafe.Unbox<SavedProperties.SavedProperty<SerializableCard[]>>(obj).value = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "value",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(SavedProperties.SavedProperty<SerializableCard[]>).GetField("value", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "value";
-		jsonPropertyInfoValues2.JsonPropertyName = null;
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SavedProperties.SavedProperty<SerializableCard[]>).GetField("value", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<SerializableCard[]> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		return array;
 	}
@@ -5981,47 +7302,49 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] SavedPropertySerializableCardPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[2];
-		JsonPropertyInfoValues<string> jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
-		jsonPropertyInfoValues.IsProperty = false;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SavedProperties.SavedProperty<SerializableCard>);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SavedProperties.SavedProperty<SerializableCard>)obj).name;
-		jsonPropertyInfoValues.Setter = delegate(object obj, string? value)
+		JsonPropertyInfoValues<string> propertyInfo = new JsonPropertyInfoValues<string>
 		{
-			Unsafe.Unbox<SavedProperties.SavedProperty<SerializableCard>>(obj).name = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SavedProperties.SavedProperty<SerializableCard>),
+			Converter = null,
+			Getter = (object obj) => ((SavedProperties.SavedProperty<SerializableCard>)obj).name,
+			Setter = delegate(object obj, string? value)
+			{
+				Unsafe.Unbox<SavedProperties.SavedProperty<SerializableCard>>(obj).name = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "name",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(SavedProperties.SavedProperty<SerializableCard>).GetField("name", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "name";
-		jsonPropertyInfoValues.JsonPropertyName = null;
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SavedProperties.SavedProperty<SerializableCard>).GetField("name", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<string> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsGetNullable = false;
 		array[0].IsSetNullable = false;
-		JsonPropertyInfoValues<SerializableCard> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<SerializableCard>();
-		jsonPropertyInfoValues2.IsProperty = false;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SavedProperties.SavedProperty<SerializableCard>);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SavedProperties.SavedProperty<SerializableCard>)obj).value;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, SerializableCard? value)
+		JsonPropertyInfoValues<SerializableCard> propertyInfo2 = new JsonPropertyInfoValues<SerializableCard>
 		{
-			Unsafe.Unbox<SavedProperties.SavedProperty<SerializableCard>>(obj).value = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SavedProperties.SavedProperty<SerializableCard>),
+			Converter = null,
+			Getter = (object obj) => ((SavedProperties.SavedProperty<SerializableCard>)obj).value,
+			Setter = delegate(object obj, SerializableCard? value)
+			{
+				Unsafe.Unbox<SavedProperties.SavedProperty<SerializableCard>>(obj).value = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "value",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(SavedProperties.SavedProperty<SerializableCard>).GetField("value", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "value";
-		jsonPropertyInfoValues2.JsonPropertyName = null;
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SavedProperties.SavedProperty<SerializableCard>).GetField("value", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<SerializableCard> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		return array;
 	}
@@ -6049,47 +7372,49 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] SavedPropertyInt32ArrayPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[2];
-		JsonPropertyInfoValues<string> jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
-		jsonPropertyInfoValues.IsProperty = false;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SavedProperties.SavedProperty<int[]>);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SavedProperties.SavedProperty<int[]>)obj).name;
-		jsonPropertyInfoValues.Setter = delegate(object obj, string? value)
+		JsonPropertyInfoValues<string> propertyInfo = new JsonPropertyInfoValues<string>
 		{
-			Unsafe.Unbox<SavedProperties.SavedProperty<int[]>>(obj).name = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SavedProperties.SavedProperty<int[]>),
+			Converter = null,
+			Getter = (object obj) => ((SavedProperties.SavedProperty<int[]>)obj).name,
+			Setter = delegate(object obj, string? value)
+			{
+				Unsafe.Unbox<SavedProperties.SavedProperty<int[]>>(obj).name = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "name",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(SavedProperties.SavedProperty<int[]>).GetField("name", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "name";
-		jsonPropertyInfoValues.JsonPropertyName = null;
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SavedProperties.SavedProperty<int[]>).GetField("name", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<string> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsGetNullable = false;
 		array[0].IsSetNullable = false;
-		JsonPropertyInfoValues<int[]> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int[]>();
-		jsonPropertyInfoValues2.IsProperty = false;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SavedProperties.SavedProperty<int[]>);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SavedProperties.SavedProperty<int[]>)obj).value;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, int[]? value)
+		JsonPropertyInfoValues<int[]> propertyInfo2 = new JsonPropertyInfoValues<int[]>
 		{
-			Unsafe.Unbox<SavedProperties.SavedProperty<int[]>>(obj).value = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SavedProperties.SavedProperty<int[]>),
+			Converter = null,
+			Getter = (object obj) => ((SavedProperties.SavedProperty<int[]>)obj).value,
+			Setter = delegate(object obj, int[]? value)
+			{
+				Unsafe.Unbox<SavedProperties.SavedProperty<int[]>>(obj).value = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "value",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(SavedProperties.SavedProperty<int[]>).GetField("value", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "value";
-		jsonPropertyInfoValues2.JsonPropertyName = null;
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SavedProperties.SavedProperty<int[]>).GetField("value", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<int[]> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		return array;
 	}
@@ -6117,47 +7442,49 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] SavedPropertyInt32PropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[2];
-		JsonPropertyInfoValues<string> jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
-		jsonPropertyInfoValues.IsProperty = false;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SavedProperties.SavedProperty<int>);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SavedProperties.SavedProperty<int>)obj).name;
-		jsonPropertyInfoValues.Setter = delegate(object obj, string? value)
+		JsonPropertyInfoValues<string> propertyInfo = new JsonPropertyInfoValues<string>
 		{
-			Unsafe.Unbox<SavedProperties.SavedProperty<int>>(obj).name = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SavedProperties.SavedProperty<int>),
+			Converter = null,
+			Getter = (object obj) => ((SavedProperties.SavedProperty<int>)obj).name,
+			Setter = delegate(object obj, string? value)
+			{
+				Unsafe.Unbox<SavedProperties.SavedProperty<int>>(obj).name = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "name",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(SavedProperties.SavedProperty<int>).GetField("name", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "name";
-		jsonPropertyInfoValues.JsonPropertyName = null;
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SavedProperties.SavedProperty<int>).GetField("name", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<string> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsGetNullable = false;
 		array[0].IsSetNullable = false;
-		JsonPropertyInfoValues<int> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues2.IsProperty = false;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SavedProperties.SavedProperty<int>);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SavedProperties.SavedProperty<int>)obj).value;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo2 = new JsonPropertyInfoValues<int>
 		{
-			Unsafe.Unbox<SavedProperties.SavedProperty<int>>(obj).value = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SavedProperties.SavedProperty<int>),
+			Converter = null,
+			Getter = (object obj) => ((SavedProperties.SavedProperty<int>)obj).value,
+			Setter = delegate(object obj, int value)
+			{
+				Unsafe.Unbox<SavedProperties.SavedProperty<int>>(obj).value = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "value",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(SavedProperties.SavedProperty<int>).GetField("value", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "value";
-		jsonPropertyInfoValues2.JsonPropertyName = null;
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SavedProperties.SavedProperty<int>).GetField("value", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<int> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		return array;
 	}
@@ -6185,47 +7512,49 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] SavedPropertyStringPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[2];
-		JsonPropertyInfoValues<string> jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
-		jsonPropertyInfoValues.IsProperty = false;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SavedProperties.SavedProperty<string>);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SavedProperties.SavedProperty<string>)obj).name;
-		jsonPropertyInfoValues.Setter = delegate(object obj, string? value)
+		JsonPropertyInfoValues<string> propertyInfo = new JsonPropertyInfoValues<string>
 		{
-			Unsafe.Unbox<SavedProperties.SavedProperty<string>>(obj).name = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SavedProperties.SavedProperty<string>),
+			Converter = null,
+			Getter = (object obj) => ((SavedProperties.SavedProperty<string>)obj).name,
+			Setter = delegate(object obj, string? value)
+			{
+				Unsafe.Unbox<SavedProperties.SavedProperty<string>>(obj).name = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "name",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(SavedProperties.SavedProperty<string>).GetField("name", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "name";
-		jsonPropertyInfoValues.JsonPropertyName = null;
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SavedProperties.SavedProperty<string>).GetField("name", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<string> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsGetNullable = false;
 		array[0].IsSetNullable = false;
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
-		jsonPropertyInfoValues.IsProperty = false;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SavedProperties.SavedProperty<string>);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SavedProperties.SavedProperty<string>)obj).value;
-		jsonPropertyInfoValues.Setter = delegate(object obj, string? value)
+		JsonPropertyInfoValues<string> propertyInfo2 = new JsonPropertyInfoValues<string>
 		{
-			Unsafe.Unbox<SavedProperties.SavedProperty<string>>(obj).value = value;
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SavedProperties.SavedProperty<string>),
+			Converter = null,
+			Getter = (object obj) => ((SavedProperties.SavedProperty<string>)obj).value,
+			Setter = delegate(object obj, string? value)
+			{
+				Unsafe.Unbox<SavedProperties.SavedProperty<string>>(obj).value = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "value",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(SavedProperties.SavedProperty<string>).GetField("value", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "value";
-		jsonPropertyInfoValues.JsonPropertyName = null;
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SavedProperties.SavedProperty<string>).GetField("value", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		JsonPropertyInfoValues<string> propertyInfo2 = jsonPropertyInfoValues;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		return array;
 	}
@@ -6253,151 +7582,158 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] SerializableActMapPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[7];
-		JsonPropertyInfoValues<List<SerializableMapPoint>> jsonPropertyInfoValues = new JsonPropertyInfoValues<List<SerializableMapPoint>>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializableActMap);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializableActMap)obj).Points;
-		jsonPropertyInfoValues.Setter = delegate(object obj, List<SerializableMapPoint>? value)
+		JsonPropertyInfoValues<List<SerializableMapPoint>> propertyInfo = new JsonPropertyInfoValues<List<SerializableMapPoint>>
 		{
-			((SerializableActMap)obj).Points = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableActMap),
+			Converter = null,
+			Getter = (object obj) => ((SerializableActMap)obj).Points,
+			Setter = delegate(object obj, List<SerializableMapPoint>? value)
+			{
+				((SerializableActMap)obj).Points = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Points",
+			JsonPropertyName = "points",
+			AttributeProviderFactory = () => typeof(SerializableActMap).GetProperty("Points", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<SerializableMapPoint>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "Points";
-		jsonPropertyInfoValues.JsonPropertyName = "points";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableActMap).GetProperty("Points", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<SerializableMapPoint>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<SerializableMapPoint>> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsGetNullable = false;
 		array[0].IsSetNullable = false;
-		JsonPropertyInfoValues<SerializableMapPoint> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<SerializableMapPoint>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SerializableActMap);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SerializableActMap)obj).BossPoint;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, SerializableMapPoint? value)
+		JsonPropertyInfoValues<SerializableMapPoint> propertyInfo2 = new JsonPropertyInfoValues<SerializableMapPoint>
 		{
-			((SerializableActMap)obj).BossPoint = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableActMap),
+			Converter = null,
+			Getter = (object obj) => ((SerializableActMap)obj).BossPoint,
+			Setter = delegate(object obj, SerializableMapPoint? value)
+			{
+				((SerializableActMap)obj).BossPoint = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "BossPoint",
+			JsonPropertyName = "boss",
+			AttributeProviderFactory = () => typeof(SerializableActMap).GetProperty("BossPoint", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializableMapPoint), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "BossPoint";
-		jsonPropertyInfoValues2.JsonPropertyName = "boss";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SerializableActMap).GetProperty("BossPoint", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializableMapPoint), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<SerializableMapPoint> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		array[1].IsGetNullable = false;
 		array[1].IsSetNullable = false;
-		jsonPropertyInfoValues2 = new JsonPropertyInfoValues<SerializableMapPoint>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SerializableActMap);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SerializableActMap)obj).SecondBossPoint;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, SerializableMapPoint? value)
+		JsonPropertyInfoValues<SerializableMapPoint> propertyInfo3 = new JsonPropertyInfoValues<SerializableMapPoint>
 		{
-			((SerializableActMap)obj).SecondBossPoint = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableActMap),
+			Converter = null,
+			Getter = (object obj) => ((SerializableActMap)obj).SecondBossPoint,
+			Setter = delegate(object obj, SerializableMapPoint? value)
+			{
+				((SerializableActMap)obj).SecondBossPoint = value;
+			},
+			IgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "SecondBossPoint",
+			JsonPropertyName = "second_boss",
+			AttributeProviderFactory = () => typeof(SerializableActMap).GetProperty("SecondBossPoint", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializableMapPoint), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "SecondBossPoint";
-		jsonPropertyInfoValues2.JsonPropertyName = "second_boss";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SerializableActMap).GetProperty("SecondBossPoint", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializableMapPoint), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<SerializableMapPoint> propertyInfo3 = jsonPropertyInfoValues2;
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
-		jsonPropertyInfoValues2 = new JsonPropertyInfoValues<SerializableMapPoint>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SerializableActMap);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SerializableActMap)obj).StartingPoint;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, SerializableMapPoint? value)
+		JsonPropertyInfoValues<SerializableMapPoint> propertyInfo4 = new JsonPropertyInfoValues<SerializableMapPoint>
 		{
-			((SerializableActMap)obj).StartingPoint = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableActMap),
+			Converter = null,
+			Getter = (object obj) => ((SerializableActMap)obj).StartingPoint,
+			Setter = delegate(object obj, SerializableMapPoint? value)
+			{
+				((SerializableActMap)obj).StartingPoint = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "StartingPoint",
+			JsonPropertyName = "start",
+			AttributeProviderFactory = () => typeof(SerializableActMap).GetProperty("StartingPoint", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializableMapPoint), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "StartingPoint";
-		jsonPropertyInfoValues2.JsonPropertyName = "start";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SerializableActMap).GetProperty("StartingPoint", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializableMapPoint), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<SerializableMapPoint> propertyInfo4 = jsonPropertyInfoValues2;
 		array[3] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo4);
 		array[3].IsGetNullable = false;
 		array[3].IsSetNullable = false;
-		JsonPropertyInfoValues<List<MapCoord>> jsonPropertyInfoValues3 = new JsonPropertyInfoValues<List<MapCoord>>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(SerializableActMap);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = (object obj) => ((SerializableActMap)obj).StartMapPointCoords;
-		jsonPropertyInfoValues3.Setter = delegate(object obj, List<MapCoord>? value)
+		JsonPropertyInfoValues<List<MapCoord>> propertyInfo5 = new JsonPropertyInfoValues<List<MapCoord>>
 		{
-			((SerializableActMap)obj).StartMapPointCoords = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableActMap),
+			Converter = null,
+			Getter = (object obj) => ((SerializableActMap)obj).StartMapPointCoords,
+			Setter = delegate(object obj, List<MapCoord>? value)
+			{
+				((SerializableActMap)obj).StartMapPointCoords = value;
+			},
+			IgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "StartMapPointCoords",
+			JsonPropertyName = "start_coords",
+			AttributeProviderFactory = () => typeof(SerializableActMap).GetProperty("StartMapPointCoords", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<MapCoord>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues3.IgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "StartMapPointCoords";
-		jsonPropertyInfoValues3.JsonPropertyName = "start_coords";
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(SerializableActMap).GetProperty("StartMapPointCoords", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<MapCoord>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<MapCoord>> propertyInfo5 = jsonPropertyInfoValues3;
 		array[4] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo5);
-		JsonPropertyInfoValues<int> jsonPropertyInfoValues4 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues4.IsProperty = true;
-		jsonPropertyInfoValues4.IsPublic = true;
-		jsonPropertyInfoValues4.IsVirtual = false;
-		jsonPropertyInfoValues4.DeclaringType = typeof(SerializableActMap);
-		jsonPropertyInfoValues4.Converter = null;
-		jsonPropertyInfoValues4.Getter = (object obj) => ((SerializableActMap)obj).GridWidth;
-		jsonPropertyInfoValues4.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo6 = new JsonPropertyInfoValues<int>
 		{
-			((SerializableActMap)obj).GridWidth = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableActMap),
+			Converter = null,
+			Getter = (object obj) => ((SerializableActMap)obj).GridWidth,
+			Setter = delegate(object obj, int value)
+			{
+				((SerializableActMap)obj).GridWidth = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "GridWidth",
+			JsonPropertyName = "width",
+			AttributeProviderFactory = () => typeof(SerializableActMap).GetProperty("GridWidth", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues4.IgnoreCondition = null;
-		jsonPropertyInfoValues4.HasJsonInclude = false;
-		jsonPropertyInfoValues4.IsExtensionData = false;
-		jsonPropertyInfoValues4.NumberHandling = null;
-		jsonPropertyInfoValues4.PropertyName = "GridWidth";
-		jsonPropertyInfoValues4.JsonPropertyName = "width";
-		jsonPropertyInfoValues4.AttributeProviderFactory = () => typeof(SerializableActMap).GetProperty("GridWidth", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo6 = jsonPropertyInfoValues4;
 		array[5] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo6);
-		jsonPropertyInfoValues4 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues4.IsProperty = true;
-		jsonPropertyInfoValues4.IsPublic = true;
-		jsonPropertyInfoValues4.IsVirtual = false;
-		jsonPropertyInfoValues4.DeclaringType = typeof(SerializableActMap);
-		jsonPropertyInfoValues4.Converter = null;
-		jsonPropertyInfoValues4.Getter = (object obj) => ((SerializableActMap)obj).GridHeight;
-		jsonPropertyInfoValues4.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo7 = new JsonPropertyInfoValues<int>
 		{
-			((SerializableActMap)obj).GridHeight = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableActMap),
+			Converter = null,
+			Getter = (object obj) => ((SerializableActMap)obj).GridHeight,
+			Setter = delegate(object obj, int value)
+			{
+				((SerializableActMap)obj).GridHeight = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "GridHeight",
+			JsonPropertyName = "height",
+			AttributeProviderFactory = () => typeof(SerializableActMap).GetProperty("GridHeight", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues4.IgnoreCondition = null;
-		jsonPropertyInfoValues4.HasJsonInclude = false;
-		jsonPropertyInfoValues4.IsExtensionData = false;
-		jsonPropertyInfoValues4.NumberHandling = null;
-		jsonPropertyInfoValues4.PropertyName = "GridHeight";
-		jsonPropertyInfoValues4.JsonPropertyName = "height";
-		jsonPropertyInfoValues4.AttributeProviderFactory = () => typeof(SerializableActMap).GetProperty("GridHeight", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo7 = jsonPropertyInfoValues4;
 		array[6] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo7);
 		return array;
 	}
@@ -6425,69 +7761,171 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] SerializableActModelPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[3];
-		JsonPropertyInfoValues<ModelId> jsonPropertyInfoValues = new JsonPropertyInfoValues<ModelId>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializableActModel);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializableActModel)obj).Id;
-		jsonPropertyInfoValues.Setter = delegate(object obj, ModelId? value)
+		JsonPropertyInfoValues<ModelId> propertyInfo = new JsonPropertyInfoValues<ModelId>
 		{
-			((SerializableActModel)obj).Id = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableActModel),
+			Converter = null,
+			Getter = (object obj) => ((SerializableActModel)obj).Id,
+			Setter = delegate(object obj, ModelId? value)
+			{
+				((SerializableActModel)obj).Id = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Id",
+			JsonPropertyName = "id",
+			AttributeProviderFactory = () => typeof(SerializableActModel).GetProperty("Id", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "Id";
-		jsonPropertyInfoValues.JsonPropertyName = "id";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableActModel).GetProperty("Id", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<ModelId> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
-		JsonPropertyInfoValues<SerializableRoomSet> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<SerializableRoomSet>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SerializableActModel);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SerializableActModel)obj).SerializableRooms;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, SerializableRoomSet? value)
+		JsonPropertyInfoValues<SerializableRoomSet> propertyInfo2 = new JsonPropertyInfoValues<SerializableRoomSet>
 		{
-			((SerializableActModel)obj).SerializableRooms = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableActModel),
+			Converter = null,
+			Getter = (object obj) => ((SerializableActModel)obj).SerializableRooms,
+			Setter = delegate(object obj, SerializableRoomSet? value)
+			{
+				((SerializableActModel)obj).SerializableRooms = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "SerializableRooms",
+			JsonPropertyName = "rooms",
+			AttributeProviderFactory = () => typeof(SerializableActModel).GetProperty("SerializableRooms", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializableRoomSet), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "SerializableRooms";
-		jsonPropertyInfoValues2.JsonPropertyName = "rooms";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SerializableActModel).GetProperty("SerializableRooms", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializableRoomSet), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<SerializableRoomSet> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		array[1].IsGetNullable = false;
 		array[1].IsSetNullable = false;
-		JsonPropertyInfoValues<SerializableActMap> jsonPropertyInfoValues3 = new JsonPropertyInfoValues<SerializableActMap>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(SerializableActModel);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = (object obj) => ((SerializableActModel)obj).SavedMap;
-		jsonPropertyInfoValues3.Setter = delegate(object obj, SerializableActMap? value)
+		JsonPropertyInfoValues<SerializableActMap> propertyInfo3 = new JsonPropertyInfoValues<SerializableActMap>
 		{
-			((SerializableActModel)obj).SavedMap = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableActModel),
+			Converter = null,
+			Getter = (object obj) => ((SerializableActModel)obj).SavedMap,
+			Setter = delegate(object obj, SerializableActMap? value)
+			{
+				((SerializableActModel)obj).SavedMap = value;
+			},
+			IgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "SavedMap",
+			JsonPropertyName = "saved_map",
+			AttributeProviderFactory = () => typeof(SerializableActModel).GetProperty("SavedMap", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializableActMap), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues3.IgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "SavedMap";
-		jsonPropertyInfoValues3.JsonPropertyName = "saved_map";
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(SerializableActModel).GetProperty("SavedMap", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializableActMap), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<SerializableActMap> propertyInfo3 = jsonPropertyInfoValues3;
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
 		return array;
+	}
+
+	private JsonTypeInfo<SerializableBadge> Create_SerializableBadge(JsonSerializerOptions options)
+	{
+		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<SerializableBadge> jsonTypeInfo))
+		{
+			JsonObjectInfoValues<SerializableBadge> objectInfo = new JsonObjectInfoValues<SerializableBadge>
+			{
+				ObjectCreator = null,
+				ObjectWithParameterizedConstructorCreator = (object[] args) => new SerializableBadge
+				{
+					Id = (string)args[0],
+					Rarity = (BadgeRarity)args[1]
+				},
+				PropertyMetadataInitializer = (JsonSerializerContext _) => SerializableBadgePropInit(options),
+				ConstructorParameterMetadataInitializer = SerializableBadgeCtorParamInit,
+				ConstructorAttributeProviderFactory = () => typeof(SerializableBadge).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null),
+				SerializeHandler = null
+			};
+			jsonTypeInfo = JsonMetadataServices.CreateObjectInfo(options, objectInfo);
+			jsonTypeInfo.NumberHandling = null;
+		}
+		jsonTypeInfo.OriginatingResolver = this;
+		return jsonTypeInfo;
+	}
+
+	private static JsonPropertyInfo[] SerializableBadgePropInit(JsonSerializerOptions options)
+	{
+		JsonPropertyInfo[] array = new JsonPropertyInfo[2];
+		JsonPropertyInfoValues<string> propertyInfo = new JsonPropertyInfoValues<string>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableBadge),
+			Converter = null,
+			Getter = (object obj) => ((SerializableBadge)obj).Id,
+			Setter = delegate(object obj, string? value)
+			{
+				((SerializableBadge)obj).Id = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Id",
+			JsonPropertyName = "id",
+			AttributeProviderFactory = () => typeof(SerializableBadge).GetProperty("Id", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null)
+		};
+		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
+		array[0].IsRequired = true;
+		array[0].IsGetNullable = false;
+		array[0].IsSetNullable = false;
+		JsonPropertyInfoValues<BadgeRarity> propertyInfo2 = new JsonPropertyInfoValues<BadgeRarity>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableBadge),
+			Converter = null,
+			Getter = (object obj) => ((SerializableBadge)obj).Rarity,
+			Setter = delegate(object obj, BadgeRarity value)
+			{
+				((SerializableBadge)obj).Rarity = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Rarity",
+			JsonPropertyName = "rarity",
+			AttributeProviderFactory = () => typeof(SerializableBadge).GetProperty("Rarity", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(BadgeRarity), Array.Empty<Type>(), null)
+		};
+		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
+		array[1].IsRequired = true;
+		return array;
+	}
+
+	private static JsonParameterInfoValues[] SerializableBadgeCtorParamInit()
+	{
+		return new JsonParameterInfoValues[2]
+		{
+			new JsonParameterInfoValues
+			{
+				Name = "Id",
+				ParameterType = typeof(string),
+				Position = 0,
+				IsNullable = false,
+				IsMemberInitializer = true
+			},
+			new JsonParameterInfoValues
+			{
+				Name = "Rarity",
+				ParameterType = typeof(BadgeRarity),
+				Position = 1,
+				IsNullable = false,
+				IsMemberInitializer = true
+			}
+		};
 	}
 
 	private JsonTypeInfo<SerializableCard> Create_SerializableCard(JsonSerializerOptions options)
@@ -6513,105 +7951,110 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] SerializableCardPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[5];
-		JsonPropertyInfoValues<ModelId> jsonPropertyInfoValues = new JsonPropertyInfoValues<ModelId>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializableCard);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializableCard)obj).Id;
-		jsonPropertyInfoValues.Setter = delegate(object obj, ModelId? value)
+		JsonPropertyInfoValues<ModelId> propertyInfo = new JsonPropertyInfoValues<ModelId>
 		{
-			((SerializableCard)obj).Id = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableCard),
+			Converter = null,
+			Getter = (object obj) => ((SerializableCard)obj).Id,
+			Setter = delegate(object obj, ModelId? value)
+			{
+				((SerializableCard)obj).Id = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Id",
+			JsonPropertyName = "id",
+			AttributeProviderFactory = () => typeof(SerializableCard).GetProperty("Id", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "Id";
-		jsonPropertyInfoValues.JsonPropertyName = "id";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableCard).GetProperty("Id", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<ModelId> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
-		JsonPropertyInfoValues<int> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SerializableCard);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SerializableCard)obj).CurrentUpgradeLevel;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo2 = new JsonPropertyInfoValues<int>
 		{
-			((SerializableCard)obj).CurrentUpgradeLevel = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableCard),
+			Converter = null,
+			Getter = (object obj) => ((SerializableCard)obj).CurrentUpgradeLevel,
+			Setter = delegate(object obj, int value)
+			{
+				((SerializableCard)obj).CurrentUpgradeLevel = value;
+			},
+			IgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "CurrentUpgradeLevel",
+			JsonPropertyName = "current_upgrade_level",
+			AttributeProviderFactory = () => typeof(SerializableCard).GetProperty("CurrentUpgradeLevel", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = JsonIgnoreCondition.WhenWritingDefault;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "CurrentUpgradeLevel";
-		jsonPropertyInfoValues2.JsonPropertyName = "current_upgrade_level";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SerializableCard).GetProperty("CurrentUpgradeLevel", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
-		JsonPropertyInfoValues<SerializableEnchantment> jsonPropertyInfoValues3 = new JsonPropertyInfoValues<SerializableEnchantment>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(SerializableCard);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = (object obj) => ((SerializableCard)obj).Enchantment;
-		jsonPropertyInfoValues3.Setter = delegate(object obj, SerializableEnchantment? value)
+		JsonPropertyInfoValues<SerializableEnchantment> propertyInfo3 = new JsonPropertyInfoValues<SerializableEnchantment>
 		{
-			((SerializableCard)obj).Enchantment = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableCard),
+			Converter = null,
+			Getter = (object obj) => ((SerializableCard)obj).Enchantment,
+			Setter = delegate(object obj, SerializableEnchantment? value)
+			{
+				((SerializableCard)obj).Enchantment = value;
+			},
+			IgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Enchantment",
+			JsonPropertyName = "enchantment",
+			AttributeProviderFactory = () => typeof(SerializableCard).GetProperty("Enchantment", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializableEnchantment), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues3.IgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "Enchantment";
-		jsonPropertyInfoValues3.JsonPropertyName = "enchantment";
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(SerializableCard).GetProperty("Enchantment", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializableEnchantment), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<SerializableEnchantment> propertyInfo3 = jsonPropertyInfoValues3;
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
-		JsonPropertyInfoValues<SavedProperties> jsonPropertyInfoValues4 = new JsonPropertyInfoValues<SavedProperties>();
-		jsonPropertyInfoValues4.IsProperty = true;
-		jsonPropertyInfoValues4.IsPublic = true;
-		jsonPropertyInfoValues4.IsVirtual = false;
-		jsonPropertyInfoValues4.DeclaringType = typeof(SerializableCard);
-		jsonPropertyInfoValues4.Converter = null;
-		jsonPropertyInfoValues4.Getter = (object obj) => ((SerializableCard)obj).Props;
-		jsonPropertyInfoValues4.Setter = delegate(object obj, SavedProperties? value)
+		JsonPropertyInfoValues<SavedProperties> propertyInfo4 = new JsonPropertyInfoValues<SavedProperties>
 		{
-			((SerializableCard)obj).Props = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableCard),
+			Converter = null,
+			Getter = (object obj) => ((SerializableCard)obj).Props,
+			Setter = delegate(object obj, SavedProperties? value)
+			{
+				((SerializableCard)obj).Props = value;
+			},
+			IgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Props",
+			JsonPropertyName = "props",
+			AttributeProviderFactory = () => typeof(SerializableCard).GetProperty("Props", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SavedProperties), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues4.IgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-		jsonPropertyInfoValues4.HasJsonInclude = false;
-		jsonPropertyInfoValues4.IsExtensionData = false;
-		jsonPropertyInfoValues4.NumberHandling = null;
-		jsonPropertyInfoValues4.PropertyName = "Props";
-		jsonPropertyInfoValues4.JsonPropertyName = "props";
-		jsonPropertyInfoValues4.AttributeProviderFactory = () => typeof(SerializableCard).GetProperty("Props", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SavedProperties), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<SavedProperties> propertyInfo4 = jsonPropertyInfoValues4;
 		array[3] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo4);
-		JsonPropertyInfoValues<int?> jsonPropertyInfoValues5 = new JsonPropertyInfoValues<int?>();
-		jsonPropertyInfoValues5.IsProperty = true;
-		jsonPropertyInfoValues5.IsPublic = true;
-		jsonPropertyInfoValues5.IsVirtual = false;
-		jsonPropertyInfoValues5.DeclaringType = typeof(SerializableCard);
-		jsonPropertyInfoValues5.Converter = null;
-		jsonPropertyInfoValues5.Getter = (object obj) => ((SerializableCard)obj).FloorAddedToDeck;
-		jsonPropertyInfoValues5.Setter = delegate(object obj, int? value)
+		JsonPropertyInfoValues<int?> propertyInfo5 = new JsonPropertyInfoValues<int?>
 		{
-			((SerializableCard)obj).FloorAddedToDeck = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableCard),
+			Converter = null,
+			Getter = (object obj) => ((SerializableCard)obj).FloorAddedToDeck,
+			Setter = delegate(object obj, int? value)
+			{
+				((SerializableCard)obj).FloorAddedToDeck = value;
+			},
+			IgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "FloorAddedToDeck",
+			JsonPropertyName = "floor_added_to_deck",
+			AttributeProviderFactory = () => typeof(SerializableCard).GetProperty("FloorAddedToDeck", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int?), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues5.IgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-		jsonPropertyInfoValues5.HasJsonInclude = false;
-		jsonPropertyInfoValues5.IsExtensionData = false;
-		jsonPropertyInfoValues5.NumberHandling = null;
-		jsonPropertyInfoValues5.PropertyName = "FloorAddedToDeck";
-		jsonPropertyInfoValues5.JsonPropertyName = "floor_added_to_deck";
-		jsonPropertyInfoValues5.AttributeProviderFactory = () => typeof(SerializableCard).GetProperty("FloorAddedToDeck", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int?), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int?> propertyInfo5 = jsonPropertyInfoValues5;
 		array[4] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo5);
 		return array;
 	}
@@ -6655,65 +8098,68 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] SerializableEnchantmentPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[3];
-		JsonPropertyInfoValues<ModelId> jsonPropertyInfoValues = new JsonPropertyInfoValues<ModelId>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializableEnchantment);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializableEnchantment)obj).Id;
-		jsonPropertyInfoValues.Setter = delegate(object obj, ModelId? value)
+		JsonPropertyInfoValues<ModelId> propertyInfo = new JsonPropertyInfoValues<ModelId>
 		{
-			((SerializableEnchantment)obj).Id = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableEnchantment),
+			Converter = null,
+			Getter = (object obj) => ((SerializableEnchantment)obj).Id,
+			Setter = delegate(object obj, ModelId? value)
+			{
+				((SerializableEnchantment)obj).Id = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Id",
+			JsonPropertyName = "id",
+			AttributeProviderFactory = () => typeof(SerializableEnchantment).GetProperty("Id", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "Id";
-		jsonPropertyInfoValues.JsonPropertyName = "id";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableEnchantment).GetProperty("Id", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<ModelId> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
-		JsonPropertyInfoValues<int> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SerializableEnchantment);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SerializableEnchantment)obj).Amount;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo2 = new JsonPropertyInfoValues<int>
 		{
-			((SerializableEnchantment)obj).Amount = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableEnchantment),
+			Converter = null,
+			Getter = (object obj) => ((SerializableEnchantment)obj).Amount,
+			Setter = delegate(object obj, int value)
+			{
+				((SerializableEnchantment)obj).Amount = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Amount",
+			JsonPropertyName = "amount",
+			AttributeProviderFactory = () => typeof(SerializableEnchantment).GetProperty("Amount", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "Amount";
-		jsonPropertyInfoValues2.JsonPropertyName = "amount";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SerializableEnchantment).GetProperty("Amount", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
-		JsonPropertyInfoValues<SavedProperties> jsonPropertyInfoValues3 = new JsonPropertyInfoValues<SavedProperties>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(SerializableEnchantment);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = (object obj) => ((SerializableEnchantment)obj).Props;
-		jsonPropertyInfoValues3.Setter = delegate(object obj, SavedProperties? value)
+		JsonPropertyInfoValues<SavedProperties> propertyInfo3 = new JsonPropertyInfoValues<SavedProperties>
 		{
-			((SerializableEnchantment)obj).Props = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableEnchantment),
+			Converter = null,
+			Getter = (object obj) => ((SerializableEnchantment)obj).Props,
+			Setter = delegate(object obj, SavedProperties? value)
+			{
+				((SerializableEnchantment)obj).Props = value;
+			},
+			IgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Props",
+			JsonPropertyName = "props",
+			AttributeProviderFactory = () => typeof(SerializableEnchantment).GetProperty("Props", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SavedProperties), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues3.IgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "Props";
-		jsonPropertyInfoValues3.JsonPropertyName = "props";
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(SerializableEnchantment).GetProperty("Props", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SavedProperties), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<SavedProperties> propertyInfo3 = jsonPropertyInfoValues3;
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
 		return array;
 	}
@@ -6741,65 +8187,68 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] SerializableExtraRunFieldsPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[3];
-		JsonPropertyInfoValues<bool> jsonPropertyInfoValues = new JsonPropertyInfoValues<bool>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializableExtraRunFields);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializableExtraRunFields)obj).StartedWithNeow;
-		jsonPropertyInfoValues.Setter = delegate(object obj, bool value)
+		JsonPropertyInfoValues<bool> propertyInfo = new JsonPropertyInfoValues<bool>
 		{
-			((SerializableExtraRunFields)obj).StartedWithNeow = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableExtraRunFields),
+			Converter = null,
+			Getter = (object obj) => ((SerializableExtraRunFields)obj).StartedWithNeow,
+			Setter = delegate(object obj, bool value)
+			{
+				((SerializableExtraRunFields)obj).StartedWithNeow = value;
+			},
+			IgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "StartedWithNeow",
+			JsonPropertyName = "started_with_neow",
+			AttributeProviderFactory = () => typeof(SerializableExtraRunFields).GetProperty("StartedWithNeow", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = JsonIgnoreCondition.WhenWritingDefault;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "StartedWithNeow";
-		jsonPropertyInfoValues.JsonPropertyName = "started_with_neow";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableExtraRunFields).GetProperty("StartedWithNeow", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<bool> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
-		JsonPropertyInfoValues<int> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SerializableExtraRunFields);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SerializableExtraRunFields)obj).TestSubjectKills;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo2 = new JsonPropertyInfoValues<int>
 		{
-			((SerializableExtraRunFields)obj).TestSubjectKills = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableExtraRunFields),
+			Converter = null,
+			Getter = (object obj) => ((SerializableExtraRunFields)obj).TestSubjectKills,
+			Setter = delegate(object obj, int value)
+			{
+				((SerializableExtraRunFields)obj).TestSubjectKills = value;
+			},
+			IgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "TestSubjectKills",
+			JsonPropertyName = "test_subject_kills",
+			AttributeProviderFactory = () => typeof(SerializableExtraRunFields).GetProperty("TestSubjectKills", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = JsonIgnoreCondition.WhenWritingDefault;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "TestSubjectKills";
-		jsonPropertyInfoValues2.JsonPropertyName = "test_subject_kills";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SerializableExtraRunFields).GetProperty("TestSubjectKills", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<bool>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializableExtraRunFields);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializableExtraRunFields)obj).FreedRepy;
-		jsonPropertyInfoValues.Setter = delegate(object obj, bool value)
+		JsonPropertyInfoValues<bool> propertyInfo3 = new JsonPropertyInfoValues<bool>
 		{
-			((SerializableExtraRunFields)obj).FreedRepy = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableExtraRunFields),
+			Converter = null,
+			Getter = (object obj) => ((SerializableExtraRunFields)obj).FreedRepy,
+			Setter = delegate(object obj, bool value)
+			{
+				((SerializableExtraRunFields)obj).FreedRepy = value;
+			},
+			IgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "FreedRepy",
+			JsonPropertyName = "freed_repy",
+			AttributeProviderFactory = () => typeof(SerializableExtraRunFields).GetProperty("FreedRepy", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = JsonIgnoreCondition.WhenWritingDefault;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "FreedRepy";
-		jsonPropertyInfoValues.JsonPropertyName = "freed_repy";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableExtraRunFields).GetProperty("FreedRepy", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<bool> propertyInfo3 = jsonPropertyInfoValues;
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
 		return array;
 	}
@@ -6827,85 +8276,89 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] SerializableMapPointPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[4];
-		JsonPropertyInfoValues<MapCoord> jsonPropertyInfoValues = new JsonPropertyInfoValues<MapCoord>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializableMapPoint);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializableMapPoint)obj).Coord;
-		jsonPropertyInfoValues.Setter = delegate(object obj, MapCoord value)
+		JsonPropertyInfoValues<MapCoord> propertyInfo = new JsonPropertyInfoValues<MapCoord>
 		{
-			((SerializableMapPoint)obj).Coord = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableMapPoint),
+			Converter = null,
+			Getter = (object obj) => ((SerializableMapPoint)obj).Coord,
+			Setter = delegate(object obj, MapCoord value)
+			{
+				((SerializableMapPoint)obj).Coord = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Coord",
+			JsonPropertyName = "coord",
+			AttributeProviderFactory = () => typeof(SerializableMapPoint).GetProperty("Coord", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(MapCoord), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "Coord";
-		jsonPropertyInfoValues.JsonPropertyName = "coord";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableMapPoint).GetProperty("Coord", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(MapCoord), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<MapCoord> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
-		JsonPropertyInfoValues<MapPointType> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<MapPointType>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SerializableMapPoint);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SerializableMapPoint)obj).PointType;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, MapPointType value)
+		JsonPropertyInfoValues<MapPointType> propertyInfo2 = new JsonPropertyInfoValues<MapPointType>
 		{
-			((SerializableMapPoint)obj).PointType = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableMapPoint),
+			Converter = null,
+			Getter = (object obj) => ((SerializableMapPoint)obj).PointType,
+			Setter = delegate(object obj, MapPointType value)
+			{
+				((SerializableMapPoint)obj).PointType = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "PointType",
+			JsonPropertyName = "type",
+			AttributeProviderFactory = () => typeof(SerializableMapPoint).GetProperty("PointType", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(MapPointType), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "PointType";
-		jsonPropertyInfoValues2.JsonPropertyName = "type";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SerializableMapPoint).GetProperty("PointType", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(MapPointType), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<MapPointType> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
-		JsonPropertyInfoValues<bool> jsonPropertyInfoValues3 = new JsonPropertyInfoValues<bool>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(SerializableMapPoint);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = (object obj) => ((SerializableMapPoint)obj).CanBeModified;
-		jsonPropertyInfoValues3.Setter = delegate(object obj, bool value)
+		JsonPropertyInfoValues<bool> propertyInfo3 = new JsonPropertyInfoValues<bool>
 		{
-			((SerializableMapPoint)obj).CanBeModified = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableMapPoint),
+			Converter = null,
+			Getter = (object obj) => ((SerializableMapPoint)obj).CanBeModified,
+			Setter = delegate(object obj, bool value)
+			{
+				((SerializableMapPoint)obj).CanBeModified = value;
+			},
+			IgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "CanBeModified",
+			JsonPropertyName = "can_modify",
+			AttributeProviderFactory = () => typeof(SerializableMapPoint).GetProperty("CanBeModified", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues3.IgnoreCondition = JsonIgnoreCondition.WhenWritingDefault;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "CanBeModified";
-		jsonPropertyInfoValues3.JsonPropertyName = "can_modify";
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(SerializableMapPoint).GetProperty("CanBeModified", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<bool> propertyInfo3 = jsonPropertyInfoValues3;
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
-		JsonPropertyInfoValues<List<MapCoord>> jsonPropertyInfoValues4 = new JsonPropertyInfoValues<List<MapCoord>>();
-		jsonPropertyInfoValues4.IsProperty = true;
-		jsonPropertyInfoValues4.IsPublic = true;
-		jsonPropertyInfoValues4.IsVirtual = false;
-		jsonPropertyInfoValues4.DeclaringType = typeof(SerializableMapPoint);
-		jsonPropertyInfoValues4.Converter = null;
-		jsonPropertyInfoValues4.Getter = (object obj) => ((SerializableMapPoint)obj).ChildCoords;
-		jsonPropertyInfoValues4.Setter = delegate(object obj, List<MapCoord>? value)
+		JsonPropertyInfoValues<List<MapCoord>> propertyInfo4 = new JsonPropertyInfoValues<List<MapCoord>>
 		{
-			((SerializableMapPoint)obj).ChildCoords = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableMapPoint),
+			Converter = null,
+			Getter = (object obj) => ((SerializableMapPoint)obj).ChildCoords,
+			Setter = delegate(object obj, List<MapCoord>? value)
+			{
+				((SerializableMapPoint)obj).ChildCoords = value;
+			},
+			IgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "ChildCoords",
+			JsonPropertyName = "children",
+			AttributeProviderFactory = () => typeof(SerializableMapPoint).GetProperty("ChildCoords", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<MapCoord>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues4.IgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-		jsonPropertyInfoValues4.HasJsonInclude = false;
-		jsonPropertyInfoValues4.IsExtensionData = false;
-		jsonPropertyInfoValues4.NumberHandling = null;
-		jsonPropertyInfoValues4.PropertyName = "ChildCoords";
-		jsonPropertyInfoValues4.JsonPropertyName = "children";
-		jsonPropertyInfoValues4.AttributeProviderFactory = () => typeof(SerializableMapPoint).GetProperty("ChildCoords", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<MapCoord>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<MapCoord>> propertyInfo4 = jsonPropertyInfoValues4;
 		array[3] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo4);
 		return array;
 	}
@@ -6933,45 +8386,47 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] SerializableModifierPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[2];
-		JsonPropertyInfoValues<ModelId> jsonPropertyInfoValues = new JsonPropertyInfoValues<ModelId>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializableModifier);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializableModifier)obj).Id;
-		jsonPropertyInfoValues.Setter = delegate(object obj, ModelId? value)
+		JsonPropertyInfoValues<ModelId> propertyInfo = new JsonPropertyInfoValues<ModelId>
 		{
-			((SerializableModifier)obj).Id = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableModifier),
+			Converter = null,
+			Getter = (object obj) => ((SerializableModifier)obj).Id,
+			Setter = delegate(object obj, ModelId? value)
+			{
+				((SerializableModifier)obj).Id = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Id",
+			JsonPropertyName = "id",
+			AttributeProviderFactory = () => typeof(SerializableModifier).GetProperty("Id", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "Id";
-		jsonPropertyInfoValues.JsonPropertyName = "id";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableModifier).GetProperty("Id", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<ModelId> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
-		JsonPropertyInfoValues<SavedProperties> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<SavedProperties>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SerializableModifier);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SerializableModifier)obj).Props;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, SavedProperties? value)
+		JsonPropertyInfoValues<SavedProperties> propertyInfo2 = new JsonPropertyInfoValues<SavedProperties>
 		{
-			((SerializableModifier)obj).Props = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableModifier),
+			Converter = null,
+			Getter = (object obj) => ((SerializableModifier)obj).Props,
+			Setter = delegate(object obj, SavedProperties? value)
+			{
+				((SerializableModifier)obj).Props = value;
+			},
+			IgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Props",
+			JsonPropertyName = "props",
+			AttributeProviderFactory = () => typeof(SerializableModifier).GetProperty("Props", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SavedProperties), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "Props";
-		jsonPropertyInfoValues2.JsonPropertyName = "props";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SerializableModifier).GetProperty("Props", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SavedProperties), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<SavedProperties> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		return array;
 	}
@@ -6999,449 +8454,470 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] SerializablePlayerPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[21];
-		JsonPropertyInfoValues<ModelId> jsonPropertyInfoValues = new JsonPropertyInfoValues<ModelId>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializablePlayer);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializablePlayer)obj).CharacterId;
-		jsonPropertyInfoValues.Setter = delegate(object obj, ModelId? value)
+		JsonPropertyInfoValues<ModelId> propertyInfo = new JsonPropertyInfoValues<ModelId>
 		{
-			((SerializablePlayer)obj).CharacterId = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializablePlayer),
+			Converter = null,
+			Getter = (object obj) => ((SerializablePlayer)obj).CharacterId,
+			Setter = delegate(object obj, ModelId? value)
+			{
+				((SerializablePlayer)obj).CharacterId = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "CharacterId",
+			JsonPropertyName = "character_id",
+			AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("CharacterId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "CharacterId";
-		jsonPropertyInfoValues.JsonPropertyName = "character_id";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("CharacterId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<ModelId> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
-		JsonPropertyInfoValues<int> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SerializablePlayer);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SerializablePlayer)obj).CurrentHp;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo2 = new JsonPropertyInfoValues<int>
 		{
-			((SerializablePlayer)obj).CurrentHp = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializablePlayer),
+			Converter = null,
+			Getter = (object obj) => ((SerializablePlayer)obj).CurrentHp,
+			Setter = delegate(object obj, int value)
+			{
+				((SerializablePlayer)obj).CurrentHp = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "CurrentHp",
+			JsonPropertyName = "current_hp",
+			AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("CurrentHp", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "CurrentHp";
-		jsonPropertyInfoValues2.JsonPropertyName = "current_hp";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("CurrentHp", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
-		jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SerializablePlayer);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SerializablePlayer)obj).MaxHp;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo3 = new JsonPropertyInfoValues<int>
 		{
-			((SerializablePlayer)obj).MaxHp = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializablePlayer),
+			Converter = null,
+			Getter = (object obj) => ((SerializablePlayer)obj).MaxHp,
+			Setter = delegate(object obj, int value)
+			{
+				((SerializablePlayer)obj).MaxHp = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "MaxHp",
+			JsonPropertyName = "max_hp",
+			AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("MaxHp", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "MaxHp";
-		jsonPropertyInfoValues2.JsonPropertyName = "max_hp";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("MaxHp", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo3 = jsonPropertyInfoValues2;
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
-		jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SerializablePlayer);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SerializablePlayer)obj).MaxEnergy;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo4 = new JsonPropertyInfoValues<int>
 		{
-			((SerializablePlayer)obj).MaxEnergy = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializablePlayer),
+			Converter = null,
+			Getter = (object obj) => ((SerializablePlayer)obj).MaxEnergy,
+			Setter = delegate(object obj, int value)
+			{
+				((SerializablePlayer)obj).MaxEnergy = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "MaxEnergy",
+			JsonPropertyName = "max_energy",
+			AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("MaxEnergy", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "MaxEnergy";
-		jsonPropertyInfoValues2.JsonPropertyName = "max_energy";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("MaxEnergy", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo4 = jsonPropertyInfoValues2;
 		array[3] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo4);
-		jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SerializablePlayer);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SerializablePlayer)obj).MaxPotionSlotCount;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo5 = new JsonPropertyInfoValues<int>
 		{
-			((SerializablePlayer)obj).MaxPotionSlotCount = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializablePlayer),
+			Converter = null,
+			Getter = (object obj) => ((SerializablePlayer)obj).MaxPotionSlotCount,
+			Setter = delegate(object obj, int value)
+			{
+				((SerializablePlayer)obj).MaxPotionSlotCount = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "MaxPotionSlotCount",
+			JsonPropertyName = "max_potion_slot_count",
+			AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("MaxPotionSlotCount", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "MaxPotionSlotCount";
-		jsonPropertyInfoValues2.JsonPropertyName = "max_potion_slot_count";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("MaxPotionSlotCount", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo5 = jsonPropertyInfoValues2;
 		array[4] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo5);
-		jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SerializablePlayer);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SerializablePlayer)obj).Gold;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo6 = new JsonPropertyInfoValues<int>
 		{
-			((SerializablePlayer)obj).Gold = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializablePlayer),
+			Converter = null,
+			Getter = (object obj) => ((SerializablePlayer)obj).Gold,
+			Setter = delegate(object obj, int value)
+			{
+				((SerializablePlayer)obj).Gold = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Gold",
+			JsonPropertyName = "gold",
+			AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("Gold", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "Gold";
-		jsonPropertyInfoValues2.JsonPropertyName = "gold";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("Gold", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo6 = jsonPropertyInfoValues2;
 		array[5] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo6);
-		jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SerializablePlayer);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SerializablePlayer)obj).BaseOrbSlotCount;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo7 = new JsonPropertyInfoValues<int>
 		{
-			((SerializablePlayer)obj).BaseOrbSlotCount = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializablePlayer),
+			Converter = null,
+			Getter = (object obj) => ((SerializablePlayer)obj).BaseOrbSlotCount,
+			Setter = delegate(object obj, int value)
+			{
+				((SerializablePlayer)obj).BaseOrbSlotCount = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "BaseOrbSlotCount",
+			JsonPropertyName = "base_orb_slot_count",
+			AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("BaseOrbSlotCount", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "BaseOrbSlotCount";
-		jsonPropertyInfoValues2.JsonPropertyName = "base_orb_slot_count";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("BaseOrbSlotCount", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo7 = jsonPropertyInfoValues2;
 		array[6] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo7);
-		JsonPropertyInfoValues<ulong> jsonPropertyInfoValues3 = new JsonPropertyInfoValues<ulong>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(SerializablePlayer);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = (object obj) => ((SerializablePlayer)obj).NetId;
-		jsonPropertyInfoValues3.Setter = delegate(object obj, ulong value)
+		JsonPropertyInfoValues<ulong> propertyInfo8 = new JsonPropertyInfoValues<ulong>
 		{
-			((SerializablePlayer)obj).NetId = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializablePlayer),
+			Converter = null,
+			Getter = (object obj) => ((SerializablePlayer)obj).NetId,
+			Setter = delegate(object obj, ulong value)
+			{
+				((SerializablePlayer)obj).NetId = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "NetId",
+			JsonPropertyName = "net_id",
+			AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("NetId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ulong), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues3.IgnoreCondition = null;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "NetId";
-		jsonPropertyInfoValues3.JsonPropertyName = "net_id";
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("NetId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ulong), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<ulong> propertyInfo8 = jsonPropertyInfoValues3;
 		array[7] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo8);
-		JsonPropertyInfoValues<List<SerializableCard>> jsonPropertyInfoValues4 = new JsonPropertyInfoValues<List<SerializableCard>>();
-		jsonPropertyInfoValues4.IsProperty = true;
-		jsonPropertyInfoValues4.IsPublic = true;
-		jsonPropertyInfoValues4.IsVirtual = false;
-		jsonPropertyInfoValues4.DeclaringType = typeof(SerializablePlayer);
-		jsonPropertyInfoValues4.Converter = null;
-		jsonPropertyInfoValues4.Getter = (object obj) => ((SerializablePlayer)obj).Deck;
-		jsonPropertyInfoValues4.Setter = delegate(object obj, List<SerializableCard>? value)
+		JsonPropertyInfoValues<List<SerializableCard>> propertyInfo9 = new JsonPropertyInfoValues<List<SerializableCard>>
 		{
-			((SerializablePlayer)obj).Deck = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializablePlayer),
+			Converter = null,
+			Getter = (object obj) => ((SerializablePlayer)obj).Deck,
+			Setter = delegate(object obj, List<SerializableCard>? value)
+			{
+				((SerializablePlayer)obj).Deck = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Deck",
+			JsonPropertyName = "deck",
+			AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("Deck", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<SerializableCard>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues4.IgnoreCondition = null;
-		jsonPropertyInfoValues4.HasJsonInclude = false;
-		jsonPropertyInfoValues4.IsExtensionData = false;
-		jsonPropertyInfoValues4.NumberHandling = null;
-		jsonPropertyInfoValues4.PropertyName = "Deck";
-		jsonPropertyInfoValues4.JsonPropertyName = "deck";
-		jsonPropertyInfoValues4.AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("Deck", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<SerializableCard>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<SerializableCard>> propertyInfo9 = jsonPropertyInfoValues4;
 		array[8] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo9);
 		array[8].IsGetNullable = false;
 		array[8].IsSetNullable = false;
-		JsonPropertyInfoValues<List<SerializableRelic>> jsonPropertyInfoValues5 = new JsonPropertyInfoValues<List<SerializableRelic>>();
-		jsonPropertyInfoValues5.IsProperty = true;
-		jsonPropertyInfoValues5.IsPublic = true;
-		jsonPropertyInfoValues5.IsVirtual = false;
-		jsonPropertyInfoValues5.DeclaringType = typeof(SerializablePlayer);
-		jsonPropertyInfoValues5.Converter = null;
-		jsonPropertyInfoValues5.Getter = (object obj) => ((SerializablePlayer)obj).Relics;
-		jsonPropertyInfoValues5.Setter = delegate(object obj, List<SerializableRelic>? value)
+		JsonPropertyInfoValues<List<SerializableRelic>> propertyInfo10 = new JsonPropertyInfoValues<List<SerializableRelic>>
 		{
-			((SerializablePlayer)obj).Relics = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializablePlayer),
+			Converter = null,
+			Getter = (object obj) => ((SerializablePlayer)obj).Relics,
+			Setter = delegate(object obj, List<SerializableRelic>? value)
+			{
+				((SerializablePlayer)obj).Relics = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Relics",
+			JsonPropertyName = "relics",
+			AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("Relics", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<SerializableRelic>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues5.IgnoreCondition = null;
-		jsonPropertyInfoValues5.HasJsonInclude = false;
-		jsonPropertyInfoValues5.IsExtensionData = false;
-		jsonPropertyInfoValues5.NumberHandling = null;
-		jsonPropertyInfoValues5.PropertyName = "Relics";
-		jsonPropertyInfoValues5.JsonPropertyName = "relics";
-		jsonPropertyInfoValues5.AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("Relics", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<SerializableRelic>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<SerializableRelic>> propertyInfo10 = jsonPropertyInfoValues5;
 		array[9] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo10);
 		array[9].IsGetNullable = false;
 		array[9].IsSetNullable = false;
-		JsonPropertyInfoValues<List<SerializablePotion>> jsonPropertyInfoValues6 = new JsonPropertyInfoValues<List<SerializablePotion>>();
-		jsonPropertyInfoValues6.IsProperty = true;
-		jsonPropertyInfoValues6.IsPublic = true;
-		jsonPropertyInfoValues6.IsVirtual = false;
-		jsonPropertyInfoValues6.DeclaringType = typeof(SerializablePlayer);
-		jsonPropertyInfoValues6.Converter = null;
-		jsonPropertyInfoValues6.Getter = (object obj) => ((SerializablePlayer)obj).Potions;
-		jsonPropertyInfoValues6.Setter = delegate(object obj, List<SerializablePotion>? value)
+		JsonPropertyInfoValues<List<SerializablePotion>> propertyInfo11 = new JsonPropertyInfoValues<List<SerializablePotion>>
 		{
-			((SerializablePlayer)obj).Potions = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializablePlayer),
+			Converter = null,
+			Getter = (object obj) => ((SerializablePlayer)obj).Potions,
+			Setter = delegate(object obj, List<SerializablePotion>? value)
+			{
+				((SerializablePlayer)obj).Potions = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Potions",
+			JsonPropertyName = "potions",
+			AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("Potions", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<SerializablePotion>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues6.IgnoreCondition = null;
-		jsonPropertyInfoValues6.HasJsonInclude = false;
-		jsonPropertyInfoValues6.IsExtensionData = false;
-		jsonPropertyInfoValues6.NumberHandling = null;
-		jsonPropertyInfoValues6.PropertyName = "Potions";
-		jsonPropertyInfoValues6.JsonPropertyName = "potions";
-		jsonPropertyInfoValues6.AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("Potions", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<SerializablePotion>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<SerializablePotion>> propertyInfo11 = jsonPropertyInfoValues6;
 		array[10] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo11);
 		array[10].IsGetNullable = false;
 		array[10].IsSetNullable = false;
-		JsonPropertyInfoValues<SerializablePlayerRngSet> jsonPropertyInfoValues7 = new JsonPropertyInfoValues<SerializablePlayerRngSet>();
-		jsonPropertyInfoValues7.IsProperty = true;
-		jsonPropertyInfoValues7.IsPublic = true;
-		jsonPropertyInfoValues7.IsVirtual = false;
-		jsonPropertyInfoValues7.DeclaringType = typeof(SerializablePlayer);
-		jsonPropertyInfoValues7.Converter = null;
-		jsonPropertyInfoValues7.Getter = (object obj) => ((SerializablePlayer)obj).Rng;
-		jsonPropertyInfoValues7.Setter = delegate(object obj, SerializablePlayerRngSet? value)
+		JsonPropertyInfoValues<SerializablePlayerRngSet> propertyInfo12 = new JsonPropertyInfoValues<SerializablePlayerRngSet>
 		{
-			((SerializablePlayer)obj).Rng = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializablePlayer),
+			Converter = null,
+			Getter = (object obj) => ((SerializablePlayer)obj).Rng,
+			Setter = delegate(object obj, SerializablePlayerRngSet? value)
+			{
+				((SerializablePlayer)obj).Rng = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Rng",
+			JsonPropertyName = "rng",
+			AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("Rng", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializablePlayerRngSet), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues7.IgnoreCondition = null;
-		jsonPropertyInfoValues7.HasJsonInclude = false;
-		jsonPropertyInfoValues7.IsExtensionData = false;
-		jsonPropertyInfoValues7.NumberHandling = null;
-		jsonPropertyInfoValues7.PropertyName = "Rng";
-		jsonPropertyInfoValues7.JsonPropertyName = "rng";
-		jsonPropertyInfoValues7.AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("Rng", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializablePlayerRngSet), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<SerializablePlayerRngSet> propertyInfo12 = jsonPropertyInfoValues7;
 		array[11] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo12);
 		array[11].IsGetNullable = false;
 		array[11].IsSetNullable = false;
-		JsonPropertyInfoValues<SerializablePlayerOddsSet> jsonPropertyInfoValues8 = new JsonPropertyInfoValues<SerializablePlayerOddsSet>();
-		jsonPropertyInfoValues8.IsProperty = true;
-		jsonPropertyInfoValues8.IsPublic = true;
-		jsonPropertyInfoValues8.IsVirtual = false;
-		jsonPropertyInfoValues8.DeclaringType = typeof(SerializablePlayer);
-		jsonPropertyInfoValues8.Converter = null;
-		jsonPropertyInfoValues8.Getter = (object obj) => ((SerializablePlayer)obj).Odds;
-		jsonPropertyInfoValues8.Setter = delegate(object obj, SerializablePlayerOddsSet? value)
+		JsonPropertyInfoValues<SerializablePlayerOddsSet> propertyInfo13 = new JsonPropertyInfoValues<SerializablePlayerOddsSet>
 		{
-			((SerializablePlayer)obj).Odds = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializablePlayer),
+			Converter = null,
+			Getter = (object obj) => ((SerializablePlayer)obj).Odds,
+			Setter = delegate(object obj, SerializablePlayerOddsSet? value)
+			{
+				((SerializablePlayer)obj).Odds = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Odds",
+			JsonPropertyName = "odds",
+			AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("Odds", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializablePlayerOddsSet), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues8.IgnoreCondition = null;
-		jsonPropertyInfoValues8.HasJsonInclude = false;
-		jsonPropertyInfoValues8.IsExtensionData = false;
-		jsonPropertyInfoValues8.NumberHandling = null;
-		jsonPropertyInfoValues8.PropertyName = "Odds";
-		jsonPropertyInfoValues8.JsonPropertyName = "odds";
-		jsonPropertyInfoValues8.AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("Odds", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializablePlayerOddsSet), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<SerializablePlayerOddsSet> propertyInfo13 = jsonPropertyInfoValues8;
 		array[12] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo13);
 		array[12].IsGetNullable = false;
 		array[12].IsSetNullable = false;
-		JsonPropertyInfoValues<SerializableRelicGrabBag> jsonPropertyInfoValues9 = new JsonPropertyInfoValues<SerializableRelicGrabBag>();
-		jsonPropertyInfoValues9.IsProperty = true;
-		jsonPropertyInfoValues9.IsPublic = true;
-		jsonPropertyInfoValues9.IsVirtual = false;
-		jsonPropertyInfoValues9.DeclaringType = typeof(SerializablePlayer);
-		jsonPropertyInfoValues9.Converter = null;
-		jsonPropertyInfoValues9.Getter = (object obj) => ((SerializablePlayer)obj).RelicGrabBag;
-		jsonPropertyInfoValues9.Setter = delegate(object obj, SerializableRelicGrabBag? value)
+		JsonPropertyInfoValues<SerializableRelicGrabBag> propertyInfo14 = new JsonPropertyInfoValues<SerializableRelicGrabBag>
 		{
-			((SerializablePlayer)obj).RelicGrabBag = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializablePlayer),
+			Converter = null,
+			Getter = (object obj) => ((SerializablePlayer)obj).RelicGrabBag,
+			Setter = delegate(object obj, SerializableRelicGrabBag? value)
+			{
+				((SerializablePlayer)obj).RelicGrabBag = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "RelicGrabBag",
+			JsonPropertyName = "relic_grab_bag",
+			AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("RelicGrabBag", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializableRelicGrabBag), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues9.IgnoreCondition = null;
-		jsonPropertyInfoValues9.HasJsonInclude = false;
-		jsonPropertyInfoValues9.IsExtensionData = false;
-		jsonPropertyInfoValues9.NumberHandling = null;
-		jsonPropertyInfoValues9.PropertyName = "RelicGrabBag";
-		jsonPropertyInfoValues9.JsonPropertyName = "relic_grab_bag";
-		jsonPropertyInfoValues9.AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("RelicGrabBag", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializableRelicGrabBag), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<SerializableRelicGrabBag> propertyInfo14 = jsonPropertyInfoValues9;
 		array[13] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo14);
 		array[13].IsGetNullable = false;
 		array[13].IsSetNullable = false;
-		JsonPropertyInfoValues<SerializableExtraPlayerFields> jsonPropertyInfoValues10 = new JsonPropertyInfoValues<SerializableExtraPlayerFields>();
-		jsonPropertyInfoValues10.IsProperty = true;
-		jsonPropertyInfoValues10.IsPublic = true;
-		jsonPropertyInfoValues10.IsVirtual = false;
-		jsonPropertyInfoValues10.DeclaringType = typeof(SerializablePlayer);
-		jsonPropertyInfoValues10.Converter = null;
-		jsonPropertyInfoValues10.Getter = (object obj) => ((SerializablePlayer)obj).ExtraFields;
-		jsonPropertyInfoValues10.Setter = delegate(object obj, SerializableExtraPlayerFields? value)
+		JsonPropertyInfoValues<SerializableExtraPlayerFields> propertyInfo15 = new JsonPropertyInfoValues<SerializableExtraPlayerFields>
 		{
-			((SerializablePlayer)obj).ExtraFields = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializablePlayer),
+			Converter = null,
+			Getter = (object obj) => ((SerializablePlayer)obj).ExtraFields,
+			Setter = delegate(object obj, SerializableExtraPlayerFields? value)
+			{
+				((SerializablePlayer)obj).ExtraFields = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "ExtraFields",
+			JsonPropertyName = "extra_fields",
+			AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("ExtraFields", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializableExtraPlayerFields), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues10.IgnoreCondition = null;
-		jsonPropertyInfoValues10.HasJsonInclude = false;
-		jsonPropertyInfoValues10.IsExtensionData = false;
-		jsonPropertyInfoValues10.NumberHandling = null;
-		jsonPropertyInfoValues10.PropertyName = "ExtraFields";
-		jsonPropertyInfoValues10.JsonPropertyName = "extra_fields";
-		jsonPropertyInfoValues10.AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("ExtraFields", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializableExtraPlayerFields), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<SerializableExtraPlayerFields> propertyInfo15 = jsonPropertyInfoValues10;
 		array[14] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo15);
 		array[14].IsGetNullable = false;
 		array[14].IsSetNullable = false;
-		JsonPropertyInfoValues<SerializableUnlockState> jsonPropertyInfoValues11 = new JsonPropertyInfoValues<SerializableUnlockState>();
-		jsonPropertyInfoValues11.IsProperty = true;
-		jsonPropertyInfoValues11.IsPublic = true;
-		jsonPropertyInfoValues11.IsVirtual = false;
-		jsonPropertyInfoValues11.DeclaringType = typeof(SerializablePlayer);
-		jsonPropertyInfoValues11.Converter = null;
-		jsonPropertyInfoValues11.Getter = (object obj) => ((SerializablePlayer)obj).UnlockState;
-		jsonPropertyInfoValues11.Setter = delegate(object obj, SerializableUnlockState? value)
+		JsonPropertyInfoValues<SerializableUnlockState> propertyInfo16 = new JsonPropertyInfoValues<SerializableUnlockState>
 		{
-			((SerializablePlayer)obj).UnlockState = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializablePlayer),
+			Converter = null,
+			Getter = (object obj) => ((SerializablePlayer)obj).UnlockState,
+			Setter = delegate(object obj, SerializableUnlockState? value)
+			{
+				((SerializablePlayer)obj).UnlockState = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "UnlockState",
+			JsonPropertyName = "unlock_state",
+			AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("UnlockState", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializableUnlockState), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues11.IgnoreCondition = null;
-		jsonPropertyInfoValues11.HasJsonInclude = false;
-		jsonPropertyInfoValues11.IsExtensionData = false;
-		jsonPropertyInfoValues11.NumberHandling = null;
-		jsonPropertyInfoValues11.PropertyName = "UnlockState";
-		jsonPropertyInfoValues11.JsonPropertyName = "unlock_state";
-		jsonPropertyInfoValues11.AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("UnlockState", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializableUnlockState), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<SerializableUnlockState> propertyInfo16 = jsonPropertyInfoValues11;
 		array[15] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo16);
 		array[15].IsGetNullable = false;
 		array[15].IsSetNullable = false;
-		JsonPropertyInfoValues<List<ModelId>> jsonPropertyInfoValues12 = new JsonPropertyInfoValues<List<ModelId>>();
-		jsonPropertyInfoValues12.IsProperty = true;
-		jsonPropertyInfoValues12.IsPublic = true;
-		jsonPropertyInfoValues12.IsVirtual = false;
-		jsonPropertyInfoValues12.DeclaringType = typeof(SerializablePlayer);
-		jsonPropertyInfoValues12.Converter = null;
-		jsonPropertyInfoValues12.Getter = (object obj) => ((SerializablePlayer)obj).DiscoveredCards;
-		jsonPropertyInfoValues12.Setter = delegate(object obj, List<ModelId>? value)
+		JsonPropertyInfoValues<List<ModelId>> propertyInfo17 = new JsonPropertyInfoValues<List<ModelId>>
 		{
-			((SerializablePlayer)obj).DiscoveredCards = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializablePlayer),
+			Converter = null,
+			Getter = (object obj) => ((SerializablePlayer)obj).DiscoveredCards,
+			Setter = delegate(object obj, List<ModelId>? value)
+			{
+				((SerializablePlayer)obj).DiscoveredCards = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "DiscoveredCards",
+			JsonPropertyName = "discovered_cards",
+			AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("DiscoveredCards", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues12.IgnoreCondition = null;
-		jsonPropertyInfoValues12.HasJsonInclude = false;
-		jsonPropertyInfoValues12.IsExtensionData = false;
-		jsonPropertyInfoValues12.NumberHandling = null;
-		jsonPropertyInfoValues12.PropertyName = "DiscoveredCards";
-		jsonPropertyInfoValues12.JsonPropertyName = "discovered_cards";
-		jsonPropertyInfoValues12.AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("DiscoveredCards", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<ModelId>> propertyInfo17 = jsonPropertyInfoValues12;
 		array[16] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo17);
 		array[16].IsGetNullable = false;
 		array[16].IsSetNullable = false;
-		jsonPropertyInfoValues12 = new JsonPropertyInfoValues<List<ModelId>>();
-		jsonPropertyInfoValues12.IsProperty = true;
-		jsonPropertyInfoValues12.IsPublic = true;
-		jsonPropertyInfoValues12.IsVirtual = false;
-		jsonPropertyInfoValues12.DeclaringType = typeof(SerializablePlayer);
-		jsonPropertyInfoValues12.Converter = null;
-		jsonPropertyInfoValues12.Getter = (object obj) => ((SerializablePlayer)obj).DiscoveredEnemies;
-		jsonPropertyInfoValues12.Setter = delegate(object obj, List<ModelId>? value)
+		JsonPropertyInfoValues<List<ModelId>> propertyInfo18 = new JsonPropertyInfoValues<List<ModelId>>
 		{
-			((SerializablePlayer)obj).DiscoveredEnemies = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializablePlayer),
+			Converter = null,
+			Getter = (object obj) => ((SerializablePlayer)obj).DiscoveredEnemies,
+			Setter = delegate(object obj, List<ModelId>? value)
+			{
+				((SerializablePlayer)obj).DiscoveredEnemies = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "DiscoveredEnemies",
+			JsonPropertyName = "discovered_enemies",
+			AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("DiscoveredEnemies", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues12.IgnoreCondition = null;
-		jsonPropertyInfoValues12.HasJsonInclude = false;
-		jsonPropertyInfoValues12.IsExtensionData = false;
-		jsonPropertyInfoValues12.NumberHandling = null;
-		jsonPropertyInfoValues12.PropertyName = "DiscoveredEnemies";
-		jsonPropertyInfoValues12.JsonPropertyName = "discovered_enemies";
-		jsonPropertyInfoValues12.AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("DiscoveredEnemies", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<ModelId>> propertyInfo18 = jsonPropertyInfoValues12;
 		array[17] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo18);
 		array[17].IsGetNullable = false;
 		array[17].IsSetNullable = false;
-		JsonPropertyInfoValues<List<string>> jsonPropertyInfoValues13 = new JsonPropertyInfoValues<List<string>>();
-		jsonPropertyInfoValues13.IsProperty = true;
-		jsonPropertyInfoValues13.IsPublic = true;
-		jsonPropertyInfoValues13.IsVirtual = false;
-		jsonPropertyInfoValues13.DeclaringType = typeof(SerializablePlayer);
-		jsonPropertyInfoValues13.Converter = (JsonConverter<List<string>>)ExpandConverter(typeof(List<string>), new EpochIdListConverter(), options);
-		jsonPropertyInfoValues13.Getter = (object obj) => ((SerializablePlayer)obj).DiscoveredEpochs;
-		jsonPropertyInfoValues13.Setter = delegate(object obj, List<string>? value)
+		JsonPropertyInfoValues<List<string>> propertyInfo19 = new JsonPropertyInfoValues<List<string>>
 		{
-			((SerializablePlayer)obj).DiscoveredEpochs = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializablePlayer),
+			Converter = (JsonConverter<List<string>>)ExpandConverter(typeof(List<string>), new EpochIdListConverter(), options),
+			Getter = (object obj) => ((SerializablePlayer)obj).DiscoveredEpochs,
+			Setter = delegate(object obj, List<string>? value)
+			{
+				((SerializablePlayer)obj).DiscoveredEpochs = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "DiscoveredEpochs",
+			JsonPropertyName = "discovered_epochs",
+			AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("DiscoveredEpochs", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<string>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues13.IgnoreCondition = null;
-		jsonPropertyInfoValues13.HasJsonInclude = false;
-		jsonPropertyInfoValues13.IsExtensionData = false;
-		jsonPropertyInfoValues13.NumberHandling = null;
-		jsonPropertyInfoValues13.PropertyName = "DiscoveredEpochs";
-		jsonPropertyInfoValues13.JsonPropertyName = "discovered_epochs";
-		jsonPropertyInfoValues13.AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("DiscoveredEpochs", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<string>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<string>> propertyInfo19 = jsonPropertyInfoValues13;
 		array[18] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo19);
 		array[18].IsGetNullable = false;
 		array[18].IsSetNullable = false;
-		jsonPropertyInfoValues12 = new JsonPropertyInfoValues<List<ModelId>>();
-		jsonPropertyInfoValues12.IsProperty = true;
-		jsonPropertyInfoValues12.IsPublic = true;
-		jsonPropertyInfoValues12.IsVirtual = false;
-		jsonPropertyInfoValues12.DeclaringType = typeof(SerializablePlayer);
-		jsonPropertyInfoValues12.Converter = null;
-		jsonPropertyInfoValues12.Getter = (object obj) => ((SerializablePlayer)obj).DiscoveredPotions;
-		jsonPropertyInfoValues12.Setter = delegate(object obj, List<ModelId>? value)
+		JsonPropertyInfoValues<List<ModelId>> propertyInfo20 = new JsonPropertyInfoValues<List<ModelId>>
 		{
-			((SerializablePlayer)obj).DiscoveredPotions = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializablePlayer),
+			Converter = null,
+			Getter = (object obj) => ((SerializablePlayer)obj).DiscoveredPotions,
+			Setter = delegate(object obj, List<ModelId>? value)
+			{
+				((SerializablePlayer)obj).DiscoveredPotions = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "DiscoveredPotions",
+			JsonPropertyName = "discovered_potions",
+			AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("DiscoveredPotions", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues12.IgnoreCondition = null;
-		jsonPropertyInfoValues12.HasJsonInclude = false;
-		jsonPropertyInfoValues12.IsExtensionData = false;
-		jsonPropertyInfoValues12.NumberHandling = null;
-		jsonPropertyInfoValues12.PropertyName = "DiscoveredPotions";
-		jsonPropertyInfoValues12.JsonPropertyName = "discovered_potions";
-		jsonPropertyInfoValues12.AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("DiscoveredPotions", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<ModelId>> propertyInfo20 = jsonPropertyInfoValues12;
 		array[19] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo20);
 		array[19].IsGetNullable = false;
 		array[19].IsSetNullable = false;
-		jsonPropertyInfoValues12 = new JsonPropertyInfoValues<List<ModelId>>();
-		jsonPropertyInfoValues12.IsProperty = true;
-		jsonPropertyInfoValues12.IsPublic = true;
-		jsonPropertyInfoValues12.IsVirtual = false;
-		jsonPropertyInfoValues12.DeclaringType = typeof(SerializablePlayer);
-		jsonPropertyInfoValues12.Converter = null;
-		jsonPropertyInfoValues12.Getter = (object obj) => ((SerializablePlayer)obj).DiscoveredRelics;
-		jsonPropertyInfoValues12.Setter = delegate(object obj, List<ModelId>? value)
+		JsonPropertyInfoValues<List<ModelId>> propertyInfo21 = new JsonPropertyInfoValues<List<ModelId>>
 		{
-			((SerializablePlayer)obj).DiscoveredRelics = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializablePlayer),
+			Converter = null,
+			Getter = (object obj) => ((SerializablePlayer)obj).DiscoveredRelics,
+			Setter = delegate(object obj, List<ModelId>? value)
+			{
+				((SerializablePlayer)obj).DiscoveredRelics = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "DiscoveredRelics",
+			JsonPropertyName = "discovered_relics",
+			AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("DiscoveredRelics", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues12.IgnoreCondition = null;
-		jsonPropertyInfoValues12.HasJsonInclude = false;
-		jsonPropertyInfoValues12.IsExtensionData = false;
-		jsonPropertyInfoValues12.NumberHandling = null;
-		jsonPropertyInfoValues12.PropertyName = "DiscoveredRelics";
-		jsonPropertyInfoValues12.JsonPropertyName = "discovered_relics";
-		jsonPropertyInfoValues12.AttributeProviderFactory = () => typeof(SerializablePlayer).GetProperty("DiscoveredRelics", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<ModelId>> propertyInfo21 = jsonPropertyInfoValues12;
 		array[20] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo21);
 		array[20].IsGetNullable = false;
 		array[20].IsSetNullable = false;
@@ -7471,45 +8947,47 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] SerializablePlayerOddsSetPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[2];
-		JsonPropertyInfoValues<float> jsonPropertyInfoValues = new JsonPropertyInfoValues<float>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializablePlayerOddsSet);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializablePlayerOddsSet)obj).CardRarityOddsValue;
-		jsonPropertyInfoValues.Setter = delegate(object obj, float value)
+		JsonPropertyInfoValues<float> propertyInfo = new JsonPropertyInfoValues<float>
 		{
-			((SerializablePlayerOddsSet)obj).CardRarityOddsValue = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializablePlayerOddsSet),
+			Converter = null,
+			Getter = (object obj) => ((SerializablePlayerOddsSet)obj).CardRarityOddsValue,
+			Setter = delegate(object obj, float value)
+			{
+				((SerializablePlayerOddsSet)obj).CardRarityOddsValue = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "CardRarityOddsValue",
+			JsonPropertyName = "card_rarity_odds_value",
+			AttributeProviderFactory = () => typeof(SerializablePlayerOddsSet).GetProperty("CardRarityOddsValue", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(float), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "CardRarityOddsValue";
-		jsonPropertyInfoValues.JsonPropertyName = "card_rarity_odds_value";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializablePlayerOddsSet).GetProperty("CardRarityOddsValue", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(float), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<float> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<float>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializablePlayerOddsSet);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializablePlayerOddsSet)obj).PotionRewardOddsValue;
-		jsonPropertyInfoValues.Setter = delegate(object obj, float value)
+		JsonPropertyInfoValues<float> propertyInfo2 = new JsonPropertyInfoValues<float>
 		{
-			((SerializablePlayerOddsSet)obj).PotionRewardOddsValue = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializablePlayerOddsSet),
+			Converter = null,
+			Getter = (object obj) => ((SerializablePlayerOddsSet)obj).PotionRewardOddsValue,
+			Setter = delegate(object obj, float value)
+			{
+				((SerializablePlayerOddsSet)obj).PotionRewardOddsValue = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "PotionRewardOddsValue",
+			JsonPropertyName = "potion_reward_odds_value",
+			AttributeProviderFactory = () => typeof(SerializablePlayerOddsSet).GetProperty("PotionRewardOddsValue", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(float), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "PotionRewardOddsValue";
-		jsonPropertyInfoValues.JsonPropertyName = "potion_reward_odds_value";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializablePlayerOddsSet).GetProperty("PotionRewardOddsValue", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(float), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<float> propertyInfo2 = jsonPropertyInfoValues;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		return array;
 	}
@@ -7537,45 +9015,47 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] SerializablePotionPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[2];
-		JsonPropertyInfoValues<ModelId> jsonPropertyInfoValues = new JsonPropertyInfoValues<ModelId>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializablePotion);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializablePotion)obj).Id;
-		jsonPropertyInfoValues.Setter = delegate(object obj, ModelId? value)
+		JsonPropertyInfoValues<ModelId> propertyInfo = new JsonPropertyInfoValues<ModelId>
 		{
-			((SerializablePotion)obj).Id = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializablePotion),
+			Converter = null,
+			Getter = (object obj) => ((SerializablePotion)obj).Id,
+			Setter = delegate(object obj, ModelId? value)
+			{
+				((SerializablePotion)obj).Id = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Id",
+			JsonPropertyName = "id",
+			AttributeProviderFactory = () => typeof(SerializablePotion).GetProperty("Id", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "Id";
-		jsonPropertyInfoValues.JsonPropertyName = "id";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializablePotion).GetProperty("Id", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<ModelId> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
-		JsonPropertyInfoValues<int> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SerializablePotion);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SerializablePotion)obj).SlotIndex;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo2 = new JsonPropertyInfoValues<int>
 		{
-			((SerializablePotion)obj).SlotIndex = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializablePotion),
+			Converter = null,
+			Getter = (object obj) => ((SerializablePotion)obj).SlotIndex,
+			Setter = delegate(object obj, int value)
+			{
+				((SerializablePotion)obj).SlotIndex = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "SlotIndex",
+			JsonPropertyName = "slot_index",
+			AttributeProviderFactory = () => typeof(SerializablePotion).GetProperty("SlotIndex", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "SlotIndex";
-		jsonPropertyInfoValues2.JsonPropertyName = "slot_index";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SerializablePotion).GetProperty("SlotIndex", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		return array;
 	}
@@ -7603,65 +9083,68 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] SerializableRelicPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[3];
-		JsonPropertyInfoValues<ModelId> jsonPropertyInfoValues = new JsonPropertyInfoValues<ModelId>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializableRelic);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializableRelic)obj).Id;
-		jsonPropertyInfoValues.Setter = delegate(object obj, ModelId? value)
+		JsonPropertyInfoValues<ModelId> propertyInfo = new JsonPropertyInfoValues<ModelId>
 		{
-			((SerializableRelic)obj).Id = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRelic),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRelic)obj).Id,
+			Setter = delegate(object obj, ModelId? value)
+			{
+				((SerializableRelic)obj).Id = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Id",
+			JsonPropertyName = "id",
+			AttributeProviderFactory = () => typeof(SerializableRelic).GetProperty("Id", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "Id";
-		jsonPropertyInfoValues.JsonPropertyName = "id";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableRelic).GetProperty("Id", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<ModelId> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
-		JsonPropertyInfoValues<SavedProperties> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<SavedProperties>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SerializableRelic);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SerializableRelic)obj).Props;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, SavedProperties? value)
+		JsonPropertyInfoValues<SavedProperties> propertyInfo2 = new JsonPropertyInfoValues<SavedProperties>
 		{
-			((SerializableRelic)obj).Props = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRelic),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRelic)obj).Props,
+			Setter = delegate(object obj, SavedProperties? value)
+			{
+				((SerializableRelic)obj).Props = value;
+			},
+			IgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Props",
+			JsonPropertyName = "props",
+			AttributeProviderFactory = () => typeof(SerializableRelic).GetProperty("Props", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SavedProperties), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "Props";
-		jsonPropertyInfoValues2.JsonPropertyName = "props";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SerializableRelic).GetProperty("Props", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SavedProperties), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<SavedProperties> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
-		JsonPropertyInfoValues<int?> jsonPropertyInfoValues3 = new JsonPropertyInfoValues<int?>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(SerializableRelic);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = (object obj) => ((SerializableRelic)obj).FloorAddedToDeck;
-		jsonPropertyInfoValues3.Setter = delegate(object obj, int? value)
+		JsonPropertyInfoValues<int?> propertyInfo3 = new JsonPropertyInfoValues<int?>
 		{
-			((SerializableRelic)obj).FloorAddedToDeck = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRelic),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRelic)obj).FloorAddedToDeck,
+			Setter = delegate(object obj, int? value)
+			{
+				((SerializableRelic)obj).FloorAddedToDeck = value;
+			},
+			IgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "FloorAddedToDeck",
+			JsonPropertyName = "floor_added_to_deck",
+			AttributeProviderFactory = () => typeof(SerializableRelic).GetProperty("FloorAddedToDeck", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int?), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues3.IgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "FloorAddedToDeck";
-		jsonPropertyInfoValues3.JsonPropertyName = "floor_added_to_deck";
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(SerializableRelic).GetProperty("FloorAddedToDeck", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int?), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int?> propertyInfo3 = jsonPropertyInfoValues3;
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
 		return array;
 	}
@@ -7689,25 +9172,26 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] SerializableRelicGrabBagPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[1];
-		JsonPropertyInfoValues<Dictionary<RelicRarity, List<ModelId>>> jsonPropertyInfoValues = new JsonPropertyInfoValues<Dictionary<RelicRarity, List<ModelId>>>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializableRelicGrabBag);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializableRelicGrabBag)obj).RelicIdLists;
-		jsonPropertyInfoValues.Setter = delegate(object obj, Dictionary<RelicRarity, List<ModelId>>? value)
+		JsonPropertyInfoValues<Dictionary<RelicRarity, List<ModelId>>> propertyInfo = new JsonPropertyInfoValues<Dictionary<RelicRarity, List<ModelId>>>
 		{
-			((SerializableRelicGrabBag)obj).RelicIdLists = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRelicGrabBag),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRelicGrabBag)obj).RelicIdLists,
+			Setter = delegate(object obj, Dictionary<RelicRarity, List<ModelId>>? value)
+			{
+				((SerializableRelicGrabBag)obj).RelicIdLists = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "RelicIdLists",
+			JsonPropertyName = "relic_id_lists",
+			AttributeProviderFactory = () => typeof(SerializableRelicGrabBag).GetProperty("RelicIdLists", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(Dictionary<RelicRarity, List<ModelId>>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "RelicIdLists";
-		jsonPropertyInfoValues.JsonPropertyName = "relic_id_lists";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableRelicGrabBag).GetProperty("RelicIdLists", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(Dictionary<RelicRarity, List<ModelId>>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<Dictionary<RelicRarity, List<ModelId>>> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsGetNullable = false;
 		array[0].IsSetNullable = false;
@@ -7736,193 +9220,223 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 
 	private static JsonPropertyInfo[] SerializableRewardPropInit(JsonSerializerOptions options)
 	{
-		JsonPropertyInfo[] array = new JsonPropertyInfo[9];
-		JsonPropertyInfoValues<RewardType> jsonPropertyInfoValues = new JsonPropertyInfoValues<RewardType>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializableReward);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializableReward)obj).RewardType;
-		jsonPropertyInfoValues.Setter = delegate(object obj, RewardType value)
+		JsonPropertyInfo[] array = new JsonPropertyInfo[10];
+		JsonPropertyInfoValues<RewardType> propertyInfo = new JsonPropertyInfoValues<RewardType>
 		{
-			((SerializableReward)obj).RewardType = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableReward),
+			Converter = null,
+			Getter = (object obj) => ((SerializableReward)obj).RewardType,
+			Setter = delegate(object obj, RewardType value)
+			{
+				((SerializableReward)obj).RewardType = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "RewardType",
+			JsonPropertyName = "reward_type",
+			AttributeProviderFactory = () => typeof(SerializableReward).GetProperty("RewardType", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(RewardType), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "RewardType";
-		jsonPropertyInfoValues.JsonPropertyName = "reward_type";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableReward).GetProperty("RewardType", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(RewardType), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<RewardType> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
-		JsonPropertyInfoValues<SerializableCard> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<SerializableCard>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SerializableReward);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SerializableReward)obj).SpecialCard;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, SerializableCard? value)
+		JsonPropertyInfoValues<ModelId> propertyInfo2 = new JsonPropertyInfoValues<ModelId>
 		{
-			((SerializableReward)obj).SpecialCard = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableReward),
+			Converter = null,
+			Getter = (object obj) => ((SerializableReward)obj).PredeterminedModelId,
+			Setter = delegate(object obj, ModelId? value)
+			{
+				((SerializableReward)obj).PredeterminedModelId = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "PredeterminedModelId",
+			JsonPropertyName = "predetermined_model_id",
+			AttributeProviderFactory = () => typeof(SerializableReward).GetProperty("PredeterminedModelId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "SpecialCard";
-		jsonPropertyInfoValues2.JsonPropertyName = "special_card";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SerializableReward).GetProperty("SpecialCard", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializableCard), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<SerializableCard> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		array[1].IsGetNullable = false;
 		array[1].IsSetNullable = false;
-		JsonPropertyInfoValues<int> jsonPropertyInfoValues3 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(SerializableReward);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = (object obj) => ((SerializableReward)obj).GoldAmount;
-		jsonPropertyInfoValues3.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<SerializableCard> propertyInfo3 = new JsonPropertyInfoValues<SerializableCard>
 		{
-			((SerializableReward)obj).GoldAmount = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableReward),
+			Converter = null,
+			Getter = (object obj) => ((SerializableReward)obj).SpecialCard,
+			Setter = delegate(object obj, SerializableCard? value)
+			{
+				((SerializableReward)obj).SpecialCard = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "SpecialCard",
+			JsonPropertyName = "special_card",
+			AttributeProviderFactory = () => typeof(SerializableReward).GetProperty("SpecialCard", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializableCard), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues3.IgnoreCondition = null;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "GoldAmount";
-		jsonPropertyInfoValues3.JsonPropertyName = "gold_amount";
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(SerializableReward).GetProperty("GoldAmount", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo3 = jsonPropertyInfoValues3;
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
-		JsonPropertyInfoValues<bool> jsonPropertyInfoValues4 = new JsonPropertyInfoValues<bool>();
-		jsonPropertyInfoValues4.IsProperty = true;
-		jsonPropertyInfoValues4.IsPublic = true;
-		jsonPropertyInfoValues4.IsVirtual = false;
-		jsonPropertyInfoValues4.DeclaringType = typeof(SerializableReward);
-		jsonPropertyInfoValues4.Converter = null;
-		jsonPropertyInfoValues4.Getter = (object obj) => ((SerializableReward)obj).WasGoldStolenBack;
-		jsonPropertyInfoValues4.Setter = delegate(object obj, bool value)
+		JsonPropertyInfoValues<int> propertyInfo4 = new JsonPropertyInfoValues<int>
 		{
-			((SerializableReward)obj).WasGoldStolenBack = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableReward),
+			Converter = null,
+			Getter = (object obj) => ((SerializableReward)obj).GoldAmount,
+			Setter = delegate(object obj, int value)
+			{
+				((SerializableReward)obj).GoldAmount = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "GoldAmount",
+			JsonPropertyName = "gold_amount",
+			AttributeProviderFactory = () => typeof(SerializableReward).GetProperty("GoldAmount", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues4.IgnoreCondition = null;
-		jsonPropertyInfoValues4.HasJsonInclude = false;
-		jsonPropertyInfoValues4.IsExtensionData = false;
-		jsonPropertyInfoValues4.NumberHandling = null;
-		jsonPropertyInfoValues4.PropertyName = "WasGoldStolenBack";
-		jsonPropertyInfoValues4.JsonPropertyName = "was_gold_stolen_back";
-		jsonPropertyInfoValues4.AttributeProviderFactory = () => typeof(SerializableReward).GetProperty("WasGoldStolenBack", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<bool> propertyInfo4 = jsonPropertyInfoValues4;
 		array[3] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo4);
-		JsonPropertyInfoValues<CardCreationSource> jsonPropertyInfoValues5 = new JsonPropertyInfoValues<CardCreationSource>();
-		jsonPropertyInfoValues5.IsProperty = true;
-		jsonPropertyInfoValues5.IsPublic = true;
-		jsonPropertyInfoValues5.IsVirtual = false;
-		jsonPropertyInfoValues5.DeclaringType = typeof(SerializableReward);
-		jsonPropertyInfoValues5.Converter = null;
-		jsonPropertyInfoValues5.Getter = (object obj) => ((SerializableReward)obj).Source;
-		jsonPropertyInfoValues5.Setter = delegate(object obj, CardCreationSource value)
+		JsonPropertyInfoValues<bool> propertyInfo5 = new JsonPropertyInfoValues<bool>
 		{
-			((SerializableReward)obj).Source = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableReward),
+			Converter = null,
+			Getter = (object obj) => ((SerializableReward)obj).WasGoldStolenBack,
+			Setter = delegate(object obj, bool value)
+			{
+				((SerializableReward)obj).WasGoldStolenBack = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "WasGoldStolenBack",
+			JsonPropertyName = "was_gold_stolen_back",
+			AttributeProviderFactory = () => typeof(SerializableReward).GetProperty("WasGoldStolenBack", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues5.IgnoreCondition = null;
-		jsonPropertyInfoValues5.HasJsonInclude = false;
-		jsonPropertyInfoValues5.IsExtensionData = false;
-		jsonPropertyInfoValues5.NumberHandling = null;
-		jsonPropertyInfoValues5.PropertyName = "Source";
-		jsonPropertyInfoValues5.JsonPropertyName = "source";
-		jsonPropertyInfoValues5.AttributeProviderFactory = () => typeof(SerializableReward).GetProperty("Source", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(CardCreationSource), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<CardCreationSource> propertyInfo5 = jsonPropertyInfoValues5;
 		array[4] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo5);
-		JsonPropertyInfoValues<CardRarityOddsType> jsonPropertyInfoValues6 = new JsonPropertyInfoValues<CardRarityOddsType>();
-		jsonPropertyInfoValues6.IsProperty = true;
-		jsonPropertyInfoValues6.IsPublic = true;
-		jsonPropertyInfoValues6.IsVirtual = false;
-		jsonPropertyInfoValues6.DeclaringType = typeof(SerializableReward);
-		jsonPropertyInfoValues6.Converter = null;
-		jsonPropertyInfoValues6.Getter = (object obj) => ((SerializableReward)obj).RarityOdds;
-		jsonPropertyInfoValues6.Setter = delegate(object obj, CardRarityOddsType value)
+		JsonPropertyInfoValues<CardCreationSource> propertyInfo6 = new JsonPropertyInfoValues<CardCreationSource>
 		{
-			((SerializableReward)obj).RarityOdds = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableReward),
+			Converter = null,
+			Getter = (object obj) => ((SerializableReward)obj).Source,
+			Setter = delegate(object obj, CardCreationSource value)
+			{
+				((SerializableReward)obj).Source = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Source",
+			JsonPropertyName = "source",
+			AttributeProviderFactory = () => typeof(SerializableReward).GetProperty("Source", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(CardCreationSource), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues6.IgnoreCondition = null;
-		jsonPropertyInfoValues6.HasJsonInclude = false;
-		jsonPropertyInfoValues6.IsExtensionData = false;
-		jsonPropertyInfoValues6.NumberHandling = null;
-		jsonPropertyInfoValues6.PropertyName = "RarityOdds";
-		jsonPropertyInfoValues6.JsonPropertyName = "rarity_odds";
-		jsonPropertyInfoValues6.AttributeProviderFactory = () => typeof(SerializableReward).GetProperty("RarityOdds", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(CardRarityOddsType), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<CardRarityOddsType> propertyInfo6 = jsonPropertyInfoValues6;
 		array[5] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo6);
-		JsonPropertyInfoValues<List<ModelId>> jsonPropertyInfoValues7 = new JsonPropertyInfoValues<List<ModelId>>();
-		jsonPropertyInfoValues7.IsProperty = true;
-		jsonPropertyInfoValues7.IsPublic = true;
-		jsonPropertyInfoValues7.IsVirtual = false;
-		jsonPropertyInfoValues7.DeclaringType = typeof(SerializableReward);
-		jsonPropertyInfoValues7.Converter = null;
-		jsonPropertyInfoValues7.Getter = (object obj) => ((SerializableReward)obj).CardPoolIds;
-		jsonPropertyInfoValues7.Setter = delegate(object obj, List<ModelId>? value)
+		JsonPropertyInfoValues<CardRarityOddsType> propertyInfo7 = new JsonPropertyInfoValues<CardRarityOddsType>
 		{
-			((SerializableReward)obj).CardPoolIds = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableReward),
+			Converter = null,
+			Getter = (object obj) => ((SerializableReward)obj).RarityOdds,
+			Setter = delegate(object obj, CardRarityOddsType value)
+			{
+				((SerializableReward)obj).RarityOdds = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "RarityOdds",
+			JsonPropertyName = "rarity_odds",
+			AttributeProviderFactory = () => typeof(SerializableReward).GetProperty("RarityOdds", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(CardRarityOddsType), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues7.IgnoreCondition = null;
-		jsonPropertyInfoValues7.HasJsonInclude = false;
-		jsonPropertyInfoValues7.IsExtensionData = false;
-		jsonPropertyInfoValues7.NumberHandling = null;
-		jsonPropertyInfoValues7.PropertyName = "CardPoolIds";
-		jsonPropertyInfoValues7.JsonPropertyName = "card_pools";
-		jsonPropertyInfoValues7.AttributeProviderFactory = () => typeof(SerializableReward).GetProperty("CardPoolIds", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<ModelId>> propertyInfo7 = jsonPropertyInfoValues7;
 		array[6] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo7);
-		array[6].IsGetNullable = false;
-		array[6].IsSetNullable = false;
-		jsonPropertyInfoValues3 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(SerializableReward);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = (object obj) => ((SerializableReward)obj).OptionCount;
-		jsonPropertyInfoValues3.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<List<ModelId>> propertyInfo8 = new JsonPropertyInfoValues<List<ModelId>>
 		{
-			((SerializableReward)obj).OptionCount = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableReward),
+			Converter = null,
+			Getter = (object obj) => ((SerializableReward)obj).CardPoolIds,
+			Setter = delegate(object obj, List<ModelId>? value)
+			{
+				((SerializableReward)obj).CardPoolIds = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "CardPoolIds",
+			JsonPropertyName = "card_pools",
+			AttributeProviderFactory = () => typeof(SerializableReward).GetProperty("CardPoolIds", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues3.IgnoreCondition = null;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "OptionCount";
-		jsonPropertyInfoValues3.JsonPropertyName = "option_count";
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(SerializableReward).GetProperty("OptionCount", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo8 = jsonPropertyInfoValues3;
 		array[7] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo8);
-		JsonPropertyInfoValues<ModelId> jsonPropertyInfoValues8 = new JsonPropertyInfoValues<ModelId>();
-		jsonPropertyInfoValues8.IsProperty = true;
-		jsonPropertyInfoValues8.IsPublic = true;
-		jsonPropertyInfoValues8.IsVirtual = false;
-		jsonPropertyInfoValues8.DeclaringType = typeof(SerializableReward);
-		jsonPropertyInfoValues8.Converter = null;
-		jsonPropertyInfoValues8.Getter = (object obj) => ((SerializableReward)obj).CustomDescriptionEncounterSourceId;
-		jsonPropertyInfoValues8.Setter = delegate(object obj, ModelId? value)
+		array[7].IsGetNullable = false;
+		array[7].IsSetNullable = false;
+		JsonPropertyInfoValues<int> propertyInfo9 = new JsonPropertyInfoValues<int>
 		{
-			((SerializableReward)obj).CustomDescriptionEncounterSourceId = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableReward),
+			Converter = null,
+			Getter = (object obj) => ((SerializableReward)obj).OptionCount,
+			Setter = delegate(object obj, int value)
+			{
+				((SerializableReward)obj).OptionCount = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "OptionCount",
+			JsonPropertyName = "option_count",
+			AttributeProviderFactory = () => typeof(SerializableReward).GetProperty("OptionCount", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues8.IgnoreCondition = null;
-		jsonPropertyInfoValues8.HasJsonInclude = false;
-		jsonPropertyInfoValues8.IsExtensionData = false;
-		jsonPropertyInfoValues8.NumberHandling = null;
-		jsonPropertyInfoValues8.PropertyName = "CustomDescriptionEncounterSourceId";
-		jsonPropertyInfoValues8.JsonPropertyName = "custom_description_encounter_source_id";
-		jsonPropertyInfoValues8.AttributeProviderFactory = () => typeof(SerializableReward).GetProperty("CustomDescriptionEncounterSourceId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<ModelId> propertyInfo9 = jsonPropertyInfoValues8;
 		array[8] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo9);
-		array[8].IsGetNullable = false;
-		array[8].IsSetNullable = false;
+		JsonPropertyInfoValues<ModelId> propertyInfo10 = new JsonPropertyInfoValues<ModelId>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableReward),
+			Converter = null,
+			Getter = (object obj) => ((SerializableReward)obj).CustomDescriptionEncounterSourceId,
+			Setter = delegate(object obj, ModelId? value)
+			{
+				((SerializableReward)obj).CustomDescriptionEncounterSourceId = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "CustomDescriptionEncounterSourceId",
+			JsonPropertyName = "custom_description_encounter_source_id",
+			AttributeProviderFactory = () => typeof(SerializableReward).GetProperty("CustomDescriptionEncounterSourceId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null)
+		};
+		array[9] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo10);
+		array[9].IsGetNullable = false;
+		array[9].IsSetNullable = false;
 		return array;
 	}
 
@@ -7949,187 +9463,196 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] SerializableRoomPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[9];
-		JsonPropertyInfoValues<RoomType> jsonPropertyInfoValues = new JsonPropertyInfoValues<RoomType>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializableRoom);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializableRoom)obj).RoomType;
-		jsonPropertyInfoValues.Setter = delegate(object obj, RoomType value)
+		JsonPropertyInfoValues<RoomType> propertyInfo = new JsonPropertyInfoValues<RoomType>
 		{
-			((SerializableRoom)obj).RoomType = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRoom),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRoom)obj).RoomType,
+			Setter = delegate(object obj, RoomType value)
+			{
+				((SerializableRoom)obj).RoomType = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "RoomType",
+			JsonPropertyName = "room_type",
+			AttributeProviderFactory = () => typeof(SerializableRoom).GetProperty("RoomType", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(RoomType), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "RoomType";
-		jsonPropertyInfoValues.JsonPropertyName = "room_type";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableRoom).GetProperty("RoomType", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(RoomType), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<RoomType> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
-		JsonPropertyInfoValues<ModelId> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<ModelId>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SerializableRoom);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SerializableRoom)obj).EncounterId;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, ModelId? value)
+		JsonPropertyInfoValues<ModelId> propertyInfo2 = new JsonPropertyInfoValues<ModelId>
 		{
-			((SerializableRoom)obj).EncounterId = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRoom),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRoom)obj).EncounterId,
+			Setter = delegate(object obj, ModelId? value)
+			{
+				((SerializableRoom)obj).EncounterId = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "EncounterId",
+			JsonPropertyName = "encounter_id",
+			AttributeProviderFactory = () => typeof(SerializableRoom).GetProperty("EncounterId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "EncounterId";
-		jsonPropertyInfoValues2.JsonPropertyName = "encounter_id";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SerializableRoom).GetProperty("EncounterId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<ModelId> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
-		jsonPropertyInfoValues2 = new JsonPropertyInfoValues<ModelId>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SerializableRoom);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SerializableRoom)obj).EventId;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, ModelId? value)
+		JsonPropertyInfoValues<ModelId> propertyInfo3 = new JsonPropertyInfoValues<ModelId>
 		{
-			((SerializableRoom)obj).EventId = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRoom),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRoom)obj).EventId,
+			Setter = delegate(object obj, ModelId? value)
+			{
+				((SerializableRoom)obj).EventId = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "EventId",
+			JsonPropertyName = "event_id",
+			AttributeProviderFactory = () => typeof(SerializableRoom).GetProperty("EventId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "EventId";
-		jsonPropertyInfoValues2.JsonPropertyName = "event_id";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SerializableRoom).GetProperty("EventId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<ModelId> propertyInfo3 = jsonPropertyInfoValues2;
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
-		JsonPropertyInfoValues<bool> jsonPropertyInfoValues3 = new JsonPropertyInfoValues<bool>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(SerializableRoom);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = (object obj) => ((SerializableRoom)obj).IsPreFinished;
-		jsonPropertyInfoValues3.Setter = delegate(object obj, bool value)
+		JsonPropertyInfoValues<bool> propertyInfo4 = new JsonPropertyInfoValues<bool>
 		{
-			((SerializableRoom)obj).IsPreFinished = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRoom),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRoom)obj).IsPreFinished,
+			Setter = delegate(object obj, bool value)
+			{
+				((SerializableRoom)obj).IsPreFinished = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "IsPreFinished",
+			JsonPropertyName = "is_pre_finished",
+			AttributeProviderFactory = () => typeof(SerializableRoom).GetProperty("IsPreFinished", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues3.IgnoreCondition = null;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "IsPreFinished";
-		jsonPropertyInfoValues3.JsonPropertyName = "is_pre_finished";
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(SerializableRoom).GetProperty("IsPreFinished", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<bool> propertyInfo4 = jsonPropertyInfoValues3;
 		array[3] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo4);
-		JsonPropertyInfoValues<float> jsonPropertyInfoValues4 = new JsonPropertyInfoValues<float>();
-		jsonPropertyInfoValues4.IsProperty = true;
-		jsonPropertyInfoValues4.IsPublic = true;
-		jsonPropertyInfoValues4.IsVirtual = false;
-		jsonPropertyInfoValues4.DeclaringType = typeof(SerializableRoom);
-		jsonPropertyInfoValues4.Converter = null;
-		jsonPropertyInfoValues4.Getter = (object obj) => ((SerializableRoom)obj).GoldProportion;
-		jsonPropertyInfoValues4.Setter = delegate(object obj, float value)
+		JsonPropertyInfoValues<float> propertyInfo5 = new JsonPropertyInfoValues<float>
 		{
-			((SerializableRoom)obj).GoldProportion = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRoom),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRoom)obj).GoldProportion,
+			Setter = delegate(object obj, float value)
+			{
+				((SerializableRoom)obj).GoldProportion = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "GoldProportion",
+			JsonPropertyName = "reward_proportion",
+			AttributeProviderFactory = () => typeof(SerializableRoom).GetProperty("GoldProportion", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(float), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues4.IgnoreCondition = null;
-		jsonPropertyInfoValues4.HasJsonInclude = false;
-		jsonPropertyInfoValues4.IsExtensionData = false;
-		jsonPropertyInfoValues4.NumberHandling = null;
-		jsonPropertyInfoValues4.PropertyName = "GoldProportion";
-		jsonPropertyInfoValues4.JsonPropertyName = "reward_proportion";
-		jsonPropertyInfoValues4.AttributeProviderFactory = () => typeof(SerializableRoom).GetProperty("GoldProportion", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(float), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<float> propertyInfo5 = jsonPropertyInfoValues4;
 		array[4] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo5);
-		JsonPropertyInfoValues<Dictionary<ulong, List<SerializableReward>>> jsonPropertyInfoValues5 = new JsonPropertyInfoValues<Dictionary<ulong, List<SerializableReward>>>();
-		jsonPropertyInfoValues5.IsProperty = true;
-		jsonPropertyInfoValues5.IsPublic = true;
-		jsonPropertyInfoValues5.IsVirtual = false;
-		jsonPropertyInfoValues5.DeclaringType = typeof(SerializableRoom);
-		jsonPropertyInfoValues5.Converter = null;
-		jsonPropertyInfoValues5.Getter = (object obj) => ((SerializableRoom)obj).ExtraRewards;
-		jsonPropertyInfoValues5.Setter = delegate(object obj, Dictionary<ulong, List<SerializableReward>>? value)
+		JsonPropertyInfoValues<Dictionary<ulong, List<SerializableReward>>> propertyInfo6 = new JsonPropertyInfoValues<Dictionary<ulong, List<SerializableReward>>>
 		{
-			((SerializableRoom)obj).ExtraRewards = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRoom),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRoom)obj).ExtraRewards,
+			Setter = delegate(object obj, Dictionary<ulong, List<SerializableReward>>? value)
+			{
+				((SerializableRoom)obj).ExtraRewards = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "ExtraRewards",
+			JsonPropertyName = "extra_rewards",
+			AttributeProviderFactory = () => typeof(SerializableRoom).GetProperty("ExtraRewards", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(Dictionary<ulong, List<SerializableReward>>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues5.IgnoreCondition = null;
-		jsonPropertyInfoValues5.HasJsonInclude = false;
-		jsonPropertyInfoValues5.IsExtensionData = false;
-		jsonPropertyInfoValues5.NumberHandling = null;
-		jsonPropertyInfoValues5.PropertyName = "ExtraRewards";
-		jsonPropertyInfoValues5.JsonPropertyName = "extra_rewards";
-		jsonPropertyInfoValues5.AttributeProviderFactory = () => typeof(SerializableRoom).GetProperty("ExtraRewards", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(Dictionary<ulong, List<SerializableReward>>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<Dictionary<ulong, List<SerializableReward>>> propertyInfo6 = jsonPropertyInfoValues5;
 		array[5] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo6);
 		array[5].IsGetNullable = false;
 		array[5].IsSetNullable = false;
-		jsonPropertyInfoValues2 = new JsonPropertyInfoValues<ModelId>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SerializableRoom);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SerializableRoom)obj).ParentEventId;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, ModelId? value)
+		JsonPropertyInfoValues<ModelId> propertyInfo7 = new JsonPropertyInfoValues<ModelId>
 		{
-			((SerializableRoom)obj).ParentEventId = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRoom),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRoom)obj).ParentEventId,
+			Setter = delegate(object obj, ModelId? value)
+			{
+				((SerializableRoom)obj).ParentEventId = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "ParentEventId",
+			JsonPropertyName = "parent_event_id",
+			AttributeProviderFactory = () => typeof(SerializableRoom).GetProperty("ParentEventId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "ParentEventId";
-		jsonPropertyInfoValues2.JsonPropertyName = "parent_event_id";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SerializableRoom).GetProperty("ParentEventId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<ModelId> propertyInfo7 = jsonPropertyInfoValues2;
 		array[6] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo7);
-		jsonPropertyInfoValues3 = new JsonPropertyInfoValues<bool>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(SerializableRoom);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = (object obj) => ((SerializableRoom)obj).ShouldResumeParentEvent;
-		jsonPropertyInfoValues3.Setter = delegate(object obj, bool value)
+		JsonPropertyInfoValues<bool> propertyInfo8 = new JsonPropertyInfoValues<bool>
 		{
-			((SerializableRoom)obj).ShouldResumeParentEvent = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRoom),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRoom)obj).ShouldResumeParentEvent,
+			Setter = delegate(object obj, bool value)
+			{
+				((SerializableRoom)obj).ShouldResumeParentEvent = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "ShouldResumeParentEvent",
+			JsonPropertyName = "should_resume_parent_event",
+			AttributeProviderFactory = () => typeof(SerializableRoom).GetProperty("ShouldResumeParentEvent", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues3.IgnoreCondition = null;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "ShouldResumeParentEvent";
-		jsonPropertyInfoValues3.JsonPropertyName = "should_resume_parent_event";
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(SerializableRoom).GetProperty("ShouldResumeParentEvent", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<bool> propertyInfo8 = jsonPropertyInfoValues3;
 		array[7] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo8);
-		JsonPropertyInfoValues<Dictionary<string, string>> jsonPropertyInfoValues6 = new JsonPropertyInfoValues<Dictionary<string, string>>();
-		jsonPropertyInfoValues6.IsProperty = true;
-		jsonPropertyInfoValues6.IsPublic = true;
-		jsonPropertyInfoValues6.IsVirtual = false;
-		jsonPropertyInfoValues6.DeclaringType = typeof(SerializableRoom);
-		jsonPropertyInfoValues6.Converter = null;
-		jsonPropertyInfoValues6.Getter = (object obj) => ((SerializableRoom)obj).EncounterState;
-		jsonPropertyInfoValues6.Setter = delegate(object obj, Dictionary<string, string>? value)
+		JsonPropertyInfoValues<Dictionary<string, string>> propertyInfo9 = new JsonPropertyInfoValues<Dictionary<string, string>>
 		{
-			((SerializableRoom)obj).EncounterState = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRoom),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRoom)obj).EncounterState,
+			Setter = delegate(object obj, Dictionary<string, string>? value)
+			{
+				((SerializableRoom)obj).EncounterState = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "EncounterState",
+			JsonPropertyName = "encounter_state",
+			AttributeProviderFactory = () => typeof(SerializableRoom).GetProperty("EncounterState", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(Dictionary<string, string>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues6.IgnoreCondition = null;
-		jsonPropertyInfoValues6.HasJsonInclude = false;
-		jsonPropertyInfoValues6.IsExtensionData = false;
-		jsonPropertyInfoValues6.NumberHandling = null;
-		jsonPropertyInfoValues6.PropertyName = "EncounterState";
-		jsonPropertyInfoValues6.JsonPropertyName = "encounter_state";
-		jsonPropertyInfoValues6.AttributeProviderFactory = () => typeof(SerializableRoom).GetProperty("EncounterState", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(Dictionary<string, string>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<Dictionary<string, string>> propertyInfo9 = jsonPropertyInfoValues6;
 		array[8] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo9);
 		array[8].IsGetNullable = false;
 		array[8].IsSetNullable = false;
@@ -8159,211 +9682,221 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] SerializableRoomSetPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[10];
-		JsonPropertyInfoValues<List<ModelId>> jsonPropertyInfoValues = new JsonPropertyInfoValues<List<ModelId>>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializableRoomSet);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializableRoomSet)obj).EventIds;
-		jsonPropertyInfoValues.Setter = delegate(object obj, List<ModelId>? value)
+		JsonPropertyInfoValues<List<ModelId>> propertyInfo = new JsonPropertyInfoValues<List<ModelId>>
 		{
-			((SerializableRoomSet)obj).EventIds = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRoomSet),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRoomSet)obj).EventIds,
+			Setter = delegate(object obj, List<ModelId>? value)
+			{
+				((SerializableRoomSet)obj).EventIds = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "EventIds",
+			JsonPropertyName = "event_ids",
+			AttributeProviderFactory = () => typeof(SerializableRoomSet).GetProperty("EventIds", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "EventIds";
-		jsonPropertyInfoValues.JsonPropertyName = "event_ids";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableRoomSet).GetProperty("EventIds", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<ModelId>> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsGetNullable = false;
 		array[0].IsSetNullable = false;
-		JsonPropertyInfoValues<int> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SerializableRoomSet);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SerializableRoomSet)obj).EventsVisited;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo2 = new JsonPropertyInfoValues<int>
 		{
-			((SerializableRoomSet)obj).EventsVisited = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRoomSet),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRoomSet)obj).EventsVisited,
+			Setter = delegate(object obj, int value)
+			{
+				((SerializableRoomSet)obj).EventsVisited = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "EventsVisited",
+			JsonPropertyName = "events_visited",
+			AttributeProviderFactory = () => typeof(SerializableRoomSet).GetProperty("EventsVisited", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "EventsVisited";
-		jsonPropertyInfoValues2.JsonPropertyName = "events_visited";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SerializableRoomSet).GetProperty("EventsVisited", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<List<ModelId>>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializableRoomSet);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializableRoomSet)obj).NormalEncounterIds;
-		jsonPropertyInfoValues.Setter = delegate(object obj, List<ModelId>? value)
+		JsonPropertyInfoValues<List<ModelId>> propertyInfo3 = new JsonPropertyInfoValues<List<ModelId>>
 		{
-			((SerializableRoomSet)obj).NormalEncounterIds = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRoomSet),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRoomSet)obj).NormalEncounterIds,
+			Setter = delegate(object obj, List<ModelId>? value)
+			{
+				((SerializableRoomSet)obj).NormalEncounterIds = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "NormalEncounterIds",
+			JsonPropertyName = "normal_encounter_ids",
+			AttributeProviderFactory = () => typeof(SerializableRoomSet).GetProperty("NormalEncounterIds", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "NormalEncounterIds";
-		jsonPropertyInfoValues.JsonPropertyName = "normal_encounter_ids";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableRoomSet).GetProperty("NormalEncounterIds", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<ModelId>> propertyInfo3 = jsonPropertyInfoValues;
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
 		array[2].IsGetNullable = false;
 		array[2].IsSetNullable = false;
-		jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SerializableRoomSet);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SerializableRoomSet)obj).NormalEncountersVisited;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo4 = new JsonPropertyInfoValues<int>
 		{
-			((SerializableRoomSet)obj).NormalEncountersVisited = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRoomSet),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRoomSet)obj).NormalEncountersVisited,
+			Setter = delegate(object obj, int value)
+			{
+				((SerializableRoomSet)obj).NormalEncountersVisited = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "NormalEncountersVisited",
+			JsonPropertyName = "normal_encounters_visited",
+			AttributeProviderFactory = () => typeof(SerializableRoomSet).GetProperty("NormalEncountersVisited", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "NormalEncountersVisited";
-		jsonPropertyInfoValues2.JsonPropertyName = "normal_encounters_visited";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SerializableRoomSet).GetProperty("NormalEncountersVisited", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo4 = jsonPropertyInfoValues2;
 		array[3] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo4);
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<List<ModelId>>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializableRoomSet);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializableRoomSet)obj).EliteEncounterIds;
-		jsonPropertyInfoValues.Setter = delegate(object obj, List<ModelId>? value)
+		JsonPropertyInfoValues<List<ModelId>> propertyInfo5 = new JsonPropertyInfoValues<List<ModelId>>
 		{
-			((SerializableRoomSet)obj).EliteEncounterIds = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRoomSet),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRoomSet)obj).EliteEncounterIds,
+			Setter = delegate(object obj, List<ModelId>? value)
+			{
+				((SerializableRoomSet)obj).EliteEncounterIds = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "EliteEncounterIds",
+			JsonPropertyName = "elite_encounter_ids",
+			AttributeProviderFactory = () => typeof(SerializableRoomSet).GetProperty("EliteEncounterIds", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "EliteEncounterIds";
-		jsonPropertyInfoValues.JsonPropertyName = "elite_encounter_ids";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableRoomSet).GetProperty("EliteEncounterIds", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<ModelId>> propertyInfo5 = jsonPropertyInfoValues;
 		array[4] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo5);
 		array[4].IsGetNullable = false;
 		array[4].IsSetNullable = false;
-		jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SerializableRoomSet);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SerializableRoomSet)obj).EliteEncountersVisited;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo6 = new JsonPropertyInfoValues<int>
 		{
-			((SerializableRoomSet)obj).EliteEncountersVisited = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRoomSet),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRoomSet)obj).EliteEncountersVisited,
+			Setter = delegate(object obj, int value)
+			{
+				((SerializableRoomSet)obj).EliteEncountersVisited = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "EliteEncountersVisited",
+			JsonPropertyName = "elite_encounters_visited",
+			AttributeProviderFactory = () => typeof(SerializableRoomSet).GetProperty("EliteEncountersVisited", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "EliteEncountersVisited";
-		jsonPropertyInfoValues2.JsonPropertyName = "elite_encounters_visited";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SerializableRoomSet).GetProperty("EliteEncountersVisited", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo6 = jsonPropertyInfoValues2;
 		array[5] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo6);
-		jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SerializableRoomSet);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SerializableRoomSet)obj).BossEncountersVisited;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo7 = new JsonPropertyInfoValues<int>
 		{
-			((SerializableRoomSet)obj).BossEncountersVisited = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRoomSet),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRoomSet)obj).BossEncountersVisited,
+			Setter = delegate(object obj, int value)
+			{
+				((SerializableRoomSet)obj).BossEncountersVisited = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "BossEncountersVisited",
+			JsonPropertyName = "boss_encounters_visited",
+			AttributeProviderFactory = () => typeof(SerializableRoomSet).GetProperty("BossEncountersVisited", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "BossEncountersVisited";
-		jsonPropertyInfoValues2.JsonPropertyName = "boss_encounters_visited";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SerializableRoomSet).GetProperty("BossEncountersVisited", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo7 = jsonPropertyInfoValues2;
 		array[6] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo7);
-		JsonPropertyInfoValues<ModelId> jsonPropertyInfoValues3 = new JsonPropertyInfoValues<ModelId>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(SerializableRoomSet);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = (object obj) => ((SerializableRoomSet)obj).BossId;
-		jsonPropertyInfoValues3.Setter = delegate(object obj, ModelId? value)
+		JsonPropertyInfoValues<ModelId> propertyInfo8 = new JsonPropertyInfoValues<ModelId>
 		{
-			((SerializableRoomSet)obj).BossId = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRoomSet),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRoomSet)obj).BossId,
+			Setter = delegate(object obj, ModelId? value)
+			{
+				((SerializableRoomSet)obj).BossId = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "BossId",
+			JsonPropertyName = "boss_id",
+			AttributeProviderFactory = () => typeof(SerializableRoomSet).GetProperty("BossId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues3.IgnoreCondition = null;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "BossId";
-		jsonPropertyInfoValues3.JsonPropertyName = "boss_id";
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(SerializableRoomSet).GetProperty("BossId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<ModelId> propertyInfo8 = jsonPropertyInfoValues3;
 		array[7] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo8);
-		jsonPropertyInfoValues3 = new JsonPropertyInfoValues<ModelId>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(SerializableRoomSet);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = (object obj) => ((SerializableRoomSet)obj).SecondBossId;
-		jsonPropertyInfoValues3.Setter = delegate(object obj, ModelId? value)
+		JsonPropertyInfoValues<ModelId> propertyInfo9 = new JsonPropertyInfoValues<ModelId>
 		{
-			((SerializableRoomSet)obj).SecondBossId = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRoomSet),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRoomSet)obj).SecondBossId,
+			Setter = delegate(object obj, ModelId? value)
+			{
+				((SerializableRoomSet)obj).SecondBossId = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "SecondBossId",
+			JsonPropertyName = "second_boss_id",
+			AttributeProviderFactory = () => typeof(SerializableRoomSet).GetProperty("SecondBossId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues3.IgnoreCondition = null;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "SecondBossId";
-		jsonPropertyInfoValues3.JsonPropertyName = "second_boss_id";
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(SerializableRoomSet).GetProperty("SecondBossId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<ModelId> propertyInfo9 = jsonPropertyInfoValues3;
 		array[8] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo9);
-		jsonPropertyInfoValues3 = new JsonPropertyInfoValues<ModelId>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(SerializableRoomSet);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = (object obj) => ((SerializableRoomSet)obj).AncientId;
-		jsonPropertyInfoValues3.Setter = delegate(object obj, ModelId? value)
+		JsonPropertyInfoValues<ModelId> propertyInfo10 = new JsonPropertyInfoValues<ModelId>
 		{
-			((SerializableRoomSet)obj).AncientId = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRoomSet),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRoomSet)obj).AncientId,
+			Setter = delegate(object obj, ModelId? value)
+			{
+				((SerializableRoomSet)obj).AncientId = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "AncientId",
+			JsonPropertyName = "ancient_id",
+			AttributeProviderFactory = () => typeof(SerializableRoomSet).GetProperty("AncientId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues3.IgnoreCondition = null;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "AncientId";
-		jsonPropertyInfoValues3.JsonPropertyName = "ancient_id";
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(SerializableRoomSet).GetProperty("AncientId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<ModelId> propertyInfo10 = jsonPropertyInfoValues3;
 		array[9] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo10);
 		return array;
 	}
@@ -8391,85 +9924,89 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] SerializableRunOddsSetPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[4];
-		JsonPropertyInfoValues<float> jsonPropertyInfoValues = new JsonPropertyInfoValues<float>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializableRunOddsSet);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializableRunOddsSet)obj).UnknownMapPointMonsterOddsValue;
-		jsonPropertyInfoValues.Setter = delegate(object obj, float value)
+		JsonPropertyInfoValues<float> propertyInfo = new JsonPropertyInfoValues<float>
 		{
-			((SerializableRunOddsSet)obj).UnknownMapPointMonsterOddsValue = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRunOddsSet),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRunOddsSet)obj).UnknownMapPointMonsterOddsValue,
+			Setter = delegate(object obj, float value)
+			{
+				((SerializableRunOddsSet)obj).UnknownMapPointMonsterOddsValue = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "UnknownMapPointMonsterOddsValue",
+			JsonPropertyName = "unknown_map_point_monster_odds_value",
+			AttributeProviderFactory = () => typeof(SerializableRunOddsSet).GetProperty("UnknownMapPointMonsterOddsValue", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(float), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "UnknownMapPointMonsterOddsValue";
-		jsonPropertyInfoValues.JsonPropertyName = "unknown_map_point_monster_odds_value";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableRunOddsSet).GetProperty("UnknownMapPointMonsterOddsValue", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(float), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<float> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<float>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializableRunOddsSet);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializableRunOddsSet)obj).UnknownMapPointEliteOddsValue;
-		jsonPropertyInfoValues.Setter = delegate(object obj, float value)
+		JsonPropertyInfoValues<float> propertyInfo2 = new JsonPropertyInfoValues<float>
 		{
-			((SerializableRunOddsSet)obj).UnknownMapPointEliteOddsValue = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRunOddsSet),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRunOddsSet)obj).UnknownMapPointEliteOddsValue,
+			Setter = delegate(object obj, float value)
+			{
+				((SerializableRunOddsSet)obj).UnknownMapPointEliteOddsValue = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "UnknownMapPointEliteOddsValue",
+			JsonPropertyName = "unknown_map_point_elite_odds_value",
+			AttributeProviderFactory = () => typeof(SerializableRunOddsSet).GetProperty("UnknownMapPointEliteOddsValue", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(float), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "UnknownMapPointEliteOddsValue";
-		jsonPropertyInfoValues.JsonPropertyName = "unknown_map_point_elite_odds_value";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableRunOddsSet).GetProperty("UnknownMapPointEliteOddsValue", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(float), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<float> propertyInfo2 = jsonPropertyInfoValues;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<float>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializableRunOddsSet);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializableRunOddsSet)obj).UnknownMapPointTreasureOddsValue;
-		jsonPropertyInfoValues.Setter = delegate(object obj, float value)
+		JsonPropertyInfoValues<float> propertyInfo3 = new JsonPropertyInfoValues<float>
 		{
-			((SerializableRunOddsSet)obj).UnknownMapPointTreasureOddsValue = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRunOddsSet),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRunOddsSet)obj).UnknownMapPointTreasureOddsValue,
+			Setter = delegate(object obj, float value)
+			{
+				((SerializableRunOddsSet)obj).UnknownMapPointTreasureOddsValue = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "UnknownMapPointTreasureOddsValue",
+			JsonPropertyName = "unknown_map_point_treasure_odds_value",
+			AttributeProviderFactory = () => typeof(SerializableRunOddsSet).GetProperty("UnknownMapPointTreasureOddsValue", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(float), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "UnknownMapPointTreasureOddsValue";
-		jsonPropertyInfoValues.JsonPropertyName = "unknown_map_point_treasure_odds_value";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableRunOddsSet).GetProperty("UnknownMapPointTreasureOddsValue", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(float), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<float> propertyInfo3 = jsonPropertyInfoValues;
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<float>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializableRunOddsSet);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializableRunOddsSet)obj).UnknownMapPointShopOddsValue;
-		jsonPropertyInfoValues.Setter = delegate(object obj, float value)
+		JsonPropertyInfoValues<float> propertyInfo4 = new JsonPropertyInfoValues<float>
 		{
-			((SerializableRunOddsSet)obj).UnknownMapPointShopOddsValue = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRunOddsSet),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRunOddsSet)obj).UnknownMapPointShopOddsValue,
+			Setter = delegate(object obj, float value)
+			{
+				((SerializableRunOddsSet)obj).UnknownMapPointShopOddsValue = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "UnknownMapPointShopOddsValue",
+			JsonPropertyName = "unknown_map_point_shop_odds_value",
+			AttributeProviderFactory = () => typeof(SerializableRunOddsSet).GetProperty("UnknownMapPointShopOddsValue", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(float), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "UnknownMapPointShopOddsValue";
-		jsonPropertyInfoValues.JsonPropertyName = "unknown_map_point_shop_odds_value";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableRunOddsSet).GetProperty("UnknownMapPointShopOddsValue", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(float), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<float> propertyInfo4 = jsonPropertyInfoValues;
 		array[3] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo4);
 		return array;
 	}
@@ -8497,45 +10034,47 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] SerializableRunRngSetPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[2];
-		JsonPropertyInfoValues<string> jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializableRunRngSet);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializableRunRngSet)obj).Seed;
-		jsonPropertyInfoValues.Setter = delegate(object obj, string? value)
+		JsonPropertyInfoValues<string> propertyInfo = new JsonPropertyInfoValues<string>
 		{
-			((SerializableRunRngSet)obj).Seed = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRunRngSet),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRunRngSet)obj).Seed,
+			Setter = delegate(object obj, string? value)
+			{
+				((SerializableRunRngSet)obj).Seed = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Seed",
+			JsonPropertyName = "seed",
+			AttributeProviderFactory = () => typeof(SerializableRunRngSet).GetProperty("Seed", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "Seed";
-		jsonPropertyInfoValues.JsonPropertyName = "seed";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableRunRngSet).GetProperty("Seed", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<string> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
-		JsonPropertyInfoValues<Dictionary<RunRngType, int>> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<Dictionary<RunRngType, int>>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SerializableRunRngSet);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SerializableRunRngSet)obj).Counters;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, Dictionary<RunRngType, int>? value)
+		JsonPropertyInfoValues<Dictionary<RunRngType, SerializableRng>> propertyInfo2 = new JsonPropertyInfoValues<Dictionary<RunRngType, SerializableRng>>
 		{
-			((SerializableRunRngSet)obj).Counters = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRunRngSet),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRunRngSet)obj).Rngs,
+			Setter = delegate(object obj, Dictionary<RunRngType, SerializableRng>? value)
+			{
+				((SerializableRunRngSet)obj).Rngs = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Rngs",
+			JsonPropertyName = "rngs",
+			AttributeProviderFactory = () => typeof(SerializableRunRngSet).GetProperty("Rngs", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(Dictionary<RunRngType, SerializableRng>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "Counters";
-		jsonPropertyInfoValues2.JsonPropertyName = "counters";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SerializableRunRngSet).GetProperty("Counters", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(Dictionary<RunRngType, int>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<Dictionary<RunRngType, int>> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		array[1].IsGetNullable = false;
 		array[1].IsSetNullable = false;
@@ -8546,18 +10085,19 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	{
 		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<SerializableEpoch> jsonTypeInfo))
 		{
-			JsonObjectInfoValues<SerializableEpoch> jsonObjectInfoValues = new JsonObjectInfoValues<SerializableEpoch>();
-			jsonObjectInfoValues.ObjectCreator = null;
-			jsonObjectInfoValues.ObjectWithParameterizedConstructorCreator = (object[] args) => new SerializableEpoch((string)args[0], (EpochState)args[1]);
-			jsonObjectInfoValues.PropertyMetadataInitializer = (JsonSerializerContext _) => SerializableEpochPropInit(options);
-			jsonObjectInfoValues.ConstructorParameterMetadataInitializer = SerializableEpochCtorParamInit;
-			jsonObjectInfoValues.ConstructorAttributeProviderFactory = () => typeof(SerializableEpoch).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new Type[2]
+			JsonObjectInfoValues<SerializableEpoch> objectInfo = new JsonObjectInfoValues<SerializableEpoch>
 			{
-				typeof(string),
-				typeof(EpochState)
-			}, null);
-			jsonObjectInfoValues.SerializeHandler = null;
-			JsonObjectInfoValues<SerializableEpoch> objectInfo = jsonObjectInfoValues;
+				ObjectCreator = null,
+				ObjectWithParameterizedConstructorCreator = (object[] args) => new SerializableEpoch((string)args[0], (EpochState)args[1]),
+				PropertyMetadataInitializer = (JsonSerializerContext _) => SerializableEpochPropInit(options),
+				ConstructorParameterMetadataInitializer = SerializableEpochCtorParamInit,
+				ConstructorAttributeProviderFactory = () => typeof(SerializableEpoch).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new Type[2]
+				{
+					typeof(string),
+					typeof(EpochState)
+				}, null),
+				SerializeHandler = null
+			};
 			jsonTypeInfo = JsonMetadataServices.CreateObjectInfo(options, objectInfo);
 			jsonTypeInfo.NumberHandling = null;
 		}
@@ -8568,63 +10108,66 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] SerializableEpochPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[3];
-		JsonPropertyInfoValues<string> jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializableEpoch);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializableEpoch)obj).Id;
-		jsonPropertyInfoValues.Setter = null;
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "Id";
-		jsonPropertyInfoValues.JsonPropertyName = "id";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableEpoch).GetProperty("Id", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<string> propertyInfo = jsonPropertyInfoValues;
+		JsonPropertyInfoValues<string> propertyInfo = new JsonPropertyInfoValues<string>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableEpoch),
+			Converter = null,
+			Getter = (object obj) => ((SerializableEpoch)obj).Id,
+			Setter = null,
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Id",
+			JsonPropertyName = "id",
+			AttributeProviderFactory = () => typeof(SerializableEpoch).GetProperty("Id", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null)
+		};
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsGetNullable = false;
-		JsonPropertyInfoValues<EpochState> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<EpochState>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SerializableEpoch);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SerializableEpoch)obj).State;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, EpochState value)
+		JsonPropertyInfoValues<EpochState> propertyInfo2 = new JsonPropertyInfoValues<EpochState>
 		{
-			((SerializableEpoch)obj).State = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableEpoch),
+			Converter = null,
+			Getter = (object obj) => ((SerializableEpoch)obj).State,
+			Setter = delegate(object obj, EpochState value)
+			{
+				((SerializableEpoch)obj).State = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "State",
+			JsonPropertyName = "state",
+			AttributeProviderFactory = () => typeof(SerializableEpoch).GetProperty("State", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(EpochState), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "State";
-		jsonPropertyInfoValues2.JsonPropertyName = "state";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SerializableEpoch).GetProperty("State", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(EpochState), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<EpochState> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
-		JsonPropertyInfoValues<long> jsonPropertyInfoValues3 = new JsonPropertyInfoValues<long>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(SerializableEpoch);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = (object obj) => ((SerializableEpoch)obj).ObtainDate;
-		jsonPropertyInfoValues3.Setter = delegate(object obj, long value)
+		JsonPropertyInfoValues<long> propertyInfo3 = new JsonPropertyInfoValues<long>
 		{
-			((SerializableEpoch)obj).ObtainDate = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableEpoch),
+			Converter = null,
+			Getter = (object obj) => ((SerializableEpoch)obj).ObtainDate,
+			Setter = delegate(object obj, long value)
+			{
+				((SerializableEpoch)obj).ObtainDate = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "ObtainDate",
+			JsonPropertyName = "obtain_date",
+			AttributeProviderFactory = () => typeof(SerializableEpoch).GetProperty("ObtainDate", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues3.IgnoreCondition = null;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "ObtainDate";
-		jsonPropertyInfoValues3.JsonPropertyName = "obtain_date";
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(SerializableEpoch).GetProperty("ObtainDate", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<long> propertyInfo3 = jsonPropertyInfoValues3;
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
 		return array;
 	}
@@ -8676,47 +10219,112 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 
 	private static JsonPropertyInfo[] SerializableExtraPlayerFieldsPropInit(JsonSerializerOptions options)
 	{
-		JsonPropertyInfo[] array = new JsonPropertyInfo[2];
-		JsonPropertyInfoValues<int> jsonPropertyInfoValues = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializableExtraPlayerFields);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializableExtraPlayerFields)obj).CardShopRemovalsUsed;
-		jsonPropertyInfoValues.Setter = delegate(object obj, int value)
+		JsonPropertyInfo[] array = new JsonPropertyInfo[5];
+		JsonPropertyInfoValues<int> propertyInfo = new JsonPropertyInfoValues<int>
 		{
-			((SerializableExtraPlayerFields)obj).CardShopRemovalsUsed = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableExtraPlayerFields),
+			Converter = null,
+			Getter = (object obj) => ((SerializableExtraPlayerFields)obj).CardShopRemovalsUsed,
+			Setter = delegate(object obj, int value)
+			{
+				((SerializableExtraPlayerFields)obj).CardShopRemovalsUsed = value;
+			},
+			IgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "CardShopRemovalsUsed",
+			JsonPropertyName = "card_shop_removals_used",
+			AttributeProviderFactory = () => typeof(SerializableExtraPlayerFields).GetProperty("CardShopRemovalsUsed", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = JsonIgnoreCondition.WhenWritingDefault;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "CardShopRemovalsUsed";
-		jsonPropertyInfoValues.JsonPropertyName = "card_shop_removals_used";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableExtraPlayerFields).GetProperty("CardShopRemovalsUsed", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializableExtraPlayerFields);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializableExtraPlayerFields)obj).WongoPoints;
-		jsonPropertyInfoValues.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo2 = new JsonPropertyInfoValues<int>
 		{
-			((SerializableExtraPlayerFields)obj).WongoPoints = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableExtraPlayerFields),
+			Converter = null,
+			Getter = (object obj) => ((SerializableExtraPlayerFields)obj).WongoPoints,
+			Setter = delegate(object obj, int value)
+			{
+				((SerializableExtraPlayerFields)obj).WongoPoints = value;
+			},
+			IgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "WongoPoints",
+			JsonPropertyName = "wongo_points",
+			AttributeProviderFactory = () => typeof(SerializableExtraPlayerFields).GetProperty("WongoPoints", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = JsonIgnoreCondition.WhenWritingDefault;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "WongoPoints";
-		jsonPropertyInfoValues.JsonPropertyName = "wongo_points";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableExtraPlayerFields).GetProperty("WongoPoints", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo2 = jsonPropertyInfoValues;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
+		JsonPropertyInfoValues<bool> propertyInfo3 = new JsonPropertyInfoValues<bool>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableExtraPlayerFields),
+			Converter = null,
+			Getter = (object obj) => ((SerializableExtraPlayerFields)obj).CccomboBadgeUnlocked,
+			Setter = delegate(object obj, bool value)
+			{
+				((SerializableExtraPlayerFields)obj).CccomboBadgeUnlocked = value;
+			},
+			IgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "CccomboBadgeUnlocked",
+			JsonPropertyName = "ccccombo_badge_unlocked",
+			AttributeProviderFactory = () => typeof(SerializableExtraPlayerFields).GetProperty("CccomboBadgeUnlocked", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
+		};
+		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
+		JsonPropertyInfoValues<int> propertyInfo4 = new JsonPropertyInfoValues<int>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableExtraPlayerFields),
+			Converter = null,
+			Getter = (object obj) => ((SerializableExtraPlayerFields)obj).DamageDealt,
+			Setter = delegate(object obj, int value)
+			{
+				((SerializableExtraPlayerFields)obj).DamageDealt = value;
+			},
+			IgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "DamageDealt",
+			JsonPropertyName = "damage_dealt",
+			AttributeProviderFactory = () => typeof(SerializableExtraPlayerFields).GetProperty("DamageDealt", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
+		};
+		array[3] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo4);
+		JsonPropertyInfoValues<int> propertyInfo5 = new JsonPropertyInfoValues<int>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableExtraPlayerFields),
+			Converter = null,
+			Getter = (object obj) => ((SerializableExtraPlayerFields)obj).DebuffsApplied,
+			Setter = delegate(object obj, int value)
+			{
+				((SerializableExtraPlayerFields)obj).DebuffsApplied = value;
+			},
+			IgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "DebuffsApplied",
+			JsonPropertyName = "debuffs_applied",
+			AttributeProviderFactory = () => typeof(SerializableExtraPlayerFields).GetProperty("DebuffsApplied", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
+		};
+		array[4] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo5);
 		return array;
 	}
 
@@ -8743,45 +10351,47 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] SerializablePlayerRngSetPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[2];
-		JsonPropertyInfoValues<uint> jsonPropertyInfoValues = new JsonPropertyInfoValues<uint>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializablePlayerRngSet);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializablePlayerRngSet)obj).Seed;
-		jsonPropertyInfoValues.Setter = delegate(object obj, uint value)
+		JsonPropertyInfoValues<ulong> propertyInfo = new JsonPropertyInfoValues<ulong>
 		{
-			((SerializablePlayerRngSet)obj).Seed = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializablePlayerRngSet),
+			Converter = null,
+			Getter = (object obj) => ((SerializablePlayerRngSet)obj).Seed,
+			Setter = delegate(object obj, ulong value)
+			{
+				((SerializablePlayerRngSet)obj).Seed = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Seed",
+			JsonPropertyName = "seed",
+			AttributeProviderFactory = () => typeof(SerializablePlayerRngSet).GetProperty("Seed", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ulong), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "Seed";
-		jsonPropertyInfoValues.JsonPropertyName = "seed";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializablePlayerRngSet).GetProperty("Seed", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(uint), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<uint> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
-		JsonPropertyInfoValues<Dictionary<PlayerRngType, int>> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<Dictionary<PlayerRngType, int>>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SerializablePlayerRngSet);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SerializablePlayerRngSet)obj).Counters;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, Dictionary<PlayerRngType, int>? value)
+		JsonPropertyInfoValues<Dictionary<PlayerRngType, SerializableRng>> propertyInfo2 = new JsonPropertyInfoValues<Dictionary<PlayerRngType, SerializableRng>>
 		{
-			((SerializablePlayerRngSet)obj).Counters = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializablePlayerRngSet),
+			Converter = null,
+			Getter = (object obj) => ((SerializablePlayerRngSet)obj).Rngs,
+			Setter = delegate(object obj, Dictionary<PlayerRngType, SerializableRng>? value)
+			{
+				((SerializablePlayerRngSet)obj).Rngs = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Rngs",
+			JsonPropertyName = "rngs",
+			AttributeProviderFactory = () => typeof(SerializablePlayerRngSet).GetProperty("Rngs", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(Dictionary<PlayerRngType, SerializableRng>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "Counters";
-		jsonPropertyInfoValues2.JsonPropertyName = "counters";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SerializablePlayerRngSet).GetProperty("Counters", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(Dictionary<PlayerRngType, int>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<Dictionary<PlayerRngType, int>> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		array[1].IsGetNullable = false;
 		array[1].IsSetNullable = false;
@@ -8792,17 +10402,18 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	{
 		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<SerializableProgress> jsonTypeInfo))
 		{
-			JsonObjectInfoValues<SerializableProgress> jsonObjectInfoValues = new JsonObjectInfoValues<SerializableProgress>();
-			jsonObjectInfoValues.ObjectCreator = null;
-			jsonObjectInfoValues.ObjectWithParameterizedConstructorCreator = (object[] args) => new SerializableProgress
+			JsonObjectInfoValues<SerializableProgress> objectInfo = new JsonObjectInfoValues<SerializableProgress>
 			{
-				UniqueId = (string)args[0]
+				ObjectCreator = null,
+				ObjectWithParameterizedConstructorCreator = (object[] args) => new SerializableProgress
+				{
+					UniqueId = (string)args[0]
+				},
+				PropertyMetadataInitializer = (JsonSerializerContext _) => SerializableProgressPropInit(options),
+				ConstructorParameterMetadataInitializer = SerializableProgressCtorParamInit,
+				ConstructorAttributeProviderFactory = () => typeof(SerializableProgress).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null),
+				SerializeHandler = null
 			};
-			jsonObjectInfoValues.PropertyMetadataInitializer = (JsonSerializerContext _) => SerializableProgressPropInit(options);
-			jsonObjectInfoValues.ConstructorParameterMetadataInitializer = SerializableProgressCtorParamInit;
-			jsonObjectInfoValues.ConstructorAttributeProviderFactory = () => typeof(SerializableProgress).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null);
-			jsonObjectInfoValues.SerializeHandler = null;
-			JsonObjectInfoValues<SerializableProgress> objectInfo = jsonObjectInfoValues;
 			jsonTypeInfo = JsonMetadataServices.CreateObjectInfo(options, objectInfo);
 			jsonTypeInfo.NumberHandling = null;
 		}
@@ -8813,640 +10424,671 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] SerializableProgressPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[31];
-		JsonPropertyInfoValues<int> jsonPropertyInfoValues = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializableProgress);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializableProgress)obj).SchemaVersion;
-		jsonPropertyInfoValues.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo = new JsonPropertyInfoValues<int>
 		{
-			((SerializableProgress)obj).SchemaVersion = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableProgress),
+			Converter = null,
+			Getter = (object obj) => ((SerializableProgress)obj).SchemaVersion,
+			Setter = delegate(object obj, int value)
+			{
+				((SerializableProgress)obj).SchemaVersion = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "SchemaVersion",
+			JsonPropertyName = "schema_version",
+			AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("SchemaVersion", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "SchemaVersion";
-		jsonPropertyInfoValues.JsonPropertyName = "schema_version";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("SchemaVersion", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
-		JsonPropertyInfoValues<string> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<string>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SerializableProgress);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SerializableProgress)obj).UniqueId;
-		jsonPropertyInfoValues2.Setter = delegate
+		JsonPropertyInfoValues<string> propertyInfo2 = new JsonPropertyInfoValues<string>
 		{
-			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableProgress),
+			Converter = null,
+			Getter = (object obj) => ((SerializableProgress)obj).UniqueId,
+			Setter = delegate
+			{
+				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "UniqueId",
+			JsonPropertyName = "unique_id",
+			AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("UniqueId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "UniqueId";
-		jsonPropertyInfoValues2.JsonPropertyName = "unique_id";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("UniqueId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<string> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		array[1].IsGetNullable = false;
 		array[1].IsSetNullable = false;
-		JsonPropertyInfoValues<List<CharacterStats>> jsonPropertyInfoValues3 = new JsonPropertyInfoValues<List<CharacterStats>>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(SerializableProgress);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = (object obj) => ((SerializableProgress)obj).CharStats;
-		jsonPropertyInfoValues3.Setter = delegate(object obj, List<CharacterStats>? value)
+		JsonPropertyInfoValues<List<CharacterStats>> propertyInfo3 = new JsonPropertyInfoValues<List<CharacterStats>>
 		{
-			((SerializableProgress)obj).CharStats = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableProgress),
+			Converter = null,
+			Getter = (object obj) => ((SerializableProgress)obj).CharStats,
+			Setter = delegate(object obj, List<CharacterStats>? value)
+			{
+				((SerializableProgress)obj).CharStats = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "CharStats",
+			JsonPropertyName = "character_stats",
+			AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("CharStats", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<CharacterStats>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues3.IgnoreCondition = null;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "CharStats";
-		jsonPropertyInfoValues3.JsonPropertyName = "character_stats";
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("CharStats", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<CharacterStats>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<CharacterStats>> propertyInfo3 = jsonPropertyInfoValues3;
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
 		array[2].IsGetNullable = false;
 		array[2].IsSetNullable = false;
-		JsonPropertyInfoValues<List<CardStats>> jsonPropertyInfoValues4 = new JsonPropertyInfoValues<List<CardStats>>();
-		jsonPropertyInfoValues4.IsProperty = true;
-		jsonPropertyInfoValues4.IsPublic = true;
-		jsonPropertyInfoValues4.IsVirtual = false;
-		jsonPropertyInfoValues4.DeclaringType = typeof(SerializableProgress);
-		jsonPropertyInfoValues4.Converter = null;
-		jsonPropertyInfoValues4.Getter = (object obj) => ((SerializableProgress)obj).CardStats;
-		jsonPropertyInfoValues4.Setter = delegate(object obj, List<CardStats>? value)
+		JsonPropertyInfoValues<List<CardStats>> propertyInfo4 = new JsonPropertyInfoValues<List<CardStats>>
 		{
-			((SerializableProgress)obj).CardStats = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableProgress),
+			Converter = null,
+			Getter = (object obj) => ((SerializableProgress)obj).CardStats,
+			Setter = delegate(object obj, List<CardStats>? value)
+			{
+				((SerializableProgress)obj).CardStats = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "CardStats",
+			JsonPropertyName = "card_stats",
+			AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("CardStats", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<CardStats>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues4.IgnoreCondition = null;
-		jsonPropertyInfoValues4.HasJsonInclude = false;
-		jsonPropertyInfoValues4.IsExtensionData = false;
-		jsonPropertyInfoValues4.NumberHandling = null;
-		jsonPropertyInfoValues4.PropertyName = "CardStats";
-		jsonPropertyInfoValues4.JsonPropertyName = "card_stats";
-		jsonPropertyInfoValues4.AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("CardStats", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<CardStats>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<CardStats>> propertyInfo4 = jsonPropertyInfoValues4;
 		array[3] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo4);
 		array[3].IsGetNullable = false;
 		array[3].IsSetNullable = false;
-		JsonPropertyInfoValues<List<EncounterStats>> jsonPropertyInfoValues5 = new JsonPropertyInfoValues<List<EncounterStats>>();
-		jsonPropertyInfoValues5.IsProperty = true;
-		jsonPropertyInfoValues5.IsPublic = true;
-		jsonPropertyInfoValues5.IsVirtual = false;
-		jsonPropertyInfoValues5.DeclaringType = typeof(SerializableProgress);
-		jsonPropertyInfoValues5.Converter = null;
-		jsonPropertyInfoValues5.Getter = (object obj) => ((SerializableProgress)obj).EncounterStats;
-		jsonPropertyInfoValues5.Setter = delegate(object obj, List<EncounterStats>? value)
+		JsonPropertyInfoValues<List<EncounterStats>> propertyInfo5 = new JsonPropertyInfoValues<List<EncounterStats>>
 		{
-			((SerializableProgress)obj).EncounterStats = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableProgress),
+			Converter = null,
+			Getter = (object obj) => ((SerializableProgress)obj).EncounterStats,
+			Setter = delegate(object obj, List<EncounterStats>? value)
+			{
+				((SerializableProgress)obj).EncounterStats = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "EncounterStats",
+			JsonPropertyName = "encounter_stats",
+			AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("EncounterStats", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<EncounterStats>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues5.IgnoreCondition = null;
-		jsonPropertyInfoValues5.HasJsonInclude = false;
-		jsonPropertyInfoValues5.IsExtensionData = false;
-		jsonPropertyInfoValues5.NumberHandling = null;
-		jsonPropertyInfoValues5.PropertyName = "EncounterStats";
-		jsonPropertyInfoValues5.JsonPropertyName = "encounter_stats";
-		jsonPropertyInfoValues5.AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("EncounterStats", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<EncounterStats>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<EncounterStats>> propertyInfo5 = jsonPropertyInfoValues5;
 		array[4] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo5);
 		array[4].IsGetNullable = false;
 		array[4].IsSetNullable = false;
-		JsonPropertyInfoValues<List<EnemyStats>> jsonPropertyInfoValues6 = new JsonPropertyInfoValues<List<EnemyStats>>();
-		jsonPropertyInfoValues6.IsProperty = true;
-		jsonPropertyInfoValues6.IsPublic = true;
-		jsonPropertyInfoValues6.IsVirtual = false;
-		jsonPropertyInfoValues6.DeclaringType = typeof(SerializableProgress);
-		jsonPropertyInfoValues6.Converter = null;
-		jsonPropertyInfoValues6.Getter = (object obj) => ((SerializableProgress)obj).EnemyStats;
-		jsonPropertyInfoValues6.Setter = delegate(object obj, List<EnemyStats>? value)
+		JsonPropertyInfoValues<List<EnemyStats>> propertyInfo6 = new JsonPropertyInfoValues<List<EnemyStats>>
 		{
-			((SerializableProgress)obj).EnemyStats = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableProgress),
+			Converter = null,
+			Getter = (object obj) => ((SerializableProgress)obj).EnemyStats,
+			Setter = delegate(object obj, List<EnemyStats>? value)
+			{
+				((SerializableProgress)obj).EnemyStats = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "EnemyStats",
+			JsonPropertyName = "enemy_stats",
+			AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("EnemyStats", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<EnemyStats>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues6.IgnoreCondition = null;
-		jsonPropertyInfoValues6.HasJsonInclude = false;
-		jsonPropertyInfoValues6.IsExtensionData = false;
-		jsonPropertyInfoValues6.NumberHandling = null;
-		jsonPropertyInfoValues6.PropertyName = "EnemyStats";
-		jsonPropertyInfoValues6.JsonPropertyName = "enemy_stats";
-		jsonPropertyInfoValues6.AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("EnemyStats", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<EnemyStats>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<EnemyStats>> propertyInfo6 = jsonPropertyInfoValues6;
 		array[5] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo6);
 		array[5].IsGetNullable = false;
 		array[5].IsSetNullable = false;
-		JsonPropertyInfoValues<List<AncientStats>> jsonPropertyInfoValues7 = new JsonPropertyInfoValues<List<AncientStats>>();
-		jsonPropertyInfoValues7.IsProperty = true;
-		jsonPropertyInfoValues7.IsPublic = true;
-		jsonPropertyInfoValues7.IsVirtual = false;
-		jsonPropertyInfoValues7.DeclaringType = typeof(SerializableProgress);
-		jsonPropertyInfoValues7.Converter = null;
-		jsonPropertyInfoValues7.Getter = (object obj) => ((SerializableProgress)obj).AncientStats;
-		jsonPropertyInfoValues7.Setter = delegate(object obj, List<AncientStats>? value)
+		JsonPropertyInfoValues<List<AncientStats>> propertyInfo7 = new JsonPropertyInfoValues<List<AncientStats>>
 		{
-			((SerializableProgress)obj).AncientStats = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableProgress),
+			Converter = null,
+			Getter = (object obj) => ((SerializableProgress)obj).AncientStats,
+			Setter = delegate(object obj, List<AncientStats>? value)
+			{
+				((SerializableProgress)obj).AncientStats = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "AncientStats",
+			JsonPropertyName = "ancient_stats",
+			AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("AncientStats", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<AncientStats>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues7.IgnoreCondition = null;
-		jsonPropertyInfoValues7.HasJsonInclude = false;
-		jsonPropertyInfoValues7.IsExtensionData = false;
-		jsonPropertyInfoValues7.NumberHandling = null;
-		jsonPropertyInfoValues7.PropertyName = "AncientStats";
-		jsonPropertyInfoValues7.JsonPropertyName = "ancient_stats";
-		jsonPropertyInfoValues7.AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("AncientStats", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<AncientStats>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<AncientStats>> propertyInfo7 = jsonPropertyInfoValues7;
 		array[6] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo7);
 		array[6].IsGetNullable = false;
 		array[6].IsSetNullable = false;
-		JsonPropertyInfoValues<bool> jsonPropertyInfoValues8 = new JsonPropertyInfoValues<bool>();
-		jsonPropertyInfoValues8.IsProperty = true;
-		jsonPropertyInfoValues8.IsPublic = true;
-		jsonPropertyInfoValues8.IsVirtual = false;
-		jsonPropertyInfoValues8.DeclaringType = typeof(SerializableProgress);
-		jsonPropertyInfoValues8.Converter = null;
-		jsonPropertyInfoValues8.Getter = (object obj) => ((SerializableProgress)obj).EnableFtues;
-		jsonPropertyInfoValues8.Setter = delegate(object obj, bool value)
+		JsonPropertyInfoValues<bool> propertyInfo8 = new JsonPropertyInfoValues<bool>
 		{
-			((SerializableProgress)obj).EnableFtues = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableProgress),
+			Converter = null,
+			Getter = (object obj) => ((SerializableProgress)obj).EnableFtues,
+			Setter = delegate(object obj, bool value)
+			{
+				((SerializableProgress)obj).EnableFtues = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "EnableFtues",
+			JsonPropertyName = "enable_ftues",
+			AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("EnableFtues", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues8.IgnoreCondition = null;
-		jsonPropertyInfoValues8.HasJsonInclude = false;
-		jsonPropertyInfoValues8.IsExtensionData = false;
-		jsonPropertyInfoValues8.NumberHandling = null;
-		jsonPropertyInfoValues8.PropertyName = "EnableFtues";
-		jsonPropertyInfoValues8.JsonPropertyName = "enable_ftues";
-		jsonPropertyInfoValues8.AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("EnableFtues", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<bool> propertyInfo8 = jsonPropertyInfoValues8;
 		array[7] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo8);
-		JsonPropertyInfoValues<List<SerializableEpoch>> jsonPropertyInfoValues9 = new JsonPropertyInfoValues<List<SerializableEpoch>>();
-		jsonPropertyInfoValues9.IsProperty = true;
-		jsonPropertyInfoValues9.IsPublic = true;
-		jsonPropertyInfoValues9.IsVirtual = false;
-		jsonPropertyInfoValues9.DeclaringType = typeof(SerializableProgress);
-		jsonPropertyInfoValues9.Converter = null;
-		jsonPropertyInfoValues9.Getter = (object obj) => ((SerializableProgress)obj).Epochs;
-		jsonPropertyInfoValues9.Setter = delegate(object obj, List<SerializableEpoch>? value)
+		JsonPropertyInfoValues<List<SerializableEpoch>> propertyInfo9 = new JsonPropertyInfoValues<List<SerializableEpoch>>
 		{
-			((SerializableProgress)obj).Epochs = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableProgress),
+			Converter = null,
+			Getter = (object obj) => ((SerializableProgress)obj).Epochs,
+			Setter = delegate(object obj, List<SerializableEpoch>? value)
+			{
+				((SerializableProgress)obj).Epochs = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Epochs",
+			JsonPropertyName = "epochs",
+			AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("Epochs", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<SerializableEpoch>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues9.IgnoreCondition = null;
-		jsonPropertyInfoValues9.HasJsonInclude = false;
-		jsonPropertyInfoValues9.IsExtensionData = false;
-		jsonPropertyInfoValues9.NumberHandling = null;
-		jsonPropertyInfoValues9.PropertyName = "Epochs";
-		jsonPropertyInfoValues9.JsonPropertyName = "epochs";
-		jsonPropertyInfoValues9.AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("Epochs", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<SerializableEpoch>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<SerializableEpoch>> propertyInfo9 = jsonPropertyInfoValues9;
 		array[8] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo9);
 		array[8].IsGetNullable = false;
 		array[8].IsSetNullable = false;
-		JsonPropertyInfoValues<List<string>> jsonPropertyInfoValues10 = new JsonPropertyInfoValues<List<string>>();
-		jsonPropertyInfoValues10.IsProperty = true;
-		jsonPropertyInfoValues10.IsPublic = true;
-		jsonPropertyInfoValues10.IsVirtual = false;
-		jsonPropertyInfoValues10.DeclaringType = typeof(SerializableProgress);
-		jsonPropertyInfoValues10.Converter = null;
-		jsonPropertyInfoValues10.Getter = (object obj) => ((SerializableProgress)obj).FtueCompleted;
-		jsonPropertyInfoValues10.Setter = delegate(object obj, List<string>? value)
+		JsonPropertyInfoValues<List<string>> propertyInfo10 = new JsonPropertyInfoValues<List<string>>
 		{
-			((SerializableProgress)obj).FtueCompleted = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableProgress),
+			Converter = null,
+			Getter = (object obj) => ((SerializableProgress)obj).FtueCompleted,
+			Setter = delegate(object obj, List<string>? value)
+			{
+				((SerializableProgress)obj).FtueCompleted = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "FtueCompleted",
+			JsonPropertyName = "ftue_completed",
+			AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("FtueCompleted", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<string>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues10.IgnoreCondition = null;
-		jsonPropertyInfoValues10.HasJsonInclude = false;
-		jsonPropertyInfoValues10.IsExtensionData = false;
-		jsonPropertyInfoValues10.NumberHandling = null;
-		jsonPropertyInfoValues10.PropertyName = "FtueCompleted";
-		jsonPropertyInfoValues10.JsonPropertyName = "ftue_completed";
-		jsonPropertyInfoValues10.AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("FtueCompleted", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<string>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<string>> propertyInfo10 = jsonPropertyInfoValues10;
 		array[9] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo10);
 		array[9].IsGetNullable = false;
 		array[9].IsSetNullable = false;
-		JsonPropertyInfoValues<List<SerializableUnlockedAchievement>> jsonPropertyInfoValues11 = new JsonPropertyInfoValues<List<SerializableUnlockedAchievement>>();
-		jsonPropertyInfoValues11.IsProperty = true;
-		jsonPropertyInfoValues11.IsPublic = true;
-		jsonPropertyInfoValues11.IsVirtual = false;
-		jsonPropertyInfoValues11.DeclaringType = typeof(SerializableProgress);
-		jsonPropertyInfoValues11.Converter = null;
-		jsonPropertyInfoValues11.Getter = (object obj) => ((SerializableProgress)obj).UnlockedAchievements;
-		jsonPropertyInfoValues11.Setter = delegate(object obj, List<SerializableUnlockedAchievement>? value)
+		JsonPropertyInfoValues<List<SerializableUnlockedAchievement>> propertyInfo11 = new JsonPropertyInfoValues<List<SerializableUnlockedAchievement>>
 		{
-			((SerializableProgress)obj).UnlockedAchievements = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableProgress),
+			Converter = null,
+			Getter = (object obj) => ((SerializableProgress)obj).UnlockedAchievements,
+			Setter = delegate(object obj, List<SerializableUnlockedAchievement>? value)
+			{
+				((SerializableProgress)obj).UnlockedAchievements = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "UnlockedAchievements",
+			JsonPropertyName = "unlocked_achievements",
+			AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("UnlockedAchievements", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<SerializableUnlockedAchievement>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues11.IgnoreCondition = null;
-		jsonPropertyInfoValues11.HasJsonInclude = false;
-		jsonPropertyInfoValues11.IsExtensionData = false;
-		jsonPropertyInfoValues11.NumberHandling = null;
-		jsonPropertyInfoValues11.PropertyName = "UnlockedAchievements";
-		jsonPropertyInfoValues11.JsonPropertyName = "unlocked_achievements";
-		jsonPropertyInfoValues11.AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("UnlockedAchievements", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<SerializableUnlockedAchievement>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<SerializableUnlockedAchievement>> propertyInfo11 = jsonPropertyInfoValues11;
 		array[10] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo11);
 		array[10].IsGetNullable = false;
 		array[10].IsSetNullable = false;
-		JsonPropertyInfoValues<List<ModelId>> jsonPropertyInfoValues12 = new JsonPropertyInfoValues<List<ModelId>>();
-		jsonPropertyInfoValues12.IsProperty = true;
-		jsonPropertyInfoValues12.IsPublic = true;
-		jsonPropertyInfoValues12.IsVirtual = false;
-		jsonPropertyInfoValues12.DeclaringType = typeof(SerializableProgress);
-		jsonPropertyInfoValues12.Converter = null;
-		jsonPropertyInfoValues12.Getter = (object obj) => ((SerializableProgress)obj).DiscoveredCards;
-		jsonPropertyInfoValues12.Setter = delegate(object obj, List<ModelId>? value)
+		JsonPropertyInfoValues<List<ModelId>> propertyInfo12 = new JsonPropertyInfoValues<List<ModelId>>
 		{
-			((SerializableProgress)obj).DiscoveredCards = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableProgress),
+			Converter = null,
+			Getter = (object obj) => ((SerializableProgress)obj).DiscoveredCards,
+			Setter = delegate(object obj, List<ModelId>? value)
+			{
+				((SerializableProgress)obj).DiscoveredCards = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "DiscoveredCards",
+			JsonPropertyName = "discovered_cards",
+			AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("DiscoveredCards", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues12.IgnoreCondition = null;
-		jsonPropertyInfoValues12.HasJsonInclude = false;
-		jsonPropertyInfoValues12.IsExtensionData = false;
-		jsonPropertyInfoValues12.NumberHandling = null;
-		jsonPropertyInfoValues12.PropertyName = "DiscoveredCards";
-		jsonPropertyInfoValues12.JsonPropertyName = "discovered_cards";
-		jsonPropertyInfoValues12.AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("DiscoveredCards", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<ModelId>> propertyInfo12 = jsonPropertyInfoValues12;
 		array[11] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo12);
 		array[11].IsGetNullable = false;
 		array[11].IsSetNullable = false;
-		jsonPropertyInfoValues12 = new JsonPropertyInfoValues<List<ModelId>>();
-		jsonPropertyInfoValues12.IsProperty = true;
-		jsonPropertyInfoValues12.IsPublic = true;
-		jsonPropertyInfoValues12.IsVirtual = false;
-		jsonPropertyInfoValues12.DeclaringType = typeof(SerializableProgress);
-		jsonPropertyInfoValues12.Converter = null;
-		jsonPropertyInfoValues12.Getter = (object obj) => ((SerializableProgress)obj).DiscoveredRelics;
-		jsonPropertyInfoValues12.Setter = delegate(object obj, List<ModelId>? value)
+		JsonPropertyInfoValues<List<ModelId>> propertyInfo13 = new JsonPropertyInfoValues<List<ModelId>>
 		{
-			((SerializableProgress)obj).DiscoveredRelics = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableProgress),
+			Converter = null,
+			Getter = (object obj) => ((SerializableProgress)obj).DiscoveredRelics,
+			Setter = delegate(object obj, List<ModelId>? value)
+			{
+				((SerializableProgress)obj).DiscoveredRelics = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "DiscoveredRelics",
+			JsonPropertyName = "discovered_relics",
+			AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("DiscoveredRelics", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues12.IgnoreCondition = null;
-		jsonPropertyInfoValues12.HasJsonInclude = false;
-		jsonPropertyInfoValues12.IsExtensionData = false;
-		jsonPropertyInfoValues12.NumberHandling = null;
-		jsonPropertyInfoValues12.PropertyName = "DiscoveredRelics";
-		jsonPropertyInfoValues12.JsonPropertyName = "discovered_relics";
-		jsonPropertyInfoValues12.AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("DiscoveredRelics", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<ModelId>> propertyInfo13 = jsonPropertyInfoValues12;
 		array[12] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo13);
 		array[12].IsGetNullable = false;
 		array[12].IsSetNullable = false;
-		jsonPropertyInfoValues12 = new JsonPropertyInfoValues<List<ModelId>>();
-		jsonPropertyInfoValues12.IsProperty = true;
-		jsonPropertyInfoValues12.IsPublic = true;
-		jsonPropertyInfoValues12.IsVirtual = false;
-		jsonPropertyInfoValues12.DeclaringType = typeof(SerializableProgress);
-		jsonPropertyInfoValues12.Converter = null;
-		jsonPropertyInfoValues12.Getter = (object obj) => ((SerializableProgress)obj).DiscoveredEvents;
-		jsonPropertyInfoValues12.Setter = delegate(object obj, List<ModelId>? value)
+		JsonPropertyInfoValues<List<ModelId>> propertyInfo14 = new JsonPropertyInfoValues<List<ModelId>>
 		{
-			((SerializableProgress)obj).DiscoveredEvents = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableProgress),
+			Converter = null,
+			Getter = (object obj) => ((SerializableProgress)obj).DiscoveredEvents,
+			Setter = delegate(object obj, List<ModelId>? value)
+			{
+				((SerializableProgress)obj).DiscoveredEvents = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "DiscoveredEvents",
+			JsonPropertyName = "discovered_events",
+			AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("DiscoveredEvents", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues12.IgnoreCondition = null;
-		jsonPropertyInfoValues12.HasJsonInclude = false;
-		jsonPropertyInfoValues12.IsExtensionData = false;
-		jsonPropertyInfoValues12.NumberHandling = null;
-		jsonPropertyInfoValues12.PropertyName = "DiscoveredEvents";
-		jsonPropertyInfoValues12.JsonPropertyName = "discovered_events";
-		jsonPropertyInfoValues12.AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("DiscoveredEvents", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<ModelId>> propertyInfo14 = jsonPropertyInfoValues12;
 		array[13] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo14);
 		array[13].IsGetNullable = false;
 		array[13].IsSetNullable = false;
-		jsonPropertyInfoValues12 = new JsonPropertyInfoValues<List<ModelId>>();
-		jsonPropertyInfoValues12.IsProperty = true;
-		jsonPropertyInfoValues12.IsPublic = true;
-		jsonPropertyInfoValues12.IsVirtual = false;
-		jsonPropertyInfoValues12.DeclaringType = typeof(SerializableProgress);
-		jsonPropertyInfoValues12.Converter = null;
-		jsonPropertyInfoValues12.Getter = (object obj) => ((SerializableProgress)obj).DiscoveredPotions;
-		jsonPropertyInfoValues12.Setter = delegate(object obj, List<ModelId>? value)
+		JsonPropertyInfoValues<List<ModelId>> propertyInfo15 = new JsonPropertyInfoValues<List<ModelId>>
 		{
-			((SerializableProgress)obj).DiscoveredPotions = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableProgress),
+			Converter = null,
+			Getter = (object obj) => ((SerializableProgress)obj).DiscoveredPotions,
+			Setter = delegate(object obj, List<ModelId>? value)
+			{
+				((SerializableProgress)obj).DiscoveredPotions = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "DiscoveredPotions",
+			JsonPropertyName = "discovered_potions",
+			AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("DiscoveredPotions", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues12.IgnoreCondition = null;
-		jsonPropertyInfoValues12.HasJsonInclude = false;
-		jsonPropertyInfoValues12.IsExtensionData = false;
-		jsonPropertyInfoValues12.NumberHandling = null;
-		jsonPropertyInfoValues12.PropertyName = "DiscoveredPotions";
-		jsonPropertyInfoValues12.JsonPropertyName = "discovered_potions";
-		jsonPropertyInfoValues12.AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("DiscoveredPotions", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<ModelId>> propertyInfo15 = jsonPropertyInfoValues12;
 		array[14] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo15);
 		array[14].IsGetNullable = false;
 		array[14].IsSetNullable = false;
-		jsonPropertyInfoValues12 = new JsonPropertyInfoValues<List<ModelId>>();
-		jsonPropertyInfoValues12.IsProperty = true;
-		jsonPropertyInfoValues12.IsPublic = true;
-		jsonPropertyInfoValues12.IsVirtual = false;
-		jsonPropertyInfoValues12.DeclaringType = typeof(SerializableProgress);
-		jsonPropertyInfoValues12.Converter = null;
-		jsonPropertyInfoValues12.Getter = (object obj) => ((SerializableProgress)obj).DiscoveredActs;
-		jsonPropertyInfoValues12.Setter = delegate(object obj, List<ModelId>? value)
+		JsonPropertyInfoValues<List<ModelId>> propertyInfo16 = new JsonPropertyInfoValues<List<ModelId>>
 		{
-			((SerializableProgress)obj).DiscoveredActs = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableProgress),
+			Converter = null,
+			Getter = (object obj) => ((SerializableProgress)obj).DiscoveredActs,
+			Setter = delegate(object obj, List<ModelId>? value)
+			{
+				((SerializableProgress)obj).DiscoveredActs = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "DiscoveredActs",
+			JsonPropertyName = "discovered_acts",
+			AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("DiscoveredActs", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues12.IgnoreCondition = null;
-		jsonPropertyInfoValues12.HasJsonInclude = false;
-		jsonPropertyInfoValues12.IsExtensionData = false;
-		jsonPropertyInfoValues12.NumberHandling = null;
-		jsonPropertyInfoValues12.PropertyName = "DiscoveredActs";
-		jsonPropertyInfoValues12.JsonPropertyName = "discovered_acts";
-		jsonPropertyInfoValues12.AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("DiscoveredActs", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<ModelId>> propertyInfo16 = jsonPropertyInfoValues12;
 		array[15] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo16);
 		array[15].IsGetNullable = false;
 		array[15].IsSetNullable = false;
-		JsonPropertyInfoValues<long> jsonPropertyInfoValues13 = new JsonPropertyInfoValues<long>();
-		jsonPropertyInfoValues13.IsProperty = true;
-		jsonPropertyInfoValues13.IsPublic = true;
-		jsonPropertyInfoValues13.IsVirtual = false;
-		jsonPropertyInfoValues13.DeclaringType = typeof(SerializableProgress);
-		jsonPropertyInfoValues13.Converter = null;
-		jsonPropertyInfoValues13.Getter = (object obj) => ((SerializableProgress)obj).TotalPlaytime;
-		jsonPropertyInfoValues13.Setter = delegate(object obj, long value)
+		JsonPropertyInfoValues<long> propertyInfo17 = new JsonPropertyInfoValues<long>
 		{
-			((SerializableProgress)obj).TotalPlaytime = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableProgress),
+			Converter = null,
+			Getter = (object obj) => ((SerializableProgress)obj).TotalPlaytime,
+			Setter = delegate(object obj, long value)
+			{
+				((SerializableProgress)obj).TotalPlaytime = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "TotalPlaytime",
+			JsonPropertyName = "total_playtime",
+			AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("TotalPlaytime", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues13.IgnoreCondition = null;
-		jsonPropertyInfoValues13.HasJsonInclude = false;
-		jsonPropertyInfoValues13.IsExtensionData = false;
-		jsonPropertyInfoValues13.NumberHandling = null;
-		jsonPropertyInfoValues13.PropertyName = "TotalPlaytime";
-		jsonPropertyInfoValues13.JsonPropertyName = "total_playtime";
-		jsonPropertyInfoValues13.AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("TotalPlaytime", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<long> propertyInfo17 = jsonPropertyInfoValues13;
 		array[16] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo17);
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializableProgress);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializableProgress)obj).TotalUnlocks;
-		jsonPropertyInfoValues.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo18 = new JsonPropertyInfoValues<int>
 		{
-			((SerializableProgress)obj).TotalUnlocks = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableProgress),
+			Converter = null,
+			Getter = (object obj) => ((SerializableProgress)obj).TotalUnlocks,
+			Setter = delegate(object obj, int value)
+			{
+				((SerializableProgress)obj).TotalUnlocks = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "TotalUnlocks",
+			JsonPropertyName = "total_unlocks",
+			AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("TotalUnlocks", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "TotalUnlocks";
-		jsonPropertyInfoValues.JsonPropertyName = "total_unlocks";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("TotalUnlocks", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo18 = jsonPropertyInfoValues;
 		array[17] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo18);
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializableProgress);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializableProgress)obj).CurrentScore;
-		jsonPropertyInfoValues.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo19 = new JsonPropertyInfoValues<int>
 		{
-			((SerializableProgress)obj).CurrentScore = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableProgress),
+			Converter = null,
+			Getter = (object obj) => ((SerializableProgress)obj).CurrentScore,
+			Setter = delegate(object obj, int value)
+			{
+				((SerializableProgress)obj).CurrentScore = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "CurrentScore",
+			JsonPropertyName = "current_score",
+			AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("CurrentScore", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "CurrentScore";
-		jsonPropertyInfoValues.JsonPropertyName = "current_score";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("CurrentScore", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo19 = jsonPropertyInfoValues;
 		array[18] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo19);
-		jsonPropertyInfoValues13 = new JsonPropertyInfoValues<long>();
-		jsonPropertyInfoValues13.IsProperty = true;
-		jsonPropertyInfoValues13.IsPublic = true;
-		jsonPropertyInfoValues13.IsVirtual = false;
-		jsonPropertyInfoValues13.DeclaringType = typeof(SerializableProgress);
-		jsonPropertyInfoValues13.Converter = null;
-		jsonPropertyInfoValues13.Getter = (object obj) => ((SerializableProgress)obj).FloorsClimbed;
-		jsonPropertyInfoValues13.Setter = delegate(object obj, long value)
+		JsonPropertyInfoValues<long> propertyInfo20 = new JsonPropertyInfoValues<long>
 		{
-			((SerializableProgress)obj).FloorsClimbed = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableProgress),
+			Converter = null,
+			Getter = (object obj) => ((SerializableProgress)obj).FloorsClimbed,
+			Setter = delegate(object obj, long value)
+			{
+				((SerializableProgress)obj).FloorsClimbed = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "FloorsClimbed",
+			JsonPropertyName = "floors_climbed",
+			AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("FloorsClimbed", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues13.IgnoreCondition = null;
-		jsonPropertyInfoValues13.HasJsonInclude = false;
-		jsonPropertyInfoValues13.IsExtensionData = false;
-		jsonPropertyInfoValues13.NumberHandling = null;
-		jsonPropertyInfoValues13.PropertyName = "FloorsClimbed";
-		jsonPropertyInfoValues13.JsonPropertyName = "floors_climbed";
-		jsonPropertyInfoValues13.AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("FloorsClimbed", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<long> propertyInfo20 = jsonPropertyInfoValues13;
 		array[19] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo20);
-		jsonPropertyInfoValues13 = new JsonPropertyInfoValues<long>();
-		jsonPropertyInfoValues13.IsProperty = true;
-		jsonPropertyInfoValues13.IsPublic = true;
-		jsonPropertyInfoValues13.IsVirtual = false;
-		jsonPropertyInfoValues13.DeclaringType = typeof(SerializableProgress);
-		jsonPropertyInfoValues13.Converter = null;
-		jsonPropertyInfoValues13.Getter = (object obj) => ((SerializableProgress)obj).ArchitectDamage;
-		jsonPropertyInfoValues13.Setter = delegate(object obj, long value)
+		JsonPropertyInfoValues<long> propertyInfo21 = new JsonPropertyInfoValues<long>
 		{
-			((SerializableProgress)obj).ArchitectDamage = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableProgress),
+			Converter = null,
+			Getter = (object obj) => ((SerializableProgress)obj).ArchitectDamage,
+			Setter = delegate(object obj, long value)
+			{
+				((SerializableProgress)obj).ArchitectDamage = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "ArchitectDamage",
+			JsonPropertyName = "architect_damage",
+			AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("ArchitectDamage", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues13.IgnoreCondition = null;
-		jsonPropertyInfoValues13.HasJsonInclude = false;
-		jsonPropertyInfoValues13.IsExtensionData = false;
-		jsonPropertyInfoValues13.NumberHandling = null;
-		jsonPropertyInfoValues13.PropertyName = "ArchitectDamage";
-		jsonPropertyInfoValues13.JsonPropertyName = "architect_damage";
-		jsonPropertyInfoValues13.AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("ArchitectDamage", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<long> propertyInfo21 = jsonPropertyInfoValues13;
 		array[20] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo21);
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializableProgress);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializableProgress)obj).WongoPoints;
-		jsonPropertyInfoValues.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo22 = new JsonPropertyInfoValues<int>
 		{
-			((SerializableProgress)obj).WongoPoints = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableProgress),
+			Converter = null,
+			Getter = (object obj) => ((SerializableProgress)obj).WongoPoints,
+			Setter = delegate(object obj, int value)
+			{
+				((SerializableProgress)obj).WongoPoints = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "WongoPoints",
+			JsonPropertyName = "wongo_points",
+			AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("WongoPoints", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "WongoPoints";
-		jsonPropertyInfoValues.JsonPropertyName = "wongo_points";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("WongoPoints", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo22 = jsonPropertyInfoValues;
 		array[21] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo22);
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializableProgress);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializableProgress)obj).PreferredMultiplayerAscension;
-		jsonPropertyInfoValues.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo23 = new JsonPropertyInfoValues<int>
 		{
-			((SerializableProgress)obj).PreferredMultiplayerAscension = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableProgress),
+			Converter = null,
+			Getter = (object obj) => ((SerializableProgress)obj).PreferredMultiplayerAscension,
+			Setter = delegate(object obj, int value)
+			{
+				((SerializableProgress)obj).PreferredMultiplayerAscension = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "PreferredMultiplayerAscension",
+			JsonPropertyName = "preferred_multiplayer_ascension",
+			AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("PreferredMultiplayerAscension", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "PreferredMultiplayerAscension";
-		jsonPropertyInfoValues.JsonPropertyName = "preferred_multiplayer_ascension";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("PreferredMultiplayerAscension", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo23 = jsonPropertyInfoValues;
 		array[22] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo23);
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializableProgress);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializableProgress)obj).MaxMultiplayerAscension;
-		jsonPropertyInfoValues.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo24 = new JsonPropertyInfoValues<int>
 		{
-			((SerializableProgress)obj).MaxMultiplayerAscension = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableProgress),
+			Converter = null,
+			Getter = (object obj) => ((SerializableProgress)obj).MaxMultiplayerAscension,
+			Setter = delegate(object obj, int value)
+			{
+				((SerializableProgress)obj).MaxMultiplayerAscension = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "MaxMultiplayerAscension",
+			JsonPropertyName = "max_multiplayer_ascension",
+			AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("MaxMultiplayerAscension", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "MaxMultiplayerAscension";
-		jsonPropertyInfoValues.JsonPropertyName = "max_multiplayer_ascension";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("MaxMultiplayerAscension", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo24 = jsonPropertyInfoValues;
 		array[23] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo24);
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializableProgress);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializableProgress)obj).TestSubjectKills;
-		jsonPropertyInfoValues.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo25 = new JsonPropertyInfoValues<int>
 		{
-			((SerializableProgress)obj).TestSubjectKills = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableProgress),
+			Converter = null,
+			Getter = (object obj) => ((SerializableProgress)obj).TestSubjectKills,
+			Setter = delegate(object obj, int value)
+			{
+				((SerializableProgress)obj).TestSubjectKills = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "TestSubjectKills",
+			JsonPropertyName = "test_subject_kills",
+			AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("TestSubjectKills", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "TestSubjectKills";
-		jsonPropertyInfoValues.JsonPropertyName = "test_subject_kills";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("TestSubjectKills", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo25 = jsonPropertyInfoValues;
 		array[24] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo25);
-		JsonPropertyInfoValues<ModelId> jsonPropertyInfoValues14 = new JsonPropertyInfoValues<ModelId>();
-		jsonPropertyInfoValues14.IsProperty = true;
-		jsonPropertyInfoValues14.IsPublic = true;
-		jsonPropertyInfoValues14.IsVirtual = false;
-		jsonPropertyInfoValues14.DeclaringType = typeof(SerializableProgress);
-		jsonPropertyInfoValues14.Converter = null;
-		jsonPropertyInfoValues14.Getter = (object obj) => ((SerializableProgress)obj).PendingCharacterUnlock;
-		jsonPropertyInfoValues14.Setter = delegate(object obj, ModelId? value)
+		JsonPropertyInfoValues<ModelId> propertyInfo26 = new JsonPropertyInfoValues<ModelId>
 		{
-			((SerializableProgress)obj).PendingCharacterUnlock = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableProgress),
+			Converter = null,
+			Getter = (object obj) => ((SerializableProgress)obj).PendingCharacterUnlock,
+			Setter = delegate(object obj, ModelId? value)
+			{
+				((SerializableProgress)obj).PendingCharacterUnlock = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "PendingCharacterUnlock",
+			JsonPropertyName = "pending_character_unlock",
+			AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("PendingCharacterUnlock", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues14.IgnoreCondition = null;
-		jsonPropertyInfoValues14.HasJsonInclude = false;
-		jsonPropertyInfoValues14.IsExtensionData = false;
-		jsonPropertyInfoValues14.NumberHandling = null;
-		jsonPropertyInfoValues14.PropertyName = "PendingCharacterUnlock";
-		jsonPropertyInfoValues14.JsonPropertyName = "pending_character_unlock";
-		jsonPropertyInfoValues14.AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("PendingCharacterUnlock", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<ModelId> propertyInfo26 = jsonPropertyInfoValues14;
 		array[25] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo26);
 		array[25].IsGetNullable = false;
 		array[25].IsSetNullable = false;
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializableProgress);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = null;
-		jsonPropertyInfoValues.Setter = null;
-		jsonPropertyInfoValues.IgnoreCondition = JsonIgnoreCondition.Always;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "Wins";
-		jsonPropertyInfoValues.JsonPropertyName = null;
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("Wins", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo27 = jsonPropertyInfoValues;
+		JsonPropertyInfoValues<int> propertyInfo27 = new JsonPropertyInfoValues<int>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableProgress),
+			Converter = null,
+			Getter = null,
+			Setter = null,
+			IgnoreCondition = JsonIgnoreCondition.Always,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Wins",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("Wins", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
+		};
 		array[26] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo27);
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializableProgress);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = null;
-		jsonPropertyInfoValues.Setter = null;
-		jsonPropertyInfoValues.IgnoreCondition = JsonIgnoreCondition.Always;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "Losses";
-		jsonPropertyInfoValues.JsonPropertyName = null;
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("Losses", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo28 = jsonPropertyInfoValues;
+		JsonPropertyInfoValues<int> propertyInfo28 = new JsonPropertyInfoValues<int>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableProgress),
+			Converter = null,
+			Getter = null,
+			Setter = null,
+			IgnoreCondition = JsonIgnoreCondition.Always,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Losses",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("Losses", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
+		};
 		array[27] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo28);
-		jsonPropertyInfoValues13 = new JsonPropertyInfoValues<long>();
-		jsonPropertyInfoValues13.IsProperty = true;
-		jsonPropertyInfoValues13.IsPublic = true;
-		jsonPropertyInfoValues13.IsVirtual = false;
-		jsonPropertyInfoValues13.DeclaringType = typeof(SerializableProgress);
-		jsonPropertyInfoValues13.Converter = null;
-		jsonPropertyInfoValues13.Getter = null;
-		jsonPropertyInfoValues13.Setter = null;
-		jsonPropertyInfoValues13.IgnoreCondition = JsonIgnoreCondition.Always;
-		jsonPropertyInfoValues13.HasJsonInclude = false;
-		jsonPropertyInfoValues13.IsExtensionData = false;
-		jsonPropertyInfoValues13.NumberHandling = null;
-		jsonPropertyInfoValues13.PropertyName = "FastestVictory";
-		jsonPropertyInfoValues13.JsonPropertyName = null;
-		jsonPropertyInfoValues13.AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("FastestVictory", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<long> propertyInfo29 = jsonPropertyInfoValues13;
+		JsonPropertyInfoValues<long> propertyInfo29 = new JsonPropertyInfoValues<long>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableProgress),
+			Converter = null,
+			Getter = null,
+			Setter = null,
+			IgnoreCondition = JsonIgnoreCondition.Always,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "FastestVictory",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("FastestVictory", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null)
+		};
 		array[28] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo29);
-		jsonPropertyInfoValues13 = new JsonPropertyInfoValues<long>();
-		jsonPropertyInfoValues13.IsProperty = true;
-		jsonPropertyInfoValues13.IsPublic = true;
-		jsonPropertyInfoValues13.IsVirtual = false;
-		jsonPropertyInfoValues13.DeclaringType = typeof(SerializableProgress);
-		jsonPropertyInfoValues13.Converter = null;
-		jsonPropertyInfoValues13.Getter = null;
-		jsonPropertyInfoValues13.Setter = null;
-		jsonPropertyInfoValues13.IgnoreCondition = JsonIgnoreCondition.Always;
-		jsonPropertyInfoValues13.HasJsonInclude = false;
-		jsonPropertyInfoValues13.IsExtensionData = false;
-		jsonPropertyInfoValues13.NumberHandling = null;
-		jsonPropertyInfoValues13.PropertyName = "BestWinStreak";
-		jsonPropertyInfoValues13.JsonPropertyName = null;
-		jsonPropertyInfoValues13.AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("BestWinStreak", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<long> propertyInfo30 = jsonPropertyInfoValues13;
+		JsonPropertyInfoValues<long> propertyInfo30 = new JsonPropertyInfoValues<long>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableProgress),
+			Converter = null,
+			Getter = null,
+			Setter = null,
+			IgnoreCondition = JsonIgnoreCondition.Always,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "BestWinStreak",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("BestWinStreak", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null)
+		};
 		array[29] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo30);
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializableProgress);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = null;
-		jsonPropertyInfoValues.Setter = null;
-		jsonPropertyInfoValues.IgnoreCondition = JsonIgnoreCondition.Always;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "NumberOfRuns";
-		jsonPropertyInfoValues.JsonPropertyName = null;
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("NumberOfRuns", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo31 = jsonPropertyInfoValues;
+		JsonPropertyInfoValues<int> propertyInfo31 = new JsonPropertyInfoValues<int>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableProgress),
+			Converter = null,
+			Getter = null,
+			Setter = null,
+			IgnoreCondition = JsonIgnoreCondition.Always,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "NumberOfRuns",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(SerializableProgress).GetProperty("NumberOfRuns", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
+		};
 		array[30] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo31);
 		return array;
 	}
@@ -9464,6 +11106,137 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 				IsMemberInitializer = true
 			}
 		};
+	}
+
+	private JsonTypeInfo<SerializableRng> Create_SerializableRng(JsonSerializerOptions options)
+	{
+		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<SerializableRng> jsonTypeInfo))
+		{
+			JsonObjectInfoValues<SerializableRng> objectInfo = new JsonObjectInfoValues<SerializableRng>
+			{
+				ObjectCreator = () => new SerializableRng(),
+				ObjectWithParameterizedConstructorCreator = null,
+				PropertyMetadataInitializer = (JsonSerializerContext _) => SerializableRngPropInit(options),
+				ConstructorParameterMetadataInitializer = null,
+				ConstructorAttributeProviderFactory = () => typeof(SerializableRng).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null),
+				SerializeHandler = null
+			};
+			jsonTypeInfo = JsonMetadataServices.CreateObjectInfo(options, objectInfo);
+			jsonTypeInfo.NumberHandling = null;
+		}
+		jsonTypeInfo.OriginatingResolver = this;
+		return jsonTypeInfo;
+	}
+
+	private static JsonPropertyInfo[] SerializableRngPropInit(JsonSerializerOptions options)
+	{
+		JsonPropertyInfo[] array = new JsonPropertyInfo[5];
+		JsonPropertyInfoValues<int> propertyInfo = new JsonPropertyInfoValues<int>
+		{
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRng),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRng)obj).counter,
+			Setter = delegate(object obj, int value)
+			{
+				((SerializableRng)obj).counter = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "counter",
+			JsonPropertyName = "counter",
+			AttributeProviderFactory = () => typeof(SerializableRng).GetField("counter", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+		};
+		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
+		JsonPropertyInfoValues<ulong> propertyInfo2 = new JsonPropertyInfoValues<ulong>
+		{
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRng),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRng)obj).state0,
+			Setter = delegate(object obj, ulong value)
+			{
+				((SerializableRng)obj).state0 = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "state0",
+			JsonPropertyName = "s0",
+			AttributeProviderFactory = () => typeof(SerializableRng).GetField("state0", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+		};
+		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
+		JsonPropertyInfoValues<ulong> propertyInfo3 = new JsonPropertyInfoValues<ulong>
+		{
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRng),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRng)obj).state1,
+			Setter = delegate(object obj, ulong value)
+			{
+				((SerializableRng)obj).state1 = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "state1",
+			JsonPropertyName = "s1",
+			AttributeProviderFactory = () => typeof(SerializableRng).GetField("state1", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+		};
+		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
+		JsonPropertyInfoValues<ulong> propertyInfo4 = new JsonPropertyInfoValues<ulong>
+		{
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRng),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRng)obj).state2,
+			Setter = delegate(object obj, ulong value)
+			{
+				((SerializableRng)obj).state2 = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "state2",
+			JsonPropertyName = "s2",
+			AttributeProviderFactory = () => typeof(SerializableRng).GetField("state2", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+		};
+		array[3] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo4);
+		JsonPropertyInfoValues<ulong> propertyInfo5 = new JsonPropertyInfoValues<ulong>
+		{
+			IsProperty = false,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRng),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRng)obj).state3,
+			Setter = delegate(object obj, ulong value)
+			{
+				((SerializableRng)obj).state3 = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "state3",
+			JsonPropertyName = "s3",
+			AttributeProviderFactory = () => typeof(SerializableRng).GetField("state3", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+		};
+		array[4] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo5);
+		return array;
 	}
 
 	private JsonTypeInfo<SerializableRun> Create_SerializableRun(JsonSerializerOptions options)
@@ -9488,447 +11261,528 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 
 	private static JsonPropertyInfo[] SerializableRunPropInit(JsonSerializerOptions options)
 	{
-		JsonPropertyInfo[] array = new JsonPropertyInfo[21];
-		JsonPropertyInfoValues<int> jsonPropertyInfoValues = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializableRun);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializableRun)obj).SchemaVersion;
-		jsonPropertyInfoValues.Setter = delegate(object obj, int value)
+		JsonPropertyInfo[] array = new JsonPropertyInfo[24];
+		JsonPropertyInfoValues<int> propertyInfo = new JsonPropertyInfoValues<int>
 		{
-			((SerializableRun)obj).SchemaVersion = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRun),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRun)obj).SchemaVersion,
+			Setter = delegate(object obj, int value)
+			{
+				((SerializableRun)obj).SchemaVersion = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "SchemaVersion",
+			JsonPropertyName = "schema_version",
+			AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("SchemaVersion", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "SchemaVersion";
-		jsonPropertyInfoValues.JsonPropertyName = "schema_version";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("SchemaVersion", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
-		JsonPropertyInfoValues<List<SerializableActModel>> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<List<SerializableActModel>>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SerializableRun);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SerializableRun)obj).Acts;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, List<SerializableActModel>? value)
+		JsonPropertyInfoValues<List<SerializableActModel>> propertyInfo2 = new JsonPropertyInfoValues<List<SerializableActModel>>
 		{
-			((SerializableRun)obj).Acts = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRun),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRun)obj).Acts,
+			Setter = delegate(object obj, List<SerializableActModel>? value)
+			{
+				((SerializableRun)obj).Acts = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Acts",
+			JsonPropertyName = "acts",
+			AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("Acts", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<SerializableActModel>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "Acts";
-		jsonPropertyInfoValues2.JsonPropertyName = "acts";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("Acts", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<SerializableActModel>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<SerializableActModel>> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		array[1].IsGetNullable = false;
 		array[1].IsSetNullable = false;
-		JsonPropertyInfoValues<List<SerializableModifier>> jsonPropertyInfoValues3 = new JsonPropertyInfoValues<List<SerializableModifier>>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(SerializableRun);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = (object obj) => ((SerializableRun)obj).Modifiers;
-		jsonPropertyInfoValues3.Setter = delegate(object obj, List<SerializableModifier>? value)
+		JsonPropertyInfoValues<List<SerializableModifier>> propertyInfo3 = new JsonPropertyInfoValues<List<SerializableModifier>>
 		{
-			((SerializableRun)obj).Modifiers = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRun),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRun)obj).Modifiers,
+			Setter = delegate(object obj, List<SerializableModifier>? value)
+			{
+				((SerializableRun)obj).Modifiers = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Modifiers",
+			JsonPropertyName = "modifiers",
+			AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("Modifiers", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<SerializableModifier>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues3.IgnoreCondition = null;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "Modifiers";
-		jsonPropertyInfoValues3.JsonPropertyName = "modifiers";
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("Modifiers", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<SerializableModifier>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<SerializableModifier>> propertyInfo3 = jsonPropertyInfoValues3;
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
 		array[2].IsGetNullable = false;
 		array[2].IsSetNullable = false;
-		JsonPropertyInfoValues<DateTimeOffset?> jsonPropertyInfoValues4 = new JsonPropertyInfoValues<DateTimeOffset?>();
-		jsonPropertyInfoValues4.IsProperty = true;
-		jsonPropertyInfoValues4.IsPublic = true;
-		jsonPropertyInfoValues4.IsVirtual = false;
-		jsonPropertyInfoValues4.DeclaringType = typeof(SerializableRun);
-		jsonPropertyInfoValues4.Converter = null;
-		jsonPropertyInfoValues4.Getter = (object obj) => ((SerializableRun)obj).DailyTime;
-		jsonPropertyInfoValues4.Setter = delegate(object obj, DateTimeOffset? value)
+		JsonPropertyInfoValues<DateTimeOffset?> propertyInfo4 = new JsonPropertyInfoValues<DateTimeOffset?>
 		{
-			((SerializableRun)obj).DailyTime = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRun),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRun)obj).DailyTime,
+			Setter = delegate(object obj, DateTimeOffset? value)
+			{
+				((SerializableRun)obj).DailyTime = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "DailyTime",
+			JsonPropertyName = "dailyTime",
+			AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("DailyTime", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(DateTimeOffset?), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues4.IgnoreCondition = null;
-		jsonPropertyInfoValues4.HasJsonInclude = false;
-		jsonPropertyInfoValues4.IsExtensionData = false;
-		jsonPropertyInfoValues4.NumberHandling = null;
-		jsonPropertyInfoValues4.PropertyName = "DailyTime";
-		jsonPropertyInfoValues4.JsonPropertyName = "dailyTime";
-		jsonPropertyInfoValues4.AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("DailyTime", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(DateTimeOffset?), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<DateTimeOffset?> propertyInfo4 = jsonPropertyInfoValues4;
 		array[3] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo4);
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializableRun);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializableRun)obj).CurrentActIndex;
-		jsonPropertyInfoValues.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo5 = new JsonPropertyInfoValues<int>
 		{
-			((SerializableRun)obj).CurrentActIndex = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRun),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRun)obj).CurrentActIndex,
+			Setter = delegate(object obj, int value)
+			{
+				((SerializableRun)obj).CurrentActIndex = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "CurrentActIndex",
+			JsonPropertyName = "current_act_index",
+			AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("CurrentActIndex", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "CurrentActIndex";
-		jsonPropertyInfoValues.JsonPropertyName = "current_act_index";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("CurrentActIndex", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo5 = jsonPropertyInfoValues;
 		array[4] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo5);
-		JsonPropertyInfoValues<List<ModelId>> jsonPropertyInfoValues5 = new JsonPropertyInfoValues<List<ModelId>>();
-		jsonPropertyInfoValues5.IsProperty = true;
-		jsonPropertyInfoValues5.IsPublic = true;
-		jsonPropertyInfoValues5.IsVirtual = false;
-		jsonPropertyInfoValues5.DeclaringType = typeof(SerializableRun);
-		jsonPropertyInfoValues5.Converter = null;
-		jsonPropertyInfoValues5.Getter = (object obj) => ((SerializableRun)obj).EventsSeen;
-		jsonPropertyInfoValues5.Setter = delegate(object obj, List<ModelId>? value)
+		JsonPropertyInfoValues<List<ModelId>> propertyInfo6 = new JsonPropertyInfoValues<List<ModelId>>
 		{
-			((SerializableRun)obj).EventsSeen = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRun),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRun)obj).EventsSeen,
+			Setter = delegate(object obj, List<ModelId>? value)
+			{
+				((SerializableRun)obj).EventsSeen = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "EventsSeen",
+			JsonPropertyName = "events_seen",
+			AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("EventsSeen", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues5.IgnoreCondition = null;
-		jsonPropertyInfoValues5.HasJsonInclude = false;
-		jsonPropertyInfoValues5.IsExtensionData = false;
-		jsonPropertyInfoValues5.NumberHandling = null;
-		jsonPropertyInfoValues5.PropertyName = "EventsSeen";
-		jsonPropertyInfoValues5.JsonPropertyName = "events_seen";
-		jsonPropertyInfoValues5.AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("EventsSeen", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<ModelId>> propertyInfo6 = jsonPropertyInfoValues5;
 		array[5] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo6);
 		array[5].IsGetNullable = false;
 		array[5].IsSetNullable = false;
-		JsonPropertyInfoValues<SerializableRoom> jsonPropertyInfoValues6 = new JsonPropertyInfoValues<SerializableRoom>();
-		jsonPropertyInfoValues6.IsProperty = true;
-		jsonPropertyInfoValues6.IsPublic = true;
-		jsonPropertyInfoValues6.IsVirtual = false;
-		jsonPropertyInfoValues6.DeclaringType = typeof(SerializableRun);
-		jsonPropertyInfoValues6.Converter = null;
-		jsonPropertyInfoValues6.Getter = (object obj) => ((SerializableRun)obj).PreFinishedRoom;
-		jsonPropertyInfoValues6.Setter = delegate(object obj, SerializableRoom? value)
+		JsonPropertyInfoValues<SerializableRoom> propertyInfo7 = new JsonPropertyInfoValues<SerializableRoom>
 		{
-			((SerializableRun)obj).PreFinishedRoom = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRun),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRun)obj).PreFinishedRoom,
+			Setter = delegate(object obj, SerializableRoom? value)
+			{
+				((SerializableRun)obj).PreFinishedRoom = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "PreFinishedRoom",
+			JsonPropertyName = "pre_finished_room",
+			AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("PreFinishedRoom", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializableRoom), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues6.IgnoreCondition = null;
-		jsonPropertyInfoValues6.HasJsonInclude = false;
-		jsonPropertyInfoValues6.IsExtensionData = false;
-		jsonPropertyInfoValues6.NumberHandling = null;
-		jsonPropertyInfoValues6.PropertyName = "PreFinishedRoom";
-		jsonPropertyInfoValues6.JsonPropertyName = "pre_finished_room";
-		jsonPropertyInfoValues6.AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("PreFinishedRoom", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializableRoom), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<SerializableRoom> propertyInfo7 = jsonPropertyInfoValues6;
 		array[6] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo7);
-		JsonPropertyInfoValues<SerializableRunOddsSet> jsonPropertyInfoValues7 = new JsonPropertyInfoValues<SerializableRunOddsSet>();
-		jsonPropertyInfoValues7.IsProperty = true;
-		jsonPropertyInfoValues7.IsPublic = true;
-		jsonPropertyInfoValues7.IsVirtual = false;
-		jsonPropertyInfoValues7.DeclaringType = typeof(SerializableRun);
-		jsonPropertyInfoValues7.Converter = null;
-		jsonPropertyInfoValues7.Getter = (object obj) => ((SerializableRun)obj).SerializableOdds;
-		jsonPropertyInfoValues7.Setter = delegate(object obj, SerializableRunOddsSet? value)
+		JsonPropertyInfoValues<SerializableRunOddsSet> propertyInfo8 = new JsonPropertyInfoValues<SerializableRunOddsSet>
 		{
-			((SerializableRun)obj).SerializableOdds = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRun),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRun)obj).SerializableOdds,
+			Setter = delegate(object obj, SerializableRunOddsSet? value)
+			{
+				((SerializableRun)obj).SerializableOdds = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "SerializableOdds",
+			JsonPropertyName = "odds",
+			AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("SerializableOdds", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializableRunOddsSet), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues7.IgnoreCondition = null;
-		jsonPropertyInfoValues7.HasJsonInclude = false;
-		jsonPropertyInfoValues7.IsExtensionData = false;
-		jsonPropertyInfoValues7.NumberHandling = null;
-		jsonPropertyInfoValues7.PropertyName = "SerializableOdds";
-		jsonPropertyInfoValues7.JsonPropertyName = "odds";
-		jsonPropertyInfoValues7.AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("SerializableOdds", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializableRunOddsSet), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<SerializableRunOddsSet> propertyInfo8 = jsonPropertyInfoValues7;
 		array[7] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo8);
 		array[7].IsGetNullable = false;
 		array[7].IsSetNullable = false;
-		JsonPropertyInfoValues<SerializableRelicGrabBag> jsonPropertyInfoValues8 = new JsonPropertyInfoValues<SerializableRelicGrabBag>();
-		jsonPropertyInfoValues8.IsProperty = true;
-		jsonPropertyInfoValues8.IsPublic = true;
-		jsonPropertyInfoValues8.IsVirtual = false;
-		jsonPropertyInfoValues8.DeclaringType = typeof(SerializableRun);
-		jsonPropertyInfoValues8.Converter = null;
-		jsonPropertyInfoValues8.Getter = (object obj) => ((SerializableRun)obj).SerializableSharedRelicGrabBag;
-		jsonPropertyInfoValues8.Setter = delegate(object obj, SerializableRelicGrabBag? value)
+		JsonPropertyInfoValues<SerializableRelicGrabBag> propertyInfo9 = new JsonPropertyInfoValues<SerializableRelicGrabBag>
 		{
-			((SerializableRun)obj).SerializableSharedRelicGrabBag = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRun),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRun)obj).SerializableSharedRelicGrabBag,
+			Setter = delegate(object obj, SerializableRelicGrabBag? value)
+			{
+				((SerializableRun)obj).SerializableSharedRelicGrabBag = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "SerializableSharedRelicGrabBag",
+			JsonPropertyName = "shared_relic_grab_bag",
+			AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("SerializableSharedRelicGrabBag", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializableRelicGrabBag), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues8.IgnoreCondition = null;
-		jsonPropertyInfoValues8.HasJsonInclude = false;
-		jsonPropertyInfoValues8.IsExtensionData = false;
-		jsonPropertyInfoValues8.NumberHandling = null;
-		jsonPropertyInfoValues8.PropertyName = "SerializableSharedRelicGrabBag";
-		jsonPropertyInfoValues8.JsonPropertyName = "shared_relic_grab_bag";
-		jsonPropertyInfoValues8.AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("SerializableSharedRelicGrabBag", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializableRelicGrabBag), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<SerializableRelicGrabBag> propertyInfo9 = jsonPropertyInfoValues8;
 		array[8] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo9);
 		array[8].IsGetNullable = false;
 		array[8].IsSetNullable = false;
-		JsonPropertyInfoValues<List<SerializablePlayer>> jsonPropertyInfoValues9 = new JsonPropertyInfoValues<List<SerializablePlayer>>();
-		jsonPropertyInfoValues9.IsProperty = true;
-		jsonPropertyInfoValues9.IsPublic = true;
-		jsonPropertyInfoValues9.IsVirtual = false;
-		jsonPropertyInfoValues9.DeclaringType = typeof(SerializableRun);
-		jsonPropertyInfoValues9.Converter = null;
-		jsonPropertyInfoValues9.Getter = (object obj) => ((SerializableRun)obj).Players;
-		jsonPropertyInfoValues9.Setter = delegate(object obj, List<SerializablePlayer>? value)
+		JsonPropertyInfoValues<List<SerializablePlayer>> propertyInfo10 = new JsonPropertyInfoValues<List<SerializablePlayer>>
 		{
-			((SerializableRun)obj).Players = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRun),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRun)obj).Players,
+			Setter = delegate(object obj, List<SerializablePlayer>? value)
+			{
+				((SerializableRun)obj).Players = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Players",
+			JsonPropertyName = "players",
+			AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("Players", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<SerializablePlayer>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues9.IgnoreCondition = null;
-		jsonPropertyInfoValues9.HasJsonInclude = false;
-		jsonPropertyInfoValues9.IsExtensionData = false;
-		jsonPropertyInfoValues9.NumberHandling = null;
-		jsonPropertyInfoValues9.PropertyName = "Players";
-		jsonPropertyInfoValues9.JsonPropertyName = "players";
-		jsonPropertyInfoValues9.AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("Players", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<SerializablePlayer>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<SerializablePlayer>> propertyInfo10 = jsonPropertyInfoValues9;
 		array[9] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo10);
 		array[9].IsGetNullable = false;
 		array[9].IsSetNullable = false;
-		JsonPropertyInfoValues<SerializableRunRngSet> jsonPropertyInfoValues10 = new JsonPropertyInfoValues<SerializableRunRngSet>();
-		jsonPropertyInfoValues10.IsProperty = true;
-		jsonPropertyInfoValues10.IsPublic = true;
-		jsonPropertyInfoValues10.IsVirtual = false;
-		jsonPropertyInfoValues10.DeclaringType = typeof(SerializableRun);
-		jsonPropertyInfoValues10.Converter = null;
-		jsonPropertyInfoValues10.Getter = (object obj) => ((SerializableRun)obj).SerializableRng;
-		jsonPropertyInfoValues10.Setter = delegate(object obj, SerializableRunRngSet? value)
+		JsonPropertyInfoValues<SerializableRunRngSet> propertyInfo11 = new JsonPropertyInfoValues<SerializableRunRngSet>
 		{
-			((SerializableRun)obj).SerializableRng = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRun),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRun)obj).SerializableRng,
+			Setter = delegate(object obj, SerializableRunRngSet? value)
+			{
+				((SerializableRun)obj).SerializableRng = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "SerializableRng",
+			JsonPropertyName = "rng",
+			AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("SerializableRng", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializableRunRngSet), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues10.IgnoreCondition = null;
-		jsonPropertyInfoValues10.HasJsonInclude = false;
-		jsonPropertyInfoValues10.IsExtensionData = false;
-		jsonPropertyInfoValues10.NumberHandling = null;
-		jsonPropertyInfoValues10.PropertyName = "SerializableRng";
-		jsonPropertyInfoValues10.JsonPropertyName = "rng";
-		jsonPropertyInfoValues10.AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("SerializableRng", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializableRunRngSet), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<SerializableRunRngSet> propertyInfo11 = jsonPropertyInfoValues10;
 		array[10] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo11);
 		array[10].IsGetNullable = false;
 		array[10].IsSetNullable = false;
-		JsonPropertyInfoValues<List<MapCoord>> jsonPropertyInfoValues11 = new JsonPropertyInfoValues<List<MapCoord>>();
-		jsonPropertyInfoValues11.IsProperty = true;
-		jsonPropertyInfoValues11.IsPublic = true;
-		jsonPropertyInfoValues11.IsVirtual = false;
-		jsonPropertyInfoValues11.DeclaringType = typeof(SerializableRun);
-		jsonPropertyInfoValues11.Converter = null;
-		jsonPropertyInfoValues11.Getter = (object obj) => ((SerializableRun)obj).VisitedMapCoords;
-		jsonPropertyInfoValues11.Setter = delegate(object obj, List<MapCoord>? value)
+		JsonPropertyInfoValues<List<MapCoord>> propertyInfo12 = new JsonPropertyInfoValues<List<MapCoord>>
 		{
-			((SerializableRun)obj).VisitedMapCoords = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRun),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRun)obj).VisitedMapCoords,
+			Setter = delegate(object obj, List<MapCoord>? value)
+			{
+				((SerializableRun)obj).VisitedMapCoords = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "VisitedMapCoords",
+			JsonPropertyName = "visited_map_coords",
+			AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("VisitedMapCoords", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<MapCoord>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues11.IgnoreCondition = null;
-		jsonPropertyInfoValues11.HasJsonInclude = false;
-		jsonPropertyInfoValues11.IsExtensionData = false;
-		jsonPropertyInfoValues11.NumberHandling = null;
-		jsonPropertyInfoValues11.PropertyName = "VisitedMapCoords";
-		jsonPropertyInfoValues11.JsonPropertyName = "visited_map_coords";
-		jsonPropertyInfoValues11.AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("VisitedMapCoords", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<MapCoord>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<MapCoord>> propertyInfo12 = jsonPropertyInfoValues11;
 		array[11] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo12);
 		array[11].IsGetNullable = false;
 		array[11].IsSetNullable = false;
-		JsonPropertyInfoValues<List<List<MapPointHistoryEntry>>> jsonPropertyInfoValues12 = new JsonPropertyInfoValues<List<List<MapPointHistoryEntry>>>();
-		jsonPropertyInfoValues12.IsProperty = true;
-		jsonPropertyInfoValues12.IsPublic = true;
-		jsonPropertyInfoValues12.IsVirtual = false;
-		jsonPropertyInfoValues12.DeclaringType = typeof(SerializableRun);
-		jsonPropertyInfoValues12.Converter = null;
-		jsonPropertyInfoValues12.Getter = (object obj) => ((SerializableRun)obj).MapPointHistory;
-		jsonPropertyInfoValues12.Setter = delegate(object obj, List<List<MapPointHistoryEntry>>? value)
+		JsonPropertyInfoValues<List<List<MapPointHistoryEntry>>> propertyInfo13 = new JsonPropertyInfoValues<List<List<MapPointHistoryEntry>>>
 		{
-			((SerializableRun)obj).MapPointHistory = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRun),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRun)obj).MapPointHistory,
+			Setter = delegate(object obj, List<List<MapPointHistoryEntry>>? value)
+			{
+				((SerializableRun)obj).MapPointHistory = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "MapPointHistory",
+			JsonPropertyName = "map_point_history",
+			AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("MapPointHistory", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<List<MapPointHistoryEntry>>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues12.IgnoreCondition = null;
-		jsonPropertyInfoValues12.HasJsonInclude = false;
-		jsonPropertyInfoValues12.IsExtensionData = false;
-		jsonPropertyInfoValues12.NumberHandling = null;
-		jsonPropertyInfoValues12.PropertyName = "MapPointHistory";
-		jsonPropertyInfoValues12.JsonPropertyName = "map_point_history";
-		jsonPropertyInfoValues12.AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("MapPointHistory", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<List<MapPointHistoryEntry>>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<List<MapPointHistoryEntry>>> propertyInfo13 = jsonPropertyInfoValues12;
 		array[12] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo13);
 		array[12].IsGetNullable = false;
 		array[12].IsSetNullable = false;
-		JsonPropertyInfoValues<long> jsonPropertyInfoValues13 = new JsonPropertyInfoValues<long>();
-		jsonPropertyInfoValues13.IsProperty = true;
-		jsonPropertyInfoValues13.IsPublic = true;
-		jsonPropertyInfoValues13.IsVirtual = false;
-		jsonPropertyInfoValues13.DeclaringType = typeof(SerializableRun);
-		jsonPropertyInfoValues13.Converter = null;
-		jsonPropertyInfoValues13.Getter = (object obj) => ((SerializableRun)obj).SaveTime;
-		jsonPropertyInfoValues13.Setter = delegate(object obj, long value)
+		JsonPropertyInfoValues<long> propertyInfo14 = new JsonPropertyInfoValues<long>
 		{
-			((SerializableRun)obj).SaveTime = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRun),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRun)obj).SaveTime,
+			Setter = delegate(object obj, long value)
+			{
+				((SerializableRun)obj).SaveTime = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "SaveTime",
+			JsonPropertyName = "save_time",
+			AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("SaveTime", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues13.IgnoreCondition = null;
-		jsonPropertyInfoValues13.HasJsonInclude = false;
-		jsonPropertyInfoValues13.IsExtensionData = false;
-		jsonPropertyInfoValues13.NumberHandling = null;
-		jsonPropertyInfoValues13.PropertyName = "SaveTime";
-		jsonPropertyInfoValues13.JsonPropertyName = "save_time";
-		jsonPropertyInfoValues13.AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("SaveTime", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<long> propertyInfo14 = jsonPropertyInfoValues13;
 		array[13] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo14);
-		jsonPropertyInfoValues13 = new JsonPropertyInfoValues<long>();
-		jsonPropertyInfoValues13.IsProperty = true;
-		jsonPropertyInfoValues13.IsPublic = true;
-		jsonPropertyInfoValues13.IsVirtual = false;
-		jsonPropertyInfoValues13.DeclaringType = typeof(SerializableRun);
-		jsonPropertyInfoValues13.Converter = null;
-		jsonPropertyInfoValues13.Getter = (object obj) => ((SerializableRun)obj).StartTime;
-		jsonPropertyInfoValues13.Setter = delegate(object obj, long value)
+		JsonPropertyInfoValues<long> propertyInfo15 = new JsonPropertyInfoValues<long>
 		{
-			((SerializableRun)obj).StartTime = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRun),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRun)obj).StartTime,
+			Setter = delegate(object obj, long value)
+			{
+				((SerializableRun)obj).StartTime = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "StartTime",
+			JsonPropertyName = "start_time",
+			AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("StartTime", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues13.IgnoreCondition = null;
-		jsonPropertyInfoValues13.HasJsonInclude = false;
-		jsonPropertyInfoValues13.IsExtensionData = false;
-		jsonPropertyInfoValues13.NumberHandling = null;
-		jsonPropertyInfoValues13.PropertyName = "StartTime";
-		jsonPropertyInfoValues13.JsonPropertyName = "start_time";
-		jsonPropertyInfoValues13.AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("StartTime", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<long> propertyInfo15 = jsonPropertyInfoValues13;
 		array[14] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo15);
-		jsonPropertyInfoValues13 = new JsonPropertyInfoValues<long>();
-		jsonPropertyInfoValues13.IsProperty = true;
-		jsonPropertyInfoValues13.IsPublic = true;
-		jsonPropertyInfoValues13.IsVirtual = false;
-		jsonPropertyInfoValues13.DeclaringType = typeof(SerializableRun);
-		jsonPropertyInfoValues13.Converter = null;
-		jsonPropertyInfoValues13.Getter = (object obj) => ((SerializableRun)obj).RunTime;
-		jsonPropertyInfoValues13.Setter = delegate(object obj, long value)
+		JsonPropertyInfoValues<long> propertyInfo16 = new JsonPropertyInfoValues<long>
 		{
-			((SerializableRun)obj).RunTime = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRun),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRun)obj).RunTime,
+			Setter = delegate(object obj, long value)
+			{
+				((SerializableRun)obj).RunTime = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "RunTime",
+			JsonPropertyName = "run_time",
+			AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("RunTime", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues13.IgnoreCondition = null;
-		jsonPropertyInfoValues13.HasJsonInclude = false;
-		jsonPropertyInfoValues13.IsExtensionData = false;
-		jsonPropertyInfoValues13.NumberHandling = null;
-		jsonPropertyInfoValues13.PropertyName = "RunTime";
-		jsonPropertyInfoValues13.JsonPropertyName = "run_time";
-		jsonPropertyInfoValues13.AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("RunTime", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<long> propertyInfo16 = jsonPropertyInfoValues13;
 		array[15] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo16);
-		jsonPropertyInfoValues13 = new JsonPropertyInfoValues<long>();
-		jsonPropertyInfoValues13.IsProperty = true;
-		jsonPropertyInfoValues13.IsPublic = true;
-		jsonPropertyInfoValues13.IsVirtual = false;
-		jsonPropertyInfoValues13.DeclaringType = typeof(SerializableRun);
-		jsonPropertyInfoValues13.Converter = null;
-		jsonPropertyInfoValues13.Getter = (object obj) => ((SerializableRun)obj).WinTime;
-		jsonPropertyInfoValues13.Setter = delegate(object obj, long value)
+		JsonPropertyInfoValues<long> propertyInfo17 = new JsonPropertyInfoValues<long>
 		{
-			((SerializableRun)obj).WinTime = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRun),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRun)obj).WinTime,
+			Setter = delegate(object obj, long value)
+			{
+				((SerializableRun)obj).WinTime = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "WinTime",
+			JsonPropertyName = "win_time",
+			AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("WinTime", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues13.IgnoreCondition = null;
-		jsonPropertyInfoValues13.HasJsonInclude = false;
-		jsonPropertyInfoValues13.IsExtensionData = false;
-		jsonPropertyInfoValues13.NumberHandling = null;
-		jsonPropertyInfoValues13.PropertyName = "WinTime";
-		jsonPropertyInfoValues13.JsonPropertyName = "win_time";
-		jsonPropertyInfoValues13.AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("WinTime", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<long> propertyInfo17 = jsonPropertyInfoValues13;
 		array[16] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo17);
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializableRun);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializableRun)obj).Ascension;
-		jsonPropertyInfoValues.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo18 = new JsonPropertyInfoValues<int>
 		{
-			((SerializableRun)obj).Ascension = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRun),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRun)obj).Ascension,
+			Setter = delegate(object obj, int value)
+			{
+				((SerializableRun)obj).Ascension = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Ascension",
+			JsonPropertyName = "ascension",
+			AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("Ascension", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "Ascension";
-		jsonPropertyInfoValues.JsonPropertyName = "ascension";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("Ascension", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo18 = jsonPropertyInfoValues;
 		array[17] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo18);
-		JsonPropertyInfoValues<PlatformType> jsonPropertyInfoValues14 = new JsonPropertyInfoValues<PlatformType>();
-		jsonPropertyInfoValues14.IsProperty = true;
-		jsonPropertyInfoValues14.IsPublic = true;
-		jsonPropertyInfoValues14.IsVirtual = false;
-		jsonPropertyInfoValues14.DeclaringType = typeof(SerializableRun);
-		jsonPropertyInfoValues14.Converter = null;
-		jsonPropertyInfoValues14.Getter = (object obj) => ((SerializableRun)obj).PlatformType;
-		jsonPropertyInfoValues14.Setter = delegate(object obj, PlatformType value)
+		JsonPropertyInfoValues<int> propertyInfo19 = new JsonPropertyInfoValues<int>
 		{
-			((SerializableRun)obj).PlatformType = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRun),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRun)obj).NumReloads,
+			Setter = delegate(object obj, int value)
+			{
+				((SerializableRun)obj).NumReloads = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "NumReloads",
+			JsonPropertyName = "num_reloads",
+			AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("NumReloads", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues14.IgnoreCondition = null;
-		jsonPropertyInfoValues14.HasJsonInclude = false;
-		jsonPropertyInfoValues14.IsExtensionData = false;
-		jsonPropertyInfoValues14.NumberHandling = null;
-		jsonPropertyInfoValues14.PropertyName = "PlatformType";
-		jsonPropertyInfoValues14.JsonPropertyName = "platform_type";
-		jsonPropertyInfoValues14.AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("PlatformType", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(PlatformType), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<PlatformType> propertyInfo19 = jsonPropertyInfoValues14;
 		array[18] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo19);
-		JsonPropertyInfoValues<SerializableMapDrawings> jsonPropertyInfoValues15 = new JsonPropertyInfoValues<SerializableMapDrawings>();
-		jsonPropertyInfoValues15.IsProperty = true;
-		jsonPropertyInfoValues15.IsPublic = true;
-		jsonPropertyInfoValues15.IsVirtual = false;
-		jsonPropertyInfoValues15.DeclaringType = typeof(SerializableRun);
-		jsonPropertyInfoValues15.Converter = (JsonConverter<SerializableMapDrawings>)ExpandConverter(typeof(SerializableMapDrawings), new SerializableMapDrawingsJsonConverter(), options);
-		jsonPropertyInfoValues15.Getter = (object obj) => ((SerializableRun)obj).MapDrawings;
-		jsonPropertyInfoValues15.Setter = delegate(object obj, SerializableMapDrawings? value)
+		JsonPropertyInfoValues<PlatformType> propertyInfo20 = new JsonPropertyInfoValues<PlatformType>
 		{
-			((SerializableRun)obj).MapDrawings = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRun),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRun)obj).PlatformType,
+			Setter = delegate(object obj, PlatformType value)
+			{
+				((SerializableRun)obj).PlatformType = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "PlatformType",
+			JsonPropertyName = "platform_type",
+			AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("PlatformType", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(PlatformType), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues15.IgnoreCondition = null;
-		jsonPropertyInfoValues15.HasJsonInclude = false;
-		jsonPropertyInfoValues15.IsExtensionData = false;
-		jsonPropertyInfoValues15.NumberHandling = null;
-		jsonPropertyInfoValues15.PropertyName = "MapDrawings";
-		jsonPropertyInfoValues15.JsonPropertyName = "map_drawings";
-		jsonPropertyInfoValues15.AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("MapDrawings", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializableMapDrawings), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<SerializableMapDrawings> propertyInfo20 = jsonPropertyInfoValues15;
 		array[19] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo20);
-		JsonPropertyInfoValues<SerializableExtraRunFields> jsonPropertyInfoValues16 = new JsonPropertyInfoValues<SerializableExtraRunFields>();
-		jsonPropertyInfoValues16.IsProperty = true;
-		jsonPropertyInfoValues16.IsPublic = true;
-		jsonPropertyInfoValues16.IsVirtual = false;
-		jsonPropertyInfoValues16.DeclaringType = typeof(SerializableRun);
-		jsonPropertyInfoValues16.Converter = null;
-		jsonPropertyInfoValues16.Getter = (object obj) => ((SerializableRun)obj).ExtraFields;
-		jsonPropertyInfoValues16.Setter = delegate(object obj, SerializableExtraRunFields? value)
+		JsonPropertyInfoValues<SerializableMapDrawings> propertyInfo21 = new JsonPropertyInfoValues<SerializableMapDrawings>
 		{
-			((SerializableRun)obj).ExtraFields = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRun),
+			Converter = (JsonConverter<SerializableMapDrawings>)ExpandConverter(typeof(SerializableMapDrawings), new SerializableMapDrawingsJsonConverter(), options),
+			Getter = (object obj) => ((SerializableRun)obj).MapDrawings,
+			Setter = delegate(object obj, SerializableMapDrawings? value)
+			{
+				((SerializableRun)obj).MapDrawings = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "MapDrawings",
+			JsonPropertyName = "map_drawings",
+			AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("MapDrawings", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializableMapDrawings), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues16.IgnoreCondition = null;
-		jsonPropertyInfoValues16.HasJsonInclude = false;
-		jsonPropertyInfoValues16.IsExtensionData = false;
-		jsonPropertyInfoValues16.NumberHandling = null;
-		jsonPropertyInfoValues16.PropertyName = "ExtraFields";
-		jsonPropertyInfoValues16.JsonPropertyName = "extra_fields";
-		jsonPropertyInfoValues16.AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("ExtraFields", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializableExtraRunFields), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<SerializableExtraRunFields> propertyInfo21 = jsonPropertyInfoValues16;
 		array[20] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo21);
-		array[20].IsGetNullable = false;
-		array[20].IsSetNullable = false;
+		JsonPropertyInfoValues<SerializableExtraRunFields> propertyInfo22 = new JsonPropertyInfoValues<SerializableExtraRunFields>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRun),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRun)obj).ExtraFields,
+			Setter = delegate(object obj, SerializableExtraRunFields? value)
+			{
+				((SerializableRun)obj).ExtraFields = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "ExtraFields",
+			JsonPropertyName = "extra_fields",
+			AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("ExtraFields", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(SerializableExtraRunFields), Array.Empty<Type>(), null)
+		};
+		array[21] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo22);
+		array[21].IsGetNullable = false;
+		array[21].IsSetNullable = false;
+		JsonPropertyInfoValues<GameMode> propertyInfo23 = new JsonPropertyInfoValues<GameMode>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRun),
+			Converter = null,
+			Getter = (object obj) => ((SerializableRun)obj).GameMode,
+			Setter = delegate(object obj, GameMode value)
+			{
+				((SerializableRun)obj).GameMode = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "GameMode",
+			JsonPropertyName = "game_mode",
+			AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("GameMode", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(GameMode), Array.Empty<Type>(), null)
+		};
+		array[22] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo23);
+		JsonPropertyInfoValues<int> propertyInfo24 = new JsonPropertyInfoValues<int>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableRun),
+			Converter = null,
+			Getter = null,
+			Setter = null,
+			IgnoreCondition = JsonIgnoreCondition.Always,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "FloorReached",
+			JsonPropertyName = null,
+			AttributeProviderFactory = () => typeof(SerializableRun).GetProperty("FloorReached", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
+		};
+		array[23] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo24);
 		return array;
 	}
 
@@ -9936,18 +11790,19 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	{
 		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<SerializableUnlockedAchievement> jsonTypeInfo))
 		{
-			JsonObjectInfoValues<SerializableUnlockedAchievement> jsonObjectInfoValues = new JsonObjectInfoValues<SerializableUnlockedAchievement>();
-			jsonObjectInfoValues.ObjectCreator = null;
-			jsonObjectInfoValues.ObjectWithParameterizedConstructorCreator = (object[] args) => new SerializableUnlockedAchievement
+			JsonObjectInfoValues<SerializableUnlockedAchievement> objectInfo = new JsonObjectInfoValues<SerializableUnlockedAchievement>
 			{
-				Achievement = (string)args[0],
-				UnlockTime = (long)args[1]
+				ObjectCreator = null,
+				ObjectWithParameterizedConstructorCreator = (object[] args) => new SerializableUnlockedAchievement
+				{
+					Achievement = (string)args[0],
+					UnlockTime = (long)args[1]
+				},
+				PropertyMetadataInitializer = (JsonSerializerContext _) => SerializableUnlockedAchievementPropInit(options),
+				ConstructorParameterMetadataInitializer = SerializableUnlockedAchievementCtorParamInit,
+				ConstructorAttributeProviderFactory = () => typeof(SerializableUnlockedAchievement).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null),
+				SerializeHandler = null
 			};
-			jsonObjectInfoValues.PropertyMetadataInitializer = (JsonSerializerContext _) => SerializableUnlockedAchievementPropInit(options);
-			jsonObjectInfoValues.ConstructorParameterMetadataInitializer = SerializableUnlockedAchievementCtorParamInit;
-			jsonObjectInfoValues.ConstructorAttributeProviderFactory = () => typeof(SerializableUnlockedAchievement).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null);
-			jsonObjectInfoValues.SerializeHandler = null;
-			JsonObjectInfoValues<SerializableUnlockedAchievement> objectInfo = jsonObjectInfoValues;
 			jsonTypeInfo = JsonMetadataServices.CreateObjectInfo(options, objectInfo);
 			jsonTypeInfo.NumberHandling = null;
 		}
@@ -9958,47 +11813,49 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] SerializableUnlockedAchievementPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[2];
-		JsonPropertyInfoValues<string> jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializableUnlockedAchievement);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializableUnlockedAchievement)obj).Achievement;
-		jsonPropertyInfoValues.Setter = delegate
+		JsonPropertyInfoValues<string> propertyInfo = new JsonPropertyInfoValues<string>
 		{
-			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableUnlockedAchievement),
+			Converter = null,
+			Getter = (object obj) => ((SerializableUnlockedAchievement)obj).Achievement,
+			Setter = delegate
+			{
+				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Achievement",
+			JsonPropertyName = "achievement",
+			AttributeProviderFactory = () => typeof(SerializableUnlockedAchievement).GetProperty("Achievement", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "Achievement";
-		jsonPropertyInfoValues.JsonPropertyName = "achievement";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableUnlockedAchievement).GetProperty("Achievement", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<string> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsGetNullable = false;
 		array[0].IsSetNullable = false;
-		JsonPropertyInfoValues<long> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<long>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SerializableUnlockedAchievement);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SerializableUnlockedAchievement)obj).UnlockTime;
-		jsonPropertyInfoValues2.Setter = delegate
+		JsonPropertyInfoValues<long> propertyInfo2 = new JsonPropertyInfoValues<long>
 		{
-			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableUnlockedAchievement),
+			Converter = null,
+			Getter = (object obj) => ((SerializableUnlockedAchievement)obj).UnlockTime,
+			Setter = delegate
+			{
+				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "UnlockTime",
+			JsonPropertyName = "unlock_time",
+			AttributeProviderFactory = () => typeof(SerializableUnlockedAchievement).GetProperty("UnlockTime", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "UnlockTime";
-		jsonPropertyInfoValues2.JsonPropertyName = "unlock_time";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SerializableUnlockedAchievement).GetProperty("UnlockTime", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<long> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		return array;
 	}
@@ -10049,469 +11906,492 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] SettingsSavePropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[23];
-		JsonPropertyInfoValues<int> jsonPropertyInfoValues = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SettingsSave);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SettingsSave)obj).SchemaVersion;
-		jsonPropertyInfoValues.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo = new JsonPropertyInfoValues<int>
 		{
-			((SettingsSave)obj).SchemaVersion = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SettingsSave),
+			Converter = null,
+			Getter = (object obj) => ((SettingsSave)obj).SchemaVersion,
+			Setter = delegate(object obj, int value)
+			{
+				((SettingsSave)obj).SchemaVersion = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "SchemaVersion",
+			JsonPropertyName = "schema_version",
+			AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("SchemaVersion", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "SchemaVersion";
-		jsonPropertyInfoValues.JsonPropertyName = "schema_version";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("SchemaVersion", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SettingsSave);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SettingsSave)obj).FpsLimit;
-		jsonPropertyInfoValues.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo2 = new JsonPropertyInfoValues<int>
 		{
-			((SettingsSave)obj).FpsLimit = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SettingsSave),
+			Converter = null,
+			Getter = (object obj) => ((SettingsSave)obj).FpsLimit,
+			Setter = delegate(object obj, int value)
+			{
+				((SettingsSave)obj).FpsLimit = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "FpsLimit",
+			JsonPropertyName = "fps_limit",
+			AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("FpsLimit", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "FpsLimit";
-		jsonPropertyInfoValues.JsonPropertyName = "fps_limit";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("FpsLimit", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo2 = jsonPropertyInfoValues;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
-		JsonPropertyInfoValues<string> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<string>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SettingsSave);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SettingsSave)obj).Language;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, string? value)
+		JsonPropertyInfoValues<string> propertyInfo3 = new JsonPropertyInfoValues<string>
 		{
-			((SettingsSave)obj).Language = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SettingsSave),
+			Converter = null,
+			Getter = (object obj) => ((SettingsSave)obj).Language,
+			Setter = delegate(object obj, string? value)
+			{
+				((SettingsSave)obj).Language = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Language",
+			JsonPropertyName = "language",
+			AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("Language", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "Language";
-		jsonPropertyInfoValues2.JsonPropertyName = "language";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("Language", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<string> propertyInfo3 = jsonPropertyInfoValues2;
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
-		JsonPropertyInfoValues<Vector2I> jsonPropertyInfoValues3 = new JsonPropertyInfoValues<Vector2I>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(SettingsSave);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = (object obj) => ((SettingsSave)obj).WindowPosition;
-		jsonPropertyInfoValues3.Setter = delegate(object obj, Vector2I value)
+		JsonPropertyInfoValues<Vector2I> propertyInfo4 = new JsonPropertyInfoValues<Vector2I>
 		{
-			((SettingsSave)obj).WindowPosition = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SettingsSave),
+			Converter = null,
+			Getter = (object obj) => ((SettingsSave)obj).WindowPosition,
+			Setter = delegate(object obj, Vector2I value)
+			{
+				((SettingsSave)obj).WindowPosition = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "WindowPosition",
+			JsonPropertyName = "window_position",
+			AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("WindowPosition", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(Vector2I), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues3.IgnoreCondition = null;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "WindowPosition";
-		jsonPropertyInfoValues3.JsonPropertyName = "window_position";
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("WindowPosition", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(Vector2I), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<Vector2I> propertyInfo4 = jsonPropertyInfoValues3;
 		array[3] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo4);
-		jsonPropertyInfoValues3 = new JsonPropertyInfoValues<Vector2I>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(SettingsSave);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = (object obj) => ((SettingsSave)obj).WindowSize;
-		jsonPropertyInfoValues3.Setter = delegate(object obj, Vector2I value)
+		JsonPropertyInfoValues<Vector2I> propertyInfo5 = new JsonPropertyInfoValues<Vector2I>
 		{
-			((SettingsSave)obj).WindowSize = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SettingsSave),
+			Converter = null,
+			Getter = (object obj) => ((SettingsSave)obj).WindowSize,
+			Setter = delegate(object obj, Vector2I value)
+			{
+				((SettingsSave)obj).WindowSize = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "WindowSize",
+			JsonPropertyName = "window_size",
+			AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("WindowSize", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(Vector2I), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues3.IgnoreCondition = null;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "WindowSize";
-		jsonPropertyInfoValues3.JsonPropertyName = "window_size";
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("WindowSize", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(Vector2I), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<Vector2I> propertyInfo5 = jsonPropertyInfoValues3;
 		array[4] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo5);
-		JsonPropertyInfoValues<bool> jsonPropertyInfoValues4 = new JsonPropertyInfoValues<bool>();
-		jsonPropertyInfoValues4.IsProperty = true;
-		jsonPropertyInfoValues4.IsPublic = true;
-		jsonPropertyInfoValues4.IsVirtual = false;
-		jsonPropertyInfoValues4.DeclaringType = typeof(SettingsSave);
-		jsonPropertyInfoValues4.Converter = null;
-		jsonPropertyInfoValues4.Getter = (object obj) => ((SettingsSave)obj).Fullscreen;
-		jsonPropertyInfoValues4.Setter = delegate(object obj, bool value)
+		JsonPropertyInfoValues<bool> propertyInfo6 = new JsonPropertyInfoValues<bool>
 		{
-			((SettingsSave)obj).Fullscreen = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SettingsSave),
+			Converter = null,
+			Getter = (object obj) => ((SettingsSave)obj).Fullscreen,
+			Setter = delegate(object obj, bool value)
+			{
+				((SettingsSave)obj).Fullscreen = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Fullscreen",
+			JsonPropertyName = "fullscreen",
+			AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("Fullscreen", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues4.IgnoreCondition = null;
-		jsonPropertyInfoValues4.HasJsonInclude = false;
-		jsonPropertyInfoValues4.IsExtensionData = false;
-		jsonPropertyInfoValues4.NumberHandling = null;
-		jsonPropertyInfoValues4.PropertyName = "Fullscreen";
-		jsonPropertyInfoValues4.JsonPropertyName = "fullscreen";
-		jsonPropertyInfoValues4.AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("Fullscreen", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<bool> propertyInfo6 = jsonPropertyInfoValues4;
 		array[5] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo6);
-		JsonPropertyInfoValues<AspectRatioSetting> jsonPropertyInfoValues5 = new JsonPropertyInfoValues<AspectRatioSetting>();
-		jsonPropertyInfoValues5.IsProperty = true;
-		jsonPropertyInfoValues5.IsPublic = true;
-		jsonPropertyInfoValues5.IsVirtual = false;
-		jsonPropertyInfoValues5.DeclaringType = typeof(SettingsSave);
-		jsonPropertyInfoValues5.Converter = null;
-		jsonPropertyInfoValues5.Getter = (object obj) => ((SettingsSave)obj).AspectRatioSetting;
-		jsonPropertyInfoValues5.Setter = delegate(object obj, AspectRatioSetting value)
+		JsonPropertyInfoValues<AspectRatioSetting> propertyInfo7 = new JsonPropertyInfoValues<AspectRatioSetting>
 		{
-			((SettingsSave)obj).AspectRatioSetting = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SettingsSave),
+			Converter = null,
+			Getter = (object obj) => ((SettingsSave)obj).AspectRatioSetting,
+			Setter = delegate(object obj, AspectRatioSetting value)
+			{
+				((SettingsSave)obj).AspectRatioSetting = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "AspectRatioSetting",
+			JsonPropertyName = "aspect_ratio",
+			AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("AspectRatioSetting", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(AspectRatioSetting), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues5.IgnoreCondition = null;
-		jsonPropertyInfoValues5.HasJsonInclude = false;
-		jsonPropertyInfoValues5.IsExtensionData = false;
-		jsonPropertyInfoValues5.NumberHandling = null;
-		jsonPropertyInfoValues5.PropertyName = "AspectRatioSetting";
-		jsonPropertyInfoValues5.JsonPropertyName = "aspect_ratio";
-		jsonPropertyInfoValues5.AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("AspectRatioSetting", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(AspectRatioSetting), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<AspectRatioSetting> propertyInfo7 = jsonPropertyInfoValues5;
 		array[6] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo7);
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SettingsSave);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SettingsSave)obj).TargetDisplay;
-		jsonPropertyInfoValues.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo8 = new JsonPropertyInfoValues<int>
 		{
-			((SettingsSave)obj).TargetDisplay = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SettingsSave),
+			Converter = null,
+			Getter = (object obj) => ((SettingsSave)obj).TargetDisplay,
+			Setter = delegate(object obj, int value)
+			{
+				((SettingsSave)obj).TargetDisplay = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "TargetDisplay",
+			JsonPropertyName = "target_display",
+			AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("TargetDisplay", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "TargetDisplay";
-		jsonPropertyInfoValues.JsonPropertyName = "target_display";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("TargetDisplay", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo8 = jsonPropertyInfoValues;
 		array[7] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo8);
-		jsonPropertyInfoValues4 = new JsonPropertyInfoValues<bool>();
-		jsonPropertyInfoValues4.IsProperty = true;
-		jsonPropertyInfoValues4.IsPublic = true;
-		jsonPropertyInfoValues4.IsVirtual = false;
-		jsonPropertyInfoValues4.DeclaringType = typeof(SettingsSave);
-		jsonPropertyInfoValues4.Converter = null;
-		jsonPropertyInfoValues4.Getter = (object obj) => ((SettingsSave)obj).ResizeWindows;
-		jsonPropertyInfoValues4.Setter = delegate(object obj, bool value)
+		JsonPropertyInfoValues<bool> propertyInfo9 = new JsonPropertyInfoValues<bool>
 		{
-			((SettingsSave)obj).ResizeWindows = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SettingsSave),
+			Converter = null,
+			Getter = (object obj) => ((SettingsSave)obj).ResizeWindows,
+			Setter = delegate(object obj, bool value)
+			{
+				((SettingsSave)obj).ResizeWindows = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "ResizeWindows",
+			JsonPropertyName = "resize_windows",
+			AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("ResizeWindows", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues4.IgnoreCondition = null;
-		jsonPropertyInfoValues4.HasJsonInclude = false;
-		jsonPropertyInfoValues4.IsExtensionData = false;
-		jsonPropertyInfoValues4.NumberHandling = null;
-		jsonPropertyInfoValues4.PropertyName = "ResizeWindows";
-		jsonPropertyInfoValues4.JsonPropertyName = "resize_windows";
-		jsonPropertyInfoValues4.AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("ResizeWindows", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<bool> propertyInfo9 = jsonPropertyInfoValues4;
 		array[8] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo9);
-		JsonPropertyInfoValues<VSyncType> jsonPropertyInfoValues6 = new JsonPropertyInfoValues<VSyncType>();
-		jsonPropertyInfoValues6.IsProperty = true;
-		jsonPropertyInfoValues6.IsPublic = true;
-		jsonPropertyInfoValues6.IsVirtual = false;
-		jsonPropertyInfoValues6.DeclaringType = typeof(SettingsSave);
-		jsonPropertyInfoValues6.Converter = null;
-		jsonPropertyInfoValues6.Getter = (object obj) => ((SettingsSave)obj).VSync;
-		jsonPropertyInfoValues6.Setter = delegate(object obj, VSyncType value)
+		JsonPropertyInfoValues<VSyncType> propertyInfo10 = new JsonPropertyInfoValues<VSyncType>
 		{
-			((SettingsSave)obj).VSync = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SettingsSave),
+			Converter = null,
+			Getter = (object obj) => ((SettingsSave)obj).VSync,
+			Setter = delegate(object obj, VSyncType value)
+			{
+				((SettingsSave)obj).VSync = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "VSync",
+			JsonPropertyName = "vsync",
+			AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("VSync", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(VSyncType), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues6.IgnoreCondition = null;
-		jsonPropertyInfoValues6.HasJsonInclude = false;
-		jsonPropertyInfoValues6.IsExtensionData = false;
-		jsonPropertyInfoValues6.NumberHandling = null;
-		jsonPropertyInfoValues6.PropertyName = "VSync";
-		jsonPropertyInfoValues6.JsonPropertyName = "vsync";
-		jsonPropertyInfoValues6.AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("VSync", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(VSyncType), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<VSyncType> propertyInfo10 = jsonPropertyInfoValues6;
 		array[9] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo10);
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SettingsSave);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SettingsSave)obj).Msaa;
-		jsonPropertyInfoValues.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo11 = new JsonPropertyInfoValues<int>
 		{
-			((SettingsSave)obj).Msaa = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SettingsSave),
+			Converter = null,
+			Getter = (object obj) => ((SettingsSave)obj).Msaa,
+			Setter = delegate(object obj, int value)
+			{
+				((SettingsSave)obj).Msaa = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Msaa",
+			JsonPropertyName = "msaa",
+			AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("Msaa", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "Msaa";
-		jsonPropertyInfoValues.JsonPropertyName = "msaa";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("Msaa", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo11 = jsonPropertyInfoValues;
 		array[10] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo11);
-		JsonPropertyInfoValues<float> jsonPropertyInfoValues7 = new JsonPropertyInfoValues<float>();
-		jsonPropertyInfoValues7.IsProperty = true;
-		jsonPropertyInfoValues7.IsPublic = true;
-		jsonPropertyInfoValues7.IsVirtual = false;
-		jsonPropertyInfoValues7.DeclaringType = typeof(SettingsSave);
-		jsonPropertyInfoValues7.Converter = null;
-		jsonPropertyInfoValues7.Getter = (object obj) => ((SettingsSave)obj).VolumeBgm;
-		jsonPropertyInfoValues7.Setter = delegate(object obj, float value)
+		JsonPropertyInfoValues<float> propertyInfo12 = new JsonPropertyInfoValues<float>
 		{
-			((SettingsSave)obj).VolumeBgm = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SettingsSave),
+			Converter = null,
+			Getter = (object obj) => ((SettingsSave)obj).VolumeBgm,
+			Setter = delegate(object obj, float value)
+			{
+				((SettingsSave)obj).VolumeBgm = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "VolumeBgm",
+			JsonPropertyName = "volume_bgm",
+			AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("VolumeBgm", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(float), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues7.IgnoreCondition = null;
-		jsonPropertyInfoValues7.HasJsonInclude = false;
-		jsonPropertyInfoValues7.IsExtensionData = false;
-		jsonPropertyInfoValues7.NumberHandling = null;
-		jsonPropertyInfoValues7.PropertyName = "VolumeBgm";
-		jsonPropertyInfoValues7.JsonPropertyName = "volume_bgm";
-		jsonPropertyInfoValues7.AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("VolumeBgm", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(float), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<float> propertyInfo12 = jsonPropertyInfoValues7;
 		array[11] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo12);
-		jsonPropertyInfoValues7 = new JsonPropertyInfoValues<float>();
-		jsonPropertyInfoValues7.IsProperty = true;
-		jsonPropertyInfoValues7.IsPublic = true;
-		jsonPropertyInfoValues7.IsVirtual = false;
-		jsonPropertyInfoValues7.DeclaringType = typeof(SettingsSave);
-		jsonPropertyInfoValues7.Converter = null;
-		jsonPropertyInfoValues7.Getter = (object obj) => ((SettingsSave)obj).VolumeMaster;
-		jsonPropertyInfoValues7.Setter = delegate(object obj, float value)
+		JsonPropertyInfoValues<float> propertyInfo13 = new JsonPropertyInfoValues<float>
 		{
-			((SettingsSave)obj).VolumeMaster = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SettingsSave),
+			Converter = null,
+			Getter = (object obj) => ((SettingsSave)obj).VolumeMaster,
+			Setter = delegate(object obj, float value)
+			{
+				((SettingsSave)obj).VolumeMaster = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "VolumeMaster",
+			JsonPropertyName = "volume_master",
+			AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("VolumeMaster", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(float), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues7.IgnoreCondition = null;
-		jsonPropertyInfoValues7.HasJsonInclude = false;
-		jsonPropertyInfoValues7.IsExtensionData = false;
-		jsonPropertyInfoValues7.NumberHandling = null;
-		jsonPropertyInfoValues7.PropertyName = "VolumeMaster";
-		jsonPropertyInfoValues7.JsonPropertyName = "volume_master";
-		jsonPropertyInfoValues7.AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("VolumeMaster", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(float), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<float> propertyInfo13 = jsonPropertyInfoValues7;
 		array[12] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo13);
-		jsonPropertyInfoValues7 = new JsonPropertyInfoValues<float>();
-		jsonPropertyInfoValues7.IsProperty = true;
-		jsonPropertyInfoValues7.IsPublic = true;
-		jsonPropertyInfoValues7.IsVirtual = false;
-		jsonPropertyInfoValues7.DeclaringType = typeof(SettingsSave);
-		jsonPropertyInfoValues7.Converter = null;
-		jsonPropertyInfoValues7.Getter = (object obj) => ((SettingsSave)obj).VolumeSfx;
-		jsonPropertyInfoValues7.Setter = delegate(object obj, float value)
+		JsonPropertyInfoValues<float> propertyInfo14 = new JsonPropertyInfoValues<float>
 		{
-			((SettingsSave)obj).VolumeSfx = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SettingsSave),
+			Converter = null,
+			Getter = (object obj) => ((SettingsSave)obj).VolumeSfx,
+			Setter = delegate(object obj, float value)
+			{
+				((SettingsSave)obj).VolumeSfx = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "VolumeSfx",
+			JsonPropertyName = "volume_sfx",
+			AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("VolumeSfx", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(float), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues7.IgnoreCondition = null;
-		jsonPropertyInfoValues7.HasJsonInclude = false;
-		jsonPropertyInfoValues7.IsExtensionData = false;
-		jsonPropertyInfoValues7.NumberHandling = null;
-		jsonPropertyInfoValues7.PropertyName = "VolumeSfx";
-		jsonPropertyInfoValues7.JsonPropertyName = "volume_sfx";
-		jsonPropertyInfoValues7.AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("VolumeSfx", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(float), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<float> propertyInfo14 = jsonPropertyInfoValues7;
 		array[13] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo14);
-		jsonPropertyInfoValues7 = new JsonPropertyInfoValues<float>();
-		jsonPropertyInfoValues7.IsProperty = true;
-		jsonPropertyInfoValues7.IsPublic = true;
-		jsonPropertyInfoValues7.IsVirtual = false;
-		jsonPropertyInfoValues7.DeclaringType = typeof(SettingsSave);
-		jsonPropertyInfoValues7.Converter = null;
-		jsonPropertyInfoValues7.Getter = (object obj) => ((SettingsSave)obj).VolumeAmbience;
-		jsonPropertyInfoValues7.Setter = delegate(object obj, float value)
+		JsonPropertyInfoValues<float> propertyInfo15 = new JsonPropertyInfoValues<float>
 		{
-			((SettingsSave)obj).VolumeAmbience = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SettingsSave),
+			Converter = null,
+			Getter = (object obj) => ((SettingsSave)obj).VolumeAmbience,
+			Setter = delegate(object obj, float value)
+			{
+				((SettingsSave)obj).VolumeAmbience = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "VolumeAmbience",
+			JsonPropertyName = "volume_ambience",
+			AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("VolumeAmbience", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(float), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues7.IgnoreCondition = null;
-		jsonPropertyInfoValues7.HasJsonInclude = false;
-		jsonPropertyInfoValues7.IsExtensionData = false;
-		jsonPropertyInfoValues7.NumberHandling = null;
-		jsonPropertyInfoValues7.PropertyName = "VolumeAmbience";
-		jsonPropertyInfoValues7.JsonPropertyName = "volume_ambience";
-		jsonPropertyInfoValues7.AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("VolumeAmbience", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(float), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<float> propertyInfo15 = jsonPropertyInfoValues7;
 		array[14] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo15);
-		JsonPropertyInfoValues<ModSettings> jsonPropertyInfoValues8 = new JsonPropertyInfoValues<ModSettings>();
-		jsonPropertyInfoValues8.IsProperty = true;
-		jsonPropertyInfoValues8.IsPublic = true;
-		jsonPropertyInfoValues8.IsVirtual = false;
-		jsonPropertyInfoValues8.DeclaringType = typeof(SettingsSave);
-		jsonPropertyInfoValues8.Converter = null;
-		jsonPropertyInfoValues8.Getter = (object obj) => ((SettingsSave)obj).ModSettings;
-		jsonPropertyInfoValues8.Setter = delegate(object obj, ModSettings? value)
+		JsonPropertyInfoValues<ModSettings> propertyInfo16 = new JsonPropertyInfoValues<ModSettings>
 		{
-			((SettingsSave)obj).ModSettings = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SettingsSave),
+			Converter = null,
+			Getter = (object obj) => ((SettingsSave)obj).ModSettings,
+			Setter = delegate(object obj, ModSettings? value)
+			{
+				((SettingsSave)obj).ModSettings = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "ModSettings",
+			JsonPropertyName = "mod_settings",
+			AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("ModSettings", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModSettings), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues8.IgnoreCondition = null;
-		jsonPropertyInfoValues8.HasJsonInclude = false;
-		jsonPropertyInfoValues8.IsExtensionData = false;
-		jsonPropertyInfoValues8.NumberHandling = null;
-		jsonPropertyInfoValues8.PropertyName = "ModSettings";
-		jsonPropertyInfoValues8.JsonPropertyName = "mod_settings";
-		jsonPropertyInfoValues8.AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("ModSettings", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModSettings), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<ModSettings> propertyInfo16 = jsonPropertyInfoValues8;
 		array[15] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo16);
-		jsonPropertyInfoValues4 = new JsonPropertyInfoValues<bool>();
-		jsonPropertyInfoValues4.IsProperty = true;
-		jsonPropertyInfoValues4.IsPublic = true;
-		jsonPropertyInfoValues4.IsVirtual = false;
-		jsonPropertyInfoValues4.DeclaringType = typeof(SettingsSave);
-		jsonPropertyInfoValues4.Converter = null;
-		jsonPropertyInfoValues4.Getter = (object obj) => ((SettingsSave)obj).SkipIntroLogo;
-		jsonPropertyInfoValues4.Setter = delegate(object obj, bool value)
+		JsonPropertyInfoValues<bool> propertyInfo17 = new JsonPropertyInfoValues<bool>
 		{
-			((SettingsSave)obj).SkipIntroLogo = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SettingsSave),
+			Converter = null,
+			Getter = (object obj) => ((SettingsSave)obj).SkipIntroLogo,
+			Setter = delegate(object obj, bool value)
+			{
+				((SettingsSave)obj).SkipIntroLogo = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "SkipIntroLogo",
+			JsonPropertyName = "skip_intro_logo",
+			AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("SkipIntroLogo", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues4.IgnoreCondition = null;
-		jsonPropertyInfoValues4.HasJsonInclude = false;
-		jsonPropertyInfoValues4.IsExtensionData = false;
-		jsonPropertyInfoValues4.NumberHandling = null;
-		jsonPropertyInfoValues4.PropertyName = "SkipIntroLogo";
-		jsonPropertyInfoValues4.JsonPropertyName = "skip_intro_logo";
-		jsonPropertyInfoValues4.AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("SkipIntroLogo", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<bool> propertyInfo17 = jsonPropertyInfoValues4;
 		array[16] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo17);
-		JsonPropertyInfoValues<Dictionary<string, string>> jsonPropertyInfoValues9 = new JsonPropertyInfoValues<Dictionary<string, string>>();
-		jsonPropertyInfoValues9.IsProperty = true;
-		jsonPropertyInfoValues9.IsPublic = true;
-		jsonPropertyInfoValues9.IsVirtual = false;
-		jsonPropertyInfoValues9.DeclaringType = typeof(SettingsSave);
-		jsonPropertyInfoValues9.Converter = null;
-		jsonPropertyInfoValues9.Getter = (object obj) => ((SettingsSave)obj).KeyboardMapping;
-		jsonPropertyInfoValues9.Setter = delegate(object obj, Dictionary<string, string>? value)
+		JsonPropertyInfoValues<Dictionary<string, string>> propertyInfo18 = new JsonPropertyInfoValues<Dictionary<string, string>>
 		{
-			((SettingsSave)obj).KeyboardMapping = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SettingsSave),
+			Converter = null,
+			Getter = (object obj) => ((SettingsSave)obj).KeyboardMapping,
+			Setter = delegate(object obj, Dictionary<string, string>? value)
+			{
+				((SettingsSave)obj).KeyboardMapping = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "KeyboardMapping",
+			JsonPropertyName = "keyboard_mapping",
+			AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("KeyboardMapping", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(Dictionary<string, string>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues9.IgnoreCondition = null;
-		jsonPropertyInfoValues9.HasJsonInclude = false;
-		jsonPropertyInfoValues9.IsExtensionData = false;
-		jsonPropertyInfoValues9.NumberHandling = null;
-		jsonPropertyInfoValues9.PropertyName = "KeyboardMapping";
-		jsonPropertyInfoValues9.JsonPropertyName = "keyboard_mapping";
-		jsonPropertyInfoValues9.AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("KeyboardMapping", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(Dictionary<string, string>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<Dictionary<string, string>> propertyInfo18 = jsonPropertyInfoValues9;
 		array[17] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo18);
 		array[17].IsGetNullable = false;
 		array[17].IsSetNullable = false;
-		JsonPropertyInfoValues<ControllerMappingType> jsonPropertyInfoValues10 = new JsonPropertyInfoValues<ControllerMappingType>();
-		jsonPropertyInfoValues10.IsProperty = true;
-		jsonPropertyInfoValues10.IsPublic = true;
-		jsonPropertyInfoValues10.IsVirtual = false;
-		jsonPropertyInfoValues10.DeclaringType = typeof(SettingsSave);
-		jsonPropertyInfoValues10.Converter = null;
-		jsonPropertyInfoValues10.Getter = (object obj) => ((SettingsSave)obj).ControllerMappingType;
-		jsonPropertyInfoValues10.Setter = delegate(object obj, ControllerMappingType value)
+		JsonPropertyInfoValues<ControllerMappingType> propertyInfo19 = new JsonPropertyInfoValues<ControllerMappingType>
 		{
-			((SettingsSave)obj).ControllerMappingType = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SettingsSave),
+			Converter = null,
+			Getter = (object obj) => ((SettingsSave)obj).ControllerMappingType,
+			Setter = delegate(object obj, ControllerMappingType value)
+			{
+				((SettingsSave)obj).ControllerMappingType = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "ControllerMappingType",
+			JsonPropertyName = "controller_mapping_type",
+			AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("ControllerMappingType", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ControllerMappingType), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues10.IgnoreCondition = null;
-		jsonPropertyInfoValues10.HasJsonInclude = false;
-		jsonPropertyInfoValues10.IsExtensionData = false;
-		jsonPropertyInfoValues10.NumberHandling = null;
-		jsonPropertyInfoValues10.PropertyName = "ControllerMappingType";
-		jsonPropertyInfoValues10.JsonPropertyName = "controller_mapping_type";
-		jsonPropertyInfoValues10.AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("ControllerMappingType", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ControllerMappingType), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<ControllerMappingType> propertyInfo19 = jsonPropertyInfoValues10;
 		array[18] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo19);
-		jsonPropertyInfoValues9 = new JsonPropertyInfoValues<Dictionary<string, string>>();
-		jsonPropertyInfoValues9.IsProperty = true;
-		jsonPropertyInfoValues9.IsPublic = true;
-		jsonPropertyInfoValues9.IsVirtual = false;
-		jsonPropertyInfoValues9.DeclaringType = typeof(SettingsSave);
-		jsonPropertyInfoValues9.Converter = null;
-		jsonPropertyInfoValues9.Getter = (object obj) => ((SettingsSave)obj).ControllerMapping;
-		jsonPropertyInfoValues9.Setter = delegate(object obj, Dictionary<string, string>? value)
+		JsonPropertyInfoValues<Dictionary<string, string>> propertyInfo20 = new JsonPropertyInfoValues<Dictionary<string, string>>
 		{
-			((SettingsSave)obj).ControllerMapping = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SettingsSave),
+			Converter = null,
+			Getter = (object obj) => ((SettingsSave)obj).ControllerMapping,
+			Setter = delegate(object obj, Dictionary<string, string>? value)
+			{
+				((SettingsSave)obj).ControllerMapping = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "ControllerMapping",
+			JsonPropertyName = "controller_mapping",
+			AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("ControllerMapping", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(Dictionary<string, string>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues9.IgnoreCondition = null;
-		jsonPropertyInfoValues9.HasJsonInclude = false;
-		jsonPropertyInfoValues9.IsExtensionData = false;
-		jsonPropertyInfoValues9.NumberHandling = null;
-		jsonPropertyInfoValues9.PropertyName = "ControllerMapping";
-		jsonPropertyInfoValues9.JsonPropertyName = "controller_mapping";
-		jsonPropertyInfoValues9.AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("ControllerMapping", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(Dictionary<string, string>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<Dictionary<string, string>> propertyInfo20 = jsonPropertyInfoValues9;
 		array[19] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo20);
 		array[19].IsGetNullable = false;
 		array[19].IsSetNullable = false;
-		jsonPropertyInfoValues4 = new JsonPropertyInfoValues<bool>();
-		jsonPropertyInfoValues4.IsProperty = true;
-		jsonPropertyInfoValues4.IsPublic = true;
-		jsonPropertyInfoValues4.IsVirtual = false;
-		jsonPropertyInfoValues4.DeclaringType = typeof(SettingsSave);
-		jsonPropertyInfoValues4.Converter = null;
-		jsonPropertyInfoValues4.Getter = (object obj) => ((SettingsSave)obj).LimitFpsInBackground;
-		jsonPropertyInfoValues4.Setter = delegate(object obj, bool value)
+		JsonPropertyInfoValues<bool> propertyInfo21 = new JsonPropertyInfoValues<bool>
 		{
-			((SettingsSave)obj).LimitFpsInBackground = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SettingsSave),
+			Converter = null,
+			Getter = (object obj) => ((SettingsSave)obj).LimitFpsInBackground,
+			Setter = delegate(object obj, bool value)
+			{
+				((SettingsSave)obj).LimitFpsInBackground = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "LimitFpsInBackground",
+			JsonPropertyName = "limit_fps_in_background",
+			AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("LimitFpsInBackground", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues4.IgnoreCondition = null;
-		jsonPropertyInfoValues4.HasJsonInclude = false;
-		jsonPropertyInfoValues4.IsExtensionData = false;
-		jsonPropertyInfoValues4.NumberHandling = null;
-		jsonPropertyInfoValues4.PropertyName = "LimitFpsInBackground";
-		jsonPropertyInfoValues4.JsonPropertyName = "limit_fps_in_background";
-		jsonPropertyInfoValues4.AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("LimitFpsInBackground", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<bool> propertyInfo21 = jsonPropertyInfoValues4;
 		array[20] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo21);
-		jsonPropertyInfoValues4 = new JsonPropertyInfoValues<bool>();
-		jsonPropertyInfoValues4.IsProperty = true;
-		jsonPropertyInfoValues4.IsPublic = true;
-		jsonPropertyInfoValues4.IsVirtual = false;
-		jsonPropertyInfoValues4.DeclaringType = typeof(SettingsSave);
-		jsonPropertyInfoValues4.Converter = null;
-		jsonPropertyInfoValues4.Getter = (object obj) => ((SettingsSave)obj).FullConsole;
-		jsonPropertyInfoValues4.Setter = delegate(object obj, bool value)
+		JsonPropertyInfoValues<bool> propertyInfo22 = new JsonPropertyInfoValues<bool>
 		{
-			((SettingsSave)obj).FullConsole = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SettingsSave),
+			Converter = null,
+			Getter = (object obj) => ((SettingsSave)obj).FullConsole,
+			Setter = delegate(object obj, bool value)
+			{
+				((SettingsSave)obj).FullConsole = value;
+			},
+			IgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "FullConsole",
+			JsonPropertyName = "full_console",
+			AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("FullConsole", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues4.IgnoreCondition = JsonIgnoreCondition.WhenWritingDefault;
-		jsonPropertyInfoValues4.HasJsonInclude = false;
-		jsonPropertyInfoValues4.IsExtensionData = false;
-		jsonPropertyInfoValues4.NumberHandling = null;
-		jsonPropertyInfoValues4.PropertyName = "FullConsole";
-		jsonPropertyInfoValues4.JsonPropertyName = "full_console";
-		jsonPropertyInfoValues4.AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("FullConsole", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<bool> propertyInfo22 = jsonPropertyInfoValues4;
 		array[21] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo22);
-		jsonPropertyInfoValues4 = new JsonPropertyInfoValues<bool>();
-		jsonPropertyInfoValues4.IsProperty = true;
-		jsonPropertyInfoValues4.IsPublic = true;
-		jsonPropertyInfoValues4.IsVirtual = false;
-		jsonPropertyInfoValues4.DeclaringType = typeof(SettingsSave);
-		jsonPropertyInfoValues4.Converter = null;
-		jsonPropertyInfoValues4.Getter = (object obj) => ((SettingsSave)obj).SeenEaDisclaimer;
-		jsonPropertyInfoValues4.Setter = delegate(object obj, bool value)
+		JsonPropertyInfoValues<bool> propertyInfo23 = new JsonPropertyInfoValues<bool>
 		{
-			((SettingsSave)obj).SeenEaDisclaimer = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SettingsSave),
+			Converter = null,
+			Getter = (object obj) => ((SettingsSave)obj).SeenEaDisclaimer,
+			Setter = delegate(object obj, bool value)
+			{
+				((SettingsSave)obj).SeenEaDisclaimer = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "SeenEaDisclaimer",
+			JsonPropertyName = "seen_ea_disclaimer",
+			AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("SeenEaDisclaimer", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues4.IgnoreCondition = null;
-		jsonPropertyInfoValues4.HasJsonInclude = false;
-		jsonPropertyInfoValues4.IsExtensionData = false;
-		jsonPropertyInfoValues4.NumberHandling = null;
-		jsonPropertyInfoValues4.PropertyName = "SeenEaDisclaimer";
-		jsonPropertyInfoValues4.JsonPropertyName = "seen_ea_disclaimer";
-		jsonPropertyInfoValues4.AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("SeenEaDisclaimer", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<bool> propertyInfo23 = jsonPropertyInfoValues4;
 		array[22] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo23);
 		return array;
 	}
@@ -10569,69 +12449,72 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 	private static JsonPropertyInfo[] SerializableUnlockStatePropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[3];
-		JsonPropertyInfoValues<List<string>> jsonPropertyInfoValues = new JsonPropertyInfoValues<List<string>>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(SerializableUnlockState);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((SerializableUnlockState)obj).UnlockedEpochs;
-		jsonPropertyInfoValues.Setter = delegate(object obj, List<string>? value)
+		JsonPropertyInfoValues<List<string>> propertyInfo = new JsonPropertyInfoValues<List<string>>
 		{
-			((SerializableUnlockState)obj).UnlockedEpochs = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableUnlockState),
+			Converter = null,
+			Getter = (object obj) => ((SerializableUnlockState)obj).UnlockedEpochs,
+			Setter = delegate(object obj, List<string>? value)
+			{
+				((SerializableUnlockState)obj).UnlockedEpochs = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "UnlockedEpochs",
+			JsonPropertyName = "unlocked_epochs",
+			AttributeProviderFactory = () => typeof(SerializableUnlockState).GetProperty("UnlockedEpochs", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<string>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "UnlockedEpochs";
-		jsonPropertyInfoValues.JsonPropertyName = "unlocked_epochs";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableUnlockState).GetProperty("UnlockedEpochs", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<string>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<string>> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsGetNullable = false;
 		array[0].IsSetNullable = false;
-		JsonPropertyInfoValues<List<ModelId>> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<List<ModelId>>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(SerializableUnlockState);
-		jsonPropertyInfoValues2.Converter = null;
-		jsonPropertyInfoValues2.Getter = (object obj) => ((SerializableUnlockState)obj).EncountersSeen;
-		jsonPropertyInfoValues2.Setter = delegate(object obj, List<ModelId>? value)
+		JsonPropertyInfoValues<List<ModelId>> propertyInfo2 = new JsonPropertyInfoValues<List<ModelId>>
 		{
-			((SerializableUnlockState)obj).EncountersSeen = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableUnlockState),
+			Converter = null,
+			Getter = (object obj) => ((SerializableUnlockState)obj).EncountersSeen,
+			Setter = delegate(object obj, List<ModelId>? value)
+			{
+				((SerializableUnlockState)obj).EncountersSeen = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "EncountersSeen",
+			JsonPropertyName = "encounters_seen",
+			AttributeProviderFactory = () => typeof(SerializableUnlockState).GetProperty("EncountersSeen", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "EncountersSeen";
-		jsonPropertyInfoValues2.JsonPropertyName = "encounters_seen";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SerializableUnlockState).GetProperty("EncountersSeen", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<List<ModelId>> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		array[1].IsGetNullable = false;
 		array[1].IsSetNullable = false;
-		JsonPropertyInfoValues<int> jsonPropertyInfoValues3 = new JsonPropertyInfoValues<int>();
-		jsonPropertyInfoValues3.IsProperty = true;
-		jsonPropertyInfoValues3.IsPublic = true;
-		jsonPropertyInfoValues3.IsVirtual = false;
-		jsonPropertyInfoValues3.DeclaringType = typeof(SerializableUnlockState);
-		jsonPropertyInfoValues3.Converter = null;
-		jsonPropertyInfoValues3.Getter = (object obj) => ((SerializableUnlockState)obj).NumberOfRuns;
-		jsonPropertyInfoValues3.Setter = delegate(object obj, int value)
+		JsonPropertyInfoValues<int> propertyInfo3 = new JsonPropertyInfoValues<int>
 		{
-			((SerializableUnlockState)obj).NumberOfRuns = value;
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SerializableUnlockState),
+			Converter = null,
+			Getter = (object obj) => ((SerializableUnlockState)obj).NumberOfRuns,
+			Setter = delegate(object obj, int value)
+			{
+				((SerializableUnlockState)obj).NumberOfRuns = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "NumberOfRuns",
+			JsonPropertyName = "number_of_runs",
+			AttributeProviderFactory = () => typeof(SerializableUnlockState).GetProperty("NumberOfRuns", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues3.IgnoreCondition = null;
-		jsonPropertyInfoValues3.HasJsonInclude = false;
-		jsonPropertyInfoValues3.IsExtensionData = false;
-		jsonPropertyInfoValues3.NumberHandling = null;
-		jsonPropertyInfoValues3.PropertyName = "NumberOfRuns";
-		jsonPropertyInfoValues3.JsonPropertyName = "number_of_runs";
-		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(SerializableUnlockState).GetProperty("NumberOfRuns", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<int> propertyInfo3 = jsonPropertyInfoValues3;
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
 		return array;
 	}
@@ -10652,32 +12535,32 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 		return jsonTypeInfo;
 	}
 
-	private JsonTypeInfo<Dictionary<PlayerRngType, int>> Create_DictionaryPlayerRngTypeInt32(JsonSerializerOptions options)
+	private JsonTypeInfo<Dictionary<PlayerRngType, SerializableRng>> Create_DictionaryPlayerRngTypeSerializableRng(JsonSerializerOptions options)
 	{
-		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<Dictionary<PlayerRngType, int>> jsonTypeInfo))
+		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<Dictionary<PlayerRngType, SerializableRng>> jsonTypeInfo))
 		{
-			JsonCollectionInfoValues<Dictionary<PlayerRngType, int>> collectionInfo = new JsonCollectionInfoValues<Dictionary<PlayerRngType, int>>
+			JsonCollectionInfoValues<Dictionary<PlayerRngType, SerializableRng>> collectionInfo = new JsonCollectionInfoValues<Dictionary<PlayerRngType, SerializableRng>>
 			{
-				ObjectCreator = () => new Dictionary<PlayerRngType, int>(),
+				ObjectCreator = () => new Dictionary<PlayerRngType, SerializableRng>(),
 				SerializeHandler = null
 			};
-			jsonTypeInfo = JsonMetadataServices.CreateDictionaryInfo<Dictionary<PlayerRngType, int>, PlayerRngType, int>(options, collectionInfo);
+			jsonTypeInfo = JsonMetadataServices.CreateDictionaryInfo<Dictionary<PlayerRngType, SerializableRng>, PlayerRngType, SerializableRng>(options, collectionInfo);
 			jsonTypeInfo.NumberHandling = null;
 		}
 		jsonTypeInfo.OriginatingResolver = this;
 		return jsonTypeInfo;
 	}
 
-	private JsonTypeInfo<Dictionary<RunRngType, int>> Create_DictionaryRunRngTypeInt32(JsonSerializerOptions options)
+	private JsonTypeInfo<Dictionary<RunRngType, SerializableRng>> Create_DictionaryRunRngTypeSerializableRng(JsonSerializerOptions options)
 	{
-		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<Dictionary<RunRngType, int>> jsonTypeInfo))
+		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<Dictionary<RunRngType, SerializableRng>> jsonTypeInfo))
 		{
-			JsonCollectionInfoValues<Dictionary<RunRngType, int>> collectionInfo = new JsonCollectionInfoValues<Dictionary<RunRngType, int>>
+			JsonCollectionInfoValues<Dictionary<RunRngType, SerializableRng>> collectionInfo = new JsonCollectionInfoValues<Dictionary<RunRngType, SerializableRng>>
 			{
-				ObjectCreator = () => new Dictionary<RunRngType, int>(),
+				ObjectCreator = () => new Dictionary<RunRngType, SerializableRng>(),
 				SerializeHandler = null
 			};
-			jsonTypeInfo = JsonMetadataServices.CreateDictionaryInfo<Dictionary<RunRngType, int>, RunRngType, int>(options, collectionInfo);
+			jsonTypeInfo = JsonMetadataServices.CreateDictionaryInfo<Dictionary<RunRngType, SerializableRng>, RunRngType, SerializableRng>(options, collectionInfo);
 			jsonTypeInfo.NumberHandling = null;
 		}
 		jsonTypeInfo.OriginatingResolver = this;
@@ -10726,6 +12609,22 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 				SerializeHandler = null
 			};
 			jsonTypeInfo = JsonMetadataServices.CreateDictionaryInfo<Dictionary<ulong, List<SerializableReward>>, ulong, List<SerializableReward>>(options, collectionInfo);
+			jsonTypeInfo.NumberHandling = null;
+		}
+		jsonTypeInfo.OriginatingResolver = this;
+		return jsonTypeInfo;
+	}
+
+	private JsonTypeInfo<IEnumerable<SerializableBadge>> Create_IEnumerableSerializableBadge(JsonSerializerOptions options)
+	{
+		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<IEnumerable<SerializableBadge>> jsonTypeInfo))
+		{
+			JsonCollectionInfoValues<IEnumerable<SerializableBadge>> collectionInfo = new JsonCollectionInfoValues<IEnumerable<SerializableBadge>>
+			{
+				ObjectCreator = null,
+				SerializeHandler = null
+			};
+			jsonTypeInfo = JsonMetadataServices.CreateIEnumerableInfo<IEnumerable<SerializableBadge>, SerializableBadge>(options, collectionInfo);
 			jsonTypeInfo.NumberHandling = null;
 		}
 		jsonTypeInfo.OriginatingResolver = this;
@@ -10812,16 +12711,32 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 		return jsonTypeInfo;
 	}
 
-	private JsonTypeInfo<List<DisabledMod>> Create_ListDisabledMod(JsonSerializerOptions options)
+	private JsonTypeInfo<List<ModDependency>> Create_ListModDependency(JsonSerializerOptions options)
 	{
-		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<List<DisabledMod>> jsonTypeInfo))
+		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<List<ModDependency>> jsonTypeInfo))
 		{
-			JsonCollectionInfoValues<List<DisabledMod>> collectionInfo = new JsonCollectionInfoValues<List<DisabledMod>>
+			JsonCollectionInfoValues<List<ModDependency>> collectionInfo = new JsonCollectionInfoValues<List<ModDependency>>
 			{
-				ObjectCreator = () => new List<DisabledMod>(),
+				ObjectCreator = () => new List<ModDependency>(),
 				SerializeHandler = null
 			};
-			jsonTypeInfo = JsonMetadataServices.CreateListInfo<List<DisabledMod>, DisabledMod>(options, collectionInfo);
+			jsonTypeInfo = JsonMetadataServices.CreateListInfo<List<ModDependency>, ModDependency>(options, collectionInfo);
+			jsonTypeInfo.NumberHandling = null;
+		}
+		jsonTypeInfo.OriginatingResolver = this;
+		return jsonTypeInfo;
+	}
+
+	private JsonTypeInfo<List<SettingsSaveMod>> Create_ListSettingsSaveMod(JsonSerializerOptions options)
+	{
+		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<List<SettingsSaveMod>> jsonTypeInfo))
+		{
+			JsonCollectionInfoValues<List<SettingsSaveMod>> collectionInfo = new JsonCollectionInfoValues<List<SettingsSaveMod>>
+			{
+				ObjectCreator = () => new List<SettingsSaveMod>(),
+				SerializeHandler = null
+			};
+			jsonTypeInfo = JsonMetadataServices.CreateListInfo<List<SettingsSaveMod>, SettingsSaveMod>(options, collectionInfo);
 			jsonTypeInfo.NumberHandling = null;
 		}
 		jsonTypeInfo.OriginatingResolver = this;
@@ -11078,6 +12993,22 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 				SerializeHandler = null
 			};
 			jsonTypeInfo = JsonMetadataServices.CreateListInfo<List<AncientStats>, AncientStats>(options, collectionInfo);
+			jsonTypeInfo.NumberHandling = null;
+		}
+		jsonTypeInfo.OriginatingResolver = this;
+		return jsonTypeInfo;
+	}
+
+	private JsonTypeInfo<List<BadgeStats>> Create_ListBadgeStats(JsonSerializerOptions options)
+	{
+		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<List<BadgeStats>> jsonTypeInfo))
+		{
+			JsonCollectionInfoValues<List<BadgeStats>> collectionInfo = new JsonCollectionInfoValues<List<BadgeStats>>
+			{
+				ObjectCreator = () => new List<BadgeStats>(),
+				SerializeHandler = null
+			};
+			jsonTypeInfo = JsonMetadataServices.CreateListInfo<List<BadgeStats>, BadgeStats>(options, collectionInfo);
 			jsonTypeInfo.NumberHandling = null;
 		}
 		jsonTypeInfo.OriginatingResolver = this;
@@ -11688,16 +13619,6 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 		return jsonTypeInfo;
 	}
 
-	private JsonTypeInfo<uint> Create_UInt32(JsonSerializerOptions options)
-	{
-		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<uint> jsonTypeInfo))
-		{
-			jsonTypeInfo = JsonMetadataServices.CreateValueInfo<uint>(options, JsonMetadataServices.UInt32Converter);
-		}
-		jsonTypeInfo.OriginatingResolver = this;
-		return jsonTypeInfo;
-	}
-
 	private JsonTypeInfo<ulong> Create_UInt64(JsonSerializerOptions options)
 	{
 		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<ulong> jsonTypeInfo))
@@ -11708,11 +13629,13 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 		return jsonTypeInfo;
 	}
 
+	/// <inheritdoc />
 	public MegaCritSerializerContext()
 		: base(null)
 	{
 	}
 
+	/// <inheritdoc />
 	public MegaCritSerializerContext(JsonSerializerOptions options)
 		: base(options)
 	{
@@ -11760,6 +13683,7 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 		return converter;
 	}
 
+	/// <inheritdoc />
 	public override JsonTypeInfo? GetTypeInfo(Type type)
 	{
 		base.Options.TryGetTypeInfo(type, out JsonTypeInfo typeInfo);
@@ -11816,9 +13740,9 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 		{
 			return Create_MapPointType(options);
 		}
-		if (type == typeof(DisabledMod))
+		if (type == typeof(ModDependency))
 		{
-			return Create_DisabledMod(options);
+			return Create_ModDependency(options);
 		}
 		if (type == typeof(ModManifest))
 		{
@@ -11831,6 +13755,14 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 		if (type == typeof(ModSource))
 		{
 			return Create_ModSource(options);
+		}
+		if (type == typeof(SettingsSaveMod))
+		{
+			return Create_SettingsSaveMod(options);
+		}
+		if (type == typeof(BadgeRarity))
+		{
+			return Create_BadgeRarity(options);
 		}
 		if (type == typeof(ModelId))
 		{
@@ -11932,6 +13864,10 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 		{
 			return Create_AncientStats(options);
 		}
+		if (type == typeof(BadgeStats))
+		{
+			return Create_BadgeStats(options);
+		}
 		if (type == typeof(CardStats))
 		{
 			return Create_CardStats(options);
@@ -12020,6 +13956,10 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 		{
 			return Create_SerializableActModel(options);
 		}
+		if (type == typeof(SerializableBadge))
+		{
+			return Create_SerializableBadge(options);
+		}
 		if (type == typeof(SerializableCard))
 		{
 			return Create_SerializableCard(options);
@@ -12100,6 +14040,10 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 		{
 			return Create_SerializableProgress(options);
 		}
+		if (type == typeof(SerializableRng))
+		{
+			return Create_SerializableRng(options);
+		}
 		if (type == typeof(SerializableRun))
 		{
 			return Create_SerializableRun(options);
@@ -12132,13 +14076,13 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 		{
 			return Create_DictionaryRelicRarityListModelId(options);
 		}
-		if (type == typeof(Dictionary<PlayerRngType, int>))
+		if (type == typeof(Dictionary<PlayerRngType, SerializableRng>))
 		{
-			return Create_DictionaryPlayerRngTypeInt32(options);
+			return Create_DictionaryPlayerRngTypeSerializableRng(options);
 		}
-		if (type == typeof(Dictionary<RunRngType, int>))
+		if (type == typeof(Dictionary<RunRngType, SerializableRng>))
 		{
-			return Create_DictionaryRunRngTypeInt32(options);
+			return Create_DictionaryRunRngTypeSerializableRng(options);
 		}
 		if (type == typeof(Dictionary<string, object>))
 		{
@@ -12151,6 +14095,10 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 		if (type == typeof(Dictionary<ulong, List<SerializableReward>>))
 		{
 			return Create_DictionaryUInt64ListSerializableReward(options);
+		}
+		if (type == typeof(IEnumerable<SerializableBadge>))
+		{
+			return Create_IEnumerableSerializableBadge(options);
 		}
 		if (type == typeof(IEnumerable<SerializableCard>))
 		{
@@ -12172,9 +14120,13 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 		{
 			return Create_ListMapCoord(options);
 		}
-		if (type == typeof(List<DisabledMod>))
+		if (type == typeof(List<ModDependency>))
 		{
-			return Create_ListDisabledMod(options);
+			return Create_ListModDependency(options);
+		}
+		if (type == typeof(List<SettingsSaveMod>))
+		{
+			return Create_ListSettingsSaveMod(options);
 		}
 		if (type == typeof(List<ModelId>))
 		{
@@ -12239,6 +14191,10 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 		if (type == typeof(List<AncientStats>))
 		{
 			return Create_ListAncientStats(options);
+		}
+		if (type == typeof(List<BadgeStats>))
+		{
+			return Create_ListBadgeStats(options);
 		}
 		if (type == typeof(List<CardStats>))
 		{
@@ -12403,10 +14359,6 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 		if (type == typeof(string))
 		{
 			return Create_String(options);
-		}
-		if (type == typeof(uint))
-		{
-			return Create_UInt32(options);
 		}
 		if (type == typeof(ulong))
 		{

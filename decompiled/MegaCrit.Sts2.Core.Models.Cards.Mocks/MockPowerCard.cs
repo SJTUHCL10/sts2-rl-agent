@@ -39,14 +39,14 @@ public sealed class MockPowerCard : MockCardModel
 	{
 		if (_mockSelfHpLoss > 0)
 		{
-			await CreatureCmd.Damage(choiceContext, base.Owner.Creature, _mockSelfHpLoss, ValueProp.Unblockable | ValueProp.Unpowered | ValueProp.Move, this);
+			await CreatureCmd.Damage(choiceContext, base.Owner.Creature, _mockSelfHpLoss, ValueProp.Unblockable | ValueProp.Unpowered | ValueProp.Move, this, cardPlay);
 		}
 		if (base.DynamicVars.Block.BaseValue > 0m)
 		{
 			await CreatureCmd.GainBlock(base.Owner.Creature, base.DynamicVars.Block, cardPlay);
 		}
 		decimal baseValue = base.DynamicVars.Strength.BaseValue;
-		await PowerCmd.Apply<StrengthPower>(base.Owner.Creature, baseValue, base.Owner.Creature, this);
+		await PowerCmd.Apply<StrengthPower>(choiceContext, base.Owner.Creature, baseValue, base.Owner.Creature, this);
 		if (_mockExtraLogic != null)
 		{
 			await _mockExtraLogic(this);

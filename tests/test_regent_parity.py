@@ -526,7 +526,7 @@ class TestRegentParity:
         combat.energy = 1
 
         assert combat.play_card(0)
-        assert combat.player.get_power_amount(PowerId.FURNACE) == card.effect_vars.get("furnace", 4)
+        assert combat.player.get_power_amount(PowerId.FURNACE) == card.effect_vars["forge"]
 
     def test_orbit_applies_orbit_power(self):
         """Matches Orbit.cs: apply OrbitPower with the configured energy value."""

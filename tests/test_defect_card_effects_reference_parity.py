@@ -412,7 +412,7 @@ class TestDefectCardEffectsReferenceParity:
         assert combat.play_card(0)
 
         assert blocked.current_hp == 100
-        assert hittable.current_hp == 74
+        assert hittable.current_hp == 70
         assert combat.player.get_power_amount(PowerId.FOCUS) == 1
 
     def test_shatter_hits_only_hittable_enemies(self):
@@ -802,7 +802,7 @@ class TestDefectCardEffectsReferenceParity:
 
         assert combat.play_card(0, 0)
 
-        assert enemy.current_hp == starting_hp - 10
+        assert enemy.current_hp == starting_hp - 11
         assert card.cost == 0
 
     def test_tesla_coil_triggers_only_lightning_passives_against_target(self):
@@ -932,7 +932,7 @@ class TestDefectCardEffectsReferenceParity:
 
         assert combat.play_card(0, 0)
 
-        assert enemy.current_hp == 100 - 10 - 6
+        assert enemy.current_hp == 100 - 12 - 6
         assert attack in combat.discard_pile
 
     def test_tempest_uses_x_energy_and_upgrade_adds_one_channel(self):

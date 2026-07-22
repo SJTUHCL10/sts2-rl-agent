@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using Godot;
 using MegaCrit.Sts2.Core.Logging;
 using MegaCrit.Sts2.Core.Runs;
 using MegaCrit.Sts2.Core.Saves.Migrations;
@@ -35,14 +36,18 @@ public class RunHistorySaveManager
 		_profileIdProvider = profileIdProvider;
 	}
 
+	/// <summary>
+	/// This should be called right after the profile ID is initialized so that there is a directory we can save run
+	/// histories to.
+	/// </summary>
 	public void CreateRunHistoryDirectory()
 	{
 		_saveStore.CreateDirectory(HistoryPath);
 	}
 
-	public static string GetHistoryPath(int profileId)
+	public static string GetHistoryPath(int profileId, bool? forceModState = null)
 	{
-		return Path.Combine(UserDataPathProvider.GetProfileDir(profileId), UserDataPathProvider.SavesDir, "history");
+		return UserDataPathProvider.GetProfileDir(profileId, forceModState).PathJoin(UserDataPathProvider.SavesDir).PathJoin("history");
 	}
 
 	public void SaveHistory(RunHistory history)
@@ -66,9 +71,18 @@ public class RunHistorySaveManager
 
 	public int GetHistoryCount()
 	{
+		if (!_saveStore.DirectoryExists(HistoryPath))
+		{
+			return 0;
+		}
 		return _saveStore.GetFilesInDirectory(HistoryPath).Length;
 	}
 
+	/// <summary>
+	/// Loads a single run history file with migration support.
+	/// </summary>
+	/// <param name="fileName">The history file name (e.g., "1234567890.run")</param>
+	/// <returns>The result of the load operation</returns>
 	public ReadSaveResult<RunHistory> LoadHistory(string fileName)
 	{
 		string filePath = Path.Combine(HistoryPath, fileName);
@@ -84,6 +98,10 @@ public class RunHistorySaveManager
 		return readSaveResult;
 	}
 
+	/// <summary>
+	/// Returns a list of all the run histories that we have available to load.
+	/// To actually load the history, use <see cref="M:MegaCrit.Sts2.Core.Saves.Managers.RunHistorySaveManager.LoadHistory(System.String)" />.
+	/// </summary>
 	public List<string> LoadAllRunHistoryNames()
 	{
 		string[] filesInDirectory = _saveStore.GetFilesInDirectory(HistoryPath);
@@ -96,7 +114,7 @@ public class RunHistorySaveManager
 			{
 				num++;
 			}
-			else
+			else if (!text.EndsWith(".backup"))
 			{
 				list.Add(text);
 			}

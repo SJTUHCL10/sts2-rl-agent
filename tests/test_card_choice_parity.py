@@ -237,7 +237,7 @@ class TestGeneratedChoiceParity:
         assert combat.pending_choice is not None
         generated = [option.card for option in combat.pending_choice.options]
         original_costs = [card.cost for card in generated]
-        selected_index = next(index for index, cost in enumerate(original_costs) if cost > 0)
+        selected_index = 0
 
         selected = generated[selected_index]
         unselected = [

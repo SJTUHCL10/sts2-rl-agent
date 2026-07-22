@@ -18,14 +18,14 @@ public sealed class Accelerant : CardModel
 	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new DynamicVar("Accelerant", 1m));
 
 	public Accelerant()
-		: base(1, CardType.Power, CardRarity.Rare, TargetType.Self)
+		: base(1, CardType.Power, CardRarity.Uncommon, TargetType.Self)
 	{
 	}
 
 	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
 	{
-		await CreatureCmd.TriggerAnim(base.Owner.Creature, "Cast", base.Owner.Character.CastAnimDelay);
-		await PowerCmd.Apply<AccelerantPower>(base.Owner.Creature, base.DynamicVars["Accelerant"].BaseValue, base.Owner.Creature, this);
+		await CreatureCmd.TriggerAnim(base.Owner.Creature, "PowerUp", base.Owner.Character.PowerUpAnimDelay);
+		await PowerCmd.Apply<AccelerantPower>(choiceContext, base.Owner.Creature, base.DynamicVars["Accelerant"].BaseValue, base.Owner.Creature, this);
 	}
 
 	protected override void OnUpgrade()

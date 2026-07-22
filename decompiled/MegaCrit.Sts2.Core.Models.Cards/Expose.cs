@@ -36,12 +36,12 @@ public sealed class Expose : CardModel
 		await CreatureCmd.TriggerAnim(base.Owner.Creature, "Cast", base.Owner.Character.CastAnimDelay);
 		VfxCmd.PlayOnCreatureCenter(base.Owner.Creature, "vfx/vfx_flying_slash");
 		int amount = base.DynamicVars["Power"].IntValue;
-		await CreatureCmd.LoseBlock(cardPlay.Target, cardPlay.Target.Block);
+		await CreatureCmd.LoseBlock(choiceContext, cardPlay.Target, cardPlay.Target.Block, base.Owner.Creature);
 		if (cardPlay.Target.HasPower<ArtifactPower>())
 		{
 			await PowerCmd.Remove<ArtifactPower>(cardPlay.Target);
 		}
-		await PowerCmd.Apply<VulnerablePower>(cardPlay.Target, amount, base.Owner.Creature, this);
+		await PowerCmd.Apply<VulnerablePower>(choiceContext, cardPlay.Target, amount, base.Owner.Creature, this);
 	}
 
 	protected override void OnUpgrade()

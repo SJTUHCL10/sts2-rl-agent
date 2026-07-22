@@ -10,6 +10,7 @@ using MegaCrit.Sts2.Core.Assets;
 using MegaCrit.Sts2.Core.Localization;
 using MegaCrit.Sts2.Core.Map;
 using MegaCrit.Sts2.Core.Models;
+using MegaCrit.Sts2.Core.Models.Relics;
 using MegaCrit.Sts2.Core.Rooms;
 using MegaCrit.Sts2.Core.Runs;
 using MegaCrit.Sts2.Core.Runs.History;
@@ -22,30 +23,66 @@ namespace MegaCrit.Sts2.Core.Nodes.HoverTips;
 [ScriptPath("res://src/Core/Nodes/HoverTips/NMapPointHistoryHoverTip.cs")]
 public class NMapPointHistoryHoverTip : MarginContainer
 {
+	/// <summary>
+	/// Cached StringNames for the methods contained in this class, for fast lookup.
+	/// </summary>
 	public new class MethodName : MarginContainer.MethodName
 	{
+		/// <summary>
+		/// Cached name for the '_Ready' method.
+		/// </summary>
 		public new static readonly StringName _Ready = "_Ready";
 	}
 
+	/// <summary>
+	/// Cached StringNames for the properties and fields contained in this class, for fast lookup.
+	/// </summary>
 	public new class PropertyName : MarginContainer.PropertyName
 	{
+		/// <summary>
+		/// Cached name for the '_floorNum' field.
+		/// </summary>
 		public static readonly StringName _floorNum = "_floorNum";
 
+		/// <summary>
+		/// Cached name for the '_playerId' field.
+		/// </summary>
 		public static readonly StringName _playerId = "_playerId";
 
+		/// <summary>
+		/// Cached name for the '_titleLabel' field.
+		/// </summary>
 		public static readonly StringName _titleLabel = "_titleLabel";
 
+		/// <summary>
+		/// Cached name for the '_playerStats' field.
+		/// </summary>
 		public static readonly StringName _playerStats = "_playerStats";
 
+		/// <summary>
+		/// Cached name for the '_roomStats' field.
+		/// </summary>
 		public static readonly StringName _roomStats = "_roomStats";
 
+		/// <summary>
+		/// Cached name for the '_rewardStatsContainer' field.
+		/// </summary>
 		public static readonly StringName _rewardStatsContainer = "_rewardStatsContainer";
 
+		/// <summary>
+		/// Cached name for the '_skippedStatsContainer' field.
+		/// </summary>
 		public static readonly StringName _skippedStatsContainer = "_skippedStatsContainer";
 
+		/// <summary>
+		/// Cached name for the '_actionStats' field.
+		/// </summary>
 		public static readonly StringName _actionStats = "_actionStats";
 	}
 
+	/// <summary>
+	/// Cached StringNames for the signals contained in this class, for fast lookup.
+	/// </summary>
 	public new class SignalName : MarginContainer.SignalName
 	{
 	}
@@ -278,124 +315,134 @@ public class NMapPointHistoryHoverTip : MarginContainer
 			stringBuilder6.Append(ref handler);
 		}
 		MapPointRoomHistoryEntry mapPointRoomHistoryEntry = _entry.Rooms.FirstOrDefault((MapPointRoomHistoryEntry r) => r.RoomType.IsCombatRoom());
-		if (playerEntry.MaxHpLost > 0)
+		if (playerEntry.IsAffectedByFurCoat)
 		{
-			_maxHpLost.Add("HP", playerEntry.MaxHpLost);
 			StringBuilder stringBuilder2 = stringBuilder;
 			StringBuilder stringBuilder7 = stringBuilder2;
 			StringBuilder.AppendInterpolatedStringHandler handler = new StringBuilder.AppendInterpolatedStringHandler(2, 1, stringBuilder2);
 			handler.AppendLiteral("\t");
-			handler.AppendFormatted(_maxHpLost.GetFormattedText());
+			handler.AppendFormatted(FurCoat.HistoryEntry.GetFormattedText());
 			handler.AppendLiteral("\n");
 			stringBuilder7.Append(ref handler);
+		}
+		if (playerEntry.MaxHpLost > 0)
+		{
+			_maxHpLost.Add("HP", playerEntry.MaxHpLost);
+			StringBuilder stringBuilder2 = stringBuilder;
+			StringBuilder stringBuilder8 = stringBuilder2;
+			StringBuilder.AppendInterpolatedStringHandler handler = new StringBuilder.AppendInterpolatedStringHandler(2, 1, stringBuilder2);
+			handler.AppendLiteral("\t");
+			handler.AppendFormatted(_maxHpLost.GetFormattedText());
+			handler.AppendLiteral("\n");
+			stringBuilder8.Append(ref handler);
 		}
 		if (playerEntry.DamageTaken > 0 || mapPointRoomHistoryEntry != null)
 		{
 			_damaged.Add("Damage", playerEntry.DamageTaken);
 			StringBuilder stringBuilder2 = stringBuilder;
-			StringBuilder stringBuilder8 = stringBuilder2;
+			StringBuilder stringBuilder9 = stringBuilder2;
 			StringBuilder.AppendInterpolatedStringHandler handler = new StringBuilder.AppendInterpolatedStringHandler(2, 1, stringBuilder2);
 			handler.AppendLiteral("\t");
 			handler.AppendFormatted(_damaged.GetFormattedText());
 			handler.AppendLiteral("\n");
-			stringBuilder8.Append(ref handler);
+			stringBuilder9.Append(ref handler);
 		}
 		if (playerEntry.MaxHpGained > 0)
 		{
 			_maxHpGained.Add("HP", playerEntry.MaxHpGained);
 			StringBuilder stringBuilder2 = stringBuilder;
-			StringBuilder stringBuilder9 = stringBuilder2;
+			StringBuilder stringBuilder10 = stringBuilder2;
 			StringBuilder.AppendInterpolatedStringHandler handler = new StringBuilder.AppendInterpolatedStringHandler(2, 1, stringBuilder2);
 			handler.AppendLiteral("\t");
 			handler.AppendFormatted(_maxHpGained.GetFormattedText());
 			handler.AppendLiteral("\n");
-			stringBuilder9.Append(ref handler);
+			stringBuilder10.Append(ref handler);
 		}
 		if (playerEntry.HpHealed > 0)
 		{
 			_healed.Add("HP", playerEntry.HpHealed);
 			StringBuilder stringBuilder2 = stringBuilder;
-			StringBuilder stringBuilder10 = stringBuilder2;
+			StringBuilder stringBuilder11 = stringBuilder2;
 			StringBuilder.AppendInterpolatedStringHandler handler = new StringBuilder.AppendInterpolatedStringHandler(2, 1, stringBuilder2);
 			handler.AppendLiteral("\t");
 			handler.AppendFormatted(_healed.GetFormattedText());
 			handler.AppendLiteral("\n");
-			stringBuilder10.Append(ref handler);
+			stringBuilder11.Append(ref handler);
 		}
 		if (mapPointRoomHistoryEntry != null)
 		{
 			_turns.Add("Turns", mapPointRoomHistoryEntry.TurnsTaken);
 			StringBuilder stringBuilder2 = stringBuilder;
-			StringBuilder stringBuilder11 = stringBuilder2;
+			StringBuilder stringBuilder12 = stringBuilder2;
 			StringBuilder.AppendInterpolatedStringHandler handler = new StringBuilder.AppendInterpolatedStringHandler(2, 1, stringBuilder2);
 			handler.AppendLiteral("\t");
 			handler.AppendFormatted(_turns.GetFormattedText());
 			handler.AppendLiteral("\n");
-			stringBuilder11.Append(ref handler);
+			stringBuilder12.Append(ref handler);
 		}
 		foreach (ModelId completedQuest in playerEntry.CompletedQuests)
 		{
 			_quests.Add("Quest", SaveUtil.CardOrDeprecated(completedQuest).Title);
 			StringBuilder stringBuilder2 = stringBuilder;
-			StringBuilder stringBuilder12 = stringBuilder2;
+			StringBuilder stringBuilder13 = stringBuilder2;
 			StringBuilder.AppendInterpolatedStringHandler handler = new StringBuilder.AppendInterpolatedStringHandler(2, 1, stringBuilder2);
 			handler.AppendLiteral("\t");
 			handler.AppendFormatted(_quests.GetFormattedText());
 			handler.AppendLiteral("\n");
-			stringBuilder12.Append(ref handler);
+			stringBuilder13.Append(ref handler);
 		}
 		foreach (ModelId item2 in playerEntry.PotionUsed)
 		{
 			_used.Add("Icon", "[img=top]res://images/packed/sprite_fonts/potion_icon.png[/img]");
 			_used.Add("Title", SaveUtil.PotionOrDeprecated(item2).Title);
 			StringBuilder stringBuilder2 = stringBuilder;
-			StringBuilder stringBuilder13 = stringBuilder2;
+			StringBuilder stringBuilder14 = stringBuilder2;
 			StringBuilder.AppendInterpolatedStringHandler handler = new StringBuilder.AppendInterpolatedStringHandler(1, 1, stringBuilder2);
 			handler.AppendFormatted(_used.GetFormattedText());
 			handler.AppendLiteral("\n");
-			stringBuilder13.Append(ref handler);
+			stringBuilder14.Append(ref handler);
 		}
 		foreach (ModelId item3 in playerEntry.PotionDiscarded)
 		{
 			_removed.Add("Icon", "[img=top]res://images/packed/sprite_fonts/potion_icon.png[/img]");
 			_removed.Add("Title", SaveUtil.PotionOrDeprecated(item3).Title);
 			StringBuilder stringBuilder2 = stringBuilder;
-			StringBuilder stringBuilder14 = stringBuilder2;
+			StringBuilder stringBuilder15 = stringBuilder2;
 			StringBuilder.AppendInterpolatedStringHandler handler = new StringBuilder.AppendInterpolatedStringHandler(1, 1, stringBuilder2);
 			handler.AppendFormatted(_removed.GetFormattedText());
 			handler.AppendLiteral("\n");
-			stringBuilder14.Append(ref handler);
+			stringBuilder15.Append(ref handler);
 		}
 		if (playerEntry.GoldSpent > 0)
 		{
 			_goldSpent.Add("Amount", playerEntry.GoldSpent);
 			StringBuilder stringBuilder2 = stringBuilder;
-			StringBuilder stringBuilder15 = stringBuilder2;
+			StringBuilder stringBuilder16 = stringBuilder2;
 			StringBuilder.AppendInterpolatedStringHandler handler = new StringBuilder.AppendInterpolatedStringHandler(1, 1, stringBuilder2);
 			handler.AppendFormatted(_goldSpent.GetFormattedText());
 			handler.AppendLiteral("\n");
-			stringBuilder15.Append(ref handler);
+			stringBuilder16.Append(ref handler);
 		}
 		if (playerEntry.GoldLost > 0)
 		{
 			_goldLost.Add("Amount", playerEntry.GoldLost);
 			StringBuilder stringBuilder2 = stringBuilder;
-			StringBuilder stringBuilder16 = stringBuilder2;
+			StringBuilder stringBuilder17 = stringBuilder2;
 			StringBuilder.AppendInterpolatedStringHandler handler = new StringBuilder.AppendInterpolatedStringHandler(1, 1, stringBuilder2);
 			handler.AppendFormatted(_goldLost.GetFormattedText());
 			handler.AppendLiteral("\n");
-			stringBuilder16.Append(ref handler);
+			stringBuilder17.Append(ref handler);
 		}
 		if (playerEntry.GoldStolen > 0)
 		{
 			_goldStolen.Add("Icon", "[img=top]res://images/packed/sprite_fonts/gold_icon.png[/img]");
 			_goldStolen.Add("Amount", playerEntry.GoldStolen);
 			StringBuilder stringBuilder2 = stringBuilder;
-			StringBuilder stringBuilder17 = stringBuilder2;
+			StringBuilder stringBuilder18 = stringBuilder2;
 			StringBuilder.AppendInterpolatedStringHandler handler = new StringBuilder.AppendInterpolatedStringHandler(1, 1, stringBuilder2);
 			handler.AppendFormatted(_goldStolen.GetFormattedText());
 			handler.AppendLiteral("\n");
-			stringBuilder17.Append(ref handler);
+			stringBuilder18.Append(ref handler);
 		}
 		_actionStats.Text = stringBuilder.ToString().Trim('\n');
 	}
@@ -515,6 +562,11 @@ public class NMapPointHistoryHoverTip : MarginContainer
 		}
 	}
 
+	/// <summary>
+	/// Get the method information for all the methods declared in this class.
+	/// This method is used by Godot to register the available methods in the editor.
+	/// Do not call this method.
+	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	internal static List<MethodInfo> GetGodotMethodList()
 	{
@@ -523,6 +575,7 @@ public class NMapPointHistoryHoverTip : MarginContainer
 		return list;
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool InvokeGodotClassMethod(in godot_string_name method, NativeVariantPtrArgs args, out godot_variant ret)
 	{
@@ -535,6 +588,7 @@ public class NMapPointHistoryHoverTip : MarginContainer
 		return base.InvokeGodotClassMethod(in method, args, out ret);
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool HasGodotClassMethod(in godot_string_name method)
 	{
@@ -545,6 +599,7 @@ public class NMapPointHistoryHoverTip : MarginContainer
 		return base.HasGodotClassMethod(in method);
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool SetGodotClassPropertyValue(in godot_string_name name, in godot_variant value)
 	{
@@ -591,6 +646,7 @@ public class NMapPointHistoryHoverTip : MarginContainer
 		return base.SetGodotClassPropertyValue(in name, in value);
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool GetGodotClassPropertyValue(in godot_string_name name, out godot_variant value)
 	{
@@ -637,6 +693,11 @@ public class NMapPointHistoryHoverTip : MarginContainer
 		return base.GetGodotClassPropertyValue(in name, out value);
 	}
 
+	/// <summary>
+	/// Get the property information for all the properties declared in this class.
+	/// This method is used by Godot to register the available properties in the editor.
+	/// Do not call this method.
+	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	internal static List<PropertyInfo> GetGodotPropertyList()
 	{
@@ -652,6 +713,7 @@ public class NMapPointHistoryHoverTip : MarginContainer
 		return list;
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override void SaveGodotObjectData(GodotSerializationInfo info)
 	{
@@ -666,6 +728,7 @@ public class NMapPointHistoryHoverTip : MarginContainer
 		info.AddProperty(PropertyName._actionStats, Variant.From(in _actionStats));
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override void RestoreGodotObjectData(GodotSerializationInfo info)
 	{

@@ -4,6 +4,7 @@ using Godot;
 using Godot.Bridge;
 using Godot.NativeInterop;
 using MegaCrit.Sts2.Core.Assets;
+using MegaCrit.Sts2.Core.Bindings.MegaSpine;
 using MegaCrit.Sts2.Core.Combat;
 using MegaCrit.Sts2.Core.Helpers;
 using MegaCrit.Sts2.Core.HoverTips;
@@ -20,50 +21,101 @@ namespace MegaCrit.Sts2.Core.Nodes.Orbs;
 [ScriptPath("res://src/Core/Nodes/Orbs/NOrb.cs")]
 public class NOrb : NClickableControl
 {
+	/// <summary>
+	/// Cached StringNames for the methods contained in this class, for fast lookup.
+	/// </summary>
 	public new class MethodName : NClickableControl.MethodName
 	{
+		/// <summary>
+		/// Cached name for the 'Create' method.
+		/// </summary>
 		public static readonly StringName Create = "Create";
 
+		/// <summary>
+		/// Cached name for the '_Ready' method.
+		/// </summary>
 		public new static readonly StringName _Ready = "_Ready";
 
-		public new static readonly StringName _EnterTree = "_EnterTree";
-
-		public new static readonly StringName _ExitTree = "_ExitTree";
-
+		/// <summary>
+		/// Cached name for the 'UpdateVisuals' method.
+		/// </summary>
 		public static readonly StringName UpdateVisuals = "UpdateVisuals";
 
-		public static readonly StringName Flash = "Flash";
-
+		/// <summary>
+		/// Cached name for the 'OnFocus' method.
+		/// </summary>
 		public new static readonly StringName OnFocus = "OnFocus";
 
+		/// <summary>
+		/// Cached name for the 'OnUnfocus' method.
+		/// </summary>
 		public new static readonly StringName OnUnfocus = "OnUnfocus";
 	}
 
+	/// <summary>
+	/// Cached StringNames for the properties and fields contained in this class, for fast lookup.
+	/// </summary>
 	public new class PropertyName : NClickableControl.PropertyName
 	{
+		/// <summary>
+		/// Cached name for the '_outline' field.
+		/// </summary>
 		public static readonly StringName _outline = "_outline";
 
+		/// <summary>
+		/// Cached name for the '_visualContainer' field.
+		/// </summary>
 		public static readonly StringName _visualContainer = "_visualContainer";
 
+		/// <summary>
+		/// Cached name for the '_labelContainer' field.
+		/// </summary>
 		public static readonly StringName _labelContainer = "_labelContainer";
 
+		/// <summary>
+		/// Cached name for the '_passiveLabel' field.
+		/// </summary>
 		public static readonly StringName _passiveLabel = "_passiveLabel";
 
+		/// <summary>
+		/// Cached name for the '_evokeLabel' field.
+		/// </summary>
 		public static readonly StringName _evokeLabel = "_evokeLabel";
 
+		/// <summary>
+		/// Cached name for the '_bounds' field.
+		/// </summary>
 		public static readonly StringName _bounds = "_bounds";
 
-		public static readonly StringName _flashParticle = "_flashParticle";
-
+		/// <summary>
+		/// Cached name for the '_selectionReticle' field.
+		/// </summary>
 		public static readonly StringName _selectionReticle = "_selectionReticle";
 
+		/// <summary>
+		/// Cached name for the '_orbVfx' field.
+		/// </summary>
+		public static readonly StringName _orbVfx = "_orbVfx";
+
+		/// <summary>
+		/// Cached name for the '_isLocal' field.
+		/// </summary>
 		public static readonly StringName _isLocal = "_isLocal";
 
+		/// <summary>
+		/// Cached name for the '_sprite' field.
+		/// </summary>
 		public static readonly StringName _sprite = "_sprite";
 
+		/// <summary>
+		/// Cached name for the '_curTween' field.
+		/// </summary>
 		public static readonly StringName _curTween = "_curTween";
 	}
 
+	/// <summary>
+	/// Cached StringNames for the signals contained in this class, for fast lookup.
+	/// </summary>
 	public new class SignalName : NClickableControl.SignalName
 	{
 	}
@@ -80,9 +132,9 @@ public class NOrb : NClickableControl
 
 	private Control _bounds;
 
-	private CpuParticles2D _flashParticle;
-
 	private NSelectionReticle _selectionReticle;
+
+	private NOrbVfx? _orbVfx;
 
 	private bool _isLocal;
 
@@ -117,7 +169,6 @@ public class NOrb : NClickableControl
 		_visualContainer = GetNode<Control>("%VisualContainer");
 		_passiveLabel = GetNode<MegaLabel>("%PassiveAmount");
 		_evokeLabel = GetNode<MegaLabel>("%EvokeAmount");
-		_flashParticle = GetNode<CpuParticles2D>("%Flash");
 		_bounds = GetNode<Control>("Bounds");
 		_labelContainer = GetNode<Control>("%LabelContainer");
 		_selectionReticle = GetNode<NSelectionReticle>("%SelectionReticle");
@@ -130,24 +181,6 @@ public class NOrb : NClickableControl
 			base.Scale *= 0.85f;
 		}
 		UpdateVisuals(isEvoking: false);
-	}
-
-	public override void _EnterTree()
-	{
-		base._EnterTree();
-		if (Model != null)
-		{
-			Model.Triggered += Flash;
-		}
-	}
-
-	public override void _ExitTree()
-	{
-		base._ExitTree();
-		if (Model != null)
-		{
-			Model.Triggered -= Flash;
-		}
 	}
 
 	public void ReplaceOrb(OrbModel model)
@@ -170,7 +203,6 @@ public class NOrb : NClickableControl
 			_passiveLabel.Visible = false;
 			_evokeLabel.Visible = false;
 			_outline.Visible = _isLocal;
-			_flashParticle.Visible = false;
 			return;
 		}
 		if (_sprite == null)
@@ -178,14 +210,21 @@ public class NOrb : NClickableControl
 			_sprite = Model.CreateSprite();
 			_visualContainer.AddChildSafely(_sprite);
 			_sprite.Position = Vector2.Zero;
+			this.RunWhenSpineReady(new MegaSprite(_sprite.GetNode("SpineSkeleton")), delegate(MegaAnimationState animState)
+			{
+				animState.SetAnimation("idle_loop");
+			});
+			_orbVfx = _sprite as NOrbVfx;
+			if (_orbVfx != null)
+			{
+				_orbVfx.Initialize(Model);
+			}
 			_curTween?.Kill();
 			_curTween = CreateTween();
 			_curTween.TweenProperty(_sprite, "scale", Vector2.One, 0.5).From(Vector2.Zero).SetTrans(Tween.TransitionType.Back)
 				.SetEase(Tween.EaseType.Out);
 		}
 		_outline.Visible = false;
-		_flashParticle.Visible = true;
-		_flashParticle.Texture = Model.Icon;
 		_labelContainer.Visible = _isLocal;
 		if (!_isLocal)
 		{
@@ -227,11 +266,6 @@ public class NOrb : NClickableControl
 		}
 	}
 
-	private void Flash()
-	{
-		_flashParticle.Emitting = true;
-	}
-
 	protected override void OnFocus()
 	{
 		if (Model != null || _isLocal)
@@ -247,8 +281,7 @@ public class NOrb : NClickableControl
 				enumerable = enumerable2;
 			}
 			IEnumerable<IHoverTip> hoverTips = enumerable;
-			NHoverTipSet nHoverTipSet = NHoverTipSet.CreateAndShow(_bounds, hoverTips, HoverTip.GetHoverTipAlignment(_bounds));
-			nHoverTipSet.SetFollowOwner();
+			NHoverTipSet.CreateAndShow(_bounds, hoverTips, HoverTip.GetHoverTipAlignment(_bounds))?.SetFollowOwner();
 			_labelContainer.Visible = true;
 			base.Modulate = Colors.White;
 			if (NControllerManager.Instance.IsUsingController)
@@ -269,27 +302,30 @@ public class NOrb : NClickableControl
 		_selectionReticle.OnDeselect();
 	}
 
+	/// <summary>
+	/// Get the method information for all the methods declared in this class.
+	/// This method is used by Godot to register the available methods in the editor.
+	/// Do not call this method.
+	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	internal new static List<MethodInfo> GetGodotMethodList()
 	{
-		List<MethodInfo> list = new List<MethodInfo>(8);
+		List<MethodInfo> list = new List<MethodInfo>(5);
 		list.Add(new MethodInfo(MethodName.Create, new PropertyInfo(Variant.Type.Object, "", PropertyHint.None, "", PropertyUsageFlags.Default, new StringName("Control"), exported: false), MethodFlags.Normal | MethodFlags.Static, new List<PropertyInfo>
 		{
 			new PropertyInfo(Variant.Type.Bool, "isLocal", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false)
 		}, null));
 		list.Add(new MethodInfo(MethodName._Ready, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
-		list.Add(new MethodInfo(MethodName._EnterTree, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
-		list.Add(new MethodInfo(MethodName._ExitTree, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName.UpdateVisuals, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
 		{
 			new PropertyInfo(Variant.Type.Bool, "isEvoking", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false)
 		}, null));
-		list.Add(new MethodInfo(MethodName.Flash, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName.OnFocus, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName.OnUnfocus, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		return list;
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool InvokeGodotClassMethod(in godot_string_name method, NativeVariantPtrArgs args, out godot_variant ret)
 	{
@@ -304,27 +340,9 @@ public class NOrb : NClickableControl
 			ret = default(godot_variant);
 			return true;
 		}
-		if (method == MethodName._EnterTree && args.Count == 0)
-		{
-			_EnterTree();
-			ret = default(godot_variant);
-			return true;
-		}
-		if (method == MethodName._ExitTree && args.Count == 0)
-		{
-			_ExitTree();
-			ret = default(godot_variant);
-			return true;
-		}
 		if (method == MethodName.UpdateVisuals && args.Count == 1)
 		{
 			UpdateVisuals(VariantUtils.ConvertTo<bool>(in args[0]));
-			ret = default(godot_variant);
-			return true;
-		}
-		if (method == MethodName.Flash && args.Count == 0)
-		{
-			Flash();
 			ret = default(godot_variant);
 			return true;
 		}
@@ -355,6 +373,7 @@ public class NOrb : NClickableControl
 		return false;
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool HasGodotClassMethod(in godot_string_name method)
 	{
@@ -366,19 +385,7 @@ public class NOrb : NClickableControl
 		{
 			return true;
 		}
-		if (method == MethodName._EnterTree)
-		{
-			return true;
-		}
-		if (method == MethodName._ExitTree)
-		{
-			return true;
-		}
 		if (method == MethodName.UpdateVisuals)
-		{
-			return true;
-		}
-		if (method == MethodName.Flash)
 		{
 			return true;
 		}
@@ -393,6 +400,7 @@ public class NOrb : NClickableControl
 		return base.HasGodotClassMethod(in method);
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool SetGodotClassPropertyValue(in godot_string_name name, in godot_variant value)
 	{
@@ -426,14 +434,14 @@ public class NOrb : NClickableControl
 			_bounds = VariantUtils.ConvertTo<Control>(in value);
 			return true;
 		}
-		if (name == PropertyName._flashParticle)
-		{
-			_flashParticle = VariantUtils.ConvertTo<CpuParticles2D>(in value);
-			return true;
-		}
 		if (name == PropertyName._selectionReticle)
 		{
 			_selectionReticle = VariantUtils.ConvertTo<NSelectionReticle>(in value);
+			return true;
+		}
+		if (name == PropertyName._orbVfx)
+		{
+			_orbVfx = VariantUtils.ConvertTo<NOrbVfx>(in value);
 			return true;
 		}
 		if (name == PropertyName._isLocal)
@@ -454,6 +462,7 @@ public class NOrb : NClickableControl
 		return base.SetGodotClassPropertyValue(in name, in value);
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool GetGodotClassPropertyValue(in godot_string_name name, out godot_variant value)
 	{
@@ -487,14 +496,14 @@ public class NOrb : NClickableControl
 			value = VariantUtils.CreateFrom(in _bounds);
 			return true;
 		}
-		if (name == PropertyName._flashParticle)
-		{
-			value = VariantUtils.CreateFrom(in _flashParticle);
-			return true;
-		}
 		if (name == PropertyName._selectionReticle)
 		{
 			value = VariantUtils.CreateFrom(in _selectionReticle);
+			return true;
+		}
+		if (name == PropertyName._orbVfx)
+		{
+			value = VariantUtils.CreateFrom(in _orbVfx);
 			return true;
 		}
 		if (name == PropertyName._isLocal)
@@ -515,6 +524,11 @@ public class NOrb : NClickableControl
 		return base.GetGodotClassPropertyValue(in name, out value);
 	}
 
+	/// <summary>
+	/// Get the property information for all the properties declared in this class.
+	/// This method is used by Godot to register the available properties in the editor.
+	/// Do not call this method.
+	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	internal new static List<PropertyInfo> GetGodotPropertyList()
 	{
@@ -525,14 +539,15 @@ public class NOrb : NClickableControl
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._passiveLabel, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._evokeLabel, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._bounds, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
-		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._flashParticle, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._selectionReticle, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._orbVfx, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Bool, PropertyName._isLocal, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._sprite, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._curTween, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		return list;
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override void SaveGodotObjectData(GodotSerializationInfo info)
 	{
@@ -543,13 +558,14 @@ public class NOrb : NClickableControl
 		info.AddProperty(PropertyName._passiveLabel, Variant.From(in _passiveLabel));
 		info.AddProperty(PropertyName._evokeLabel, Variant.From(in _evokeLabel));
 		info.AddProperty(PropertyName._bounds, Variant.From(in _bounds));
-		info.AddProperty(PropertyName._flashParticle, Variant.From(in _flashParticle));
 		info.AddProperty(PropertyName._selectionReticle, Variant.From(in _selectionReticle));
+		info.AddProperty(PropertyName._orbVfx, Variant.From(in _orbVfx));
 		info.AddProperty(PropertyName._isLocal, Variant.From(in _isLocal));
 		info.AddProperty(PropertyName._sprite, Variant.From(in _sprite));
 		info.AddProperty(PropertyName._curTween, Variant.From(in _curTween));
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override void RestoreGodotObjectData(GodotSerializationInfo info)
 	{
@@ -578,13 +594,13 @@ public class NOrb : NClickableControl
 		{
 			_bounds = value6.As<Control>();
 		}
-		if (info.TryGetProperty(PropertyName._flashParticle, out var value7))
+		if (info.TryGetProperty(PropertyName._selectionReticle, out var value7))
 		{
-			_flashParticle = value7.As<CpuParticles2D>();
+			_selectionReticle = value7.As<NSelectionReticle>();
 		}
-		if (info.TryGetProperty(PropertyName._selectionReticle, out var value8))
+		if (info.TryGetProperty(PropertyName._orbVfx, out var value8))
 		{
-			_selectionReticle = value8.As<NSelectionReticle>();
+			_orbVfx = value8.As<NOrbVfx>();
 		}
 		if (info.TryGetProperty(PropertyName._isLocal, out var value9))
 		{

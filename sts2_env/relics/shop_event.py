@@ -21,6 +21,141 @@ from sts2_env.core.enums import (
 from sts2_env.relics.base import RelicId, RelicPool, RelicInstance
 from sts2_env.relics.registry import register_relic
 
+
+@register_relic
+class DowsingRod(RelicInstance):
+    relic_id = RelicId.DOWSING_ROD
+    rarity = RelicRarity.ANCIENT
+    pool = RelicPool.EVENT
+    has_upon_pickup_effect = True
+
+    def after_obtained(self, owner: Creature) -> None:
+        from sts2_env.cards.factory import create_card
+
+        owner.deck.append(create_card(CardId.DOWSING))
+
+
+@register_relic
+class NeowsSacrifice(RelicInstance):
+    relic_id = RelicId.NEOWS_SACRIFICE
+    rarity = RelicRarity.ANCIENT
+    pool = RelicPool.EVENT
+    has_upon_pickup_effect = True
+
+    def after_obtained(self, owner: Creature) -> None:
+        from sts2_env.cards.factory import create_card
+        from sts2_env.potions.all import AMBERGRIS_ID
+        from sts2_env.potions.base import create_potion
+
+        owner.add_potion(create_potion(AMBERGRIS_ID))
+        owner.deck.append(create_card(CardId.GUILTY))
+
+
+class _AncientRelic(RelicInstance):
+    rarity = RelicRarity.ANCIENT
+    pool = RelicPool.EVENT
+
+
+@register_relic
+class FishingRod(_AncientRelic):
+    relic_id = RelicId.FISHING_ROD
+
+    def __init__(self, relic_id: RelicId):
+        super().__init__(relic_id)
+        self.combats_seen = 0
+
+    def after_combat_end(self, owner: Creature, combat: CombatState) -> None:
+        self.combats_seen += 1
+        if self.combats_seen % 3:
+            return
+        state = combat.combat_player_state_for(owner)
+        player = state.player_state if state is not None else None
+        if player is not None:
+            player.upgrade_random_cards(None, 1, rng=player.run_state.rng.niche)
+
+
+@register_relic
+class HeftyTablet(_AncientRelic):
+    relic_id = RelicId.HEFTY_TABLET
+    has_upon_pickup_effect = True
+
+    def after_obtained(self, owner: Creature) -> None:
+        from sts2_env.cards.factory import create_card
+
+        owner.deck.append(create_card(CardId.INJURY))
+
+
+@register_relic
+class Kaleidoscope(_AncientRelic):
+    relic_id = RelicId.KALEIDOSCOPE
+    has_upon_pickup_effect = True
+
+
+@register_relic
+class NeowsBones(_AncientRelic):
+    relic_id = RelicId.NEOWS_BONES
+    has_upon_pickup_effect = True
+
+    def after_obtained(self, owner: Creature) -> None:
+        from sts2_env.cards.factory import create_card, eligible_registered_cards
+
+        curse_id = owner.run_state.rng.niche.choice(
+            list(eligible_registered_cards(card_type=CardType.CURSE, generation_context="modifier"))
+        )
+        owner.deck.append(create_card(curse_id))
+
+
+@register_relic
+class NeowsTalisman(_AncientRelic):
+    relic_id = RelicId.NEOWS_TALISMAN
+    has_upon_pickup_effect = True
+
+    def after_obtained(self, owner: Creature) -> None:
+        for tag in (CardTag.STRIKE, CardTag.DEFEND):
+            card = next((candidate for candidate in reversed(owner.deck) if tag in candidate.tags), None)
+            if card is not None:
+                owner.upgrade_card_instance(card)
+
+
+@register_relic
+class PhialHolster(_AncientRelic):
+    relic_id = RelicId.PHIAL_HOLSTER
+    has_upon_pickup_effect = True
+
+    def after_obtained(self, owner: Creature) -> None:
+        owner.max_potion_slots += 1
+        owner.offer_potions(2)
+
+
+@register_relic
+class SilkenTress(_AncientRelic):
+    relic_id = RelicId.SILKEN_TRESS
+    has_upon_pickup_effect = True
+
+    def __init__(self, relic_id: RelicId):
+        super().__init__(relic_id)
+        self.used = False
+
+    @property
+    def is_used_up(self) -> bool:
+        return self.used
+
+    def after_obtained(self, owner: Creature) -> None:
+        owner.gold = 0
+
+
+@register_relic
+class WingedBoots(_AncientRelic):
+    relic_id = RelicId.WINGED_BOOTS
+
+    def __init__(self, relic_id: RelicId):
+        super().__init__(relic_id)
+        self.times_used = 0
+
+    @property
+    def is_used_up(self) -> bool:
+        return self.times_used >= 3
+
 if TYPE_CHECKING:
     from sts2_env.cards.base import CardInstance
     from sts2_env.core.creature import Creature

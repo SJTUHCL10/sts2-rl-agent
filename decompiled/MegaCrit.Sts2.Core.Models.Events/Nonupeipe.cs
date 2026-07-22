@@ -49,92 +49,93 @@ public class Nonupeipe : AncientEventModel
 
 	protected override AncientDialogueSet DefineDialogues()
 	{
-		AncientDialogueSet ancientDialogueSet = new AncientDialogueSet();
-		ancientDialogueSet.FirstVisitEverDialogue = new AncientDialogue("event:/sfx/npcs/nonupeipe/nonupeipe_welcome");
-		ancientDialogueSet.CharacterDialogues = new Dictionary<string, IReadOnlyList<AncientDialogue>>
+		return new AncientDialogueSet
 		{
-			[AncientEventModel.CharKey<Ironclad>()] = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[3]
+			FirstVisitEverDialogue = new AncientDialogue("event:/sfx/npcs/nonupeipe/nonupeipe_welcome"),
+			CharacterDialogues = new Dictionary<string, IReadOnlyList<AncientDialogue>>
 			{
-				new AncientDialogue("event:/sfx/npcs/nonupeipe/nonupeipe_welcome")
+				[AncientEventModel.CharKey<Ironclad>()] = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[3]
 				{
-					VisitIndex = 0
-				},
-				new AncientDialogue("")
+					new AncientDialogue("event:/sfx/npcs/nonupeipe/nonupeipe_welcome")
+					{
+						VisitIndex = 0
+					},
+					new AncientDialogue("")
+					{
+						VisitIndex = 1
+					},
+					new AncientDialogue("")
+					{
+						VisitIndex = 4
+					}
+				}),
+				[AncientEventModel.CharKey<Silent>()] = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[3]
 				{
-					VisitIndex = 1
-				},
-				new AncientDialogue("")
+					new AncientDialogue("event:/sfx/npcs/nonupeipe/nonupeipe_grossed_out", "", "event:/sfx/npcs/nonupeipe/nonupeipe_welcome")
+					{
+						VisitIndex = 0
+					},
+					new AncientDialogue("event:/sfx/npcs/nonupeipe/nonupeipe_giggle")
+					{
+						VisitIndex = 1
+					},
+					new AncientDialogue("event:/sfx/npcs/nonupeipe/nonupeipe_eeked", "", "event:/sfx/npcs/nonupeipe/nonupeipe_eeked")
+					{
+						VisitIndex = 4
+					}
+				}),
+				[AncientEventModel.CharKey<Defect>()] = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[3]
 				{
-					VisitIndex = 4
-				}
-			}),
-			[AncientEventModel.CharKey<Silent>()] = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[3]
+					new AncientDialogue("event:/sfx/npcs/nonupeipe/nonupeipe_welcome")
+					{
+						VisitIndex = 0
+					},
+					new AncientDialogue("event:/sfx/npcs/nonupeipe/nonupeipe_welcome")
+					{
+						VisitIndex = 1
+					},
+					new AncientDialogue("event:/sfx/npcs/nonupeipe/nonupeipe_giggle", "")
+					{
+						VisitIndex = 4
+					}
+				}),
+				[AncientEventModel.CharKey<Necrobinder>()] = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[3]
+				{
+					new AncientDialogue("", "event:/sfx/npcs/nonupeipe/nonupeipe_eeked")
+					{
+						VisitIndex = 0
+					},
+					new AncientDialogue("event:/sfx/npcs/nonupeipe/nonupeipe_welcome")
+					{
+						VisitIndex = 1
+					},
+					new AncientDialogue("event:/sfx/npcs/nonupeipe/nonupeipe_grossed_out", "")
+					{
+						VisitIndex = 4
+					}
+				}),
+				[AncientEventModel.CharKey<Regent>()] = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[3]
+				{
+					new AncientDialogue("", "event:/sfx/npcs/nonupeipe/nonupeipe_eeked")
+					{
+						VisitIndex = 0
+					},
+					new AncientDialogue("event:/sfx/npcs/nonupeipe/nonupeipe_welcome")
+					{
+						VisitIndex = 1
+					},
+					new AncientDialogue("event:/sfx/npcs/nonupeipe/nonupeipe_grossed_out", "")
+					{
+						VisitIndex = 4
+					}
+				})
+			},
+			AgnosticDialogues = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[2]
 			{
-				new AncientDialogue("event:/sfx/npcs/nonupeipe/nonupeipe_grossed_out", "", "event:/sfx/npcs/nonupeipe/nonupeipe_welcome")
-				{
-					VisitIndex = 0
-				},
-				new AncientDialogue("event:/sfx/npcs/nonupeipe/nonupeipe_giggle")
-				{
-					VisitIndex = 1
-				},
-				new AncientDialogue("event:/sfx/npcs/nonupeipe/nonupeipe_eeked", "", "event:/sfx/npcs/nonupeipe/nonupeipe_eeked")
-				{
-					VisitIndex = 4
-				}
-			}),
-			[AncientEventModel.CharKey<Defect>()] = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[3]
-			{
-				new AncientDialogue("event:/sfx/npcs/nonupeipe/nonupeipe_welcome")
-				{
-					VisitIndex = 0
-				},
-				new AncientDialogue("event:/sfx/npcs/nonupeipe/nonupeipe_welcome")
-				{
-					VisitIndex = 1
-				},
-				new AncientDialogue("event:/sfx/npcs/nonupeipe/nonupeipe_giggle", "")
-				{
-					VisitIndex = 4
-				}
-			}),
-			[AncientEventModel.CharKey<Necrobinder>()] = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[3]
-			{
-				new AncientDialogue("", "event:/sfx/npcs/nonupeipe/nonupeipe_eeked")
-				{
-					VisitIndex = 0
-				},
-				new AncientDialogue("event:/sfx/npcs/nonupeipe/nonupeipe_welcome")
-				{
-					VisitIndex = 1
-				},
-				new AncientDialogue("event:/sfx/npcs/nonupeipe/nonupeipe_grossed_out", "")
-				{
-					VisitIndex = 4
-				}
-			}),
-			[AncientEventModel.CharKey<Regent>()] = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[3]
-			{
-				new AncientDialogue("", "event:/sfx/npcs/nonupeipe/nonupeipe_eeked")
-				{
-					VisitIndex = 0
-				},
-				new AncientDialogue("event:/sfx/npcs/nonupeipe/nonupeipe_welcome")
-				{
-					VisitIndex = 1
-				},
-				new AncientDialogue("event:/sfx/npcs/nonupeipe/nonupeipe_grossed_out", "")
-				{
-					VisitIndex = 4
-				}
+				new AncientDialogue("event:/sfx/npcs/nonupeipe/nonupeipe_welcome"),
+				new AncientDialogue("event:/sfx/npcs/nonupeipe/nonupeipe_eeked")
 			})
 		};
-		ancientDialogueSet.AgnosticDialogues = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[2]
-		{
-			new AncientDialogue("event:/sfx/npcs/nonupeipe/nonupeipe_welcome"),
-			new AncientDialogue("event:/sfx/npcs/nonupeipe/nonupeipe_eeked")
-		});
-		return ancientDialogueSet;
 	}
 
 	protected override IReadOnlyList<EventOption> GenerateInitialOptions()

@@ -7,6 +7,7 @@ bin/
 publish/
 Properties/
 packages/
+STS2BridgeMod.local.props
 .editorconfig
 *cs.uid
 *.user

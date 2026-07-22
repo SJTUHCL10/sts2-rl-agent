@@ -52,15 +52,14 @@ def _make_combat() -> CombatState:
 
 
 class TestNecrobinderParity:
-    def test_borrowed_time_applies_doom_and_gains_energy(self):
-        """Matches BorrowedTime.cs: apply Doom to the owner, then gain energy immediately."""
+    def test_borrowed_time_gains_energy_and_applies_cost_increase(self):
         combat = _make_combat()
         combat.hand = [create_card(CardId.BORROWED_TIME)]
-        combat.energy = 0
+        combat.energy = 1
 
         assert combat.play_card(0)
-        assert combat.player.get_power_amount(PowerId.DOOM) == 3
-        assert combat.energy == 1
+        assert combat.player.get_power_amount(PowerId.BORROWED_TIME_POWER) == 1
+        assert combat.energy == 4
 
     def test_countdown_card_applies_countdown_power(self):
         """Matches Countdown.cs: apply CountdownPower to the owner."""
@@ -254,8 +253,8 @@ class TestNecrobinderParity:
         assert len(ally_osties) == 1
         assert ally_osties[0].max_hp == 6
 
-    def test_reanimate_summons_large_osty_and_exhausts_self(self):
-        """Matches Reanimate.cs: summon a large Osty and exhaust the card."""
+    def test_reanimate_summons_large_osty_and_discards_self(self):
+        """Reanimate no longer exhausts in the current reference."""
         combat = _make_combat()
         card = make_reanimate()
         combat.hand = [card]
@@ -264,7 +263,7 @@ class TestNecrobinderParity:
         assert combat.play_card(0)
         assert combat.osty is not None
         assert combat.osty.max_hp == 20
-        assert card in combat.exhaust_pile
+        assert card in combat.discard_pile
 
     def test_spur_summons_and_heals_existing_osty(self):
         """Matches Spur.cs: summon more Osty HP, then heal Osty."""
@@ -374,16 +373,16 @@ class TestNecrobinderParity:
         souls = [card for card in combat.draw_pile if card.card_id == CardId.SOUL]
         assert len(souls) == 2
 
-    def test_eidolon_exhausts_hand_and_grants_intangible_at_threshold(self):
-        """Matches Eidolon.cs: exhaust the hand, then grant Intangible if 9+ cards were exhausted."""
+    def test_eidolon_exhausts_self_without_exhausting_the_hand(self):
         combat = _make_combat()
-        combat.hand = [make_eidolon()] + [make_strike_ironclad() for _ in range(9)]
+        card = make_eidolon()
+        combat.hand = [card] + [make_strike_ironclad() for _ in range(9)]
         combat.energy = 2
 
         assert combat.play_card(0)
-        assert len(combat.hand) == 0
-        assert len(combat.exhaust_pile) >= 9
-        assert combat.player.get_power_amount(PowerId.INTANGIBLE) == 1
+        assert len(combat.hand) == 9
+        assert card in combat.exhaust_pile
+        assert combat.player.get_power_amount(PowerId.INTANGIBLE) == 0
 
     def test_protector_scales_damage_with_owner_osty_max_hp(self):
         """Matches Protector.cs: damage is based on the owner's live Osty max HP."""
@@ -474,16 +473,15 @@ class TestNecrobinderParity:
         assert transformed not in combat.draw_pile
         assert any(card.card_id == make_soul(upgraded=True).card_id and card.upgraded for card in combat.draw_pile)
 
-    def test_borrowed_time_applies_doom_and_gains_energy(self):
-        """Matches BorrowedTime.cs: apply Doom to self, then gain energy."""
+    def test_borrowed_time_gains_energy_and_increases_card_costs(self):
         combat = _make_combat()
         card = create_card(CardId.BORROWED_TIME)
         combat.hand = [card]
-        combat.energy = 0
+        combat.energy = 1
 
         assert combat.play_card(0)
-        assert combat.player.get_power_amount(PowerId.DOOM) == card.effect_vars.get("doom", 3)
-        assert combat.energy == card.effect_vars.get("energy", 1)
+        assert combat.player.get_power_amount(PowerId.BORROWED_TIME_POWER) == 1
+        assert combat.energy == card.effect_vars["energy"]
 
     def test_countdown_applies_countdown_power(self):
         """Matches Countdown.cs: apply CountdownPower with the configured amount."""

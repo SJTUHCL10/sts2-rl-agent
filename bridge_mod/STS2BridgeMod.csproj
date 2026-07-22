@@ -9,6 +9,9 @@
         <PathMap>$(AppOutputBase)=.\</PathMap>
     </PropertyGroup>
 
+    <!-- Local paths are intentionally untracked; see STS2BridgeMod.local.props.example. -->
+    <Import Project="STS2BridgeMod.local.props" Condition="Exists('STS2BridgeMod.local.props')" />
+
     <!-- OS Detection -->
     <PropertyGroup>
         <IsWindows>false</IsWindows>
@@ -24,9 +27,9 @@
     <!-- Windows -->
     <PropertyGroup Condition="'$(IsWindows)' == 'true'">
         <AutoSteamPath>$(registry:HKEY_CURRENT_USER\Software\Valve\Steam@SteamPath)\steamapps</AutoSteamPath>
-        <SteamLibraryPath Condition="Exists('$(AutoSteamPath)/common/Slay the Spire 2')">$(AutoSteamPath)</SteamLibraryPath>
+        <SteamLibraryPath Condition="'$(SteamLibraryPath)' == '' and Exists('$(AutoSteamPath)/common/Slay the Spire 2')">$(AutoSteamPath)</SteamLibraryPath>
 
-        <GodotPath>C:/megadot/Godot_v4.5.1-stable_mono_win64/Godot_v4.5.1-stable_mono_win64_console.exe</GodotPath>
+        <GodotPath Condition="'$(GodotPath)' == ''">C:/megadot/Godot_v4.5.1-stable_mono_win64/Godot_v4.5.1-stable_mono_win64_console.exe</GodotPath>
         <!-- If on Windows and Slay the Spire 2 is not installed in your default steam library, adjust the following.-->
         <SteamLibraryPath Condition="'$(SteamLibraryPath)' == ''">C:/Program Files (x86)/Steam/steamapps</SteamLibraryPath>
 
@@ -76,9 +79,17 @@
         </Reference>
     </ItemGroup>
 
-    <ItemGroup>
+    <ItemGroup Condition="'$(BaseLibDllPath)' == ''">
         <PackageReference Include="Alchyr.Sts2.BaseLib" Version="*" PrivateAssets="All" />
         <PackageReference Include="Alchyr.Sts2.ModAnalyzers" Version="*" />
+        <AdditionalFiles Include="STS2BridgeMod/localization/**/*.json"/>
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(BaseLibDllPath)' != '' and Exists('$(BaseLibDllPath)')">
+        <Reference Include="BaseLib">
+            <HintPath>$(BaseLibDllPath)</HintPath>
+            <Private>false</Private>
+        </Reference>
         <AdditionalFiles Include="STS2BridgeMod/localization/**/*.json"/>
     </ItemGroup>
 
@@ -119,11 +130,11 @@
         <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ModsPath)$(MSBuildProjectName)/" />
         <Copy SourceFiles="STS2BridgeMod.json" DestinationFolder="$(ModsPath)$(MSBuildProjectName)/" />
         <Copy SourceFiles="mod_manifest.json" DestinationFolder="$(ModsPath)$(MSBuildProjectName)/" />
-        <Message Text="Copying BaseLib to mods folder." Importance="high" />
-        <ItemGroup>
+        <Message Text="Copying BaseLib to mods folder." Importance="high" Condition="'$(CopyBaseLibToMods)' != 'false'" />
+        <ItemGroup Condition="'$(CopyBaseLibToMods)' != 'false'">
             <BaseLibFiles Include="$(NuGetPackageRoot)/alchyr.sts2.baselib/**/lib/**/BaseLib.dll;$(NuGetPackageRoot)/alchyr.sts2.baselib/**/Content/BaseLib.pck;$(NuGetPackageRoot)/alchyr.sts2.baselib/**/Content/BaseLib.json;"/>
         </ItemGroup>
-        <Copy SourceFiles="@(BaseLibFiles)" DestinationFolder="$(ModsPath)BaseLib/" />
+        <Copy SourceFiles="@(BaseLibFiles)" DestinationFolder="$(ModsPath)BaseLib/" Condition="'$(CopyBaseLibToMods)' != 'false'" />
     </Target>
 
     <Target Name="GodotExport" AfterTargets="Build;Publish" Condition="'$(GodotPath)' != '' and Exists('$(GodotPath)') and '$(IsInnerGodotExport)' != 'true'">

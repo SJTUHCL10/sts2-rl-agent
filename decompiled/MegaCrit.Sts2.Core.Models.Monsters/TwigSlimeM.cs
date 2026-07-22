@@ -12,7 +12,6 @@ using MegaCrit.Sts2.Core.MonsterMoves;
 using MegaCrit.Sts2.Core.MonsterMoves.Intents;
 using MegaCrit.Sts2.Core.MonsterMoves.MonsterMoveStateMachine;
 using MegaCrit.Sts2.Core.Nodes.Combat;
-using MegaCrit.Sts2.Core.Nodes.Rooms;
 using MegaCrit.Sts2.Core.TestSupport;
 
 namespace MegaCrit.Sts2.Core.Models.Monsters;
@@ -25,6 +24,8 @@ public sealed class TwigSlimeM : MonsterModel
 
 	public override int MaxInitialHp => AscensionHelper.GetValueIfAscension(AscensionLevel.ToughEnemies, 29, 28);
 
+	protected override bool HasPhobiaSpineSkin => true;
+
 	private int ClumpDamage => AscensionHelper.GetValueIfAscension(AscensionLevel.DeadlyEnemies, 12, 11);
 
 	public override DamageSfxType TakeDamageSfxType => DamageSfxType.Slime;
@@ -32,7 +33,7 @@ public sealed class TwigSlimeM : MonsterModel
 	protected override MonsterMoveStateMachine GenerateMoveStateMachine()
 	{
 		List<MonsterState> list = new List<MonsterState>();
-		MoveState moveState = new MoveState("CLUMP_SHOT_MOVE", ClumpShotMove, new SingleAttackIntent(ClumpDamage));
+		MoveState moveState = new MoveState("POKEY_POUNCE_MOVE", ClumpShotMove, new SingleAttackIntent(ClumpDamage));
 		MoveState moveState2 = new MoveState("STICKY_SHOT_MOVE", StickyShotMove, new StatusIntent(1));
 		RandomBranchState randomBranchState = (RandomBranchState)(moveState2.FollowUpState = (moveState.FollowUpState = new RandomBranchState("RAND")));
 		randomBranchState.AddBranch(moveState, 2);
@@ -55,24 +56,25 @@ public sealed class TwigSlimeM : MonsterModel
 	{
 		if (TestMode.IsOff)
 		{
-			Vector2? vector = null;
+			NCreature nCreature = null;
 			foreach (Creature target in targets)
 			{
-				NCreature creatureNode = NCombatRoom.Instance.GetCreatureNode(target);
-				if (creatureNode != null && (!vector.HasValue || vector.Value.X > creatureNode.GlobalPosition.X))
+				NCreature creatureNode = target.GetCreatureNode();
+				if (creatureNode != null && (nCreature == null || nCreature.GlobalPosition.X > creatureNode.GlobalPosition.X))
 				{
-					vector = creatureNode.VfxSpawnPosition;
+					nCreature = creatureNode;
 				}
 			}
-			Node2D node2D = NCombatRoom.Instance.GetCreatureNode(base.Creature)?.GetSpecialNode<Node2D>("Visuals/SpitTarget");
-			if (node2D != null)
+			NCreature creatureNode2 = base.Creature.GetCreatureNode();
+			Node2D node2D = creatureNode2?.GetSpecialNode<Node2D>("Visuals/SpitTarget");
+			if (creatureNode2 != null && node2D != null && nCreature != null)
 			{
-				node2D.GlobalPosition = vector.Value;
+				node2D.GlobalPosition = new Vector2(nCreature.GlobalPosition.X, node2D.GlobalPosition.Y);
 			}
 		}
 		SfxCmd.Play(CastSfx);
 		await CreatureCmd.TriggerAnim(base.Creature, "Cast", 0.75f);
 		VfxCmd.PlayOnCreatureCenters(targets, "vfx/vfx_slime_impact");
-		await CardPileCmd.AddToCombatAndPreview<Slimed>(targets, PileType.Discard, 1, addedByPlayer: false);
+		await CardPileCmd.AddToCombatAndPreview<Slimed>(targets, PileType.Discard, 1, null);
 	}
 }

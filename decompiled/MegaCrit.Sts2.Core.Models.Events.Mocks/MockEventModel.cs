@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using MegaCrit.Sts2.Core.Events;
+using MegaCrit.Sts2.Core.Rewards;
 
 namespace MegaCrit.Sts2.Core.Models.Events.Mocks;
 
@@ -12,7 +13,9 @@ public class MockEventModel : EventModel
 
 	public int? optionChosen;
 
-	public List<EventOption>? initialOptions;
+	public Func<EventModel, IReadOnlyList<EventOption>>? generateInitialOptions;
+
+	public override bool IsMock => true;
 
 	public override bool IsShared => isShared;
 
@@ -44,7 +47,17 @@ public class MockEventModel : EventModel
 
 	protected override IReadOnlyList<EventOption> GenerateInitialOptions()
 	{
-		return initialOptions ?? DefaultInitialOptions;
+		List<EventOption> list = new List<EventOption>();
+		foreach (EventOption item in generateInitialOptions?.Invoke(this) ?? DefaultInitialOptions)
+		{
+			list.Add(new EventOption(item));
+		}
+		return list;
+	}
+
+	public new void EnterCombatWithoutExitingEvent<T>(IReadOnlyList<Reward> extraRewards, bool shouldResumeAfterCombat) where T : EncounterModel
+	{
+		base.EnterCombatWithoutExitingEvent<T>(extraRewards, shouldResumeAfterCombat);
 	}
 
 	public void SetEventState(IEnumerable<EventOption> options)

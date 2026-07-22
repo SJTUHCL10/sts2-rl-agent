@@ -5,19 +5,13 @@ using MegaCrit.Sts2.Core.Saves.Runs;
 
 namespace MegaCrit.Sts2.Core.Runs.History;
 
-public struct CardEnchantmentHistoryEntry : IPacketSerializable
+public struct CardEnchantmentHistoryEntry(CardModel card, ModelId enchantment) : IPacketSerializable
 {
 	[JsonPropertyName("card")]
-	public SerializableCard Card { get; set; }
+	public SerializableCard Card { get; set; } = card.ToSerializable();
 
 	[JsonPropertyName("enchantment")]
-	public ModelId Enchantment { get; set; }
-
-	public CardEnchantmentHistoryEntry(CardModel card, ModelId enchantment)
-	{
-		Card = card.ToSerializable();
-		Enchantment = enchantment;
-	}
+	public ModelId Enchantment { get; set; } = enchantment;
 
 	public void Serialize(PacketWriter writer)
 	{

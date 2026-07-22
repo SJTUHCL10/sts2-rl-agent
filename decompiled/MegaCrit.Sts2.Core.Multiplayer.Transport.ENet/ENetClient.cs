@@ -152,15 +152,15 @@ public class ENetClient : NetClient
 			ENetConnection.EventType num = type - -1;
 			if ((ulong)num <= 4uL)
 			{
-				switch (num)
+				switch ((int)num)
 				{
-				case ENetConnection.EventType.None:
+				case 0:
 					_logger.Error($"Got error from ENetConnection! Error: {output.Value.error} TODO: Expand me");
 					continue;
-				case ENetConnection.EventType.Disconnect:
+				case 2:
 					_logger.Debug("Received connect on client");
 					continue;
-				case ENetConnection.EventType.Receive:
+				case 3:
 					_logger.Debug($"Received disconnect on client. Already disconnected: {!_isConnected}");
 					if (_isConnected)
 					{
@@ -168,7 +168,7 @@ public class ENetClient : NetClient
 						_handler.OnDisconnectedFromHost(HostNetId, new NetErrorInfo(NetError.UnknownNetworkError, selfInitiated: false));
 					}
 					continue;
-				case (ENetConnection.EventType)4L:
+				case 4:
 					HandleMessageReceived(output.Value);
 					continue;
 				}

@@ -23,7 +23,7 @@ public sealed class SicEm : CardModel
 	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(new DynamicVar[2]
 	{
 		new OstyDamageVar(5m, ValueProp.Move),
-		new PowerVar<SicEmPower>(2m)
+		new PowerVar<SicEmPower>(3m)
 	});
 
 	public SicEm()
@@ -36,11 +36,11 @@ public sealed class SicEm : CardModel
 		ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
 		if (!Osty.CheckMissingWithAnim(base.Owner))
 		{
-			await DamageCmd.Attack(base.DynamicVars.OstyDamage.BaseValue).FromOsty(base.Owner.Osty, this).Targeting(cardPlay.Target)
+			await DamageCmd.Attack(base.DynamicVars.OstyDamage.BaseValue).FromOsty(base.Owner.Osty, this, cardPlay).Targeting(cardPlay.Target)
 				.WithHitFx("vfx/vfx_attack_blunt", null, "blunt_attack.mp3")
 				.Execute(choiceContext);
 		}
-		await PowerCmd.Apply<SicEmPower>(cardPlay.Target, base.DynamicVars["SicEmPower"].BaseValue, base.Owner.Creature, this);
+		await PowerCmd.Apply<SicEmPower>(choiceContext, cardPlay.Target, base.DynamicVars["SicEmPower"].BaseValue, base.Owner.Creature, this);
 	}
 
 	protected override void OnUpgrade()

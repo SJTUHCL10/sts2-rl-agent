@@ -1,0 +1,6613 @@
+{
+  "initial_state": {
+    "act": 1,
+    "floor": 1,
+    "options": [
+      {
+        "action": "event_choice",
+        "enabled": true,
+        "index": 0
+      },
+      {
+        "action": "event_choice",
+        "enabled": true,
+        "index": 1
+      },
+      {
+        "action": "event_choice",
+        "enabled": true,
+        "index": 2
+      }
+    ],
+    "type": "event"
+  },
+  "metadata": {
+    "host": "127.0.0.1",
+    "model_path": "C:\\Users\\A\\Codes\\sts\\sts2-rl-agent\\output\\combat_v0109_smoke_masked_20260720\\final_model.zip",
+    "port": 9002
+  },
+  "mode": "combat",
+  "steps": [
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 1,
+        "options": [
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 0
+          },
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 1
+          },
+          {
+            "action": "proceed",
+            "enabled": true,
+            "index": 2
+          }
+        ],
+        "type": "reward_screen"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "can_skip": true,
+        "cards": [
+          {
+            "cost": 1,
+            "id": "HAILSTORM",
+            "index": 0,
+            "type": "Power"
+          },
+          {
+            "cost": 3,
+            "id": "KNOCKOUT_BLOW",
+            "index": 1,
+            "type": "Attack"
+          },
+          {
+            "cost": 2,
+            "id": "DELAY",
+            "index": 2,
+            "type": "Skill"
+          }
+        ],
+        "type": "card_reward"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 1,
+        "options": [
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 0
+          },
+          {
+            "action": "proceed",
+            "enabled": true,
+            "index": 1
+          }
+        ],
+        "type": "reward_screen"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "can_skip": true,
+        "cards": [
+          {
+            "cost": 1,
+            "id": "BUBBLE_BUBBLE",
+            "index": 0,
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DOUBLE_ENERGY",
+            "index": 1,
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "AFTERLIFE",
+            "index": 2,
+            "type": "Skill"
+          }
+        ],
+        "type": "card_reward"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 1,
+        "nodes": [
+          {
+            "col": 0,
+            "index": 0,
+            "row": 1,
+            "type": "Monster"
+          },
+          {
+            "col": 2,
+            "index": 1,
+            "row": 1,
+            "type": "Monster"
+          },
+          {
+            "col": 3,
+            "index": 2,
+            "row": 1,
+            "type": "Monster"
+          },
+          {
+            "col": 5,
+            "index": 3,
+            "row": 1,
+            "type": "Monster"
+          }
+        ],
+        "type": "map_select"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 0,
+        "draw_pile_count": 8,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 45,
+            "id": "NIBBIT",
+            "intent": "Attack",
+            "intent_damage": 13,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 45,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "BUBBLE_BUBBLE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 64,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 1,
+        "draw_pile_count": 8,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 39,
+            "id": "NIBBIT",
+            "intent": "Attack",
+            "intent_damage": 13,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 45,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "BUBBLE_BUBBLE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 2,
+          "hp": 64,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 2,
+        "draw_pile_count": 8,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 39,
+            "id": "NIBBIT",
+            "intent": "Attack",
+            "intent_damage": 13,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 45,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "BUBBLE_BUBBLE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 1,
+          "hp": 64,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 2,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 3,
+        "draw_pile_count": 8,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 39,
+            "id": "NIBBIT",
+            "intent": "Attack",
+            "intent_damage": 13,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 45,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 0,
+          "hp": 64,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 4,
+        "draw_pile_count": 3,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 39,
+            "id": "NIBBIT",
+            "intent": "Attack",
+            "intent_damage": 7,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 45,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "HAILSTORM",
+            "playable": true,
+            "target": "Self",
+            "type": "Power"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 56,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 5,
+        "draw_pile_count": 3,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 33,
+            "id": "NIBBIT",
+            "intent": "Attack",
+            "intent_damage": 7,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 45,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "HAILSTORM",
+            "playable": true,
+            "target": "Self",
+            "type": "Power"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 2,
+          "hp": 56,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 0,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 6,
+        "draw_pile_count": 3,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 27,
+            "id": "NIBBIT",
+            "intent": "Attack",
+            "intent_damage": 7,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 45,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "HAILSTORM",
+            "playable": true,
+            "target": "Self",
+            "type": "Power"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 1,
+          "hp": 56,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 7,
+        "draw_pile_count": 3,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 21,
+            "id": "NIBBIT",
+            "intent": "Attack",
+            "intent_damage": 7,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 45,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "HAILSTORM",
+            "playable": false,
+            "target": "Self",
+            "type": "Power"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 0,
+          "hp": 56,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 0,
+        "draw_pile_count": 7,
+        "enemies": [
+          {
+            "block": 6,
+            "hp": 21,
+            "id": "NIBBIT",
+            "intent": "Buff",
+            "is_alive": true,
+            "max_hp": 45,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "HAILSTORM",
+            "playable": true,
+            "target": "Self",
+            "type": "Power"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 49,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 1,
+        "draw_pile_count": 7,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 21,
+            "id": "NIBBIT",
+            "intent": "Buff",
+            "is_alive": true,
+            "max_hp": 45,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "HAILSTORM",
+            "playable": true,
+            "target": "Self",
+            "type": "Power"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 2,
+          "hp": 49,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 2,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 2,
+        "draw_pile_count": 7,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 15,
+            "id": "NIBBIT",
+            "intent": "Buff",
+            "is_alive": true,
+            "max_hp": 45,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "HAILSTORM",
+            "playable": true,
+            "target": "Self",
+            "type": "Power"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 1,
+          "hp": 49,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 0,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 3,
+        "draw_pile_count": 7,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 15,
+            "id": "NIBBIT",
+            "intent": "Buff",
+            "is_alive": true,
+            "max_hp": 45,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "HAILSTORM",
+            "playable": false,
+            "target": "Self",
+            "type": "Power"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 0,
+          "hp": 49,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 5,
+        "draw_pile_count": 2,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 15,
+            "id": "NIBBIT",
+            "intent": "Attack",
+            "intent_damage": 16,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 45,
+            "powers": [
+              {
+                "amount": 3,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 49,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 4,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 6,
+        "draw_pile_count": 2,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 7,
+            "id": "NIBBIT",
+            "intent": "Attack",
+            "intent_damage": 16,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 45,
+            "powers": [
+              {
+                "amount": 3,
+                "id": "STRENGTH_POWER"
+              },
+              {
+                "amount": 2,
+                "id": "VULNERABLE_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 1,
+          "hp": 49,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 4,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 0,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 2,
+        "options": [
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 0
+          },
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 1
+          },
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 2
+          },
+          {
+            "action": "proceed",
+            "enabled": true,
+            "index": 3
+          }
+        ],
+        "type": "reward_screen"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 2,
+        "options": [
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 0
+          },
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 1
+          },
+          {
+            "action": "proceed",
+            "enabled": true,
+            "index": 2
+          }
+        ],
+        "type": "reward_screen"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 2,
+        "options": [
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 0
+          },
+          {
+            "action": "proceed",
+            "enabled": true,
+            "index": 1
+          }
+        ],
+        "type": "reward_screen"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "can_skip": true,
+        "cards": [
+          {
+            "cost": 1,
+            "id": "IRON_WAVE",
+            "index": 0,
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "TRUE_GRIT",
+            "index": 1,
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "BODY_SLAM",
+            "index": 2,
+            "type": "Attack"
+          }
+        ],
+        "type": "card_reward"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 2,
+        "nodes": [
+          {
+            "col": 0,
+            "index": 0,
+            "row": 2,
+            "type": "Monster"
+          }
+        ],
+        "type": "map_select"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 0,
+        "draw_pile_count": 9,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 40,
+            "id": "SHRINKER_BEETLE",
+            "intent": "DebuffStrong",
+            "is_alive": true,
+            "max_hp": 40,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "BUBBLE_BUBBLE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Skill"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 55,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 1,
+        "draw_pile_count": 9,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 34,
+            "id": "SHRINKER_BEETLE",
+            "intent": "DebuffStrong",
+            "is_alive": true,
+            "max_hp": 40,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "BUBBLE_BUBBLE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Skill"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 2,
+          "hp": 55,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 2,
+        "draw_pile_count": 9,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 28,
+            "id": "SHRINKER_BEETLE",
+            "intent": "DebuffStrong",
+            "is_alive": true,
+            "max_hp": 40,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "BUBBLE_BUBBLE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Skill"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 1,
+          "hp": 55,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 3,
+        "draw_pile_count": 9,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 28,
+            "id": "SHRINKER_BEETLE",
+            "intent": "DebuffStrong",
+            "is_alive": true,
+            "max_hp": 40,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 0,
+          "hp": 55,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "potion",
+        "slot": 0,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 3,
+        "draw_pile_count": 9,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 28,
+            "id": "SHRINKER_BEETLE",
+            "intent": "DebuffStrong",
+            "is_alive": true,
+            "max_hp": 40,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack",
+            "upgraded": true
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack",
+            "upgraded": true
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 0,
+          "hp": 55,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 5,
+        "draw_pile_count": 4,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 28,
+            "id": "SHRINKER_BEETLE",
+            "intent": "Attack",
+            "intent_damage": 8,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 40,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "IRON_WAVE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 55,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": -1,
+              "id": "SHRINK_POWER"
+            }
+          ]
+        },
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 6,
+        "draw_pile_count": 4,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 25,
+            "id": "SHRINKER_BEETLE",
+            "intent": "Attack",
+            "intent_damage": 8,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 40,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 2,
+          "hp": 55,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": -1,
+              "id": "SHRINK_POWER"
+            }
+          ]
+        },
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 2,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 7,
+        "draw_pile_count": 4,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 21,
+            "id": "SHRINKER_BEETLE",
+            "intent": "Attack",
+            "intent_damage": 8,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 40,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 1,
+          "hp": 55,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": -1,
+              "id": "SHRINK_POWER"
+            }
+          ]
+        },
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 2,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 8,
+        "draw_pile_count": 4,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 17,
+            "id": "SHRINKER_BEETLE",
+            "intent": "Attack",
+            "intent_damage": 8,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 40,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 0,
+          "hp": 55,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": -1,
+              "id": "SHRINK_POWER"
+            }
+          ]
+        },
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 0,
+        "draw_pile_count": 9,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 17,
+            "id": "SHRINKER_BEETLE",
+            "intent": "Attack",
+            "intent_damage": 14,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 40,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "HAILSTORM",
+            "playable": true,
+            "target": "Self",
+            "type": "Power"
+          },
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 52,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": -1,
+              "id": "SHRINK_POWER"
+            }
+          ]
+        },
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 3,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 1,
+        "draw_pile_count": 9,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 17,
+            "id": "SHRINKER_BEETLE",
+            "intent": "Attack",
+            "intent_damage": 14,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 40,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "HAILSTORM",
+            "playable": true,
+            "target": "Self",
+            "type": "Power"
+          },
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 2,
+          "hp": 52,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": -1,
+              "id": "SHRINK_POWER"
+            }
+          ]
+        },
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 3,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 2,
+        "draw_pile_count": 9,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 17,
+            "id": "SHRINKER_BEETLE",
+            "intent": "Attack",
+            "intent_damage": 14,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 40,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "HAILSTORM",
+            "playable": true,
+            "target": "Self",
+            "type": "Power"
+          },
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          }
+        ],
+        "player": {
+          "block": 10,
+          "energy": 1,
+          "hp": 52,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": -1,
+              "id": "SHRINK_POWER"
+            }
+          ]
+        },
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 0,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 3,
+        "draw_pile_count": 9,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 17,
+            "id": "SHRINKER_BEETLE",
+            "intent": "Attack",
+            "intent_damage": 14,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 40,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "HAILSTORM",
+            "playable": false,
+            "target": "Self",
+            "type": "Power"
+          },
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          }
+        ],
+        "player": {
+          "block": 15,
+          "energy": 0,
+          "hp": 52,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": -1,
+              "id": "SHRINK_POWER"
+            }
+          ]
+        },
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 4,
+        "draw_pile_count": 4,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 17,
+            "id": "SHRINKER_BEETLE",
+            "intent": "Attack",
+            "intent_damage": 8,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 40,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack",
+            "upgraded": true
+          },
+          {
+            "cost": 1,
+            "id": "IRON_WAVE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "BUBBLE_BUBBLE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Skill"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack",
+            "upgraded": true
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 52,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": -1,
+              "id": "SHRINK_POWER"
+            }
+          ]
+        },
+        "round": 4,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 5,
+        "draw_pile_count": 4,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 14,
+            "id": "SHRINKER_BEETLE",
+            "intent": "Attack",
+            "intent_damage": 8,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 40,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack",
+            "upgraded": true
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "BUBBLE_BUBBLE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Skill"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack",
+            "upgraded": true
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 2,
+          "hp": 52,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": -1,
+              "id": "SHRINK_POWER"
+            }
+          ]
+        },
+        "round": 4,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 6,
+        "draw_pile_count": 4,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 10,
+            "id": "SHRINKER_BEETLE",
+            "intent": "Attack",
+            "intent_damage": 8,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 40,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack",
+            "upgraded": true
+          },
+          {
+            "cost": 1,
+            "id": "BUBBLE_BUBBLE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Skill"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack",
+            "upgraded": true
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 1,
+          "hp": 52,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": -1,
+              "id": "SHRINK_POWER"
+            }
+          ]
+        },
+        "round": 4,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 7,
+        "draw_pile_count": 4,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 10,
+            "id": "SHRINKER_BEETLE",
+            "intent": "Attack",
+            "intent_damage": 8,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 40,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack",
+            "upgraded": true
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack",
+            "upgraded": true
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 0,
+          "hp": 52,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": -1,
+              "id": "SHRINK_POWER"
+            }
+          ]
+        },
+        "round": 4,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 0,
+        "draw_pile_count": 8,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 10,
+            "id": "SHRINKER_BEETLE",
+            "intent": "Attack",
+            "intent_damage": 14,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 40,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "IRON_WAVE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 49,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": -1,
+              "id": "SHRINK_POWER"
+            }
+          ]
+        },
+        "round": 5,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 1,
+        "draw_pile_count": 8,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 6,
+            "id": "SHRINKER_BEETLE",
+            "intent": "Attack",
+            "intent_damage": 14,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 40,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "IRON_WAVE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 2,
+          "hp": 49,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": -1,
+              "id": "SHRINK_POWER"
+            }
+          ]
+        },
+        "round": 5,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 0,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 2,
+        "draw_pile_count": 8,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 2,
+            "id": "SHRINKER_BEETLE",
+            "intent": "Attack",
+            "intent_damage": 14,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 40,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "IRON_WAVE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 1,
+          "hp": 49,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": -1,
+              "id": "SHRINK_POWER"
+            }
+          ]
+        },
+        "round": 5,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 3,
+        "options": [
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 0
+          },
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 1
+          },
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 2
+          },
+          {
+            "action": "proceed",
+            "enabled": true,
+            "index": 3
+          }
+        ],
+        "type": "reward_screen"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 3,
+        "options": [
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 0
+          },
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 1
+          },
+          {
+            "action": "proceed",
+            "enabled": true,
+            "index": 2
+          }
+        ],
+        "type": "reward_screen"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 3,
+        "options": [
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 0
+          },
+          {
+            "action": "proceed",
+            "enabled": true,
+            "index": 1
+          }
+        ],
+        "type": "reward_screen"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "can_skip": true,
+        "cards": [
+          {
+            "cost": 1,
+            "id": "SHRUG_IT_OFF",
+            "index": 0,
+            "type": "Skill"
+          },
+          {
+            "cost": 2,
+            "id": "PERFECTED_STRIKE",
+            "index": 1,
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "TAUNT",
+            "index": 2,
+            "type": "Skill"
+          }
+        ],
+        "type": "card_reward"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 1
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 3,
+        "nodes": [
+          {
+            "col": 0,
+            "index": 0,
+            "row": 3,
+            "type": "Unknown"
+          }
+        ],
+        "type": "map_select"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 0,
+        "draw_pile_count": 10,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 12,
+            "id": "LEAF_SLIME_S",
+            "intent": "Attack",
+            "intent_damage": 4,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 12,
+            "powers": []
+          },
+          {
+            "block": 0,
+            "hp": 33,
+            "id": "LEAF_SLIME_M",
+            "intent": "StatusCard",
+            "is_alive": true,
+            "max_hp": 33,
+            "powers": []
+          },
+          {
+            "block": 0,
+            "hp": 11,
+            "id": "TWIG_SLIME_S",
+            "intent": "Attack",
+            "intent_damage": 5,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 11,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 2,
+            "id": "PERFECTED_STRIKE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 55,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 1,
+        "draw_pile_count": 10,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 33,
+            "id": "LEAF_SLIME_M",
+            "intent": "StatusCard",
+            "is_alive": true,
+            "max_hp": 33,
+            "powers": []
+          },
+          {
+            "block": 0,
+            "hp": 11,
+            "id": "TWIG_SLIME_S",
+            "intent": "Attack",
+            "intent_damage": 5,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 11,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 1,
+          "hp": 55,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 2,
+        "draw_pile_count": 10,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 27,
+            "id": "LEAF_SLIME_M",
+            "intent": "StatusCard",
+            "is_alive": true,
+            "max_hp": 33,
+            "powers": []
+          },
+          {
+            "block": 0,
+            "hp": 11,
+            "id": "TWIG_SLIME_S",
+            "intent": "Attack",
+            "intent_damage": 5,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 11,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 0,
+          "hp": 55,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "potion",
+        "slot": 0,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "cards": [
+          {
+            "id": "HOWL_FROM_BEYOND",
+            "type": "Attack"
+          },
+          {
+            "id": "POMMEL_STRIKE",
+            "type": "Attack"
+          },
+          {
+            "id": "PERFECTED_STRIKE",
+            "type": "Attack"
+          }
+        ],
+        "max_select": 1,
+        "min_select": 0,
+        "type": "card_select"
+      }
+    },
+    {
+      "action": {
+        "action": "skip"
+      },
+      "resulting_state": {
+        "discard_pile_count": 2,
+        "draw_pile_count": 10,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 27,
+            "id": "LEAF_SLIME_M",
+            "intent": "StatusCard",
+            "is_alive": true,
+            "max_hp": 33,
+            "powers": []
+          },
+          {
+            "block": 0,
+            "hp": 11,
+            "id": "TWIG_SLIME_S",
+            "intent": "Attack",
+            "intent_damage": 5,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 11,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 0,
+          "hp": 55,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 6,
+        "draw_pile_count": 5,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 27,
+            "id": "LEAF_SLIME_M",
+            "intent": "Attack",
+            "intent_damage": 9,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 33,
+            "powers": []
+          },
+          {
+            "block": 0,
+            "hp": 11,
+            "id": "TWIG_SLIME_S",
+            "intent": "Attack",
+            "intent_damage": 5,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 11,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "IRON_WAVE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "BUBBLE_BUBBLE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "HAILSTORM",
+            "playable": true,
+            "target": "Self",
+            "type": "Power"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 50,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 7,
+        "draw_pile_count": 5,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 21,
+            "id": "LEAF_SLIME_M",
+            "intent": "Attack",
+            "intent_damage": 9,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 33,
+            "powers": []
+          },
+          {
+            "block": 0,
+            "hp": 11,
+            "id": "TWIG_SLIME_S",
+            "intent": "Attack",
+            "intent_damage": 5,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 11,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "IRON_WAVE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "BUBBLE_BUBBLE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "HAILSTORM",
+            "playable": true,
+            "target": "Self",
+            "type": "Power"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 2,
+          "hp": 50,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 8,
+        "draw_pile_count": 5,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 21,
+            "id": "LEAF_SLIME_M",
+            "intent": "Attack",
+            "intent_damage": 9,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 33,
+            "powers": []
+          },
+          {
+            "block": 0,
+            "hp": 11,
+            "id": "TWIG_SLIME_S",
+            "intent": "Attack",
+            "intent_damage": 5,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 11,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "IRON_WAVE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "HAILSTORM",
+            "playable": true,
+            "target": "Self",
+            "type": "Power"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 1,
+          "hp": 50,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 9,
+        "draw_pile_count": 5,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 15,
+            "id": "LEAF_SLIME_M",
+            "intent": "Attack",
+            "intent_damage": 9,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 33,
+            "powers": []
+          },
+          {
+            "block": 0,
+            "hp": 11,
+            "id": "TWIG_SLIME_S",
+            "intent": "Attack",
+            "intent_damage": 5,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 11,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "IRON_WAVE",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "HAILSTORM",
+            "playable": false,
+            "target": "Self",
+            "type": "Power"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 0,
+          "hp": 50,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 11,
+        "draw_pile_count": 0,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 15,
+            "id": "LEAF_SLIME_M",
+            "intent": "StatusCard",
+            "is_alive": true,
+            "max_hp": 33,
+            "powers": []
+          },
+          {
+            "block": 0,
+            "hp": 11,
+            "id": "TWIG_SLIME_S",
+            "intent": "Attack",
+            "intent_damage": 5,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 11,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 36,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 12,
+        "draw_pile_count": 0,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 9,
+            "id": "LEAF_SLIME_M",
+            "intent": "StatusCard",
+            "is_alive": true,
+            "max_hp": 33,
+            "powers": []
+          },
+          {
+            "block": 0,
+            "hp": 11,
+            "id": "TWIG_SLIME_S",
+            "intent": "Attack",
+            "intent_damage": 5,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 11,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 2,
+          "hp": 36,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 0,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 13,
+        "draw_pile_count": 0,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 1,
+            "id": "LEAF_SLIME_M",
+            "intent": "StatusCard",
+            "is_alive": true,
+            "max_hp": 33,
+            "powers": [
+              {
+                "amount": 2,
+                "id": "VULNERABLE_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 11,
+            "id": "TWIG_SLIME_S",
+            "intent": "Attack",
+            "intent_damage": 5,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 11,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 0,
+          "hp": 36,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 0,
+        "draw_pile_count": 13,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 1,
+            "id": "LEAF_SLIME_M",
+            "intent": "Attack",
+            "intent_damage": 9,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 33,
+            "powers": [
+              {
+                "amount": 1,
+                "id": "VULNERABLE_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 11,
+            "id": "TWIG_SLIME_S",
+            "intent": "Attack",
+            "intent_damage": 5,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 11,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "BUBBLE_BUBBLE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 2,
+            "id": "PERFECTED_STRIKE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 31,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 4,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 4,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 1,
+        "draw_pile_count": 13,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 11,
+            "id": "TWIG_SLIME_S",
+            "intent": "Attack",
+            "intent_damage": 5,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 11,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "BUBBLE_BUBBLE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 2,
+            "id": "PERFECTED_STRIKE",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 1,
+          "hp": 31,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 4,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 0,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 2,
+        "draw_pile_count": 13,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 11,
+            "id": "TWIG_SLIME_S",
+            "intent": "Attack",
+            "intent_damage": 5,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 11,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 2,
+            "id": "PERFECTED_STRIKE",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 0,
+          "hp": 31,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 4,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 5,
+        "draw_pile_count": 8,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 11,
+            "id": "TWIG_SLIME_S",
+            "intent": "Attack",
+            "intent_damage": 5,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 11,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "SLIMED",
+            "playable": true,
+            "target": "None",
+            "type": "Status"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "SLIMED",
+            "playable": true,
+            "target": "None",
+            "type": "Status"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 26,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 5,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 6,
+        "draw_pile_count": 8,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 5,
+            "id": "TWIG_SLIME_S",
+            "intent": "Attack",
+            "intent_damage": 5,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 11,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "SLIMED",
+            "playable": true,
+            "target": "None",
+            "type": "Status"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "SLIMED",
+            "playable": true,
+            "target": "None",
+            "type": "Status"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 2,
+          "hp": 26,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 5,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 3,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 6,
+        "draw_pile_count": 7,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 5,
+            "id": "TWIG_SLIME_S",
+            "intent": "Attack",
+            "intent_damage": 5,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 11,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 2,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "SLIMED",
+            "playable": true,
+            "target": "None",
+            "type": "Status"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 1,
+          "hp": 26,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 5,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 0,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 7,
+        "draw_pile_count": 7,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 5,
+            "id": "TWIG_SLIME_S",
+            "intent": "Attack",
+            "intent_damage": 5,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 11,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 2,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "SLIMED",
+            "playable": false,
+            "target": "None",
+            "type": "Status"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 0,
+          "hp": 26,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 5,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 10,
+        "draw_pile_count": 2,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 5,
+            "id": "TWIG_SLIME_S",
+            "intent": "Attack",
+            "intent_damage": 5,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 11,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 2,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "SLIMED",
+            "playable": true,
+            "target": "None",
+            "type": "Status"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "SLIMED",
+            "playable": true,
+            "target": "None",
+            "type": "Status"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "IRON_WAVE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 26,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 6,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 4,
+        "options": [
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 0
+          },
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 1
+          },
+          {
+            "action": "proceed",
+            "enabled": true,
+            "index": 2
+          }
+        ],
+        "type": "reward_screen"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 4,
+        "options": [
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 0
+          },
+          {
+            "action": "proceed",
+            "enabled": true,
+            "index": 1
+          }
+        ],
+        "type": "reward_screen"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "can_skip": true,
+        "cards": [
+          {
+            "cost": 1,
+            "id": "SETUP_STRIKE",
+            "index": 0,
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "MOLTEN_FIST",
+            "index": 1,
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "JUGGLING",
+            "index": 2,
+            "type": "Power"
+          }
+        ],
+        "type": "card_reward"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 2
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 4,
+        "nodes": [
+          {
+            "col": 1,
+            "index": 0,
+            "row": 4,
+            "type": "Monster"
+          }
+        ],
+        "type": "map_select"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 0,
+        "draw_pile_count": 11,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 16,
+            "id": "INKLET",
+            "intent": "Attack",
+            "intent_damage": 4,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 16,
+            "powers": [
+              {
+                "amount": 1,
+                "id": "SLIPPERY_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 13,
+            "id": "INKLET",
+            "intent": "Attack",
+            "intent_damage": 3,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 13,
+            "powers": [
+              {
+                "amount": 1,
+                "id": "SLIPPERY_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 14,
+            "id": "INKLET",
+            "intent": "Attack",
+            "intent_damage": 4,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 14,
+            "powers": [
+              {
+                "amount": 1,
+                "id": "SLIPPERY_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "IRON_WAVE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "BUBBLE_BUBBLE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "JUGGLING",
+            "playable": true,
+            "target": "Self",
+            "type": "Power"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 32,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 1,
+        "draw_pile_count": 11,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 16,
+            "id": "INKLET",
+            "intent": "Attack",
+            "intent_damage": 4,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 16,
+            "powers": [
+              {
+                "amount": 1,
+                "id": "SLIPPERY_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 13,
+            "id": "INKLET",
+            "intent": "Attack",
+            "intent_damage": 3,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 13,
+            "powers": [
+              {
+                "amount": 1,
+                "id": "SLIPPERY_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 14,
+            "id": "INKLET",
+            "intent": "Attack",
+            "intent_damage": 4,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 14,
+            "powers": [
+              {
+                "amount": 1,
+                "id": "SLIPPERY_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "IRON_WAVE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "JUGGLING",
+            "playable": true,
+            "target": "Self",
+            "type": "Power"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 2,
+          "hp": 32,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 0,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 2,
+        "draw_pile_count": 11,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 15,
+            "id": "INKLET",
+            "intent": "Attack",
+            "intent_damage": 4,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 16,
+            "powers": []
+          },
+          {
+            "block": 0,
+            "hp": 13,
+            "id": "INKLET",
+            "intent": "Attack",
+            "intent_damage": 3,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 13,
+            "powers": [
+              {
+                "amount": 1,
+                "id": "SLIPPERY_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 14,
+            "id": "INKLET",
+            "intent": "Attack",
+            "intent_damage": 4,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 14,
+            "powers": [
+              {
+                "amount": 1,
+                "id": "SLIPPERY_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "JUGGLING",
+            "playable": true,
+            "target": "Self",
+            "type": "Power"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 1,
+          "hp": 32,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 0,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 3,
+        "draw_pile_count": 11,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 15,
+            "id": "INKLET",
+            "intent": "Attack",
+            "intent_damage": 4,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 16,
+            "powers": []
+          },
+          {
+            "block": 0,
+            "hp": 13,
+            "id": "INKLET",
+            "intent": "Attack",
+            "intent_damage": 3,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 13,
+            "powers": [
+              {
+                "amount": 1,
+                "id": "SLIPPERY_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 14,
+            "id": "INKLET",
+            "intent": "Attack",
+            "intent_damage": 4,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 14,
+            "powers": [
+              {
+                "amount": 1,
+                "id": "SLIPPERY_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "JUGGLING",
+            "playable": false,
+            "target": "Self",
+            "type": "Power"
+          }
+        ],
+        "player": {
+          "block": 10,
+          "energy": 0,
+          "hp": 32,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 5,
+        "draw_pile_count": 6,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 15,
+            "id": "INKLET",
+            "intent": "Attack",
+            "intent_damage": 3,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 16,
+            "powers": []
+          },
+          {
+            "block": 0,
+            "hp": 13,
+            "id": "INKLET",
+            "intent": "Attack",
+            "intent_damage": 4,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 13,
+            "powers": [
+              {
+                "amount": 1,
+                "id": "SLIPPERY_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 14,
+            "id": "INKLET",
+            "intent": "Attack",
+            "intent_damage": 3,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 14,
+            "powers": [
+              {
+                "amount": 1,
+                "id": "SLIPPERY_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 2,
+            "id": "PERFECTED_STRIKE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 25,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 0,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 6,
+        "draw_pile_count": 6,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 9,
+            "id": "INKLET",
+            "intent": "Attack",
+            "intent_damage": 3,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 16,
+            "powers": []
+          },
+          {
+            "block": 0,
+            "hp": 13,
+            "id": "INKLET",
+            "intent": "Attack",
+            "intent_damage": 4,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 13,
+            "powers": [
+              {
+                "amount": 1,
+                "id": "SLIPPERY_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 14,
+            "id": "INKLET",
+            "intent": "Attack",
+            "intent_damage": 3,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 14,
+            "powers": [
+              {
+                "amount": 1,
+                "id": "SLIPPERY_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 2,
+            "id": "PERFECTED_STRIKE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 2,
+          "hp": 25,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 7,
+        "draw_pile_count": 6,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 13,
+            "id": "INKLET",
+            "intent": "Attack",
+            "intent_damage": 4,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 13,
+            "powers": [
+              {
+                "amount": 1,
+                "id": "SLIPPERY_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 14,
+            "id": "INKLET",
+            "intent": "Attack",
+            "intent_damage": 3,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 14,
+            "powers": [
+              {
+                "amount": 1,
+                "id": "SLIPPERY_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 0,
+          "hp": 25,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 9,
+        "draw_pile_count": 1,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 13,
+            "id": "INKLET",
+            "intent": "Attack",
+            "intent_damage": 11,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 13,
+            "powers": [
+              {
+                "amount": 1,
+                "id": "SLIPPERY_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 14,
+            "id": "INKLET",
+            "intent": "Attack",
+            "intent_damage": 4,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 14,
+            "powers": [
+              {
+                "amount": 1,
+                "id": "SLIPPERY_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "HAILSTORM",
+            "playable": true,
+            "target": "Self",
+            "type": "Power"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 12,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 10,
+        "draw_pile_count": 1,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 12,
+            "id": "INKLET",
+            "intent": "Attack",
+            "intent_damage": 11,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 13,
+            "powers": []
+          },
+          {
+            "block": 0,
+            "hp": 14,
+            "id": "INKLET",
+            "intent": "Attack",
+            "intent_damage": 4,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 14,
+            "powers": [
+              {
+                "amount": 1,
+                "id": "SLIPPERY_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "HAILSTORM",
+            "playable": true,
+            "target": "Self",
+            "type": "Power"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 2,
+          "hp": 12,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 11,
+        "draw_pile_count": 1,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 6,
+            "id": "INKLET",
+            "intent": "Attack",
+            "intent_damage": 11,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 13,
+            "powers": []
+          },
+          {
+            "block": 0,
+            "hp": 14,
+            "id": "INKLET",
+            "intent": "Attack",
+            "intent_damage": 4,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 14,
+            "powers": [
+              {
+                "amount": 1,
+                "id": "SLIPPERY_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "HAILSTORM",
+            "playable": true,
+            "target": "Self",
+            "type": "Power"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 1,
+          "hp": 12,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 0,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 12,
+        "draw_pile_count": 1,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 14,
+            "id": "INKLET",
+            "intent": "Attack",
+            "intent_damage": 4,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 14,
+            "powers": [
+              {
+                "amount": 1,
+                "id": "SLIPPERY_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "HAILSTORM",
+            "playable": false,
+            "target": "Self",
+            "type": "Power"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 0,
+          "hp": 12,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 0,
+        "draw_pile_count": 10,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 14,
+            "id": "INKLET",
+            "intent": "Attack",
+            "intent_damage": 3,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 14,
+            "powers": [
+              {
+                "amount": 1,
+                "id": "SLIPPERY_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "BUBBLE_BUBBLE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 8,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 4,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 1,
+        "draw_pile_count": 10,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 14,
+            "id": "INKLET",
+            "intent": "Attack",
+            "intent_damage": 3,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 14,
+            "powers": [
+              {
+                "amount": 1,
+                "id": "SLIPPERY_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 2,
+          "hp": 8,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 4,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 0,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 2,
+        "draw_pile_count": 10,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 13,
+            "id": "INKLET",
+            "intent": "Attack",
+            "intent_damage": 3,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 14,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 1,
+          "hp": 8,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 4,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 0,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 3,
+        "draw_pile_count": 10,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 13,
+            "id": "INKLET",
+            "intent": "Attack",
+            "intent_damage": 3,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 14,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 0,
+          "hp": 8,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 4,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 5,
+        "draw_pile_count": 5,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 13,
+            "id": "INKLET",
+            "intent": "Attack",
+            "intent_damage": 4,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 14,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "HAILSTORM",
+            "playable": true,
+            "target": "Self",
+            "type": "Power"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "JUGGLING",
+            "playable": true,
+            "target": "Self",
+            "type": "Power"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 4,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 5,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 2,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 6,
+        "draw_pile_count": 5,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 7,
+            "id": "INKLET",
+            "intent": "Attack",
+            "intent_damage": 4,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 14,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "HAILSTORM",
+            "playable": true,
+            "target": "Self",
+            "type": "Power"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "JUGGLING",
+            "playable": true,
+            "target": "Self",
+            "type": "Power"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 2,
+          "hp": 4,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 5,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 2,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 7,
+        "draw_pile_count": 5,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 1,
+            "id": "INKLET",
+            "intent": "Attack",
+            "intent_damage": 4,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 14,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "HAILSTORM",
+            "playable": true,
+            "target": "Self",
+            "type": "Power"
+          },
+          {
+            "cost": 1,
+            "id": "JUGGLING",
+            "playable": true,
+            "target": "Self",
+            "type": "Power"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 1,
+          "hp": 4,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 5,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 0,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 8,
+        "draw_pile_count": 5,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 1,
+            "id": "INKLET",
+            "intent": "Attack",
+            "intent_damage": 4,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 14,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "HAILSTORM",
+            "playable": false,
+            "target": "Self",
+            "type": "Power"
+          },
+          {
+            "cost": 1,
+            "id": "JUGGLING",
+            "playable": false,
+            "target": "Self",
+            "type": "Power"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 0,
+          "hp": 4,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 5,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 10,
+        "draw_pile_count": 0,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 1,
+            "id": "INKLET",
+            "intent": "Attack",
+            "intent_damage": 3,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 14,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "IRON_WAVE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 2,
+            "id": "PERFECTED_STRIKE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 4,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 6,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 5,
+        "options": [
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 0
+          },
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 1
+          },
+          {
+            "action": "proceed",
+            "enabled": true,
+            "index": 2
+          }
+        ],
+        "type": "reward_screen"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 5,
+        "options": [
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 0
+          },
+          {
+            "action": "proceed",
+            "enabled": true,
+            "index": 1
+          }
+        ],
+        "type": "reward_screen"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "can_skip": true,
+        "cards": [
+          {
+            "cost": 1,
+            "id": "TRUE_GRIT",
+            "index": 0,
+            "type": "Skill"
+          },
+          {
+            "cost": 3,
+            "id": "HOWL_FROM_BEYOND",
+            "index": 1,
+            "type": "Attack"
+          },
+          {
+            "cost": 2,
+            "id": "BLOOD_WALL",
+            "index": 2,
+            "type": "Skill"
+          }
+        ],
+        "type": "card_reward"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 1
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 5,
+        "nodes": [
+          {
+            "col": 2,
+            "index": 0,
+            "row": 5,
+            "type": "Monster"
+          }
+        ],
+        "type": "map_select"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 0,
+        "draw_pile_count": 12,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 40,
+            "id": "SHRINKER_BEETLE",
+            "intent": "DebuffStrong",
+            "is_alive": true,
+            "max_hp": 40,
+            "powers": []
+          },
+          {
+            "block": 0,
+            "hp": 59,
+            "id": "FUZZY_WURM_CRAWLER",
+            "intent": "Attack",
+            "intent_damage": 6,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 59,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "JUGGLING",
+            "playable": true,
+            "target": "Self",
+            "type": "Power"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 2,
+            "id": "PERFECTED_STRIKE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 10,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 1,
+        "draw_pile_count": 12,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 32,
+            "id": "SHRINKER_BEETLE",
+            "intent": "DebuffStrong",
+            "is_alive": true,
+            "max_hp": 40,
+            "powers": [
+              {
+                "amount": 2,
+                "id": "VULNERABLE_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 59,
+            "id": "FUZZY_WURM_CRAWLER",
+            "intent": "Attack",
+            "intent_damage": 6,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 59,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "JUGGLING",
+            "playable": true,
+            "target": "Self",
+            "type": "Power"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 2,
+            "id": "PERFECTED_STRIKE",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 1,
+          "hp": 10,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 0,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 2,
+        "draw_pile_count": 12,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 32,
+            "id": "SHRINKER_BEETLE",
+            "intent": "DebuffStrong",
+            "is_alive": true,
+            "max_hp": 40,
+            "powers": [
+              {
+                "amount": 2,
+                "id": "VULNERABLE_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 59,
+            "id": "FUZZY_WURM_CRAWLER",
+            "intent": "Attack",
+            "intent_damage": 6,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 59,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "JUGGLING",
+            "playable": false,
+            "target": "Self",
+            "type": "Power"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 2,
+            "id": "PERFECTED_STRIKE",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 0,
+          "hp": 10,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 5,
+        "draw_pile_count": 7,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 32,
+            "id": "SHRINKER_BEETLE",
+            "intent": "Attack",
+            "intent_damage": 8,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 40,
+            "powers": [
+              {
+                "amount": 1,
+                "id": "VULNERABLE_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 59,
+            "id": "FUZZY_WURM_CRAWLER",
+            "intent": "Buff",
+            "is_alive": true,
+            "max_hp": 59,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "IRON_WAVE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "HAILSTORM",
+            "playable": true,
+            "target": "Self",
+            "type": "Power"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 9,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": -1,
+              "id": "SHRINK_POWER"
+            }
+          ]
+        },
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 6,
+        "draw_pile_count": 7,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 26,
+            "id": "SHRINKER_BEETLE",
+            "intent": "Attack",
+            "intent_damage": 8,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 40,
+            "powers": [
+              {
+                "amount": 1,
+                "id": "VULNERABLE_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 59,
+            "id": "FUZZY_WURM_CRAWLER",
+            "intent": "Buff",
+            "is_alive": true,
+            "max_hp": 59,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "IRON_WAVE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "HAILSTORM",
+            "playable": true,
+            "target": "Self",
+            "type": "Power"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 2,
+          "hp": 9,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": -1,
+              "id": "SHRINK_POWER"
+            }
+          ]
+        },
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 7,
+        "draw_pile_count": 7,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 20,
+            "id": "SHRINKER_BEETLE",
+            "intent": "Attack",
+            "intent_damage": 8,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 40,
+            "powers": [
+              {
+                "amount": 1,
+                "id": "VULNERABLE_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 59,
+            "id": "FUZZY_WURM_CRAWLER",
+            "intent": "Buff",
+            "is_alive": true,
+            "max_hp": 59,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "IRON_WAVE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "HAILSTORM",
+            "playable": true,
+            "target": "Self",
+            "type": "Power"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 1,
+          "hp": 9,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": -1,
+              "id": "SHRINK_POWER"
+            }
+          ]
+        },
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 0,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 8,
+        "draw_pile_count": 7,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 15,
+            "id": "SHRINKER_BEETLE",
+            "intent": "Attack",
+            "intent_damage": 8,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 40,
+            "powers": [
+              {
+                "amount": 1,
+                "id": "VULNERABLE_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 59,
+            "id": "FUZZY_WURM_CRAWLER",
+            "intent": "Buff",
+            "is_alive": true,
+            "max_hp": 59,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "HAILSTORM",
+            "playable": false,
+            "target": "Self",
+            "type": "Power"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 0,
+          "hp": 9,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": -1,
+              "id": "SHRINK_POWER"
+            }
+          ]
+        },
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 10,
+        "draw_pile_count": 2,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 15,
+            "id": "SHRINKER_BEETLE",
+            "intent": "Attack",
+            "intent_damage": 14,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 40,
+            "powers": []
+          },
+          {
+            "block": 0,
+            "hp": 59,
+            "id": "FUZZY_WURM_CRAWLER",
+            "intent": "Attack",
+            "intent_damage": 13,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 59,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "BUBBLE_BUBBLE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 3,
+            "id": "HOWL_FROM_BEYOND",
+            "playable": true,
+            "target": "AllEnemies",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 6,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": -1,
+              "id": "SHRINK_POWER"
+            }
+          ]
+        },
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 11,
+        "draw_pile_count": 2,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 15,
+            "id": "SHRINKER_BEETLE",
+            "intent": "Attack",
+            "intent_damage": 14,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 40,
+            "powers": []
+          },
+          {
+            "block": 0,
+            "hp": 59,
+            "id": "FUZZY_WURM_CRAWLER",
+            "intent": "Attack",
+            "intent_damage": 13,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 59,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 3,
+            "id": "HOWL_FROM_BEYOND",
+            "playable": false,
+            "target": "AllEnemies",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 2,
+          "hp": 6,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": -1,
+              "id": "SHRINK_POWER"
+            }
+          ]
+        },
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 12,
+        "draw_pile_count": 2,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 11,
+            "id": "SHRINKER_BEETLE",
+            "intent": "Attack",
+            "intent_damage": 14,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 40,
+            "powers": []
+          },
+          {
+            "block": 0,
+            "hp": 59,
+            "id": "FUZZY_WURM_CRAWLER",
+            "intent": "Attack",
+            "intent_damage": 13,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 59,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 3,
+            "id": "HOWL_FROM_BEYOND",
+            "playable": false,
+            "target": "AllEnemies",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 1,
+          "hp": 6,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": -1,
+              "id": "SHRINK_POWER"
+            }
+          ]
+        },
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 2,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 13,
+        "draw_pile_count": 2,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 7,
+            "id": "SHRINKER_BEETLE",
+            "intent": "Attack",
+            "intent_damage": 14,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 40,
+            "powers": []
+          },
+          {
+            "block": 0,
+            "hp": 59,
+            "id": "FUZZY_WURM_CRAWLER",
+            "intent": "Attack",
+            "intent_damage": 13,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 59,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 3,
+            "id": "HOWL_FROM_BEYOND",
+            "playable": false,
+            "target": "AllEnemies",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 0,
+          "hp": 6,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": -1,
+              "id": "SHRINK_POWER"
+            }
+          ]
+        },
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "result": "terminated",
+        "type": "run_complete"
+      }
+    }
+  ],
+  "version": 1
+}

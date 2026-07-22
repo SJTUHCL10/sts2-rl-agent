@@ -13,6 +13,9 @@ using MegaCrit.Sts2.Core.Runs;
 
 namespace MegaCrit.Sts2.Core.AutoSlay.Handlers.Screens;
 
+/// <summary>
+/// Handles map screen navigation between rooms.
+/// </summary>
 public class MapScreenHandler : IScreenHandler, IHandler
 {
 	private TaskCompletionSource? _roomEnteredTcs;
@@ -27,25 +30,19 @@ public class MapScreenHandler : IScreenHandler, IHandler
 		Node root = ((SceneTree)Engine.GetMainLoop()).Root;
 		NRun runNode = root.GetNode<NRun>("/root/Game/RootSceneContainer/Run");
 		await WaitHelper.Until(() => runNode.GlobalUi.MapScreen.IsVisibleInTree(), ct, AutoSlayConfig.mapScreenTimeout, "Map screen not visible");
-		List<NMapPoint> source = UiHelper.FindAll<NMapPoint>(runNode.GlobalUi.MapScreen);
-		RunState runState = RunManager.Instance.DebugOnlyGetState();
-		NMapPoint nextRoom;
-		if (runState.VisitedMapCoords.Count == 0)
+		NMapScreen mapScreen = runNode.GlobalUi.MapScreen;
+		NMapPoint nextRoom = null;
+		try
 		{
-			AutoSlayLog.Action("Selecting first room");
-			nextRoom = source.First((NMapPoint mp) => mp.Point.coord.row == 0);
+			await WaitHelper.Until(() => (nextRoom = SelectNextRoom(mapScreen))?.IsEnabled ?? false, ct, AutoSlayConfig.mapPointEnabledTimeout, "Map point not enabled");
 		}
-		else
+		catch (AutoSlayTimeoutException)
 		{
-			IReadOnlyList<MapCoord> visitedMapCoords = runState.VisitedMapCoords;
-			MapCoord lastCoord = visitedMapCoords[visitedMapCoords.Count - 1];
-			NMapPoint nMapPoint = source.First((NMapPoint mp) => mp.Point.coord.Equals(lastCoord));
-			MapPoint child = nMapPoint.Point.Children.First();
-			nextRoom = source.First((NMapPoint mp) => mp.Point.coord.Equals(child.coord));
-			AutoSlayLog.Action($"Selecting room at ({child.coord.row}, {child.coord.col})");
+			AutoSlayLog.Info("[AutoSlay] Map point never became travelable: node=" + ((nextRoom == null) ? "none" : nextRoom.Point.coord.ToString()) + ", state=" + ((nextRoom == null) ? "n/a" : nextRoom.State.ToString()) + ", " + $"screenTravelEnabled={mapScreen.IsTravelEnabled}");
+			throw;
 		}
-		await WaitHelper.Until(() => nextRoom.IsEnabled, ct, TimeSpan.FromSeconds(10L), "Map point not enabled");
-		_roomEnteredTcs = new TaskCompletionSource();
+		AutoSlayLog.Action($"Selecting room at ({nextRoom.Point.coord.row}, {nextRoom.Point.coord.col})");
+		_roomEnteredTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 		RunManager.Instance.RoomEntered += OnRoomEntered;
 		try
 		{
@@ -58,6 +55,29 @@ public class MapScreenHandler : IScreenHandler, IHandler
 			_roomEnteredTcs = null;
 		}
 		AutoSlayLog.ExitScreen("NMapScreen");
+	}
+
+	/// <summary>
+	/// Resolves the next room to travel to from the live map points, or null when the expected node is
+	/// not present yet (for example mid act-transition while the new act's map is still being generated).
+	/// Returning null keeps the caller polling instead of latching onto a stale node from the prior act.
+	/// </summary>
+	private static NMapPoint? SelectNextRoom(NMapScreen mapScreen)
+	{
+		List<NMapPoint> source = UiHelper.FindAll<NMapPoint>(mapScreen);
+		RunState runState = RunManager.Instance.DebugOnlyGetState();
+		if (runState.VisitedMapCoords.Count == 0)
+		{
+			return source.FirstOrDefault((NMapPoint mp) => mp.Point.coord.row == 0);
+		}
+		IReadOnlyList<MapCoord> visitedMapCoords = runState.VisitedMapCoords;
+		MapCoord lastCoord = visitedMapCoords[visitedMapCoords.Count - 1];
+		MapPoint child = source.FirstOrDefault((NMapPoint mp) => mp.Point.coord.Equals(lastCoord))?.Point.Children.FirstOrDefault();
+		if (child != null)
+		{
+			return source.FirstOrDefault((NMapPoint mp) => mp.Point.coord.Equals(child.coord));
+		}
+		return null;
 	}
 
 	private void OnRoomEntered()

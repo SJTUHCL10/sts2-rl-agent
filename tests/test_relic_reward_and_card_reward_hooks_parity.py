@@ -607,12 +607,16 @@ def test_massive_scroll_enqueues_multiplayer_reward_pool():
         CardId.GANG_UP,
         CardId.HUDDLE_UP,
         CardId.INTERCEPT_CARD,
-        CardId.KNOCKDOWN,
-        CardId.LIFT,
-        CardId.MIMIC,
-        CardId.RALLY,
-        CardId.TAG_TEAM,
-        CardId.TANK_CARD,
+            CardId.KNOCKDOWN,
+            CardId.LIFT,
+            CardId.MIMIC,
+            CardId.BLAZE,
+            CardId.MIDNIGHT,
+            CardId.OUTRAGE,
+            CardId.RALLY,
+            CardId.TAG_TEAM,
+            CardId.TANK_CARD,
+            CardId.THE_BALL,
     }
     assert set(reward.custom_card_ids) == expected_ids
     reward.populate(run_state, None)

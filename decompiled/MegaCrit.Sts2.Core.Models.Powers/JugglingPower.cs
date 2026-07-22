@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MegaCrit.Sts2.Core.Combat;
@@ -28,11 +29,11 @@ public sealed class JugglingPower : PowerModel
 
 	public override Task AfterApplied(Creature? applier, CardModel? cardSource)
 	{
-		GetInternalData<Data>().attacksPlayedThisTurn = CombatManager.Instance.History.CardPlaysStarted.Count((CardPlayStartedEntry e) => e.CardPlay.Card.Type == CardType.Attack && e.CardPlay.Card.Owner.Creature == base.Owner && e.HappenedThisTurn(base.CombatState));
+		GetInternalData<Data>().attacksPlayedThisTurn = CombatManager.Instance.History.CardPlaysStarted.Count((CardPlayStartedEntry e) => e.CardPlay.Card.Type == CardType.Attack && e.CardPlay.Player == base.Owner.Player && e.HappenedThisTurn(base.CombatState));
 		return Task.CompletedTask;
 	}
 
-	public override async Task AfterCardPlayed(PlayerChoiceContext context, CardPlay cardPlay)
+	public override async Task AfterCardPlayed(PlayerChoiceContext choiceContext, CardPlay cardPlay)
 	{
 		if (cardPlay.Card.Owner != base.Owner.Player || cardPlay.Card.Type != CardType.Attack)
 		{
@@ -45,17 +46,18 @@ public sealed class JugglingPower : PowerModel
 			for (int i = 0; i < base.Amount; i++)
 			{
 				CardModel card = cardPlay.Card.CreateClone();
-				await CardPileCmd.AddGeneratedCardToCombat(card, PileType.Hand, addedByPlayer: true);
+				await CardPileCmd.AddGeneratedCardToCombat(card, PileType.Hand, base.Owner.Player);
 			}
 		}
 	}
 
-	public override Task AfterTurnEnd(PlayerChoiceContext choiceContext, CombatSide side)
+	public override Task AfterSideTurnEnd(PlayerChoiceContext choiceContext, CombatSide side, IEnumerable<Creature> participants)
 	{
-		if (side == base.Owner.Side)
+		if (!participants.Contains(base.Owner))
 		{
-			GetInternalData<Data>().attacksPlayedThisTurn = 0;
+			return Task.CompletedTask;
 		}
+		GetInternalData<Data>().attacksPlayedThisTurn = 0;
 		return Task.CompletedTask;
 	}
 }

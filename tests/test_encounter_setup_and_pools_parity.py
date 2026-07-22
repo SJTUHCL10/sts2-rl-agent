@@ -935,15 +935,15 @@ class TestAct3Pools:
 
     def test_act3_order_matches_original_glory_lists(self):
         assert [encounter.__name__ for encounter in ACT3_BOSS] == [
+            "setup_aeonglass_boss",
             "setup_queen_boss",
             "setup_test_subject_boss",
-            "setup_doormaker_boss",
         ]
         assert [encounter.__name__ for encounter in ALL_ACT3_ENCOUNTERS] == [
             "setup_axebots_normal",
+            "setup_aeonglass_boss",
             "setup_construct_menagerie_normal",
             "setup_devoted_sculptor_weak",
-            "setup_doormaker_boss",
             "setup_fabricator_normal",
             "setup_frog_knight_normal",
             "setup_globe_head_normal",
@@ -1023,7 +1023,7 @@ class TestAllEncountersSetup:
                 combat = _make_combat(seed)
                 encounter(combat, rng)
                 for enemy in combat.enemies:
-                    assert 1 <= enemy.max_hp <= 500, (
+                    assert 1 <= enemy.max_hp <= 600, (
                         f"{act_name}: unreasonable HP {enemy.max_hp} for {enemy.monster_id}"
                     )
                     assert enemy.current_hp == enemy.max_hp

@@ -213,7 +213,7 @@ def _make_smoke_combat(card: CardInstance) -> CombatState:
     combat.draw_pile = [make_bash(), make_strike_ironclad(), make_defend_ironclad()]
     combat.discard_pile = [make_bash(), make_strike_ironclad(), make_defend_ironclad()]
     combat.exhaust_pile = [make_bash()]
-    combat.energy = 10
+    combat.energy = max(10, card.cost)
     combat.stars = 10
     combat.player.stars = 10
     if CardTag.OSTY_ATTACK in getattr(card, "tags", ()) or "osty_attack" in getattr(card, "tags", ()):
@@ -439,7 +439,7 @@ def test_docs_backed_cards_preserve_reference_tags_for_explicit_instantiation(ca
         (CardId.BAD_LUCK, {"eternal", "unplayable"}),
         (CardId.CURSE_OF_THE_BELL, {"eternal", "unplayable"}),
         (CardId.ENTHRALLED, {"eternal"}),
-        (CardId.FOLLY, {"unplayable", "eternal", "innate"}),
+        (CardId.FOLLY, {"unplayable", "eternal", "innate", "ethereal"}),
         (CardId.GREED, {"eternal", "unplayable"}),
     ],
 )
@@ -469,12 +469,12 @@ def test_knowledge_demon_status_cards_are_cost_unplayable_without_keyword(card_i
 def test_deprecated_card_matches_original_save_placeholder():
     card = create_card(CardId.DEPRECATED_CARD, upgraded=True)
 
-    assert card.cost == -1
-    assert card.original_cost == -1
-    assert card.card_type is CardType.CURSE
-    assert card.rarity is CardRarity.CURSE
+    assert card.cost == 0
+    assert card.original_cost == 0
+    assert card.card_type is CardType.STATUS
+    assert card.rarity is CardRarity.STATUS
     assert card.target_type is TargetType.NONE
-    assert card.keywords == frozenset({"unplayable"})
+    assert card.keywords == frozenset({"exhaust"})
     assert card.upgraded is False
     assert card.can_be_generated_in_combat is True
     assert card.can_be_generated_by_modifiers is True

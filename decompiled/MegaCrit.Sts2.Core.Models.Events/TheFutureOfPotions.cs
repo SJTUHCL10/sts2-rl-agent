@@ -82,20 +82,20 @@ public sealed class TheFutureOfPotions : EventModel
 		}
 	}
 
-	public override bool IsAllowed(RunState runState)
+	public override bool IsAllowed(IRunState runState)
 	{
 		return runState.Players.All((Player p) => p.Potions.Count() >= 2);
 	}
 
-	protected override Task BeforeEventStarted()
+	protected override Task BeforeEventStarted(bool isPreFinished)
 	{
-		base.Owner.CanRemovePotions = false;
+		base.Owner.CanUseOrRemovePotions = false;
 		return Task.CompletedTask;
 	}
 
 	protected override void OnEventFinished()
 	{
-		base.Owner.CanRemovePotions = true;
+		base.Owner.CanUseOrRemovePotions = true;
 	}
 
 	protected override IReadOnlyList<EventOption> GenerateInitialOptions()
@@ -124,7 +124,7 @@ public sealed class TheFutureOfPotions : EventModel
 	{
 		CardRarity targetRarity = GetCardRarity(potion);
 		await PotionCmd.Discard(potion);
-		CardCreationOptions options = CardCreationOptions.ForNonCombatWithUniformOdds(new global::_003C_003Ez__ReadOnlySingleElementList<CardPoolModel>(base.Owner.Character.CardPool), (CardModel c) => c.Rarity == targetRarity && c.Type == PotionToCardType[potion]).WithFlags(CardCreationFlags.NoRarityModification);
+		CardCreationOptions options = CardCreationOptions.ForNonCombatWithUniformOdds(new global::_003C_003Ez__ReadOnlySingleElementList<CardPoolModel>(base.Owner.Character.CardPool), (CardModel c) => c.Rarity == targetRarity && c.Type == PotionToCardType[potion]).WithFlags(CardCreationFlags.NoRarityModification | CardCreationFlags.NoCardPoolModifications);
 		CardReward reward = new CardReward(options, 3, base.Owner);
 		reward.AfterGenerated += UpgradeCardsInReward;
 		await RewardsCmd.OfferCustom(base.Owner, new List<Reward>(1) { reward });

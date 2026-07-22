@@ -67,10 +67,10 @@ SOW_DAMAGE = 8
 SOW_UPGRADED_DAMAGE = 11
 STRIKE_NECROBINDER_DAMAGE = 6
 STRIKE_NECROBINDER_UPGRADED_DAMAGE = 9
-DEBILITATE_DAMAGE = 7
-DEBILITATE_POWER_AMOUNT = 3
-DEBILITATE_UPGRADED_DAMAGE = 9
-DEBILITATE_UPGRADED_POWER_AMOUNT = 4
+DEBILITATE_DAMAGE = 10
+DEBILITATE_POWER_AMOUNT = 2
+DEBILITATE_UPGRADED_DAMAGE = 12
+DEBILITATE_UPGRADED_POWER_AMOUNT = 3
 PARSE_DRAW_COUNT = 3
 PARSE_UPGRADED_DRAW_COUNT = 4
 DEATHS_DOOR_REPEAT = 2
@@ -418,7 +418,7 @@ class TestNecrobinderCardEffectsReferenceParity:
         hittable.current_hp = hittable.max_hp = 100
         blocked.powers[PowerId.COVERED] = _CannotHitPower()
         combat.hand = [make_banshees_cry()]
-        combat.energy = 6
+        combat.energy = 9
 
         assert combat.play_card(0)
 
@@ -430,7 +430,7 @@ class TestNecrobinderCardEffectsReferenceParity:
         extra_enemy, extra_ai = create_shrinker_beetle(Rng(9091))
         combat.add_enemy(extra_enemy, extra_ai)
         combat.hand = [make_deathbringer()]
-        combat.energy = 2
+        combat.energy = 9
 
         assert combat.play_card(0)
         for enemy in combat.enemies:
@@ -1047,17 +1047,17 @@ class TestNecrobinderCardEffectsReferenceParity:
         combat.energy = 2
 
         assert combat.play_card(0, 0)
-        assert held.cost == 4
+        assert held.cost == 7
 
         assert combat.play_card(1, 0)
-        assert held.cost == 2
+        assert held.cost == 5
 
         combat.move_card_to_creature_hand(combat.player, later)
-        assert later.cost == 2
+        assert later.cost == 5
         held.end_of_turn_cleanup()
         later.end_of_turn_cleanup()
-        assert held.cost == 2
-        assert later.cost == 2
+        assert held.cost == 5
+        assert later.cost == 5
 
     def test_banshees_cry_cost_uses_ethereal_state_from_when_card_was_played(self):
         combat = _make_combat()

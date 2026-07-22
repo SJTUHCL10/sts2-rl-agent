@@ -91,6 +91,10 @@ CardAfterCardEnteredCombatHook = Callable[
     ["CardInstance", "CardInstance", "Creature", "CombatState"],
     None,
 ]
+CardAfterCardExhaustedHook = Callable[
+    ["CardInstance", "CardInstance", "CombatState"],
+    None,
+]
 CardCardPlayHook = Callable[
     ["CardInstance", "CardInstance", "Creature", "CombatState"],
     None,
@@ -125,6 +129,7 @@ _CARD_AFTER_CARD_DRAWN_HOOKS: dict[CardId, CardAfterCardDrawnHook] = {}
 _CARD_TURN_END_IN_HAND_HOOKS: dict[CardId, CardTurnEndInHandHook] = {}
 _CARD_AFTER_CARD_GENERATED_FOR_COMBAT_HOOKS: dict[CardId, CardAfterCardGeneratedForCombatHook] = {}
 _CARD_AFTER_CARD_ENTERED_COMBAT_HOOKS: dict[CardId, CardAfterCardEnteredCombatHook] = {}
+_CARD_AFTER_CARD_EXHAUSTED_HOOKS: dict[CardId, CardAfterCardExhaustedHook] = {}
 _CARD_BEFORE_CARD_PLAYED_HOOKS: dict[CardId, CardCardPlayHook] = {}
 _CARD_AFTER_CARD_PLAYED_HOOKS: dict[CardId, CardCardPlayHook] = {}
 _CARD_AFTER_ATTACK_HOOKS: dict[CardId, CardAfterAttackHook] = {}
@@ -280,6 +285,13 @@ def register_after_card_generated_for_combat_hook(card_id: CardId):
 def register_after_card_entered_combat_hook(card_id: CardId):
     def decorator(func: CardAfterCardEnteredCombatHook) -> CardAfterCardEnteredCombatHook:
         _CARD_AFTER_CARD_ENTERED_COMBAT_HOOKS[card_id] = func
+        return func
+    return decorator
+
+
+def register_after_card_exhausted_hook(card_id: CardId):
+    def decorator(func: CardAfterCardExhaustedHook) -> CardAfterCardExhaustedHook:
+        _CARD_AFTER_CARD_EXHAUSTED_HOOKS[card_id] = func
         return func
     return decorator
 
@@ -552,6 +564,16 @@ def fire_card_after_card_entered_combat(
     hook = _CARD_AFTER_CARD_ENTERED_COMBAT_HOOKS.get(listener_card.card_id)
     if hook is not None:
         hook(listener_card, entered_card, owner, combat)
+
+
+def fire_card_after_card_exhausted(
+    listener_card: "CardInstance",
+    exhausted_card: "CardInstance",
+    combat: "CombatState",
+) -> None:
+    hook = _CARD_AFTER_CARD_EXHAUSTED_HOOKS.get(listener_card.card_id)
+    if hook is not None:
+        hook(listener_card, exhausted_card, combat)
 
 
 def fire_card_before_card_played(

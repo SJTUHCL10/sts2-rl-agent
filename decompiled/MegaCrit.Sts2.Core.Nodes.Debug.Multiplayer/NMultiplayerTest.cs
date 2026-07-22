@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Godot;
 using Godot.Bridge;
@@ -28,7 +30,6 @@ using MegaCrit.Sts2.Core.Multiplayer.Serialization;
 using MegaCrit.Sts2.Core.Nodes.Audio;
 using MegaCrit.Sts2.Core.Nodes.GodotExtensions;
 using MegaCrit.Sts2.Core.Platform;
-using MegaCrit.Sts2.Core.Platform.Steam;
 using MegaCrit.Sts2.Core.Rooms;
 using MegaCrit.Sts2.Core.Runs;
 using MegaCrit.Sts2.Core.Saves;
@@ -47,62 +48,156 @@ public class NMultiplayerTest : Control, IStartRunLobbyListener
 		public Label playerName;
 	}
 
+	/// <summary>
+	/// Cached StringNames for the methods contained in this class, for fast lookup.
+	/// </summary>
 	public new class MethodName : Control.MethodName
 	{
+		/// <summary>
+		/// Cached name for the '_Ready' method.
+		/// </summary>
 		public new static readonly StringName _Ready = "_Ready";
 
+		/// <summary>
+		/// Cached name for the '_EnterTree' method.
+		/// </summary>
+		public new static readonly StringName _EnterTree = "_EnterTree";
+
+		/// <summary>
+		/// Cached name for the '_ExitTree' method.
+		/// </summary>
 		public new static readonly StringName _ExitTree = "_ExitTree";
 
+		/// <summary>
+		/// Cached name for the 'AddGame' method.
+		/// </summary>
 		public static readonly StringName AddGame = "AddGame";
 
+		/// <summary>
+		/// Cached name for the 'HostButtonPressed' method.
+		/// </summary>
 		public static readonly StringName HostButtonPressed = "HostButtonPressed";
 
-		public static readonly StringName SteamHostButtonPressed = "SteamHostButtonPressed";
-
+		/// <summary>
+		/// Cached name for the 'JoinButtonPressed' method.
+		/// </summary>
 		public static readonly StringName JoinButtonPressed = "JoinButtonPressed";
 
+		/// <summary>
+		/// Cached name for the 'ReadyButtonPressed' method.
+		/// </summary>
 		public static readonly StringName ReadyButtonPressed = "ReadyButtonPressed";
 
+		/// <summary>
+		/// Cached name for the 'Disconnect' method.
+		/// </summary>
 		public new static readonly StringName Disconnect = "Disconnect";
 
+		/// <summary>
+		/// Cached name for the 'AfterMultiplayerStarted' method.
+		/// </summary>
 		public static readonly StringName AfterMultiplayerStarted = "AfterMultiplayerStarted";
 
+		/// <summary>
+		/// Cached name for the 'ChooseReplayToLoad' method.
+		/// </summary>
 		public static readonly StringName ChooseReplayToLoad = "ChooseReplayToLoad";
 
+		/// <summary>
+		/// Cached name for the 'ChooseReplayToSave' method.
+		/// </summary>
+		public static readonly StringName ChooseReplayToSave = "ChooseReplayToSave";
+
+		/// <summary>
+		/// Cached name for the 'LoadReplay' method.
+		/// </summary>
 		public static readonly StringName LoadReplay = "LoadReplay";
 
+		/// <summary>
+		/// Cached name for the 'WriteReplayAsSave' method.
+		/// </summary>
+		public static readonly StringName WriteReplayAsSave = "WriteReplayAsSave";
+
+		/// <summary>
+		/// Cached name for the '_Process' method.
+		/// </summary>
 		public new static readonly StringName _Process = "_Process";
 
+		/// <summary>
+		/// Cached name for the 'AscensionChanged' method.
+		/// </summary>
 		public static readonly StringName AscensionChanged = "AscensionChanged";
 
+		/// <summary>
+		/// Cached name for the 'SeedChanged' method.
+		/// </summary>
 		public static readonly StringName SeedChanged = "SeedChanged";
 
+		/// <summary>
+		/// Cached name for the 'ModifiersChanged' method.
+		/// </summary>
 		public static readonly StringName ModifiersChanged = "ModifiersChanged";
 
+		/// <summary>
+		/// Cached name for the 'MaxAscensionChanged' method.
+		/// </summary>
 		public static readonly StringName MaxAscensionChanged = "MaxAscensionChanged";
 	}
 
+	/// <summary>
+	/// Cached StringNames for the properties and fields contained in this class, for fast lookup.
+	/// </summary>
 	public new class PropertyName : Control.PropertyName
 	{
+		/// <summary>
+		/// Cached name for the '_ipField' field.
+		/// </summary>
 		public static readonly StringName _ipField = "_ipField";
 
+		/// <summary>
+		/// Cached name for the '_idField' field.
+		/// </summary>
 		public static readonly StringName _idField = "_idField";
 
+		/// <summary>
+		/// Cached name for the '_readyButton' field.
+		/// </summary>
 		public static readonly StringName _readyButton = "_readyButton";
 
+		/// <summary>
+		/// Cached name for the '_readyIndicator' field.
+		/// </summary>
 		public static readonly StringName _readyIndicator = "_readyIndicator";
 
+		/// <summary>
+		/// Cached name for the '_loadingPanel' field.
+		/// </summary>
 		public static readonly StringName _loadingPanel = "_loadingPanel";
 
+		/// <summary>
+		/// Cached name for the '_characterPaginator' field.
+		/// </summary>
 		public static readonly StringName _characterPaginator = "_characterPaginator";
 
+		/// <summary>
+		/// Cached name for the '_game' field.
+		/// </summary>
 		public static readonly StringName _game = "_game";
 
+		/// <summary>
+		/// Cached name for the '_ignoreReplayModelIdHash' field.
+		/// </summary>
 		public static readonly StringName _ignoreReplayModelIdHash = "_ignoreReplayModelIdHash";
 
+		/// <summary>
+		/// Cached name for the '_beginningRun' field.
+		/// </summary>
 		public static readonly StringName _beginningRun = "_beginningRun";
 	}
 
+	/// <summary>
+	/// Cached StringNames for the signals contained in this class, for fast lookup.
+	/// </summary>
 	public new class SignalName : Control.SignalName
 	{
 	}
@@ -129,6 +224,8 @@ public class NMultiplayerTest : Control, IStartRunLobbyListener
 
 	private readonly SerializablePlayer _localPlayerData = new SerializablePlayer();
 
+	private CancellationTokenSource _cts = new CancellationTokenSource();
+
 	private IBootstrapSettings? _settings;
 
 	private bool _ignoreReplayModelIdHash;
@@ -141,11 +238,11 @@ public class NMultiplayerTest : Control, IStartRunLobbyListener
 		_idField = GetNode<TextEdit>("NameField");
 		_characterPaginator = GetNode<NMultiplayerTestCharacterPaginator>("CharacterChooser");
 		Button node = GetNode<Button>("HostButton");
-		Button node2 = GetNode<Button>("SteamHostButton");
-		Button node3 = GetNode<Button>("JoinButton");
+		Button node2 = GetNode<Button>("JoinButton");
 		_readyButton = GetNode<Button>("ReadyButton");
 		_readyIndicator = GetNode<Control>("ReadyButton/ReadyIndicator");
-		Button node4 = GetNode<Button>("ReplayButton");
+		Button node3 = GetNode<Button>("ReplayButton");
+		Button node4 = GetNode<Button>("SaveReplayButton");
 		Button node5 = GetNode<Button>("DeleteCloudSavesButton");
 		_loadingPanel = GetNode<Control>("LoadingPanel");
 		Control node6 = GetNode<Control>("Characters");
@@ -158,10 +255,10 @@ public class NMultiplayerTest : Control, IStartRunLobbyListener
 			});
 		}
 		node.Connect(BaseButton.SignalName.ButtonUp, Callable.From(HostButtonPressed));
-		node2.Connect(BaseButton.SignalName.ButtonUp, Callable.From(SteamHostButtonPressed));
-		node3.Connect(BaseButton.SignalName.ButtonUp, Callable.From(JoinButtonPressed));
+		node2.Connect(BaseButton.SignalName.ButtonUp, Callable.From(JoinButtonPressed));
 		_readyButton.Connect(BaseButton.SignalName.ButtonUp, Callable.From(ReadyButtonPressed));
-		node4.Connect(BaseButton.SignalName.ButtonUp, Callable.From(ChooseReplayToLoad));
+		node3.Connect(BaseButton.SignalName.ButtonUp, Callable.From(ChooseReplayToLoad));
+		node4.Connect(BaseButton.SignalName.ButtonUp, Callable.From(ChooseReplayToSave));
 		node5.Connect(BaseButton.SignalName.ButtonUp, Callable.From(CloudConsoleCmd.DeleteCloudSaves));
 		_characterPaginator.Visible = false;
 		_characterPaginator.CharacterChanged += OnCharacterChanged;
@@ -177,27 +274,20 @@ public class NMultiplayerTest : Control, IStartRunLobbyListener
 		if (type != null)
 		{
 			_settings = (IBootstrapSettings)Activator.CreateInstance(type);
-			if (!_settings.BootstrapInMultiplayer)
-			{
-				_settings = null;
-			}
-			else
-			{
-				PreloadManager.Enabled = _settings.DoPreloading;
-				_game.DebugSeedOverride = _settings.Seed;
-			}
-		}
-		if (!SteamInitializer.Initialized)
-		{
-			SteamInitializer.Initialize(_game);
 		}
 		MegaCrit.Sts2.Core.Logging.Logger.logLevelTypeMap[LogType.Network] = LogLevel.Debug;
 		MegaCrit.Sts2.Core.Logging.Logger.logLevelTypeMap[LogType.Actions] = LogLevel.VeryDebug;
 		MegaCrit.Sts2.Core.Logging.Logger.logLevelTypeMap[LogType.GameSync] = LogLevel.VeryDebug;
 	}
 
+	public override void _EnterTree()
+	{
+		_cts = new CancellationTokenSource();
+	}
+
 	public override void _ExitTree()
 	{
+		_cts.Cancel();
 		_characterPaginator.CharacterChanged -= OnCharacterChanged;
 		if (!_beginningRun)
 		{
@@ -216,11 +306,6 @@ public class NMultiplayerTest : Control, IStartRunLobbyListener
 	private void HostButtonPressed()
 	{
 		TaskHelper.RunSafely(StartHost(steam: false));
-	}
-
-	private void SteamHostButtonPressed()
-	{
-		TaskHelper.RunSafely(StartHost(steam: true));
 	}
 
 	private void JoinButtonPressed()
@@ -275,8 +360,8 @@ public class NMultiplayerTest : Control, IStartRunLobbyListener
 			using (new NetLoadingHandle(_lobby.NetService))
 			{
 				acts[0] = _settings.Act;
-				RunState runState = RunState.CreateForNewRun(_lobby.Players.Select((LobbyPlayer p) => Player.CreateForNewRun(p.character, UnlockState.FromSerializable(p.unlockState), p.id)).ToList(), acts.Select((ActModel a) => a.ToMutable()).ToList(), _settings.Modifiers, _lobby.Ascension, seed);
-				RunManager.Instance.SetUpNewMultiPlayer(runState, _lobby, _settings.SaveRunHistory);
+				RunState runState = RunState.CreateForNewRun(_lobby.Players.Select((LobbyPlayer p) => Player.CreateForNewRun(p.character, UnlockState.FromSerializable(p.unlockState), p.id)).ToList(), acts.Select((ActModel a) => a.ToMutable()).ToList(), _settings.Modifiers, GameMode.Standard, _lobby.Ascension, seed);
+				RunManager.Instance.SetUpNewMultiplayer(runState, _lobby, _settings.SaveRunHistory);
 				await PreloadManager.LoadRunAssets(runState.Players.Select((Player p) => p.Character));
 				await RunManager.Instance.FinalizeStartingRelics();
 				RunManager.Instance.Launch();
@@ -314,13 +399,17 @@ public class NMultiplayerTest : Control, IStartRunLobbyListener
 
 	private void Disconnect(NetError reason)
 	{
-		_lobby?.NetService.Disconnect(reason);
-		_lobby?.CleanUp(disconnectSession: true);
+		_lobby?.CleanUp(disconnectSession: true, reason);
 		_lobby = null;
 	}
 
 	private async Task<bool> StartHost(bool steam)
 	{
+		if (_settings?.BootstrapInMultiplayer ?? false)
+		{
+			PreloadManager.Enabled = _settings.DoPreloading;
+			_game.DebugSeedOverride = _settings.Seed;
+		}
 		Disconnect(NetError.Quit);
 		NetHostGameService netService = new NetHostGameService();
 		NetErrorInfo? value = ((!steam) ? netService.StartENetHost(33771, 4) : (await netService.StartSteamHost(4)));
@@ -341,8 +430,13 @@ public class NMultiplayerTest : Control, IStartRunLobbyListener
 
 	public async Task JoinToHost(IClientConnectionInitializer initializer)
 	{
+		if (_settings?.BootstrapInMultiplayer ?? false)
+		{
+			PreloadManager.Enabled = _settings.DoPreloading;
+			_game.DebugSeedOverride = _settings.Seed;
+		}
 		Disconnect(NetError.Quit);
-		JoinFlow joinFlow = new JoinFlow();
+		JoinFlow joinFlow = new JoinFlow(new NetClientGameService());
 		try
 		{
 			JoinResult joinResult = await joinFlow.Begin(initializer, GetTree());
@@ -372,7 +466,7 @@ public class NMultiplayerTest : Control, IStartRunLobbyListener
 		foreach (LobbyPlayer player in _lobby.Players)
 		{
 			_characterContainers[player.slotId].characterImage.Texture = player.character.IconTexture;
-			_characterContainers[player.slotId].playerName.Text = PlatformUtil.GetPlayerName(_lobby.NetService.Platform, player.id);
+			_characterContainers[player.slotId].playerName.Text = PlatformUtil.GetPlayerNameRaw(_lobby.NetService.Platform, player.id);
 		}
 		_readyButton.Visible = true;
 		_characterPaginator.Visible = true;
@@ -383,14 +477,41 @@ public class NMultiplayerTest : Control, IStartRunLobbyListener
 
 	private void ChooseReplayToLoad()
 	{
+		ChooseReplay(LoadReplay);
+	}
+
+	private void ChooseReplayToSave()
+	{
+		ChooseReplay(WriteReplayAsSave);
+	}
+
+	private void ChooseReplay(Action<string> action)
+	{
 		FileDialog fileDialog = new FileDialog();
 		fileDialog.Filters = new string[1] { "*.mcr" };
 		fileDialog.UseNativeDialog = true;
 		fileDialog.Title = "Choose Replay";
 		fileDialog.Access = FileDialog.AccessEnum.Filesystem;
 		fileDialog.FileMode = FileDialog.FileModeEnum.OpenFile;
-		fileDialog.Connect(FileDialog.SignalName.FileSelected, Callable.From<string>(LoadReplay));
+		fileDialog.CurrentDir = ProjectSettings.GlobalizePath("user://");
+		fileDialog.Connect(FileDialog.SignalName.FileSelected, Callable.From(action));
+		this.AddChildSafely(fileDialog);
 		fileDialog.Show();
+	}
+
+	private bool ValidateReplay(CombatReplay replay)
+	{
+		if (replay.modelIdHash != ModelIdSerializationCache.Hash)
+		{
+			if (!_ignoreReplayModelIdHash)
+			{
+				Log.Error($"Attempting to load replay with Model ID hash {replay.modelIdHash} that does not match ours ({ModelIdSerializationCache.Hash})! The replay will mismatch. If you want to continue anyway, try running the replay again.");
+				_ignoreReplayModelIdHash = true;
+				return false;
+			}
+			Log.Warn("Ignoring model ID hash mismatch in replay.");
+		}
+		return true;
 	}
 
 	private void LoadReplay(string path)
@@ -402,30 +523,25 @@ public class NMultiplayerTest : Control, IStartRunLobbyListener
 		}
 		PacketReader packetReader = new PacketReader();
 		packetReader.Reset(memoryStream.ToArray());
-		CombatReplay replay = packetReader.Read<CombatReplay>();
-		TaskHelper.RunSafely(RunReplay(replay));
+		CombatReplay combatReplay = packetReader.Read<CombatReplay>();
+		Log.Info($"Loaded replay. Game version: {combatReplay.version} Commit: {combatReplay.gitCommit} Model ID hash: {combatReplay.modelIdHash}");
+		if (ValidateReplay(combatReplay))
+		{
+			int valueOrDefault = (_settings?.ReplayPlayerIndex).GetValueOrDefault();
+			TaskHelper.RunSafely(RunReplay(combatReplay, GetTree(), valueOrDefault));
+		}
 	}
 
-	private async Task RunReplay(CombatReplay replay)
+	private static async Task RunReplay(CombatReplay replay, SceneTree sceneTree, int playerIndex)
 	{
-		Log.Info($"Loaded replay. Game version: {replay.version} Commit: {replay.gitCommit} Model ID hash: {replay.modelIdHash}");
-		if (replay.modelIdHash != ModelIdSerializationCache.Hash)
-		{
-			if (!_ignoreReplayModelIdHash)
-			{
-				Log.Error($"Attempting to load replay with Model ID hash {replay.modelIdHash} that does not match ours ({ModelIdSerializationCache.Hash})! The replay will mismatch. If you want to continue anyway, try running the replay again.");
-				_ignoreReplayModelIdHash = true;
-				return;
-			}
-			Log.Warn("Ignoring model ID hash mismatch in replay.");
-		}
 		string text = ReleaseInfoManager.Instance.ReleaseInfo?.Commit ?? GitHelper.ShortCommitId;
 		if (replay.gitCommit != text)
 		{
 			Log.Warn($"Git commit in replay {replay.gitCommit} does not match ours ({text}). The replay has a chance of mismatching!");
 		}
 		RunState runState = RunState.FromSerializable(replay.serializableRun);
-		RunManager.Instance.SetUpReplay(runState, replay);
+		ulong netId = runState.Players[playerIndex].NetId;
+		RunManager.Instance.SetUpReplay(runState, replay, netId);
 		RunManager.Instance.CombatStateSynchronizer.IsDisabled = true;
 		await PreloadManager.LoadRunAssets(runState.Players.Select((Player p) => p.Character));
 		await PreloadManager.LoadActAssets(runState.Act);
@@ -437,10 +553,11 @@ public class NMultiplayerTest : Control, IStartRunLobbyListener
 		RunManager.Instance.ActionQueueSynchronizer.FastForwardHookId(replay.nextHookId);
 		RunManager.Instance.ChecksumTracker.LoadReplayChecksums(replay.checksumData, replay.nextChecksumId);
 		RunManager.Instance.PlayerChoiceSynchronizer.FastForwardChoiceIds(replay.choiceIds);
+		RunManager.Instance.RewardsSetSynchronizer.FastForwardRewardIds(replay.rewardIds);
 		await RunManager.Instance.LoadIntoLatestMapCoord(AbstractRoom.FromSerializable(replay.serializableRun.PreFinishedRoom, runState));
 		while (RunManager.Instance.ActionExecutor.IsPaused)
 		{
-			await Engine.GetMainLoop().ToSignal(Engine.GetMainLoop(), SceneTree.SignalName.ProcessFrame);
+			await sceneTree.Root.AwaitProcessFrame();
 		}
 		foreach (CombatReplayEvent replayEvent in replay.events)
 		{
@@ -450,7 +567,7 @@ public class NMultiplayerTest : Control, IStartRunLobbyListener
 			{
 				while (CombatManager.Instance.EndingPlayerTurnPhaseOne || CombatManager.Instance.EndingPlayerTurnPhaseTwo)
 				{
-					await new SignalAwaiter(Engine.GetMainLoop(), SceneTree.SignalName.ProcessFrame, Engine.GetMainLoop());
+					await sceneTree.Root.AwaitProcessFrame();
 				}
 				Player player2 = runState.GetPlayer(replayEvent.playerId.Value);
 				GameAction action = replayEvent.action.ToGameAction(player2);
@@ -458,7 +575,7 @@ public class NMultiplayerTest : Control, IStartRunLobbyListener
 				{
 					while (CombatManager.Instance.DebugOnlyGetState().CurrentSide == CombatSide.Enemy)
 					{
-						await new SignalAwaiter(Engine.GetMainLoop(), SceneTree.SignalName.ProcessFrame, Engine.GetMainLoop());
+						await sceneTree.Root.AwaitProcessFrame();
 					}
 				}
 				RunManager.Instance.ActionQueueSet.EnqueueWithoutSynchronizing(action);
@@ -490,6 +607,38 @@ public class NMultiplayerTest : Control, IStartRunLobbyListener
 		}
 	}
 
+	private void WriteReplayAsSave(string path)
+	{
+		using MemoryStream memoryStream = new MemoryStream();
+		using (FileAccessStream fileAccessStream = new FileAccessStream(path, Godot.FileAccess.ModeFlags.Read))
+		{
+			fileAccessStream.CopyTo(memoryStream);
+		}
+		PacketReader packetReader = new PacketReader();
+		packetReader.Reset(memoryStream.ToArray());
+		CombatReplay combatReplay = packetReader.Read<CombatReplay>();
+		if (!ValidateReplay(combatReplay))
+		{
+			return;
+		}
+		SerializableRun serializableRun = combatReplay.serializableRun;
+		string text = JsonSerializer.Serialize(serializableRun, JsonSerializationUtility.GetTypeInfo<SerializableRun>());
+		for (int i = 0; i < serializableRun.Players.Count; i++)
+		{
+			text = text.Replace(serializableRun.Players[i].NetId.ToString(), ((i == 0) ? 1 : (i * 1000)).ToString());
+		}
+		string path2 = ((serializableRun.Players.Count > 1) ? "current_run_mp.save" : "current_run.save");
+		string text2 = Path.Combine(UserDataPathProvider.GetProfileScopedPath(SaveManager.Instance.CurrentProfileId, "saves"), path2);
+		Log.Info(text2);
+		using Godot.FileAccess fileAccess = Godot.FileAccess.Open(text2, Godot.FileAccess.ModeFlags.Write);
+		if (fileAccess == null)
+		{
+			throw new InvalidOperationException($"Couldn't open {text2}: {Godot.FileAccess.GetOpenError()}.");
+		}
+		fileAccess.StoreString(text);
+		Log.Info($"Wrote {text.Length} chars to {text2}");
+	}
+
 	private void OnCharacterChanged(CharacterModel model)
 	{
 		_lobby.SetLocalCharacter(model);
@@ -509,13 +658,13 @@ public class NMultiplayerTest : Control, IStartRunLobbyListener
 	public void PlayerConnected(LobbyPlayer player)
 	{
 		_characterContainers[player.slotId].characterImage.Texture = player.character.IconTexture;
-		_characterContainers[player.slotId].playerName.Text = PlatformUtil.GetPlayerName(_lobby.NetService.Platform, player.id);
+		_characterContainers[player.slotId].playerName.Text = PlatformUtil.GetPlayerNameRaw(_lobby.NetService.Platform, player.id);
 	}
 
-	public void PlayerChanged(LobbyPlayer player)
+	public void PlayerChanged(LobbyPlayer player, bool isRandomCharacterResolution)
 	{
 		_characterContainers[player.slotId].characterImage.Texture = player.character.IconTexture;
-		_characterContainers[player.slotId].playerName.Text = PlatformUtil.GetPlayerName(_lobby.NetService.Platform, player.id);
+		_characterContainers[player.slotId].playerName.Text = PlatformUtil.GetPlayerNameRaw(_lobby.NetService.Platform, player.id);
 	}
 
 	public void AscensionChanged()
@@ -548,15 +697,20 @@ public class NMultiplayerTest : Control, IStartRunLobbyListener
 		_characterPaginator.SetIndex(0);
 	}
 
+	/// <summary>
+	/// Get the method information for all the methods declared in this class.
+	/// This method is used by Godot to register the available methods in the editor.
+	/// Do not call this method.
+	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	internal static List<MethodInfo> GetGodotMethodList()
 	{
-		List<MethodInfo> list = new List<MethodInfo>(16);
+		List<MethodInfo> list = new List<MethodInfo>(18);
 		list.Add(new MethodInfo(MethodName._Ready, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
+		list.Add(new MethodInfo(MethodName._EnterTree, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName._ExitTree, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName.AddGame, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName.HostButtonPressed, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
-		list.Add(new MethodInfo(MethodName.SteamHostButtonPressed, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName.JoinButtonPressed, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName.ReadyButtonPressed, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName.Disconnect, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
@@ -565,7 +719,12 @@ public class NMultiplayerTest : Control, IStartRunLobbyListener
 		}, null));
 		list.Add(new MethodInfo(MethodName.AfterMultiplayerStarted, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName.ChooseReplayToLoad, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
+		list.Add(new MethodInfo(MethodName.ChooseReplayToSave, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName.LoadReplay, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
+		{
+			new PropertyInfo(Variant.Type.String, "path", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false)
+		}, null));
+		list.Add(new MethodInfo(MethodName.WriteReplayAsSave, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
 		{
 			new PropertyInfo(Variant.Type.String, "path", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false)
 		}, null));
@@ -580,12 +739,19 @@ public class NMultiplayerTest : Control, IStartRunLobbyListener
 		return list;
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool InvokeGodotClassMethod(in godot_string_name method, NativeVariantPtrArgs args, out godot_variant ret)
 	{
 		if (method == MethodName._Ready && args.Count == 0)
 		{
 			_Ready();
+			ret = default(godot_variant);
+			return true;
+		}
+		if (method == MethodName._EnterTree && args.Count == 0)
+		{
+			_EnterTree();
 			ret = default(godot_variant);
 			return true;
 		}
@@ -604,12 +770,6 @@ public class NMultiplayerTest : Control, IStartRunLobbyListener
 		if (method == MethodName.HostButtonPressed && args.Count == 0)
 		{
 			HostButtonPressed();
-			ret = default(godot_variant);
-			return true;
-		}
-		if (method == MethodName.SteamHostButtonPressed && args.Count == 0)
-		{
-			SteamHostButtonPressed();
 			ret = default(godot_variant);
 			return true;
 		}
@@ -643,9 +803,21 @@ public class NMultiplayerTest : Control, IStartRunLobbyListener
 			ret = default(godot_variant);
 			return true;
 		}
+		if (method == MethodName.ChooseReplayToSave && args.Count == 0)
+		{
+			ChooseReplayToSave();
+			ret = default(godot_variant);
+			return true;
+		}
 		if (method == MethodName.LoadReplay && args.Count == 1)
 		{
 			LoadReplay(VariantUtils.ConvertTo<string>(in args[0]));
+			ret = default(godot_variant);
+			return true;
+		}
+		if (method == MethodName.WriteReplayAsSave && args.Count == 1)
+		{
+			WriteReplayAsSave(VariantUtils.ConvertTo<string>(in args[0]));
 			ret = default(godot_variant);
 			return true;
 		}
@@ -682,10 +854,15 @@ public class NMultiplayerTest : Control, IStartRunLobbyListener
 		return base.InvokeGodotClassMethod(in method, args, out ret);
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool HasGodotClassMethod(in godot_string_name method)
 	{
 		if (method == MethodName._Ready)
+		{
+			return true;
+		}
+		if (method == MethodName._EnterTree)
 		{
 			return true;
 		}
@@ -698,10 +875,6 @@ public class NMultiplayerTest : Control, IStartRunLobbyListener
 			return true;
 		}
 		if (method == MethodName.HostButtonPressed)
-		{
-			return true;
-		}
-		if (method == MethodName.SteamHostButtonPressed)
 		{
 			return true;
 		}
@@ -725,7 +898,15 @@ public class NMultiplayerTest : Control, IStartRunLobbyListener
 		{
 			return true;
 		}
+		if (method == MethodName.ChooseReplayToSave)
+		{
+			return true;
+		}
 		if (method == MethodName.LoadReplay)
+		{
+			return true;
+		}
+		if (method == MethodName.WriteReplayAsSave)
 		{
 			return true;
 		}
@@ -752,6 +933,7 @@ public class NMultiplayerTest : Control, IStartRunLobbyListener
 		return base.HasGodotClassMethod(in method);
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool SetGodotClassPropertyValue(in godot_string_name name, in godot_variant value)
 	{
@@ -803,6 +985,7 @@ public class NMultiplayerTest : Control, IStartRunLobbyListener
 		return base.SetGodotClassPropertyValue(in name, in value);
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool GetGodotClassPropertyValue(in godot_string_name name, out godot_variant value)
 	{
@@ -854,6 +1037,11 @@ public class NMultiplayerTest : Control, IStartRunLobbyListener
 		return base.GetGodotClassPropertyValue(in name, out value);
 	}
 
+	/// <summary>
+	/// Get the property information for all the properties declared in this class.
+	/// This method is used by Godot to register the available properties in the editor.
+	/// Do not call this method.
+	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	internal static List<PropertyInfo> GetGodotPropertyList()
 	{
@@ -870,6 +1058,7 @@ public class NMultiplayerTest : Control, IStartRunLobbyListener
 		return list;
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override void SaveGodotObjectData(GodotSerializationInfo info)
 	{
@@ -885,6 +1074,7 @@ public class NMultiplayerTest : Control, IStartRunLobbyListener
 		info.AddProperty(PropertyName._beginningRun, Variant.From(in _beginningRun));
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override void RestoreGodotObjectData(GodotSerializationInfo info)
 	{

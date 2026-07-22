@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Godot;
-using MegaCrit.Sts2.Core.Debug;
 using MegaCrit.Sts2.Core.Entities.Multiplayer;
 using MegaCrit.Sts2.Core.Helpers;
 using MegaCrit.Sts2.Core.Logging;
@@ -12,13 +11,31 @@ using MegaCrit.Sts2.Core.Modding;
 using MegaCrit.Sts2.Core.Multiplayer.Connection;
 using MegaCrit.Sts2.Core.Multiplayer.Messages.Lobby;
 using MegaCrit.Sts2.Core.Multiplayer.Serialization;
+using MegaCrit.Sts2.Core.Nodes;
+using MegaCrit.Sts2.Core.Platform;
 using MegaCrit.Sts2.Core.Saves;
 using MegaCrit.Sts2.Core.Unlocks;
 
 namespace MegaCrit.Sts2.Core.Multiplayer.Game;
 
+/// <summary>
+/// Object which manages the join flow for the local player, who joins as a client.
+/// </summary>
 public class JoinFlow
 {
+	public struct MockInfo
+	{
+		public string version;
+
+		public uint hash;
+
+		public PlatformBranch branch;
+
+		public List<string>? gameplayAffectingMods;
+
+		public List<string>? nonGameplayAffectingMods;
+	}
+
 	private TaskCompletionSource<InitialGameInfoMessage>? _connectCompletion;
 
 	private TaskCompletionSource<ClientRejoinResponseMessage>? _rejoinCompletion;
@@ -27,26 +44,46 @@ public class JoinFlow
 
 	private TaskCompletionSource<ClientLobbyJoinResponseMessage>? _joinCompletion;
 
-	private MegaCrit.Sts2.Core.Logging.Logger _logger = new MegaCrit.Sts2.Core.Logging.Logger("JoinFlow", LogType.Network);
+	private readonly MegaCrit.Sts2.Core.Logging.Logger _logger = new MegaCrit.Sts2.Core.Logging.Logger("JoinFlow", LogType.Network);
 
-	public NetClientGameService? NetService { get; private set; }
+	private readonly MockInfo? _mockInfo;
 
-	public CancellationTokenSource CancelToken { get; private set; } = new CancellationTokenSource();
+	public INetClientGameService NetService { get; }
 
-	public async Task<JoinResult> Begin(IClientConnectionInitializer initializer, SceneTree sceneTree)
+	public CancellationTokenSource CancelToken { get; } = new CancellationTokenSource();
+
+	public JoinFlow(INetClientGameService netService, MockInfo? mockInfo = null)
+	{
+		_mockInfo = mockInfo;
+		NetService = netService;
+	}
+
+	/// <summary>
+	/// Begins the join flow.
+	/// This task returns either a JoinResult with the final message in the join flow, for use initializing the run or
+	/// the Lobby in the case of a rejoin or a join, respectively.
+	/// </summary>
+	/// <param name="initializer">The object to use when initializing the connection.</param>
+	/// <param name="sceneTree">Scene tree to use for hooking into update.
+	/// If null, NetService.Update is NOT called and the caller needs to do it manually.</param>
+	/// <throws>ClientConnectionFailedException if the join fails. In this case, you should not use NetService. An error
+	/// should be shown to the user and they may try to join again.</throws>
+	public async Task<JoinResult> Begin(IClientConnectionInitializer initializer, SceneTree? sceneTree)
 	{
 		MegaCrit.Sts2.Core.Logging.Logger.logLevelTypeMap[LogType.Network] = LogLevel.Debug;
 		MegaCrit.Sts2.Core.Logging.Logger.logLevelTypeMap[LogType.Actions] = LogLevel.VeryDebug;
 		MegaCrit.Sts2.Core.Logging.Logger.logLevelTypeMap[LogType.GameSync] = LogLevel.VeryDebug;
 		if (_connectCompletion != null)
 		{
-			throw new InvalidOperationException("RejoinFlow object can only be used once!");
+			throw new InvalidOperationException("JoinFlow object can only be used once!");
 		}
 		_logger.Info($"Beginning join with initializer {initializer}");
-		NetService = new NetClientGameService();
 		CancelToken.Token.Register(Cancel);
 		CancellationTokenSource updateLoopCancelSource = new CancellationTokenSource();
-		TaskHelper.RunSafely(NetServiceUpdateLoop(updateLoopCancelSource, sceneTree));
+		if (sceneTree != null)
+		{
+			TaskHelper.RunSafely(NetServiceUpdateLoop(updateLoopCancelSource, sceneTree));
+		}
 		JoinResult result;
 		try
 		{
@@ -74,35 +111,47 @@ public class JoinFlow
 				}
 				RunSessionState state = initialMessage.sessionState;
 				_logger.Info($"Got initial game info message. Version: {initialMessage.version} Hash: {initialMessage.idDatabaseHash} Type: {initialMessage.gameMode} State: {state}");
-				string text = ReleaseInfoManager.Instance.ReleaseInfo?.Version ?? GitHelper.ShortCommitId ?? "UNKNOWN";
-				if (initialMessage.version != text)
+				ConnectionFailureExtraInfo connectionFailureExtraInfo = new ConnectionFailureExtraInfo
 				{
-					throw new ClientConnectionFailedException("Version mismatch. Host: " + initialMessage.version + " Ours: " + text, new NetErrorInfo(ConnectionFailureReason.VersionMismatch));
-				}
-				List<string> list = ModManager.GetModNameList() ?? new List<string>();
-				List<string> list2 = initialMessage.mods ?? new List<string>();
-				List<string> list3 = list2.Except(list).ToList();
-				List<string> list4 = list.Except(list2).ToList();
-				ConnectionFailureExtraInfo extraInfo = new ConnectionFailureExtraInfo
-				{
-					missingModsOnHost = list4,
-					missingModsOnLocal = list3
+					hostBranch = initialMessage.branch,
+					hostVersion = initialMessage.version,
+					hostHash = initialMessage.idDatabaseHash,
+					localVersion = (_mockInfo?.version ?? NGame.GetGameVersion()),
+					localBranch = (_mockInfo?.branch ?? PlatformUtil.GetPlatformBranch()),
+					localHash = (_mockInfo?.hash ?? ModelIdSerializationCache.Hash)
 				};
+				if (initialMessage.version != connectionFailureExtraInfo.localVersion)
+				{
+					throw new ClientConnectionFailedException(info: new NetErrorInfo(ConnectionFailureReason.VersionMismatch, connectionFailureExtraInfo), message: $"Version mismatch. Host: {initialMessage.version} Ours: {connectionFailureExtraInfo.localVersion} Host branch: {initialMessage.branch}");
+				}
+				List<string> list = ((!_mockInfo.HasValue) ? ModManager.GetGameplayRelevantModNameList() : _mockInfo.Value.gameplayAffectingMods) ?? new List<string>();
+				List<string> list2 = initialMessage.gameplayAffectingMods ?? new List<string>();
+				List<string> list3 = list2.Except(list).ToList();
+				List<string> list4 = (connectionFailureExtraInfo.missingModsOnHost = list.Except(list2).ToList());
+				connectionFailureExtraInfo.missingModsOnLocal = list3;
 				if (list3.Count > 0 || list4.Count > 0)
 				{
-					_logger.Warn($"Mod mismatch! Mods that host has that we don't: {string.Join(",", list3)}. Mods that we have that host doesn't: {string.Join(",", list4)}.");
-					throw new ClientConnectionFailedException("Mod mismatch. Host mods: " + string.Join(",", list2) + " Local mods: " + string.Join(",", list), new NetErrorInfo(ConnectionFailureReason.ModMismatch, extraInfo));
+					_logger.Warn($"Mismatch in gameplay-relevant mods with the host!\nMods that host has that we don't: {string.Join(",", list3)}.\nMods that we have that host doesn't: {string.Join(",", list4)}.");
+					throw new ClientConnectionFailedException("Mod mismatch. Host mods: " + string.Join(",", list2) + " Local mods: " + string.Join(",", list), new NetErrorInfo(ConnectionFailureReason.ModMismatch, connectionFailureExtraInfo));
 				}
-				if (initialMessage.idDatabaseHash != ModelIdSerializationCache.Hash)
+				if (initialMessage.idDatabaseHash != connectionFailureExtraInfo.localHash)
 				{
-					_logger.Warn("Our version " + text + " matches the host's, but our Model ID hash does not! Disconnecting");
-					throw new ClientConnectionFailedException($"ModelDb hash mismatch. Host: {initialMessage.idDatabaseHash} Ours: {ModelIdSerializationCache.Hash}", new NetErrorInfo(ConnectionFailureReason.VersionMismatch, extraInfo));
+					_logger.Warn("Our version " + connectionFailureExtraInfo.localVersion + " matches the host's, but our Model ID hash does not! Disconnecting");
+					throw new ClientConnectionFailedException($"ModelDb hash mismatch. Host: {initialMessage.idDatabaseHash} Ours: {ModelIdSerializationCache.Hash}", new NetErrorInfo(ConnectionFailureReason.VersionMismatch, connectionFailureExtraInfo));
+				}
+				List<string> list5 = ((!_mockInfo.HasValue) ? ModManager.GetNonGameplayRelevantModNameList() : _mockInfo.Value.nonGameplayAffectingMods) ?? new List<string>();
+				List<string> list6 = initialMessage.otherMods ?? new List<string>();
+				List<string> list7 = list6.Except(list5).ToList();
+				List<string> list8 = list5.Except(list6).ToList();
+				if (list8.Count > 0 || list7.Count > 0)
+				{
+					_logger.Warn($"Mismatch in non-gameplay relevant mods. This is allowed, but it's up to the mod authors to guarantee that it doesn't break anything.\nNon-gameplay relevant mods that host has that we don't: {string.Join(",", list7)}.\nNon-gameplay relevant mods that we have that host doesn't: {string.Join(",", list8)}.");
 				}
 				switch (state)
 				{
 				case RunSessionState.InLobby:
 				{
-					ClientLobbyJoinResponseMessage value4 = await AttemptJoin(NetService);
+					ClientLobbyJoinResponseMessage value4 = await AttemptJoin();
 					result = new JoinResult
 					{
 						gameMode = initialMessage.gameMode,
@@ -113,7 +162,7 @@ public class JoinFlow
 				}
 				case RunSessionState.InLoadedLobby:
 				{
-					ClientLoadJoinResponseMessage value3 = await AttemptLoadJoin(NetService);
+					ClientLoadJoinResponseMessage value3 = await AttemptLoadJoin();
 					result = new JoinResult
 					{
 						gameMode = initialMessage.gameMode,
@@ -124,7 +173,7 @@ public class JoinFlow
 				}
 				case RunSessionState.Running:
 				{
-					ClientRejoinResponseMessage value2 = await AttemptRejoin(NetService);
+					ClientRejoinResponseMessage value2 = await AttemptRejoin();
 					result = new JoinResult
 					{
 						gameMode = initialMessage.gameMode,
@@ -179,7 +228,7 @@ public class JoinFlow
 		}
 	}
 
-	private async Task<ClientLobbyJoinResponseMessage> AttemptJoin(NetClientGameService gameService)
+	private async Task<ClientLobbyJoinResponseMessage> AttemptJoin()
 	{
 		_joinCompletion = new TaskCompletionSource<ClientLobbyJoinResponseMessage>();
 		_logger.Info("Sending ClientLobbyJoinRequestMessage and waiting for response message");
@@ -189,27 +238,27 @@ public class JoinFlow
 			maxAscensionUnlocked = SaveManager.Instance.Progress.MaxMultiplayerAscension,
 			unlockState = unlockState.ToSerializable()
 		};
-		gameService.SendMessage(message);
+		NetService.SendMessage(message);
 		ClientLobbyJoinResponseMessage clientLobbyJoinResponseMessage = await _joinCompletion.Task;
 		_logger.Info($"Received {"ClientLobbyJoinResponseMessage"}: {clientLobbyJoinResponseMessage}");
 		return clientLobbyJoinResponseMessage;
 	}
 
-	private async Task<ClientLoadJoinResponseMessage> AttemptLoadJoin(NetClientGameService gameService)
+	private async Task<ClientLoadJoinResponseMessage> AttemptLoadJoin()
 	{
 		_loadJoinCompletion = new TaskCompletionSource<ClientLoadJoinResponseMessage>();
 		_logger.Info("Sending ClientLoadJoinRequestMessage and waiting for rejoin response message");
-		gameService.SendMessage(default(ClientLoadJoinRequestMessage));
+		NetService.SendMessage(default(ClientLoadJoinRequestMessage));
 		ClientLoadJoinResponseMessage clientLoadJoinResponseMessage = await _loadJoinCompletion.Task;
 		_logger.Info($"Received ClientLoadJoinResponseMessage: {clientLoadJoinResponseMessage}");
 		return clientLoadJoinResponseMessage;
 	}
 
-	private async Task<ClientRejoinResponseMessage> AttemptRejoin(NetClientGameService gameService)
+	private async Task<ClientRejoinResponseMessage> AttemptRejoin()
 	{
 		_rejoinCompletion = new TaskCompletionSource<ClientRejoinResponseMessage>();
 		_logger.Info("Sending ClientRequestRejoinMessage and waiting for rejoin response message");
-		gameService.SendMessage(default(ClientRejoinRequestMessage));
+		NetService.SendMessage(default(ClientRejoinRequestMessage));
 		ClientRejoinResponseMessage clientRejoinResponseMessage = await _rejoinCompletion.Task;
 		_logger.Info($"Received ClientRejoinResponseMessage: {clientRejoinResponseMessage}");
 		return clientRejoinResponseMessage;

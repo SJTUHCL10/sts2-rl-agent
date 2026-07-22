@@ -36,8 +36,8 @@ public sealed class DramaticEntrance : CardModel
 	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
 	{
 		await CreatureCmd.TriggerAnim(base.Owner.Creature, "Attack", base.Owner.Character.AttackAnimDelay);
-		VfxCmd.PlayFullScreenInCombat("vfx/vfx_dramatic_entrance_fullscreen");
-		await DamageCmd.Attack(base.DynamicVars.Damage.BaseValue).FromCard(this).TargetingAllOpponents(base.CombatState)
+		VfxCmd.PlayFullScreenInCombat("vfx/vfx_dramatic_entrance_fullscreen", base.Owner.Creature);
+		await DamageCmd.Attack(base.DynamicVars.Damage.BaseValue).FromCard(this, cardPlay).TargetingAllOpponents(base.CombatState)
 			.WithHitFx("vfx/vfx_attack_slash")
 			.Execute(choiceContext);
 	}

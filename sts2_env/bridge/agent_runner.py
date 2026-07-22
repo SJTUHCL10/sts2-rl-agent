@@ -10,8 +10,9 @@ Usage:
   python -m sts2_env.bridge.agent_runner --model-path models/combat_ppo.zip
   python -m sts2_env.bridge.agent_runner --model-path models/combat_ppo.zip --port 9002
 
-The agent uses the trained model for combat decisions and simple heuristics
-for non-combat decisions (map navigation, card rewards, etc.).
+The runner auto-detects combat-only (131x115) and full-run (151x157) models.
+Combat-only models use heuristics outside combat; full-run models drive every
+actionable phase through the learned policy.
 """
 
 from __future__ import annotations
@@ -23,6 +24,7 @@ import time
 from typing import Any
 
 from sts2_env.bridge.client import STS2GameClient
+from sts2_env.bridge.full_run_adapter import FullRunStateAdapter
 from sts2_env.bridge.protocol import (
     ActionType,
     BridgeStateType,
@@ -129,6 +131,20 @@ def run_agent(
     """
     model = load_model(model_path)
     adapter = StateAdapter()
+    full_run_adapter = FullRunStateAdapter()
+    observation_shape = getattr(model.observation_space, "shape", ())
+    action_count = getattr(model.action_space, "n", 0)
+    full_run_policy = observation_shape == (151,) and action_count == 157
+    if full_run_policy:
+        logger.info("Detected full-run policy (151 observations, 157 actions).")
+    elif observation_shape == (131,) and action_count == 115:
+        logger.info("Detected combat policy (131 observations, 115 actions).")
+    else:
+        raise ValueError(
+            "Unsupported model interface: observation shape "
+            f"{observation_shape}, action count {action_count}. Expected "
+            "combat 131x115 or full-run 151x157."
+        )
 
     logger.info("Connecting to STS2 at %s:%d...", host, port)
 
@@ -187,6 +203,26 @@ def run_agent(
                     break
                 if phase == MSG_TYPE_ERROR:
                     logger.warning("Game error: %s", state.get("message", ""))
+                    continue
+
+                if full_run_policy and phase in Phase.ACTIONABLE:
+                    obs = full_run_adapter.encode_observation(state)
+                    mask = full_run_adapter.compute_action_mask(state)
+                    action, _states = model.predict(
+                        obs,
+                        action_masks=mask,
+                        deterministic=deterministic,
+                    )
+                    action_int = int(action)
+                    decoded = full_run_adapter.decode_action(action_int, state)
+                    if verbose:
+                        logger.info(
+                            "FULL_RUN: type=%s policy_action=%d command=%s",
+                            msg_type,
+                            action_int,
+                            decoded,
+                        )
+                    _send_bridge_action(client, decoded)
                     continue
 
                 if phase in Phase.COMBAT_PHASES:
@@ -476,6 +512,23 @@ def _send_choice_or_skip(client: Any, choice_index: int | None) -> None:
         client.skip()
     else:
         client.choose(choice_index)
+
+
+def _send_bridge_action(client: Any, command: dict[str, Any]) -> None:
+    """Dispatch a normalized adapter command through the Bridge client."""
+    action = command.get("action")
+    if action == "end_turn":
+        client.end_turn()
+    elif action == "play":
+        client.play_card(command["card_index"], command.get("target_index", -1))
+    elif action == "potion":
+        client.use_potion(command["slot"], command.get("target_index", -1))
+    elif action == "choose":
+        client.choose(command["index"])
+    elif action == "skip":
+        client.skip()
+    else:
+        raise ValueError(f"Unsupported Bridge action command: {command!r}")
 
 
 def _enabled_options(state: dict[str, Any]) -> list[dict[str, Any]]:

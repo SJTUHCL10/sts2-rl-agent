@@ -30,6 +30,8 @@ FOUL_POTION_ID = "FoulPotion"
 FOUL_POTION_GOLD = 100
 FRUIT_JUICE_ID = "FruitJuice"
 FRUIT_JUICE_MAX_HP = 5
+AMBERGRIS_ID = "Ambergris"
+AMBERGRIS_HEAL_PERCENT = 50
 
 
 def _r(
@@ -121,7 +123,7 @@ _r("SneckoOil",           R,  CO, AP)
 _r("SoldiersStew",        R,  CO, AP, character_pool="Ironclad")
 
 # ── Event / Token / Deprecated ────────────────────────────────────────
+_r(AMBERGRIS_ID,          E,  AT, AP)
 _r(FOUL_POTION_ID,        E,  AT, S)
 _r("GlowwaterPotion",     E,  CO, S)
 _r("PotionShapedRock",    T,  CO, AE)
-_r("DeprecatedPotion",    N,  CO, AE)

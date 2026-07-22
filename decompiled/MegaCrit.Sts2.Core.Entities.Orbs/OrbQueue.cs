@@ -6,7 +6,6 @@ using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Context;
 using MegaCrit.Sts2.Core.Entities.Players;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
-using MegaCrit.Sts2.Core.Hooks;
 using MegaCrit.Sts2.Core.Models;
 
 namespace MegaCrit.Sts2.Core.Entities.Orbs;
@@ -80,31 +79,25 @@ public class OrbQueue
 
 	public async Task BeforeTurnEnd(PlayerChoiceContext choiceContext)
 	{
-		foreach (OrbModel orb in Orbs.ToList())
+		foreach (OrbModel item in Orbs.ToList())
 		{
-			List<AbstractModel> modifyingModels;
-			int triggerCount = Hook.ModifyOrbPassiveTriggerCount(_owner.Creature.CombatState, orb, 1, out modifyingModels);
-			await Hook.AfterModifyingOrbPassiveTriggerCount(_owner.Creature.CombatState, orb, modifyingModels);
-			for (int i = 0; i < triggerCount; i++)
+			if (_owner.Creature.CombatState == null)
 			{
-				await orb.BeforeTurnEndOrbTrigger(choiceContext);
-				await SmallWait();
+				return;
 			}
+			await item.BeforeTurnEndOrbTrigger(choiceContext);
 		}
 	}
 
 	public async Task AfterTurnStart(PlayerChoiceContext choiceContext)
 	{
-		foreach (OrbModel orb in Orbs.ToList())
+		foreach (OrbModel item in Orbs.ToList())
 		{
-			List<AbstractModel> modifyingModels;
-			int triggerCount = Hook.ModifyOrbPassiveTriggerCount(_owner.Creature.CombatState, orb, 1, out modifyingModels);
-			await Hook.AfterModifyingOrbPassiveTriggerCount(_owner.Creature.CombatState, orb, modifyingModels);
-			for (int i = 0; i < triggerCount; i++)
+			if (_owner.Creature.CombatState == null)
 			{
-				await orb.AfterTurnStartOrbTrigger(choiceContext);
-				await SmallWait();
+				return;
 			}
+			await item.AfterTurnStartOrbTrigger(choiceContext);
 		}
 	}
 

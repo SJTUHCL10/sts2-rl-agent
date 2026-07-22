@@ -12,6 +12,8 @@ public class CreatureAnimator
 
 	public const string attackTrigger = "Attack";
 
+	public const string powerUpTrigger = "PowerUp";
+
 	public const string castTrigger = "Cast";
 
 	public const string deathTrigger = "Dead";
@@ -39,13 +41,21 @@ public class CreatureAnimator
 		_spineController.ConnectAnimationCompleted(Callable.From<GodotObject, GodotObject, GodotObject>(OnAnimationCompleted));
 		_spineController.ConnectAnimationInterrupted(Callable.From<GodotObject, GodotObject, GodotObject>(OnAnimationInterrupted));
 		SetNextState(initialState);
-		if (initialState.Id == "idle_loop")
+		if (!(initialState.Id == "idle_loop"))
 		{
-			MegaAnimationState animationState = _spineController.GetAnimationState();
-			MegaTrackEntry current = animationState.GetCurrent(0);
-			current.SetTrackTime(Rng.Chaotic.NextFloat(current.GetAnimationEnd()));
+			return;
+		}
+		MegaAnimationState animationState = _spineController.GetAnimationState();
+		using MegaTrackEntry megaTrackEntry = animationState.GetCurrent(0);
+		if (megaTrackEntry != null)
+		{
+			megaTrackEntry.SetTrackTime(Rng.Chaotic.NextFloat(megaTrackEntry.GetAnimationEnd()));
 			animationState.Update(0f);
-			animationState.Apply(_spineController.GetSkeleton());
+			MegaSkeleton skeleton = _spineController.GetSkeleton();
+			if (skeleton != null)
+			{
+				animationState.Apply(skeleton);
+			}
 		}
 	}
 
@@ -74,6 +84,10 @@ public class CreatureAnimator
 
 	private void SetNextState(AnimState state)
 	{
+		if (_currentState.BoundsContainer != null)
+		{
+			this.BoundsUpdated?.Invoke(_currentState.BoundsContainer);
+		}
 		_currentState = state;
 		if (!_spineController.HasAnimation(_currentState.Id))
 		{
@@ -85,7 +99,11 @@ public class CreatureAnimator
 		animationState.SetAnimation(_currentState.Id, _currentState.IsLooping);
 		if (_currentState.IsLooping)
 		{
-			OffsetLoopingAnimation(animationState.GetCurrent(0));
+			using MegaTrackEntry megaTrackEntry = animationState.GetCurrent(0);
+			if (megaTrackEntry != null)
+			{
+				OffsetLoopingAnimation(megaTrackEntry);
+			}
 		}
 		if (state.BoundsContainer != null)
 		{
@@ -106,10 +124,14 @@ public class CreatureAnimator
 			return;
 		}
 		MegaAnimationState animationState = _spineController.GetAnimationState();
-		MegaTrackEntry track = animationState.AddAnimation(state.Id, 0f, state.IsLooping);
 		if (state.IsLooping)
 		{
+			using MegaTrackEntry track = animationState.AddAnimationTracked(state.Id, 0f, state.IsLooping);
 			OffsetLoopingAnimation(track);
+		}
+		else
+		{
+			animationState.AddAnimation(state.Id, 0f, state.IsLooping);
 		}
 		if (state.NextState != null)
 		{

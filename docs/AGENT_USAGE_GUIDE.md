@@ -186,7 +186,7 @@ python -m sts2_env.bridge.agent_runner \
        --verbose
    ```
 
-4. **Watch the game play.** The agent will:
+4. **Watch the game play.** With a combat checkpoint, the agent will:
    - Start a new run with a random seed
    - Navigate the map (prefer elites when healthy, safer nodes when low on HP)
    - Fight combats (using the trained model)
@@ -215,7 +215,17 @@ python -m sts2_env.bridge.agent_runner \
 | Events | Pick the first enabled event option | Heuristic (TODO: train) |
 | Treasure / Boss relics | Pick the bridge option matching collect / pick relic | Heuristic (TODO: train) |
 
-For a fully trained agent, use the full-run model instead of the combat-only model. The full-run model handles all phases via the trained policy.
+The runner detects the model interface automatically. A 131-observation,
+115-action combat checkpoint uses the table above. A 151-observation,
+157-action full-run checkpoint uses model predictions for every actionable
+phase, with masks derived from the live Bridge choices. No extra command-line
+flag is required.
+
+The live protocol currently omits some run-level metadata from some screens.
+The full-run adapter retains the last observed values and initializes unseen
+gold/deck/relic/potion fields with starter-run defaults. This is sufficient for
+protocol smoke testing, but adding a complete `run_state` snapshot to every
+Bridge message will improve simulator-to-game observation parity.
 
 ---
 

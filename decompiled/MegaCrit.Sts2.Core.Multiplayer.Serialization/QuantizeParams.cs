@@ -1,17 +1,10 @@
 namespace MegaCrit.Sts2.Core.Multiplayer.Serialization;
 
-public struct QuantizeParams
+public struct QuantizeParams(float min, float max, int bits)
 {
-	public float min;
+	public float min = min;
 
-	public float max;
+	public float max = max;
 
-	public int bits;
-
-	public QuantizeParams(float min, float max, int bits)
-	{
-		this.min = min;
-		this.max = max;
-		this.bits = bits;
-	}
+	public int bits = bits;
 }

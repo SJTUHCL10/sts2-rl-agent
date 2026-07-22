@@ -20,12 +20,12 @@ public sealed class Colossus : CardModel
 
 	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(new DynamicVar[2]
 	{
-		new BlockVar(5m, ValueProp.Move),
+		new BlockVar(4m, ValueProp.Move),
 		new DynamicVar("Colossus", 1m)
 	});
 
 	public Colossus()
-		: base(1, CardType.Skill, CardRarity.Rare, TargetType.Self)
+		: base(1, CardType.Skill, CardRarity.Uncommon, TargetType.Self)
 	{
 	}
 
@@ -33,7 +33,7 @@ public sealed class Colossus : CardModel
 	{
 		await CreatureCmd.TriggerAnim(base.Owner.Creature, "Cast", base.Owner.Character.CastAnimDelay);
 		await CreatureCmd.GainBlock(base.Owner.Creature, base.DynamicVars.Block, cardPlay);
-		await PowerCmd.Apply<ColossusPower>(base.Owner.Creature, base.DynamicVars["Colossus"].BaseValue, base.Owner.Creature, this);
+		await PowerCmd.Apply<ColossusPower>(choiceContext, base.Owner.Creature, base.DynamicVars["Colossus"].BaseValue, base.Owner.Creature, this);
 	}
 
 	protected override void OnUpgrade()

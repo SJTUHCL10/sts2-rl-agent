@@ -37,6 +37,9 @@ from sts2_env.cards.reference_static_metadata import (
     MULTIPLAYER_CONSTRAINT_MULTIPLAYER_ONLY,
     MULTIPLAYER_CONSTRAINT_NONE,
     MULTIPLAYER_CONSTRAINT_SINGLEPLAYER_ONLY,
+    reference_dynamic_vars_by_card_id,
+    upgraded_reference_dynamic_vars_by_card_id,
+    upgraded_reference_metadata_by_card_id,
 )
 
 CardFactory = Callable[..., CardInstance]
@@ -180,14 +183,37 @@ class ReferenceCardDefinition:
 
 
 def _apply_decompiled_static_metadata(card: CardInstance) -> CardInstance:
-    static_metadata = _static_metadata_override(card.card_id)
+    if card.upgraded:
+        static_metadata = upgraded_reference_metadata_by_card_id().get(card.card_id)
+        dynamic_vars = upgraded_reference_dynamic_vars_by_card_id().get(card.card_id)
+    else:
+        static_metadata = _static_metadata_override(card.card_id)
+        dynamic_vars = reference_dynamic_vars_by_card_id().get(card.card_id)
     if static_metadata is not None:
+        card.cost = static_metadata.cost
+        card.original_cost = static_metadata.cost
+        card.card_type = static_metadata.card_type
+        card.target_type = static_metadata.target_type
+        card.rarity = static_metadata.rarity
+        card.keywords = static_metadata.keywords
+        card.tags = static_metadata.tags
+        card.has_energy_cost_x = static_metadata.has_energy_cost_x
+        card.star_cost = static_metadata.star_cost
+        card.has_star_cost_x = static_metadata.has_star_cost_x
         card.can_be_generated_in_combat = static_metadata.can_be_generated_in_combat
         card.can_be_generated_by_modifiers = static_metadata.can_be_generated_by_modifiers
         card.has_turn_end_in_hand_effect = static_metadata.has_turn_end_in_hand_effect
-        return card
-    card.can_be_generated_in_combat = card.card_id not in _COMBAT_GENERATION_EXCLUDED
-    card.can_be_generated_by_modifiers = card.card_id not in _MODIFIER_GENERATION_EXCLUDED
+        if static_metadata.max_upgrade_level == 0:
+            card.upgraded = False
+    else:
+        card.can_be_generated_in_combat = card.card_id not in _COMBAT_GENERATION_EXCLUDED
+        card.can_be_generated_by_modifiers = card.card_id not in _MODIFIER_GENERATION_EXCLUDED
+    if dynamic_vars is not None:
+        card.effect_vars.update(dynamic_vars)
+        if "damage" in dynamic_vars:
+            card.base_damage = dynamic_vars["damage"]
+        if "block" in dynamic_vars:
+            card.base_block = dynamic_vars["block"]
     return card
 
 

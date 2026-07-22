@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Godot;
 using MegaCrit.Sts2.Core.Assets;
@@ -15,6 +16,7 @@ using MegaCrit.Sts2.Core.Models.Events;
 using MegaCrit.Sts2.Core.Nodes;
 using MegaCrit.Sts2.Core.Nodes.Events.Custom;
 using MegaCrit.Sts2.Core.Nodes.Rooms;
+using MegaCrit.Sts2.Core.Nodes.Screens.Shops;
 using MegaCrit.Sts2.Core.Rooms;
 using MegaCrit.Sts2.Core.Runs;
 using MegaCrit.Sts2.Core.TestSupport;
@@ -54,15 +56,30 @@ public sealed class FoulPotion : PotionModel
 			{
 				return true;
 			}
-			if (base.Owner.RunState.CurrentRoom is MerchantRoom)
+			AbstractRoom currentRoom = base.Owner.RunState.CurrentRoom;
+			if (currentRoom is MerchantRoom)
 			{
-				return true;
+				goto IL_0040;
 			}
-			if (base.Owner.RunState.CurrentRoom is EventRoom eventRoom && eventRoom.CanonicalEvent is FakeMerchant)
+			if (currentRoom is EventRoom eventRoom)
 			{
-				return true;
+				EventModel canonicalEvent = eventRoom.CanonicalEvent;
+				if (canonicalEvent is FakeMerchant)
+				{
+					goto IL_0040;
+				}
+			}
+			bool flag = false;
+			goto IL_0046;
+			IL_0046:
+			if (flag)
+			{
+				return GetFoulPotionMerchantTarget(currentRoom).button != null;
 			}
 			return false;
+			IL_0040:
+			flag = true;
+			goto IL_0046;
 		}
 	}
 
@@ -72,7 +89,7 @@ public sealed class FoulPotion : PotionModel
 		{
 			Creature creature = base.Owner.Creature;
 			DamageVar damage = base.DynamicVars.Damage;
-			await CreatureCmd.Damage(choiceContext, base.Owner.Creature.CombatState.Creatures, damage.BaseValue, damage.Props, creature, null);
+			await CreatureCmd.Damage(choiceContext, base.Owner.Creature.CombatState.Creatures.Where((Creature c) => !c.IsPet), damage.BaseValue, damage.Props, creature, null, null);
 		}
 		else if (base.Owner.RunState.CurrentRoom is MerchantRoom)
 		{
@@ -115,5 +132,38 @@ public sealed class FoulPotion : PotionModel
 			merchantButton.GetParent().AddChildSafely(node2D);
 			node2D.GlobalPosition = merchantButton.GlobalPosition;
 		}
+	}
+
+	/// <summary>
+	/// Tries to grab the merchant button and its parent screen context from the Shop/Fake shop room.
+	/// Used for Foul Potion targeting.
+	/// </summary>
+	public static (NMerchantButton? button, Control? screenContext) GetFoulPotionMerchantTarget(AbstractRoom room)
+	{
+		if (room.RoomType == RoomType.Shop)
+		{
+			NMerchantRoom instance = NMerchantRoom.Instance;
+			if (instance != null)
+			{
+				NMerchantInventory inventory = instance.Inventory;
+				if (inventory != null && !inventory.IsOpen)
+				{
+					return (button: instance.MerchantButton, screenContext: instance);
+				}
+			}
+		}
+		if (room is EventRoom eventRoom && eventRoom.CanonicalEvent is FakeMerchant)
+		{
+			EventModel localMutableEvent = eventRoom.LocalMutableEvent;
+			if (localMutableEvent != null && localMutableEvent.Node is NFakeMerchant nFakeMerchant)
+			{
+				NMerchantInventory inventory = nFakeMerchant.Inventory;
+				if (inventory != null && !inventory.IsOpen)
+				{
+					return (button: nFakeMerchant.MerchantButton, screenContext: nFakeMerchant);
+				}
+			}
+		}
+		return (button: null, screenContext: null);
 	}
 }

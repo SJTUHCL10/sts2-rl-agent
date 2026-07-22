@@ -155,14 +155,10 @@ class TestPotionRegistry:
     def test_nonexistent_returns_none(self):
         assert get_potion_model("NonexistentPotion") is None
 
-    def test_deprecated_potion_matches_original_save_placeholder(self):
+    def test_removed_deprecated_potion_is_not_registered(self):
         model = get_potion_model("DeprecatedPotion")
 
-        assert model is not None
-        assert model.rarity is PotionRarity.NONE
-        assert model.usage_type is PotionUsageType.COMBAT_ONLY
-        assert model.target_type is PotionTargetType.ANY_ENEMY
-        assert model not in normal_pool_models()
+        assert model is None
 
 
 class TestRarityCounts:
@@ -180,7 +176,7 @@ class TestRarityCounts:
 
     def test_event_count(self):
         event = [m for m in all_potion_models() if m.rarity == PotionRarity.EVENT]
-        assert len(event) == 2
+        assert len(event) == 3
 
     def test_token_count(self):
         token = [m for m in all_potion_models() if m.rarity == PotionRarity.TOKEN]

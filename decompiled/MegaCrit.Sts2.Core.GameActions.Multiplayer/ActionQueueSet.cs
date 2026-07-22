@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MegaCrit.Sts2.Core.Debug;
 using MegaCrit.Sts2.Core.Entities.Actions;
 using MegaCrit.Sts2.Core.Entities.Multiplayer;
 using MegaCrit.Sts2.Core.Entities.Players;
@@ -9,6 +10,13 @@ using MegaCrit.Sts2.Core.Logging;
 
 namespace MegaCrit.Sts2.Core.GameActions.Multiplayer;
 
+/// <summary>
+/// Contains one action queue per player.
+/// We use multiple action queues to resolve the following scenario:
+/// - One player queues up three or more card plays, the second of which requires player choice
+/// - Their queue blocks on the player choice. The third action awaits completion of the player choice
+/// - Other players may freely queue card plays to their queues and have them executed
+/// </summary>
 public class ActionQueueSet
 {
 	private class ActionQueue
@@ -43,6 +51,15 @@ public class ActionQueueSet
 
 	private uint _nextId;
 
+	private bool _isInCombat;
+
+	/// <summary>
+	/// Set to true by <see cref="M:MegaCrit.Sts2.Core.GameActions.Multiplayer.ActionQueueSet.Reset" /> and back to false by <see cref="M:MegaCrit.Sts2.Core.GameActions.Multiplayer.ActionQueueSet.CombatStarted" />.
+	/// This lets <see cref="M:MegaCrit.Sts2.Core.GameActions.Multiplayer.ActionQueueSet.PopAction(MegaCrit.Sts2.Core.GameActions.GameAction)" /> no-op for actions that were orphaned mid-execution when their queue was
+	/// cleared out from under them.
+	/// </summary>
+	private bool _wasReset;
+
 	public bool IsEmpty
 	{
 		get
@@ -76,6 +93,11 @@ public class ActionQueueSet
 		}
 	}
 
+	/// <summary>
+	/// Only use this if you really know what you're doing! Improper use can lead to state divergence.
+	/// Enqueues an action directly to the owner's action queue.
+	/// </summary>
+	/// <param name="gameAction">The action to enqueue.</param>
 	public void EnqueueWithoutSynchronizing(GameAction gameAction)
 	{
 		if (_queuesEmptyCompletionSource == null || _queuesEmptyCompletionSource.Task.IsCompleted)
@@ -88,14 +110,22 @@ public class ActionQueueSet
 		}
 		gameAction.OnEnqueued(PopAction, GetAndIncrementActionId());
 		ActionQueue queue = GetQueue(gameAction.OwnerId);
-		this.ActionEnqueued?.Invoke(gameAction);
+		try
+		{
+			this.ActionEnqueued?.Invoke(gameAction);
+		}
+		catch (Exception ex)
+		{
+			Log.Error($"Exception encountered in ActionEnqueued for action {gameAction}: {ex}");
+			SentryService.CaptureException(ex);
+		}
 		if (queue.isCancellingPlayCardActions && gameAction is PlayCardAction)
 		{
 			_logger.Debug($"Attempted to enqueue PlayCardAction {gameAction} to player queue owned by {gameAction.OwnerId}, but it's currently cancelling all play card actions due to player choice");
 			gameAction.Cancel();
 			return;
 		}
-		if (queue.isCancellingPlayerDrivenCombatActions && IsGameActionPlayerDriven(gameAction) && gameAction.ActionType != GameActionType.NonCombat)
+		if (queue.isCancellingPlayerDrivenCombatActions && IsGameActionPlayerDriven(gameAction) && gameAction.ActionType != GameActionType.NonCombat && gameAction.ActionType != GameActionType.Any)
 		{
 			_logger.Debug($"Attempted to enqueue GameAction {gameAction} to player queue owned by {gameAction.OwnerId}, but it's currently cancelling all non-hook actions due to end of turn");
 			gameAction.Cancel();
@@ -122,6 +152,12 @@ public class ActionQueueSet
 		}
 	}
 
+	/// <summary>
+	/// Returns true if a GameAction is player driven, false if it is emitted automatically.
+	/// If this ends up being used in a few different places, it can be moved somewhere else; for now, it's obscure enough
+	/// that it should only be used here.
+	/// </summary>
+	/// <returns></returns>
 	public static bool IsGameActionPlayerDriven(GameAction gameAction)
 	{
 		if (!(gameAction is GenericHookGameAction))
@@ -131,6 +167,13 @@ public class ActionQueueSet
 		return false;
 	}
 
+	/// <summary>
+	/// Returns the next action on top of a player's queue that should be executed.
+	/// Selection works like this:
+	/// - If any player's queue is awaiting a player choice, then that queue is skipped.
+	/// - Otherwise, we return the action with the minimum ID (the first queued by the host) at the top of any player's queue.
+	/// This method should not be called when an action is already being executed.
+	/// </summary>
 	public GameAction? GetReadyAction()
 	{
 		GameAction gameAction = null;
@@ -142,7 +185,34 @@ public class ActionQueueSet
 				_logger.VeryDebug($"Queue for player {actionQueue.ownerId} is empty");
 				continue;
 			}
+			while (actionQueue.actions.Count > 0 && actionQueue.actions[0].State == GameActionState.Canceled)
+			{
+				_logger.Warn($"Removing canceled action {actionQueue.actions[0]} from front of player queue {actionQueue.ownerId}");
+				actionQueue.actions.RemoveAt(0);
+			}
+			if (actionQueue.actions.Count <= 0)
+			{
+				continue;
+			}
 			GameAction gameAction2 = actionQueue.actions[0];
+			if (_isInCombat && gameAction2.ActionType == GameActionType.NonCombat)
+			{
+				_logger.VeryDebug($"We are currently in combat and candidate action {gameAction2} has type {gameAction2.ActionType}");
+				continue;
+			}
+			bool flag = !_isInCombat;
+			bool flag2 = flag;
+			if (flag2)
+			{
+				GameActionType actionType = gameAction2.ActionType;
+				bool flag3 = (uint)(actionType - 1) <= 1u;
+				flag2 = flag3;
+			}
+			if (flag2)
+			{
+				_logger.VeryDebug($"We are currently not in combat and candidate action {gameAction2} has type {gameAction2.ActionType}");
+				continue;
+			}
 			if (actionQueue.isPaused && gameAction2.ActionType == GameActionType.CombatPlayPhaseOnly)
 			{
 				_logger.VeryDebug($"Queue for player {actionQueue.ownerId} is paused and candidate action {gameAction2} has type {gameAction2.ActionType}");
@@ -178,6 +248,14 @@ public class ActionQueueSet
 		return gameAction;
 	}
 
+	/// <summary>
+	/// Pauses an action for player choice. The action will be removed from the ActionExecutor and a new action will be
+	/// allowed to execute, if there are any actions that are ready.
+	/// To resume the action after this is called, call RequestResumeActionAfterPlayerChoice.
+	/// </summary>
+	/// <param name="action">The GameAction to pause.</param>
+	/// <param name="options">Whether to cancel card play actions that enter the queue while obtaining player choice.</param>
+	/// <exception cref="T:System.InvalidOperationException">Thrown if the action is not at the front of the owner's action queue.</exception>
 	public void PauseActionForPlayerChoice(GameAction action, PlayerChoiceOptions options)
 	{
 		ActionQueue queue = GetQueue(action.OwnerId);
@@ -212,6 +290,10 @@ public class ActionQueueSet
 		}
 	}
 
+	/// <summary>
+	/// Returns a task which completes when all player queues are empty.
+	/// Be careful of running this in tests that involve player choice! If actions are not resumed, the task will never complete.
+	/// </summary>
 	public Task BecameEmpty()
 	{
 		if (_queuesEmptyCompletionSource == null)
@@ -221,6 +303,10 @@ public class ActionQueueSet
 		return _queuesEmptyCompletionSource.Task;
 	}
 
+	/// <summary>
+	/// Pauses execution of all actions on all player queues, including those that are queued after this is called.
+	/// Note that this does not pause execution of the currently executing action - only those that come after it.
+	/// </summary>
 	public void PauseAllPlayerQueues()
 	{
 		_logger.Debug("Pausing all player queues");
@@ -232,6 +318,14 @@ public class ActionQueueSet
 		this.ActionQueueChanged?.Invoke();
 	}
 
+	/// <summary>
+	/// Cancels all manual combat actions that are enqueued to all queues.
+	/// Manual combat actions are any GameActions that have ActionType != GameActionType.NonCombat and ActionType !=
+	/// GameActionType.Any, and are manually played by the player (i.e. everything except for GenericHookGameAction and
+	/// ReadyToSwitchToEnemyTurnAction). The flag becomes unset when either PauseAllPlayerQueues or UnpauseAllPlayerQueues
+	/// is called.
+	/// See the comments in EnqueueWithoutSynchronizing for why this is necessary.
+	/// </summary>
 	public void StartCancellingAllPlayerDrivenCombatActions()
 	{
 		_logger.Debug("Setting all player queues to cancel all non-hook actions");
@@ -241,7 +335,7 @@ public class ActionQueueSet
 			for (int i = 0; i < actionQueue.actions.Count; i++)
 			{
 				GameAction gameAction = actionQueue.actions[i];
-				if (IsGameActionPlayerDriven(gameAction) && gameAction.ActionType != GameActionType.NonCombat && gameAction.State == GameActionState.WaitingForExecution)
+				if (IsGameActionPlayerDriven(gameAction) && gameAction.ActionType != GameActionType.NonCombat && gameAction.ActionType != GameActionType.Any && gameAction.State == GameActionState.WaitingForExecution)
 				{
 					_logger.VeryDebug($"Cancelling non-hook action {actionQueue.actions[i]}");
 					gameAction.Cancel();
@@ -252,11 +346,17 @@ public class ActionQueueSet
 		}
 	}
 
+	/// <returns>Returns true if the action queue for the given player is paused.</returns>
 	public bool ActionQueueIsPaused(ulong playerId)
 	{
 		return GetQueue(playerId).isPaused;
 	}
 
+	/// <summary>
+	/// Resumes execution of all player queues without synchronization.
+	/// It's fine to call this at the end of combat, but call this very carefully during combat, as incorrect usage
+	/// can lead to state divergences.
+	/// </summary>
 	public void UnpauseAllPlayerQueues()
 	{
 		_logger.Debug("Unpausing all player queues");
@@ -268,9 +368,13 @@ public class ActionQueueSet
 		this.ActionQueueChanged?.Invoke();
 	}
 
+	/// <summary>
+	/// Cancels all combat actions on the queue and continues cancelling them until CombatStarted is called.
+	/// </summary>
 	public void CombatEnded()
 	{
-		_logger.Debug("Cancelling all non-executing combat actions in all queues");
+		_logger.Debug("Combat ended. Cancelling all non-executing combat actions in all queues");
+		_isInCombat = false;
 		foreach (ActionQueue actionQueue in _actionQueues)
 		{
 			for (int i = 0; i < actionQueue.actions.Count; i++)
@@ -298,8 +402,28 @@ public class ActionQueueSet
 		this.ActionQueueChanged?.Invoke();
 	}
 
+	/// <summary>
+	/// Allows combat actions to be added to player queues, but not be executed.
+	/// </summary>
+	public void SetUpForCombat()
+	{
+		_logger.Debug("Setting up for combat.");
+		_wasReset = false;
+		_isInCombat = false;
+		foreach (ActionQueue actionQueue in _actionQueues)
+		{
+			actionQueue.isCancellingCombatActions = false;
+		}
+	}
+
+	/// <summary>
+	/// Allows combat actions to start executing.
+	/// </summary>
 	public void CombatStarted()
 	{
+		_logger.Debug("Combat started.");
+		_isInCombat = true;
+		_wasReset = false;
 		foreach (ActionQueue actionQueue in _actionQueues)
 		{
 			actionQueue.isCancellingCombatActions = false;
@@ -308,11 +432,15 @@ public class ActionQueueSet
 
 	public void Reset()
 	{
+		_wasReset = true;
 		_actionQueues.Clear();
 		CheckIfQueuesEmpty();
 		this.ActionQueueChanged?.Invoke();
 	}
 
+	/// <summary>
+	/// Cancels all non-executing actions for a specific player's queue.
+	/// </summary>
 	public void CancelNonExecutingActionsForPlayer(ulong playerId)
 	{
 		_logger.Debug($"Cancelling all non-executing actions owned by {playerId}");
@@ -330,6 +458,15 @@ public class ActionQueueSet
 		CheckIfQueuesEmpty();
 	}
 
+	/// <summary>
+	/// Cancel all queued actions of the specified type owned by a specific player.
+	/// Used when we are selecting a card, e.g. for Survivor, but cards have been queued up for play.
+	/// Note that this does not cancel the action at the front of the queue if it is executing.
+	/// This is private because the timing must be synchronized with action enqueues across peers.
+	/// </summary>
+	/// <typeparam name="T">Type of actions to cancel.</typeparam>
+	/// <param name="ownerId">The owner of the actions to cancel.</param>
+	/// <param name="maxActionId">If non-null, only actions with ID less than this value will be cancelled.</param>
 	private void CancelNonExecutingActionsOfType<T>(ulong ownerId, uint? maxActionId) where T : GameAction
 	{
 		_logger.Debug($"Cancelling non-executing actions of type {typeof(T)} owned by {ownerId}");
@@ -354,6 +491,9 @@ public class ActionQueueSet
 		CheckIfQueuesEmpty();
 	}
 
+	/// <summary>
+	/// Resumes a GameAction after a player choice. This should never be called anywhere other than ActionQueueSynchronizer.
+	/// </summary>
 	public void ResumeActionWithoutSynchronizing(uint id)
 	{
 		this.ActionResumed?.Invoke(id);
@@ -377,6 +517,9 @@ public class ActionQueueSet
 		}
 	}
 
+	/// <summary>
+	/// Obtains an action by its ID.
+	/// </summary>
 	private bool TryGetAction(uint id, out GameAction? gameAction, out ActionQueue? queue)
 	{
 		foreach (ActionQueue actionQueue in _actionQueues)
@@ -396,6 +539,9 @@ public class ActionQueueSet
 		return false;
 	}
 
+	/// <summary>
+	/// Obtains an action queue by its owner's ID.
+	/// </summary>
 	private ActionQueue GetQueue(ulong playerId)
 	{
 		ActionQueue actionQueue = _actionQueues.FirstOrDefault((ActionQueue q) => q.ownerId == playerId);
@@ -406,8 +552,15 @@ public class ActionQueueSet
 		return actionQueue;
 	}
 
+	/// <summary>
+	/// Removes an action from the front of its owner's queue. Should be called when an action finishes execution.
+	/// </summary>
 	private void PopAction(GameAction action)
 	{
+		if (_wasReset)
+		{
+			return;
+		}
 		bool flag = false;
 		foreach (ActionQueue actionQueue in _actionQueues)
 		{
@@ -445,11 +598,18 @@ public class ActionQueueSet
 		throw new InvalidOperationException($"Tried to pop action {action}, but we didn't find it in any queue!");
 	}
 
+	/// <summary>
+	/// Used in replays so that we start with the correct action ID when replaying actions.
+	/// </summary>
+	/// <param name="nextId">The ID to assign to the next action.</param>
 	public void FastForwardNextActionId(uint nextId)
 	{
 		_nextId = nextId;
 	}
 
+	/// <summary>
+	/// Checks if all action queues are empty and sets the completion source for tests that wait.
+	/// </summary>
 	private void CheckIfQueuesEmpty()
 	{
 		if (!_actionQueues.All((ActionQueue q) => q.actions.Count == 0))
@@ -467,6 +627,17 @@ public class ActionQueueSet
 		}
 	}
 
+	/// <summary>
+	/// Called when an action is enqueued or resumed.
+	/// It is extremely important that this message is called deterministically across all peers. Action IDs are not
+	/// synchronized across the network; since all action messages (enqueue/resume) are received in the same order that
+	/// they are sent, we can trust that all peers will generate the same action IDs.
+	///
+	/// Note that we re-assign an ID to an action when it becomes ready. The reason we do this is to avoid subtle timing
+	/// bugs with message ready timings. Re-assigning the ID to an ID that is greater than all actions currently in the
+	/// queue ensures that the existing actions in the queue will execute in a deterministic fashion, and the newly ready
+	/// action will execute after them.
+	/// </summary>
 	private uint GetAndIncrementActionId()
 	{
 		uint nextId = _nextId;

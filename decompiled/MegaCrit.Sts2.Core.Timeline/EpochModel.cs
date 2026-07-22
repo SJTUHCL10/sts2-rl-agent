@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Godot;
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.Entities.Potions;
@@ -17,90 +18,43 @@ using MegaCrit.Sts2.SourceGeneration;
 
 namespace MegaCrit.Sts2.Core.Timeline;
 
+/// <summary>
+/// An abstract class which contains data for a single Epoch.
+/// </summary>
 [GenerateSubtypes(DynamicallyAccessedMemberTypes = DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
 public abstract class EpochModel
 {
-	private static IReadOnlyList<string>? _allEpochIds;
+	/// <summary>
+	/// List of all valid epochs currently in the game
+	/// </summary>
+	private static readonly List<Type> _allEpochs;
+
+	private static List<string>? _allEpochIds;
+
+	private static HashSet<string>? _epochIdsHashSet;
+
+	private string? _resolvedPortraitPath;
 
 	private static readonly Dictionary<string, Type> _epochTypeDictionary;
 
 	private static readonly Dictionary<Type, string> _typeToIdDictionary;
 
-	private static IEnumerable<string> EpochIds => new global::_003C_003Ez__ReadOnlyArray<string>(new string[57]
-	{
-		GetId<Act2BEpoch>(),
-		GetId<Act3BEpoch>(),
-		GetId<Colorless1Epoch>(),
-		GetId<Colorless2Epoch>(),
-		GetId<Colorless3Epoch>(),
-		GetId<Colorless4Epoch>(),
-		GetId<Colorless5Epoch>(),
-		GetId<CustomAndSeedsEpoch>(),
-		GetId<DailyRunEpoch>(),
-		GetId<DarvEpoch>(),
-		GetId<Defect1Epoch>(),
-		GetId<Defect2Epoch>(),
-		GetId<Defect3Epoch>(),
-		GetId<Defect4Epoch>(),
-		GetId<Defect5Epoch>(),
-		GetId<Defect6Epoch>(),
-		GetId<Defect7Epoch>(),
-		GetId<Event1Epoch>(),
-		GetId<Event2Epoch>(),
-		GetId<Event3Epoch>(),
-		GetId<Ironclad2Epoch>(),
-		GetId<Ironclad3Epoch>(),
-		GetId<Ironclad4Epoch>(),
-		GetId<Ironclad5Epoch>(),
-		GetId<Ironclad6Epoch>(),
-		GetId<Ironclad7Epoch>(),
-		GetId<Necrobinder1Epoch>(),
-		GetId<Necrobinder2Epoch>(),
-		GetId<Necrobinder3Epoch>(),
-		GetId<Necrobinder4Epoch>(),
-		GetId<Necrobinder5Epoch>(),
-		GetId<Necrobinder6Epoch>(),
-		GetId<Necrobinder7Epoch>(),
-		GetId<NeowEpoch>(),
-		GetId<OrobasEpoch>(),
-		GetId<Potion1Epoch>(),
-		GetId<Potion2Epoch>(),
-		GetId<Regent1Epoch>(),
-		GetId<Regent2Epoch>(),
-		GetId<Regent3Epoch>(),
-		GetId<Regent4Epoch>(),
-		GetId<Regent5Epoch>(),
-		GetId<Regent6Epoch>(),
-		GetId<Regent7Epoch>(),
-		GetId<Relic1Epoch>(),
-		GetId<Relic2Epoch>(),
-		GetId<Relic3Epoch>(),
-		GetId<Relic4Epoch>(),
-		GetId<Relic5Epoch>(),
-		GetId<Silent1Epoch>(),
-		GetId<Silent2Epoch>(),
-		GetId<Silent3Epoch>(),
-		GetId<Silent4Epoch>(),
-		GetId<Silent5Epoch>(),
-		GetId<Silent6Epoch>(),
-		GetId<Silent7Epoch>(),
-		GetId<UnderdocksEpoch>()
-	});
+	public static IReadOnlyList<Type> AllEpochs => _allEpochs;
 
-	public static IReadOnlyList<string> AllEpochIds => _allEpochIds ?? (_allEpochIds = EpochIds.ToList());
+	public static IReadOnlyList<string> AllEpochIds => _allEpochIds ?? (_allEpochIds = _allEpochs.Select(GetId).ToList());
 
-	public string Year => new LocString("eras", StringHelper.Slugify(Era.ToString()) + ".year").GetFormattedText();
-
-	public string EraName => new LocString("eras", StringHelper.Slugify(Era.ToString()) + ".name").GetFormattedText();
+	public static IReadOnlySet<string> EpochIdsHashSet => _epochIdsHashSet ?? (_epochIdsHashSet = AllEpochIds.ToHashSet());
 
 	public abstract string Id { get; }
 
-	public ModelId ModelId => new ModelId("epoch", Id);
-
-	public virtual bool IsArtPlaceholder => true;
-
+	/// <summary>
+	/// Not used as of this time except for the header of the hovertip when peeking at the unlock requirement.
+	/// </summary>
 	public LocString Title => new LocString("epochs", Id + ".title");
 
+	/// <summary>
+	/// The fancy lore text.
+	/// </summary>
 	public string Description => new LocString("epochs", Id + ".description").GetFormattedText();
 
 	public string? StoryTitle
@@ -117,22 +71,58 @@ public abstract class EpochModel
 
 	public virtual string? StoryId => null;
 
+	/// <summary>
+	/// The text shown in the hovertip when you hover this Epoch while it's not yet obtained.
+	/// </summary>
 	public LocString UnlockInfo => new LocString("epochs", Id + ".unlockInfo");
 
+	/// <summary>
+	/// The text which shows up at the bottom of the Epoch Inspect Screen, describing what had been unlocked.
+	/// </summary>
 	public virtual string UnlockText => new LocString("epochs", Id + ".unlockText").GetFormattedText();
 
 	public abstract EpochEra Era { get; }
 
+	/// <summary>
+	/// The "row" which this Era supposedly resides in. 0 is the bottom, 4 is the top!
+	/// </summary>
 	public abstract int EraPosition { get; }
 
 	public Texture2D Portrait => ResourceLoader.Load<Texture2D>(PackedPortraitPath, null, ResourceLoader.CacheMode.Reuse);
 
-	public string PackedPortraitPath => ImageHelper.GetImagePath("atlases/epoch_atlas.sprites/" + Id.ToLowerInvariant() + ".tres");
+	private string PackedPortraitPath => ImageHelper.GetImagePath("atlases/epoch_atlas.sprites/" + Id.ToLowerInvariant() + ".tres");
 
-	public Texture2D BigPortrait => ResourceLoader.Load<Texture2D>(BigPortraitPath, null, ResourceLoader.CacheMode.Reuse);
+	public Texture2D RealPortrait => ResourceLoader.Load<Texture2D>(ResolvedPortraitPath, null, ResourceLoader.CacheMode.Reuse);
 
-	public string BigPortraitPath => ImageHelper.GetImagePath("timeline/epoch_portraits/" + Id.ToLowerInvariant() + ".png");
+	public bool HasRealPortrait => ResourceLoader.Exists(RealPortraitPath);
 
+	private string RealPortraitPath => ImageHelper.GetImagePath("timeline/epoch_portraits/" + Id.ToLowerInvariant() + ".png");
+
+	private string PlaceholderPortraitPath => ImageHelper.GetImagePath("timeline/epoch_portraits/placeholder/" + Id.ToLowerInvariant() + ".png");
+
+	public string ResolvedPortraitPath
+	{
+		get
+		{
+			if (_resolvedPortraitPath != null)
+			{
+				return _resolvedPortraitPath;
+			}
+			if (ResourceLoader.Exists(RealPortraitPath))
+			{
+				_resolvedPortraitPath = RealPortraitPath;
+			}
+			else
+			{
+				_resolvedPortraitPath = PlaceholderPortraitPath;
+			}
+			return _resolvedPortraitPath;
+		}
+	}
+
+	/// <summary>
+	/// Grabs the index of a given Epoch. If invalid, returns -1
+	/// </summary>
 	public int ChapterIndex
 	{
 		get
@@ -155,6 +145,125 @@ public abstract class EpochModel
 
 	static EpochModel()
 	{
+		int num = 57;
+		List<Type> list = new List<Type>(num);
+		CollectionsMarshal.SetCount(list, num);
+		Span<Type> span = CollectionsMarshal.AsSpan(list);
+		int num2 = 0;
+		span[num2] = typeof(Act2BEpoch);
+		num2++;
+		span[num2] = typeof(Act3BEpoch);
+		num2++;
+		span[num2] = typeof(Colorless1Epoch);
+		num2++;
+		span[num2] = typeof(Colorless2Epoch);
+		num2++;
+		span[num2] = typeof(Colorless3Epoch);
+		num2++;
+		span[num2] = typeof(Colorless4Epoch);
+		num2++;
+		span[num2] = typeof(Colorless5Epoch);
+		num2++;
+		span[num2] = typeof(CustomAndSeedsEpoch);
+		num2++;
+		span[num2] = typeof(DailyRunEpoch);
+		num2++;
+		span[num2] = typeof(DarvEpoch);
+		num2++;
+		span[num2] = typeof(Defect1Epoch);
+		num2++;
+		span[num2] = typeof(Defect2Epoch);
+		num2++;
+		span[num2] = typeof(Defect3Epoch);
+		num2++;
+		span[num2] = typeof(Defect4Epoch);
+		num2++;
+		span[num2] = typeof(Defect5Epoch);
+		num2++;
+		span[num2] = typeof(Defect6Epoch);
+		num2++;
+		span[num2] = typeof(Defect7Epoch);
+		num2++;
+		span[num2] = typeof(Event1Epoch);
+		num2++;
+		span[num2] = typeof(Event2Epoch);
+		num2++;
+		span[num2] = typeof(Event3Epoch);
+		num2++;
+		span[num2] = typeof(Ironclad2Epoch);
+		num2++;
+		span[num2] = typeof(Ironclad3Epoch);
+		num2++;
+		span[num2] = typeof(Ironclad4Epoch);
+		num2++;
+		span[num2] = typeof(Ironclad5Epoch);
+		num2++;
+		span[num2] = typeof(Ironclad6Epoch);
+		num2++;
+		span[num2] = typeof(Ironclad7Epoch);
+		num2++;
+		span[num2] = typeof(Necrobinder1Epoch);
+		num2++;
+		span[num2] = typeof(Necrobinder2Epoch);
+		num2++;
+		span[num2] = typeof(Necrobinder3Epoch);
+		num2++;
+		span[num2] = typeof(Necrobinder4Epoch);
+		num2++;
+		span[num2] = typeof(Necrobinder5Epoch);
+		num2++;
+		span[num2] = typeof(Necrobinder6Epoch);
+		num2++;
+		span[num2] = typeof(Necrobinder7Epoch);
+		num2++;
+		span[num2] = typeof(NeowEpoch);
+		num2++;
+		span[num2] = typeof(OrobasEpoch);
+		num2++;
+		span[num2] = typeof(Potion1Epoch);
+		num2++;
+		span[num2] = typeof(Potion2Epoch);
+		num2++;
+		span[num2] = typeof(Regent1Epoch);
+		num2++;
+		span[num2] = typeof(Regent2Epoch);
+		num2++;
+		span[num2] = typeof(Regent3Epoch);
+		num2++;
+		span[num2] = typeof(Regent4Epoch);
+		num2++;
+		span[num2] = typeof(Regent5Epoch);
+		num2++;
+		span[num2] = typeof(Regent6Epoch);
+		num2++;
+		span[num2] = typeof(Regent7Epoch);
+		num2++;
+		span[num2] = typeof(Relic1Epoch);
+		num2++;
+		span[num2] = typeof(Relic2Epoch);
+		num2++;
+		span[num2] = typeof(Relic3Epoch);
+		num2++;
+		span[num2] = typeof(Relic4Epoch);
+		num2++;
+		span[num2] = typeof(Relic5Epoch);
+		num2++;
+		span[num2] = typeof(Silent1Epoch);
+		num2++;
+		span[num2] = typeof(Silent2Epoch);
+		num2++;
+		span[num2] = typeof(Silent3Epoch);
+		num2++;
+		span[num2] = typeof(Silent4Epoch);
+		num2++;
+		span[num2] = typeof(Silent5Epoch);
+		num2++;
+		span[num2] = typeof(Silent6Epoch);
+		num2++;
+		span[num2] = typeof(Silent7Epoch);
+		num2++;
+		span[num2] = typeof(UnderdocksEpoch);
+		_allEpochs = list;
 		_epochTypeDictionary = new Dictionary<string, Type>();
 		_typeToIdDictionary = new Dictionary<Type, string>();
 		for (int i = 0; i < EpochModelSubtypes.Count; i++)
@@ -166,15 +275,26 @@ public abstract class EpochModel
 		}
 	}
 
+	/// <summary>
+	/// Returns the list of epochs whose slots are revealed when this epoch is revealed on the timeline.
+	/// Used by <see cref="M:MegaCrit.Sts2.Core.Timeline.EpochModel.QueueTimelineExpansion(MegaCrit.Sts2.Core.Timeline.EpochModel[])" /> at runtime and by save validation to detect missing slots.
+	/// </summary>
 	public virtual EpochModel[] GetTimelineExpansion()
 	{
 		return Array.Empty<EpochModel>();
 	}
 
+	/// <summary>
+	/// WARN: Currently, every Epoch MUST unlock something. Whether it be information, cards, relics, etc.
+	/// Without an unlock, if the player slots 2 Epochs at once, the game will function incorrectly.
+	/// </summary>
 	public virtual void QueueUnlocks()
 	{
 	}
 
+	/// <summary>
+	/// Static method to get the Id for a given type
+	/// </summary>
 	public static string GetId<T>() where T : EpochModel
 	{
 		return _typeToIdDictionary[typeof(T)];
@@ -187,7 +307,7 @@ public abstract class EpochModel
 
 	public static bool IsValid(string id)
 	{
-		return AllEpochIds.Any((string epoch) => epoch.Equals(id));
+		return EpochIdsHashSet.Contains(id);
 	}
 
 	public static EpochModel Get(string id)
@@ -239,6 +359,9 @@ public abstract class EpochModel
 		return locString.GetFormattedText();
 	}
 
+	/// <summary>
+	/// Little helper method for coloring the text.
+	/// </summary>
 	private string GetColoredCardName(CardModel card)
 	{
 		if (card.Rarity == CardRarity.Common)
@@ -267,6 +390,9 @@ public abstract class EpochModel
 		return locString.GetFormattedText();
 	}
 
+	/// <summary>
+	/// Little helper method for coloring the text.
+	/// </summary>
 	private string GetColoredRelicName(RelicModel relic)
 	{
 		if (relic.Rarity == RelicRarity.Common)
@@ -295,6 +421,9 @@ public abstract class EpochModel
 		return locString.GetFormattedText();
 	}
 
+	/// <summary>
+	/// Little helper method for coloring the text.
+	/// </summary>
 	private string GetColoredPotionName(PotionModel potion)
 	{
 		if (potion.Rarity == PotionRarity.Common)

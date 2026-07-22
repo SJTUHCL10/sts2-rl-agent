@@ -23,17 +23,17 @@ public sealed class CrashLanding : CardModel
 
 	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
 	{
-		await DamageCmd.Attack(base.DynamicVars.Damage.BaseValue).FromCard(this).TargetingAllOpponents(base.CombatState)
+		await DamageCmd.Attack(base.DynamicVars.Damage.BaseValue).FromCard(this, cardPlay).TargetingAllOpponents(base.CombatState)
 			.WithHitFx("vfx/vfx_heavy_blunt", null, "heavy_attack.mp3")
 			.WithHitVfxSpawnedAtBase()
 			.Execute(choiceContext);
-		int num = 10 - CardPile.GetCards(base.Owner, PileType.Hand).Count();
+		int num = CardPile.MaxCardsInHand - CardPile.GetCards(base.Owner, PileType.Hand).Count();
 		List<CardModel> list = new List<CardModel>();
 		for (int i = 0; i < num; i++)
 		{
 			list.Add(base.CombatState.CreateCard<Debris>(base.Owner));
 		}
-		await CardPileCmd.AddGeneratedCardsToCombat(list, PileType.Hand, addedByPlayer: true);
+		await CardPileCmd.AddGeneratedCardsToCombat(list, PileType.Hand, base.Owner);
 	}
 
 	protected override void OnUpgrade()

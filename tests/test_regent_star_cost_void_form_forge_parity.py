@@ -43,8 +43,8 @@ class TestRegentStarCostVoidFormForgeParity:
         assert combat.can_play_card(card) is True
         assert combat.play_card(0)
         assert combat.stars == 0
-        assert enemy_a.current_hp == 86
-        assert enemy_b.current_hp == 86
+        assert enemy_a.current_hp == 94
+        assert enemy_b.current_hp == 94
 
     def test_guiding_star_spends_star_cost_and_applies_draw_next_turn(self):
         """Matches GuidingStar.cs: StarCost 2, damage target, apply DrawCardsNextTurn."""
@@ -70,9 +70,9 @@ class TestRegentStarCostVoidFormForgeParity:
         combat.hand = [card]
         combat.energy = 0
 
-        assert card.star_cost == 2
+        assert card.star_cost == 3
         assert combat.can_play_card(card) is False
-        combat.gain_stars(combat.player, 2)
+        combat.gain_stars(combat.player, 3)
         assert combat.play_card(0)
         assert combat.stars == 0
         assert combat.energy == 3

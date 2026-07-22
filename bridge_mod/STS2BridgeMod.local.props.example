@@ -1,0 +1,11 @@
+<Project>
+  <PropertyGroup>
+    <!-- SteamLibraryPath ends in steamapps, not the game directory. -->
+    <SteamLibraryPath>E:/SteamLibrary/steamapps</SteamLibraryPath>
+    <GodotPath>C:/Users/A/Codes/sts/.tools/Godot_v4.5.1-stable_mono_win64/Godot_v4.5.1-stable_mono_win64/Godot_v4.5.1-stable_mono_win64_console.exe</GodotPath>
+
+    <!-- Reuse the subscribed Workshop BaseLib; do not install a duplicate in mods/. -->
+    <BaseLibDllPath>E:/SteamLibrary/steamapps/workshop/content/2868840/3737335127/BaseLib/BaseLib.dll</BaseLibDllPath>
+    <CopyBaseLibToMods>false</CopyBaseLibToMods>
+  </PropertyGroup>
+</Project>

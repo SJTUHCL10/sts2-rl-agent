@@ -10,6 +10,7 @@ Requires: stable-baselines3, sb3-contrib, torch
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import sys
 import time
 from pathlib import Path
@@ -17,23 +18,19 @@ from pathlib import Path
 import numpy as np
 
 
-def make_env(seed: int = 0, act_count: int = 1, reward_shaping: bool = True):
+def make_env(seed: int = 0):
     """Create a single STS2RunEnv wrapped with ActionMasker."""
     from sts2_env.gym_env.run_env import STS2RunEnv
 
     def _init():
-        env = STS2RunEnv(
-            act_count=act_count,
-            reward_shaping=reward_shaping,
-            max_steps=2000,
-        )
+        env = STS2RunEnv(max_steps=2000)
         env.reset(seed=seed)
         return env
 
     return _init
 
 
-def make_masked_env(seed: int, act_count: int = 1, reward_shaping: bool = True):
+def make_masked_env(seed: int):
     """Create a masked env factory for vectorised envs."""
     try:
         from sb3_contrib.common.wrappers import ActionMasker
@@ -48,12 +45,9 @@ def make_masked_env(seed: int, act_count: int = 1, reward_shaping: bool = True):
         return env.action_masks()
 
     def _init():
-        env = STS2RunEnv(
-            act_count=act_count,
-            reward_shaping=reward_shaping,
-            max_steps=2000,
-        )
+        env = STS2RunEnv(max_steps=2000)
         env = ActionMasker(env, mask_fn)
+        env.reset(seed=seed)
         return env
 
     return _init
@@ -64,39 +58,44 @@ def train(args):
         from sb3_contrib import MaskablePPO
         from sb3_contrib.common.wrappers import ActionMasker
         from stable_baselines3.common.vec_env import SubprocVecEnv, DummyVecEnv
-        from stable_baselines3.common.callbacks import EvalCallback
+        from sb3_contrib.common.maskable.callbacks import MaskableEvalCallback
     except ImportError:
         print("Training requires sb3-contrib and stable-baselines3.")
         print("Install with: pip install 'sts2-rl-agent[train]'")
         sys.exit(1)
 
     print(f"Training MaskablePPO on STS2 Full Run")
-    print(f"  act_count:       {args.act_count}")
     print(f"  n_envs:          {args.n_envs}")
     print(f"  total_timesteps: {args.total_timesteps}")
     print(f"  learning_rate:   {args.lr}")
     print(f"  batch_size:      {args.batch_size}")
-    print(f"  reward_shaping:  {args.reward_shaping}")
+    print(f"  seed:            {args.seed}")
     print(f"  output_dir:      {args.output_dir}")
     print()
 
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
+    tensorboard_log: str | None = None
+    if importlib.util.find_spec("tensorboard") is not None:
+        tensorboard_log = str(output_dir / "tb_logs")
+    else:
+        print("TensorBoard is not installed; continuing without TensorBoard logs.\n")
+
     # Create vectorised environments
     if args.n_envs > 1:
         train_env = SubprocVecEnv([
-            make_masked_env(i, args.act_count, args.reward_shaping)
+            make_masked_env(args.seed + i)
             for i in range(args.n_envs)
         ])
     else:
         train_env = DummyVecEnv([
-            make_masked_env(0, args.act_count, args.reward_shaping)
+            make_masked_env(args.seed)
         ])
 
     # Eval env (always single)
     eval_env = DummyVecEnv([
-        make_masked_env(9999, args.act_count, args.reward_shaping)
+        make_masked_env(args.seed + 9999)
     ])
 
     # Create model
@@ -112,14 +111,15 @@ def train(args):
         clip_range=0.2,
         ent_coef=args.ent_coef,
         verbose=1,
-        tensorboard_log=str(output_dir / "tb_logs"),
+        seed=args.seed,
+        tensorboard_log=tensorboard_log,
         policy_kwargs=dict(
             net_arch=dict(pi=[256, 256], vf=[256, 256]),
         ),
     )
 
     # Eval callback
-    eval_callback = EvalCallback(
+    eval_callback = MaskableEvalCallback(
         eval_env,
         best_model_save_path=str(output_dir / "best_model"),
         log_path=str(output_dir / "eval_logs"),
@@ -133,7 +133,7 @@ def train(args):
     model.learn(
         total_timesteps=args.total_timesteps,
         callback=eval_callback,
-        progress_bar=True,
+        progress_bar=args.progress_bar,
     )
     elapsed = time.perf_counter() - start
 
@@ -146,13 +146,21 @@ def train(args):
 
     # Quick evaluation
     print("\n--- Final Evaluation ---")
-    evaluate(model, act_count=args.act_count, n_episodes=100)
+    evaluate(
+        model,
+        n_episodes=args.final_eval_episodes,
+        seed=args.seed + 10_000,
+    )
 
     train_env.close()
     eval_env.close()
 
 
-def evaluate(model, act_count: int = 1, n_episodes: int = 100):
+def evaluate(
+    model,
+    n_episodes: int = 100,
+    seed: int = 10_000,
+):
     """Evaluate a trained model on the full-run environment."""
     from sb3_contrib.common.wrappers import ActionMasker
     from sts2_env.gym_env.run_env import STS2RunEnv
@@ -161,7 +169,7 @@ def evaluate(model, act_count: int = 1, n_episodes: int = 100):
         return env.action_masks()
 
     env = ActionMasker(
-        STS2RunEnv(act_count=act_count, reward_shaping=False, max_steps=2000),
+        STS2RunEnv(max_steps=2000),
         mask_fn,
     )
 
@@ -171,7 +179,7 @@ def evaluate(model, act_count: int = 1, n_episodes: int = 100):
     episode_lengths = []
 
     for ep in range(n_episodes):
-        obs, info = env.reset(seed=ep + 10000)
+        obs, info = env.reset(seed=seed + ep)
         done = False
         ep_reward = 0.0
         steps = 0
@@ -186,12 +194,7 @@ def evaluate(model, act_count: int = 1, n_episodes: int = 100):
                 wins += 1
         total_rewards.append(ep_reward)
         episode_lengths.append(steps)
-        # Access the unwrapped env's run_state for stats
-        unwrapped = env.unwrapped if hasattr(env, "unwrapped") else env
-        if hasattr(unwrapped, "run_state") and unwrapped.run_state is not None:
-            floors_reached.append(unwrapped.run_state.total_floor)
-        else:
-            floors_reached.append(0)
+        floors_reached.append(int(info.get("floor", 0)))
 
     print(f"Episodes:         {n_episodes}")
     print(f"Win rate:         {wins / n_episodes:.1%}")
@@ -201,11 +204,11 @@ def evaluate(model, act_count: int = 1, n_episodes: int = 100):
     print(f"Max floors:       {max(floors_reached)}")
 
 
-def random_baseline(act_count: int = 1, n_episodes: int = 100):
+def random_baseline(n_episodes: int = 100):
     """Run a random-action baseline for comparison."""
     from sts2_env.gym_env.run_env import STS2RunEnv
 
-    env = STS2RunEnv(act_count=act_count, reward_shaping=False, max_steps=2000)
+    env = STS2RunEnv(max_steps=2000)
     rng = np.random.RandomState(42)
 
     wins = 0
@@ -226,7 +229,7 @@ def random_baseline(act_count: int = 1, n_episodes: int = 100):
             if terminated and reward > 0:
                 wins += 1
         total_rewards.append(ep_reward)
-        floors_reached.append(env.run_state.total_floor if env.run_state else 0)
+        floors_reached.append(int(info.get("floor", 0)))
 
     print(f"=== Random Baseline ===")
     print(f"Episodes:         {n_episodes}")
@@ -247,10 +250,6 @@ def main():
     parser.add_argument(
         "--n-envs", type=int, default=4,
         help="Number of parallel environments (default: 4)",
-    )
-    parser.add_argument(
-        "--act-count", type=int, default=1,
-        help="Number of acts to play per run (1=Act0 only, 3=full game; default: 1)",
     )
     parser.add_argument(
         "--lr", type=float, default=3e-4,
@@ -277,14 +276,6 @@ def main():
         help="Entropy coefficient (default: 0.02)",
     )
     parser.add_argument(
-        "--reward-shaping", action="store_true", default=True,
-        help="Use reward shaping (floor/act bonuses; default: True)",
-    )
-    parser.add_argument(
-        "--no-reward-shaping", action="store_false", dest="reward_shaping",
-        help="Disable reward shaping (sparse only)",
-    )
-    parser.add_argument(
         "--eval-freq", type=int, default=20_000,
         help="Evaluate every N steps (default: 20000)",
     )
@@ -297,17 +288,29 @@ def main():
         help="Output directory (default: output/run_ppo)",
     )
     parser.add_argument(
+        "--seed", type=int, default=0,
+        help="Training and evaluation seed (default: 0)",
+    )
+    parser.add_argument(
+        "--final-eval-episodes", type=int, default=100,
+        help="Number of deterministic episodes after training (default: 100)",
+    )
+    parser.add_argument(
+        "--progress-bar", action="store_true",
+        help="Show the tqdm training progress bar.",
+    )
+    parser.add_argument(
         "--baseline-only", action="store_true",
         help="Only run random baseline evaluation (no training)",
     )
     args = parser.parse_args()
 
     if args.baseline_only:
-        random_baseline(act_count=args.act_count)
+        random_baseline()
     else:
         # Print random baseline first for reference
         print("Running random baseline for reference...")
-        random_baseline(act_count=args.act_count, n_episodes=50)
+        random_baseline(n_episodes=50)
         print()
         train(args)
 

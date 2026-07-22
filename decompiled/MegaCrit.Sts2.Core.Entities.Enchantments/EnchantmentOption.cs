@@ -2,18 +2,14 @@ using MegaCrit.Sts2.Core.Models;
 
 namespace MegaCrit.Sts2.Core.Entities.Enchantments;
 
-public struct EnchantmentOption
+/// <summary>
+/// Utility object representing a random enchantment that may be applied to a card.
+/// </summary>
+public struct EnchantmentOption(EnchantmentModel enchantment, int minAmount, int maxAmount)
 {
-	public readonly EnchantmentModel enchantment;
+	public readonly EnchantmentModel enchantment = enchantment;
 
-	public readonly int minAmount;
+	public readonly int minAmount = minAmount;
 
-	public readonly int maxAmount;
-
-	public EnchantmentOption(EnchantmentModel enchantment, int minAmount, int maxAmount)
-	{
-		this.enchantment = enchantment;
-		this.minAmount = minAmount;
-		this.maxAmount = maxAmount;
-	}
+	public readonly int maxAmount = maxAmount;
 }

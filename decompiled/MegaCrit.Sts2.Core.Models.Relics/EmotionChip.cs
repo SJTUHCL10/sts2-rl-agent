@@ -16,7 +16,7 @@ public sealed class EmotionChip : RelicModel
 {
 	public override RelicRarity Rarity => RelicRarity.Rare;
 
-	private bool LostHpInPreviousTurn => CombatManager.Instance.History.Entries.OfType<DamageReceivedEntry>().Any((DamageReceivedEntry e) => e.Receiver == base.Owner.Creature && !e.Result.WasFullyBlocked && e.RoundNumber + 1 == base.Owner.Creature.CombatState.RoundNumber);
+	private bool LostHpInPreviousTurn => CombatManager.Instance.History.Entries.OfType<DamageReceivedEntry>().Any((DamageReceivedEntry e) => e.Receiver == base.Owner.Creature && !e.Result.WasFullyBlocked && e.HappenedLastPlayerTurn(base.Owner));
 
 	public override Task AfterDamageReceived(PlayerChoiceContext choiceContext, Creature target, DamageResult result, ValueProp props, Creature? dealer, CardModel? cardSource)
 	{
@@ -51,7 +51,7 @@ public sealed class EmotionChip : RelicModel
 		Flash();
 		foreach (OrbModel orb in base.Owner.PlayerCombatState.OrbQueue.Orbs)
 		{
-			await OrbCmd.Passive(choiceContext, orb, null);
+			await OrbCmd.Passive(choiceContext, orb, null, countAffectedByHooks: true);
 			await Cmd.Wait(0.25f);
 		}
 	}

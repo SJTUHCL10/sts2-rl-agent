@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using MegaCrit.Sts2.Core.Entities.Players;
@@ -19,24 +18,62 @@ public static class PotionFactory
 
 	private const float _uncommonThreshold = 0.35f;
 
+	/// <summary>
+	/// Create a random potion while out of combat.
+	/// This can get any potion from the valid potion pools, including potions that can do restricted things like heal
+	/// the player.
+	/// </summary>
+	/// <param name="player">Player to create a potion for.</param>
+	/// <param name="rng">RNG to use to determine what potion to create.</param>
+	/// <param name="blacklist">Canonical potions that should be blocked from being generated.</param>
+	/// <returns>Newly-created potion.</returns>
 	public static PotionModel CreateRandomPotionOutOfCombat(Player player, Rng rng, IEnumerable<PotionModel>? blacklist = null)
 	{
-		return CreateRandomPotion(GetPotionOptions(player, blacklist ?? Array.Empty<PotionModel>()), 1, rng).First();
+		return CreateRandomPotionsOutOfCombat(player, 1, rng, blacklist).First();
 	}
 
-	public static List<PotionModel> CreateRandomPotionsOutOfCombat(Player player, int count, Rng rng, IEnumerable<PotionModel>? blacklist = null)
+	/// <summary>
+	/// Create random potions while out of combat.
+	/// This can get any potion from the valid potion pools, including potions that can do restricted things like heal
+	/// the player.
+	/// </summary>
+	/// <param name="player">Player to create a potion for.</param>
+	/// <param name="count">How many potions you want to generate.</param>
+	/// <param name="rng">RNG to use to determine what potion to create.</param>
+	/// <param name="blacklist">Canonical potions that should be blocked from being generated.</param>
+	/// <returns>Newly-created potions.</returns>
+	public static IEnumerable<PotionModel> CreateRandomPotionsOutOfCombat(Player player, int count, Rng rng, IEnumerable<PotionModel>? blacklist = null)
 	{
-		return CreateRandomPotion(GetPotionOptions(player, blacklist ?? Array.Empty<PotionModel>()), count, rng);
+		IEnumerable<PotionModel> enumerable = GetPotionOptions(player);
+		if (blacklist != null)
+		{
+			enumerable = enumerable.Except(blacklist);
+		}
+		return CreateRandomPotions(enumerable, count, rng);
 	}
 
+	/// <summary>
+	/// Create a random potion while in combat.
+	/// This can get any potion from the valid potion pools, except potions that cannot be generated in combat (like
+	/// healing potions).
+	/// </summary>
+	/// <param name="player">Player to create a potion for.</param>
+	/// <param name="rng">RNG to use to determine what potion to create.</param>
+	/// <param name="blacklist">Canonical potions that should be blocked from being generated.</param>
+	/// <returns>Newly-created potion.</returns>
 	public static PotionModel CreateRandomPotionInCombat(Player player, Rng rng, IEnumerable<PotionModel>? blacklist = null)
 	{
-		return CreateRandomPotion(from p in GetPotionOptions(player, blacklist ?? Array.Empty<PotionModel>())
+		IEnumerable<PotionModel> enumerable = from p in GetPotionOptions(player)
 			where p.CanBeGeneratedInCombat
-			select p, 1, rng).First();
+			select p;
+		if (blacklist != null)
+		{
+			enumerable = enumerable.Except(blacklist);
+		}
+		return CreateRandomPotions(enumerable, 1, rng).First();
 	}
 
-	private static List<PotionModel> CreateRandomPotion(IEnumerable<PotionModel> options, int count, Rng rng)
+	private static IEnumerable<PotionModel> CreateRandomPotions(IEnumerable<PotionModel> options, int count, Rng rng)
 	{
 		List<PotionModel> list = options.ToList();
 		List<PotionModel> list2 = new List<PotionModel>();
@@ -52,10 +89,8 @@ public static class PotionFactory
 		return list2;
 	}
 
-	public static IEnumerable<PotionModel> GetPotionOptions(Player player, IEnumerable<PotionModel> blacklist)
+	public static IEnumerable<PotionModel> GetPotionOptions(Player player)
 	{
-		return from p in player.Character.PotionPool.GetUnlockedPotions(player.UnlockState).Concat(ModelDb.PotionPool<SharedPotionPool>().GetUnlockedPotions(player.UnlockState))
-			where !blacklist.Contains(p)
-			select p;
+		return player.Character.PotionPool.GetUnlockedPotions(player.UnlockState).Concat(ModelDb.PotionPool<SharedPotionPool>().GetUnlockedPotions(player.UnlockState));
 	}
 }

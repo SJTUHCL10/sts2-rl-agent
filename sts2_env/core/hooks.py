@@ -729,11 +729,24 @@ def should_draw(combat: CombatState, drawing_owner: Creature, from_hand_draw: bo
 
 def should_take_extra_turn(combat: CombatState) -> bool:
     """Return whether the player should immediately take another turn."""
+    for owner, power in _iter_power_listeners(combat):
+        hook = getattr(power, "should_take_extra_turn", None)
+        if hook is not None and hook(owner, combat):
+            return True
     for owner, relic in _iter_relic_listeners(combat):
         result = relic.should_take_extra_turn(owner, combat)
         if result is True:
             return True
     return False
+
+
+def modify_energy_gain(owner: Creature, amount: int, combat: CombatState) -> int:
+    result = amount
+    for listener, power in _iter_power_listeners(combat):
+        hook = getattr(power, "modify_energy_gain", None)
+        if hook is not None:
+            result = hook(listener, owner, result)
+    return max(0, result)
 
 
 # ─── Event Hooks (fire-and-forget) ─────────────────────────────────────
@@ -776,6 +789,11 @@ def fire_after_card_exhausted(card: object, combat: CombatState) -> None:
         power.after_card_exhausted(owner, card, combat)
     for owner, relic in _iter_relic_listeners(combat):
         relic.after_card_exhausted(owner, card, combat)
+    from sts2_env.cards.registry import fire_card_after_card_exhausted
+
+    for state in getattr(combat, "combat_player_states", ()):
+        for listener_card in combat.unique_cards_in_piles(state.all_piles):
+            fire_card_after_card_exhausted(listener_card, card, combat)
 
 
 def fire_after_card_discarded(card: object, combat: CombatState) -> None:
@@ -1110,6 +1128,11 @@ def fire_after_combat_end(combat: CombatState) -> None:
 
 
 def fire_after_taking_extra_turn(combat: CombatState) -> None:
+    for owner, power in _iter_power_listeners(combat):
+        should_take = getattr(power, "should_take_extra_turn", None)
+        after_taking = getattr(power, "after_taking_extra_turn", None)
+        if should_take is not None and after_taking is not None and should_take(owner, combat):
+            after_taking(owner, combat)
     for owner, relic in _iter_relic_listeners(combat):
         if relic.should_take_extra_turn(owner, combat):
             relic.after_taking_extra_turn(owner, combat)

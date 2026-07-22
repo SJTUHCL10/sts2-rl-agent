@@ -160,4 +160,4 @@ class TestNecrobinderSoulAndDoomParity:
         combat.energy = 1
 
         assert combat.play_card(0, 0)
-        assert enemy.current_hp == starting_hp - 15
+        assert enemy.current_hp == starting_hp - 21

@@ -17,14 +17,14 @@ public sealed class Taunt : CardModel
 
 	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(new DynamicVar[2]
 	{
-		new BlockVar(7m, ValueProp.Move),
+		new BlockVar(6m, ValueProp.Move),
 		new PowerVar<VulnerablePower>(1m)
 	});
 
 	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.FromPower<VulnerablePower>());
 
 	public Taunt()
-		: base(1, CardType.Skill, CardRarity.Uncommon, TargetType.AnyEnemy)
+		: base(1, CardType.Skill, CardRarity.Common, TargetType.AnyEnemy)
 	{
 	}
 
@@ -33,7 +33,7 @@ public sealed class Taunt : CardModel
 		ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
 		await CreatureCmd.TriggerAnim(base.Owner.Creature, "Cast", base.Owner.Character.CastAnimDelay);
 		await CreatureCmd.GainBlock(base.Owner.Creature, base.DynamicVars.Block, cardPlay);
-		await PowerCmd.Apply<VulnerablePower>(cardPlay.Target, base.DynamicVars.Vulnerable.BaseValue, base.Owner.Creature, this);
+		await PowerCmd.Apply<VulnerablePower>(choiceContext, cardPlay.Target, base.DynamicVars.Vulnerable.BaseValue, base.Owner.Creature, this);
 	}
 
 	protected override void OnUpgrade()

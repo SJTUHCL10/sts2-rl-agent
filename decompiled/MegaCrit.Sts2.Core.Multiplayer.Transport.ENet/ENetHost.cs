@@ -159,17 +159,17 @@ public class ENetHost : NetHost
 			ENetConnection.EventType num = type - -1;
 			if ((ulong)num <= 4uL)
 			{
-				switch (num)
+				switch ((int)num)
 				{
-				case ENetConnection.EventType.Receive:
+				case 3:
 					continue;
-				case ENetConnection.EventType.None:
+				case 0:
 					_logger.Error("Got error from ENetConnection! TODO: Expand me");
 					continue;
-				case ENetConnection.EventType.Disconnect:
+				case 2:
 					TaskHelper.RunSafely(DoClientHandshake(output.Value.peer));
 					continue;
-				case (ENetConnection.EventType)4L:
+				case 4:
 					HandlePacketReceived(output.Value);
 					continue;
 				}

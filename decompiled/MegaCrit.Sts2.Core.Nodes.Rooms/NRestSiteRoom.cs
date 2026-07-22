@@ -30,79 +30,197 @@ using MegaCrit.Sts2.addons.mega_text;
 
 namespace MegaCrit.Sts2.Core.Nodes.Rooms;
 
+/// <summary>
+/// Manages the UI flow for a rest site.
+/// </summary>
 [ScriptPath("res://src/Core/Nodes/Rooms/NRestSiteRoom.cs")]
 public class NRestSiteRoom : Control, IScreenContext, IRoomWithProceedButton
 {
+	/// <summary>
+	/// Cached StringNames for the methods contained in this class, for fast lookup.
+	/// </summary>
 	public new class MethodName : Control.MethodName
 	{
+		/// <summary>
+		/// Cached name for the '_Ready' method.
+		/// </summary>
 		public new static readonly StringName _Ready = "_Ready";
 
+		/// <summary>
+		/// Cached name for the '_EnterTree' method.
+		/// </summary>
 		public new static readonly StringName _EnterTree = "_EnterTree";
 
+		/// <summary>
+		/// Cached name for the '_ExitTree' method.
+		/// </summary>
 		public new static readonly StringName _ExitTree = "_ExitTree";
 
+		/// <summary>
+		/// Cached name for the 'BeforeExitingRoom' method.
+		/// </summary>
+		public static readonly StringName BeforeExitingRoom = "BeforeExitingRoom";
+
+		/// <summary>
+		/// Cached name for the 'DisableOptions' method.
+		/// </summary>
 		public static readonly StringName DisableOptions = "DisableOptions";
 
+		/// <summary>
+		/// Cached name for the 'EnableOptions' method.
+		/// </summary>
 		public static readonly StringName EnableOptions = "EnableOptions";
 
+		/// <summary>
+		/// Cached name for the 'AnimateDescriptionDown' method.
+		/// </summary>
 		public static readonly StringName AnimateDescriptionDown = "AnimateDescriptionDown";
 
+		/// <summary>
+		/// Cached name for the 'AnimateDescriptionUp' method.
+		/// </summary>
 		public static readonly StringName AnimateDescriptionUp = "AnimateDescriptionUp";
 
+		/// <summary>
+		/// Cached name for the 'UpdateRestSiteOptions' method.
+		/// </summary>
 		public static readonly StringName UpdateRestSiteOptions = "UpdateRestSiteOptions";
 
+		/// <summary>
+		/// Cached name for the 'RestSiteButtonHovered' method.
+		/// </summary>
 		public static readonly StringName RestSiteButtonHovered = "RestSiteButtonHovered";
 
+		/// <summary>
+		/// Cached name for the 'RestSiteButtonUnhovered' method.
+		/// </summary>
 		public static readonly StringName RestSiteButtonUnhovered = "RestSiteButtonUnhovered";
 
+		/// <summary>
+		/// Cached name for the 'OnPlayerChangedHoveredRestSiteOption' method.
+		/// </summary>
 		public static readonly StringName OnPlayerChangedHoveredRestSiteOption = "OnPlayerChangedHoveredRestSiteOption";
 
+		/// <summary>
+		/// Cached name for the 'ShowProceedButton' method.
+		/// </summary>
 		public static readonly StringName ShowProceedButton = "ShowProceedButton";
 
+		/// <summary>
+		/// Cached name for the 'OnProceedButtonReleased' method.
+		/// </summary>
 		public static readonly StringName OnProceedButtonReleased = "OnProceedButtonReleased";
 
+		/// <summary>
+		/// Cached name for the 'SetText' method.
+		/// </summary>
 		public static readonly StringName SetText = "SetText";
 
+		/// <summary>
+		/// Cached name for the 'FadeOutOptionDescription' method.
+		/// </summary>
 		public static readonly StringName FadeOutOptionDescription = "FadeOutOptionDescription";
 
+		/// <summary>
+		/// Cached name for the '_Input' method.
+		/// </summary>
 		public new static readonly StringName _Input = "_Input";
 
+		/// <summary>
+		/// Cached name for the 'ExtinguishFireIfAble' method.
+		/// </summary>
 		public static readonly StringName ExtinguishFireIfAble = "ExtinguishFireIfAble";
 
+		/// <summary>
+		/// Cached name for the 'OnActiveScreenUpdated' method.
+		/// </summary>
 		public static readonly StringName OnActiveScreenUpdated = "OnActiveScreenUpdated";
 	}
 
+	/// <summary>
+	/// Cached StringNames for the properties and fields contained in this class, for fast lookup.
+	/// </summary>
 	public new class PropertyName : Control.PropertyName
 	{
+		/// <summary>
+		/// Cached name for the 'ProceedButton' property.
+		/// </summary>
 		public static readonly StringName ProceedButton = "ProceedButton";
 
+		/// <summary>
+		/// Cached name for the 'Header' property.
+		/// </summary>
 		public static readonly StringName Header = "Header";
 
+		/// <summary>
+		/// Cached name for the 'Description' property.
+		/// </summary>
 		public static readonly StringName Description = "Description";
 
+		/// <summary>
+		/// Cached name for the 'BgContainer' property.
+		/// </summary>
 		public static readonly StringName BgContainer = "BgContainer";
 
+		/// <summary>
+		/// Cached name for the 'DefaultFocusedControl' property.
+		/// </summary>
 		public static readonly StringName DefaultFocusedControl = "DefaultFocusedControl";
 
+		/// <summary>
+		/// Cached name for the '_choicesContainer' field.
+		/// </summary>
 		public static readonly StringName _choicesContainer = "_choicesContainer";
 
+		/// <summary>
+		/// Cached name for the '_choicesScreen' field.
+		/// </summary>
 		public static readonly StringName _choicesScreen = "_choicesScreen";
 
+		/// <summary>
+		/// Cached name for the '_proceedButton' field.
+		/// </summary>
 		public static readonly StringName _proceedButton = "_proceedButton";
 
+		/// <summary>
+		/// Cached name for the '_restSiteLighting' field.
+		/// </summary>
 		public static readonly StringName _restSiteLighting = "_restSiteLighting";
 
+		/// <summary>
+		/// Cached name for the '_descriptionTween' field.
+		/// </summary>
 		public static readonly StringName _descriptionTween = "_descriptionTween";
 
+		/// <summary>
+		/// Cached name for the '_descriptionPositionTween' field.
+		/// </summary>
 		public static readonly StringName _descriptionPositionTween = "_descriptionPositionTween";
 
+		/// <summary>
+		/// Cached name for the '_choicesTween' field.
+		/// </summary>
 		public static readonly StringName _choicesTween = "_choicesTween";
 
+		/// <summary>
+		/// Cached name for the '_originalDescriptionYPos' field.
+		/// </summary>
 		public static readonly StringName _originalDescriptionYPos = "_originalDescriptionYPos";
 
+		/// <summary>
+		/// Cached name for the '_roomExiting' field.
+		/// </summary>
+		public static readonly StringName _roomExiting = "_roomExiting";
+
+		/// <summary>
+		/// Cached name for the '_lastFocused' field.
+		/// </summary>
 		public static readonly StringName _lastFocused = "_lastFocused";
 	}
 
+	/// <summary>
+	/// Cached StringNames for the signals contained in this class, for fast lookup.
+	/// </summary>
 	public new class SignalName : Control.SignalName
 	{
 	}
@@ -138,6 +256,8 @@ public class NRestSiteRoom : Control, IScreenContext, IRoomWithProceedButton
 	private Tween? _choicesTween;
 
 	private float _originalDescriptionYPos;
+
+	private bool _roomExiting;
 
 	private Control? _lastFocused;
 
@@ -200,7 +320,7 @@ public class NRestSiteRoom : Control, IScreenContext, IRoomWithProceedButton
 		_characterContainers.Add(GetNode<Control>("BgContainer/Character_4"));
 		Control control = _runState.Act.CreateRestSiteBackground();
 		BgContainer.AddChildSafely(control);
-		BgContainer.MoveChild(control, 0);
+		BgContainer.MoveChildSafely(control, 0);
 		_restSiteLighting = control.GetNode<Control>("%RestSiteLighting");
 		Header.SetTextAutoSize(new LocString("rest_site_ui", "PROMPT").GetFormattedText());
 		_proceedButton.Connect(NClickableControl.SignalName.Released, Callable.From<NButton>(OnProceedButtonReleased));
@@ -239,7 +359,6 @@ public class NRestSiteRoom : Control, IScreenContext, IRoomWithProceedButton
 	public override void _ExitTree()
 	{
 		_cts.Cancel();
-		_cts.Dispose();
 		_descriptionTween?.Kill();
 		_descriptionPositionTween?.Kill();
 		_choicesTween?.Kill();
@@ -279,6 +398,18 @@ public class NRestSiteRoom : Control, IScreenContext, IRoomWithProceedButton
 		}
 	}
 
+	/// <summary>
+	/// Called before the room exit begins to disable all buttons.
+	/// </summary>
+	public void BeforeExitingRoom()
+	{
+		_roomExiting = true;
+		DisableOptions();
+	}
+
+	/// <summary>
+	/// Grays out options so that they can't be selected while an option is being executed.
+	/// </summary>
 	public void DisableOptions()
 	{
 		foreach (NRestSiteButton item in _choicesContainer.GetChildren().OfType<NRestSiteButton>())
@@ -287,15 +418,27 @@ public class NRestSiteRoom : Control, IScreenContext, IRoomWithProceedButton
 		}
 	}
 
+	/// <summary>
+	/// Re-enables options so that they can be selected after an option is executed.
+	/// This is if a relic allows you to choose multiple options.
+	/// </summary>
 	public void EnableOptions()
 	{
+		if (_roomExiting)
+		{
+			return;
+		}
 		foreach (NRestSiteButton item in _choicesContainer.GetChildren().OfType<NRestSiteButton>())
 		{
 			item.Enable();
 		}
-		ActiveScreenContext.Instance.Update();
+		DefaultFocusedControl?.TryGrabFocus();
 	}
 
+	/// <summary>
+	/// Animates the description text down below the characters.
+	/// If a player is doing the mend target selection, the arrow gets in the way of the text.
+	/// </summary>
 	public void AnimateDescriptionDown()
 	{
 		_descriptionPositionTween?.Kill();
@@ -303,6 +446,10 @@ public class NRestSiteRoom : Control, IScreenContext, IRoomWithProceedButton
 		_descriptionPositionTween.TweenProperty(Description, "position:y", 885f, 0.800000011920929).SetTrans(Tween.TransitionType.Expo).SetEase(Tween.EaseType.Out);
 	}
 
+	/// <summary>
+	/// Animates the description text back up to its original position.
+	/// If a player is doing the mend target selection, the arrow gets in the way of the text.
+	/// </summary>
 	public void AnimateDescriptionUp()
 	{
 		_descriptionPositionTween?.Kill();
@@ -320,12 +467,31 @@ public class NRestSiteRoom : Control, IScreenContext, IRoomWithProceedButton
 		{
 			child.QueueFreeSafely();
 		}
+		List<NRestSiteButton> list = new List<NRestSiteButton>();
 		foreach (RestSiteOption option in Options)
 		{
 			NRestSiteButton nRestSiteButton = NRestSiteButton.Create(option);
 			_choicesContainer.AddChildSafely(nRestSiteButton);
 			nRestSiteButton.Connect(NClickableControl.SignalName.Focused, Callable.From<NRestSiteButton>(RestSiteButtonHovered));
 			nRestSiteButton.Connect(NClickableControl.SignalName.Unfocused, Callable.From<NRestSiteButton>(RestSiteButtonUnhovered));
+			list.Add(nRestSiteButton);
+		}
+		for (int i = 0; i < list.Count; i++)
+		{
+			NRestSiteButton nRestSiteButton2 = list[i];
+			NodePath path;
+			if (i <= 0)
+			{
+				path = list[list.Count - 1].GetPath();
+			}
+			else
+			{
+				path = list[i - 1].GetPath();
+			}
+			nRestSiteButton2.FocusNeighborLeft = path;
+			nRestSiteButton2.FocusNeighborRight = ((i < list.Count - 1) ? list[i + 1].GetPath() : list[0].GetPath());
+			nRestSiteButton2.FocusNeighborTop = nRestSiteButton2.GetPath();
+			nRestSiteButton2.FocusNeighborBottom = nRestSiteButton2.GetPath();
 		}
 	}
 
@@ -408,15 +574,15 @@ public class NRestSiteRoom : Control, IScreenContext, IRoomWithProceedButton
 		Task task2 = option.DoLocalPostSelectVfx(_cts.Token);
 		ExtinguishFireIfAble();
 		global::_003C_003Ey__InlineArray2<Task> buffer = default(global::_003C_003Ey__InlineArray2<Task>);
-		global::_003CPrivateImplementationDetails_003E.InlineArrayElementRef<global::_003C_003Ey__InlineArray2<Task>, Task>(ref buffer, 0) = task;
-		global::_003CPrivateImplementationDetails_003E.InlineArrayElementRef<global::_003C_003Ey__InlineArray2<Task>, Task>(ref buffer, 1) = task2;
-		await Task.WhenAll(global::_003CPrivateImplementationDetails_003E.InlineArrayAsReadOnlySpan<global::_003C_003Ey__InlineArray2<Task>, Task>(in buffer, 2));
+		buffer[0] = task;
+		buffer[1] = task2;
+		await Task.WhenAll(buffer);
 		UpdateRestSiteOptions();
 		ShowProceedButton();
 		if (Options.Count > 0)
 		{
 			await ShowChoices(_cts.Token);
-			ActiveScreenContext.Instance.Update();
+			DefaultFocusedControl?.TryGrabFocus();
 		}
 	}
 
@@ -459,6 +625,9 @@ public class NRestSiteRoom : Control, IScreenContext, IRoomWithProceedButton
 		}
 	}
 
+	/// <summary>
+	/// Disables the fire vfx in the rest site if there are no more options remaining.
+	/// </summary>
 	private void ExtinguishFireIfAble()
 	{
 		if (RunManager.Instance.RestSiteSynchronizer.GetLocalOptions().Count > 0 || !_restSiteLighting.Visible)
@@ -474,7 +643,10 @@ public class NRestSiteRoom : Control, IScreenContext, IRoomWithProceedButton
 			characterContainer.Modulate = Colors.DarkGray;
 		}
 		_restSiteLighting.Visible = false;
-		NRunMusicController.Instance?.TriggerCampfireGoingOut();
+		if (!_runState.IsGameOver)
+		{
+			NRunMusicController.Instance?.TriggerCampfireGoingOut();
+		}
 	}
 
 	private async Task ShowChoices(CancellationToken ct)
@@ -511,13 +683,19 @@ public class NRestSiteRoom : Control, IScreenContext, IRoomWithProceedButton
 		}
 	}
 
+	/// <summary>
+	/// Get the method information for all the methods declared in this class.
+	/// This method is used by Godot to register the available methods in the editor.
+	/// Do not call this method.
+	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	internal static List<MethodInfo> GetGodotMethodList()
 	{
-		List<MethodInfo> list = new List<MethodInfo>(18);
+		List<MethodInfo> list = new List<MethodInfo>(19);
 		list.Add(new MethodInfo(MethodName._Ready, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName._EnterTree, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName._ExitTree, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
+		list.Add(new MethodInfo(MethodName.BeforeExitingRoom, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName.DisableOptions, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName.EnableOptions, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName.AnimateDescriptionDown, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
@@ -554,6 +732,7 @@ public class NRestSiteRoom : Control, IScreenContext, IRoomWithProceedButton
 		return list;
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool InvokeGodotClassMethod(in godot_string_name method, NativeVariantPtrArgs args, out godot_variant ret)
 	{
@@ -572,6 +751,12 @@ public class NRestSiteRoom : Control, IScreenContext, IRoomWithProceedButton
 		if (method == MethodName._ExitTree && args.Count == 0)
 		{
 			_ExitTree();
+			ret = default(godot_variant);
+			return true;
+		}
+		if (method == MethodName.BeforeExitingRoom && args.Count == 0)
+		{
+			BeforeExitingRoom();
 			ret = default(godot_variant);
 			return true;
 		}
@@ -668,6 +853,7 @@ public class NRestSiteRoom : Control, IScreenContext, IRoomWithProceedButton
 		return base.InvokeGodotClassMethod(in method, args, out ret);
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool HasGodotClassMethod(in godot_string_name method)
 	{
@@ -680,6 +866,10 @@ public class NRestSiteRoom : Control, IScreenContext, IRoomWithProceedButton
 			return true;
 		}
 		if (method == MethodName._ExitTree)
+		{
+			return true;
+		}
+		if (method == MethodName.BeforeExitingRoom)
 		{
 			return true;
 		}
@@ -746,6 +936,7 @@ public class NRestSiteRoom : Control, IScreenContext, IRoomWithProceedButton
 		return base.HasGodotClassMethod(in method);
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool SetGodotClassPropertyValue(in godot_string_name name, in godot_variant value)
 	{
@@ -804,6 +995,11 @@ public class NRestSiteRoom : Control, IScreenContext, IRoomWithProceedButton
 			_originalDescriptionYPos = VariantUtils.ConvertTo<float>(in value);
 			return true;
 		}
+		if (name == PropertyName._roomExiting)
+		{
+			_roomExiting = VariantUtils.ConvertTo<bool>(in value);
+			return true;
+		}
 		if (name == PropertyName._lastFocused)
 		{
 			_lastFocused = VariantUtils.ConvertTo<Control>(in value);
@@ -812,6 +1008,7 @@ public class NRestSiteRoom : Control, IScreenContext, IRoomWithProceedButton
 		return base.SetGodotClassPropertyValue(in name, in value);
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool GetGodotClassPropertyValue(in godot_string_name name, out godot_variant value)
 	{
@@ -883,6 +1080,11 @@ public class NRestSiteRoom : Control, IScreenContext, IRoomWithProceedButton
 			value = VariantUtils.CreateFrom(in _originalDescriptionYPos);
 			return true;
 		}
+		if (name == PropertyName._roomExiting)
+		{
+			value = VariantUtils.CreateFrom(in _roomExiting);
+			return true;
+		}
 		if (name == PropertyName._lastFocused)
 		{
 			value = VariantUtils.CreateFrom(in _lastFocused);
@@ -891,6 +1093,11 @@ public class NRestSiteRoom : Control, IScreenContext, IRoomWithProceedButton
 		return base.GetGodotClassPropertyValue(in name, out value);
 	}
 
+	/// <summary>
+	/// Get the property information for all the properties declared in this class.
+	/// This method is used by Godot to register the available properties in the editor.
+	/// Do not call this method.
+	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	internal static List<PropertyInfo> GetGodotPropertyList()
 	{
@@ -904,6 +1111,7 @@ public class NRestSiteRoom : Control, IScreenContext, IRoomWithProceedButton
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._descriptionPositionTween, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._choicesTween, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Float, PropertyName._originalDescriptionYPos, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Bool, PropertyName._roomExiting, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._lastFocused, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName.Header, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName.Description, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
@@ -912,6 +1120,7 @@ public class NRestSiteRoom : Control, IScreenContext, IRoomWithProceedButton
 		return list;
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override void SaveGodotObjectData(GodotSerializationInfo info)
 	{
@@ -927,9 +1136,11 @@ public class NRestSiteRoom : Control, IScreenContext, IRoomWithProceedButton
 		info.AddProperty(PropertyName._descriptionPositionTween, Variant.From(in _descriptionPositionTween));
 		info.AddProperty(PropertyName._choicesTween, Variant.From(in _choicesTween));
 		info.AddProperty(PropertyName._originalDescriptionYPos, Variant.From(in _originalDescriptionYPos));
+		info.AddProperty(PropertyName._roomExiting, Variant.From(in _roomExiting));
 		info.AddProperty(PropertyName._lastFocused, Variant.From(in _lastFocused));
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override void RestoreGodotObjectData(GodotSerializationInfo info)
 	{
@@ -978,9 +1189,13 @@ public class NRestSiteRoom : Control, IScreenContext, IRoomWithProceedButton
 		{
 			_originalDescriptionYPos = value11.As<float>();
 		}
-		if (info.TryGetProperty(PropertyName._lastFocused, out var value12))
+		if (info.TryGetProperty(PropertyName._roomExiting, out var value12))
 		{
-			_lastFocused = value12.As<Control>();
+			_roomExiting = value12.As<bool>();
+		}
+		if (info.TryGetProperty(PropertyName._lastFocused, out var value13))
+		{
+			_lastFocused = value13.As<Control>();
 		}
 	}
 }

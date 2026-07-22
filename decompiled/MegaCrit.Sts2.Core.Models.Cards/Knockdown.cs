@@ -28,10 +28,10 @@ public sealed class Knockdown : CardModel
 	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
 	{
 		ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
-		await DamageCmd.Attack(base.DynamicVars.Damage.BaseValue).FromCard(this).Targeting(cardPlay.Target)
+		await DamageCmd.Attack(base.DynamicVars.Damage.BaseValue).FromCard(this, cardPlay).Targeting(cardPlay.Target)
 			.WithHitFx("vfx/vfx_attack_slash")
 			.Execute(choiceContext);
-		await PowerCmd.Apply<KnockdownPower>(cardPlay.Target, base.DynamicVars["KnockdownPower"].BaseValue, base.Owner.Creature, this);
+		await PowerCmd.Apply<KnockdownPower>(choiceContext, cardPlay.Target, base.DynamicVars["KnockdownPower"].BaseValue, base.Owner.Creature, this);
 	}
 
 	protected override void OnUpgrade()

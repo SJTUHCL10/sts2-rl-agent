@@ -19,7 +19,7 @@ public sealed class Supermassive : CardModel
 	{
 		new CalculationBaseVar(5m),
 		new ExtraDamageVar(3m),
-		new CalculatedDamageVar(ValueProp.Move).WithMultiplier((CardModel card, Creature? _) => CombatManager.Instance.History.Entries.OfType<CardGeneratedEntry>().Count((CardGeneratedEntry c) => c.Actor.Player == card.Owner && c.GeneratedByPlayer))
+		new CalculatedDamageVar(ValueProp.Move).WithMultiplier((CardModel card, Creature? _) => CombatManager.Instance.History.Entries.OfType<CardGeneratedEntry>().Count((CardGeneratedEntry c) => c.Creator == card.Owner))
 	});
 
 	public Supermassive()
@@ -30,7 +30,7 @@ public sealed class Supermassive : CardModel
 	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
 	{
 		ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
-		await DamageCmd.Attack(base.DynamicVars.CalculatedDamage).FromCard(this).Targeting(cardPlay.Target)
+		await DamageCmd.Attack(base.DynamicVars.CalculatedDamage).FromCard(this, cardPlay).Targeting(cardPlay.Target)
 			.WithHitFx("vfx/vfx_attack_slash", null, "heavy_attack.mp3")
 			.Execute(choiceContext);
 	}

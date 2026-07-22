@@ -11,6 +11,9 @@ using MegaCrit.Sts2.Core.ValueProps;
 
 namespace MegaCrit.Sts2.Core.Models.Cards;
 
+/// <summary>
+/// The only difference between the starting Strike cards are portrait, attack vfx, and color.
+/// </summary>
 public sealed class Hegemony : CardModel
 {
 	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(new DynamicVar[2]
@@ -21,6 +24,9 @@ public sealed class Hegemony : CardModel
 
 	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(base.EnergyHoverTip);
 
+	/// <summary>
+	/// The only difference between the starting Strike cards are portrait, attack vfx, and color.
+	/// </summary>
 	public Hegemony()
 		: base(2, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy)
 	{
@@ -29,10 +35,10 @@ public sealed class Hegemony : CardModel
 	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
 	{
 		ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
-		await DamageCmd.Attack(base.DynamicVars.Damage.BaseValue).FromCard(this).Targeting(cardPlay.Target)
+		await DamageCmd.Attack(base.DynamicVars.Damage.BaseValue).FromCard(this, cardPlay).Targeting(cardPlay.Target)
 			.WithHitFx("vfx/vfx_attack_slash", null, "blunt_attack.mp3")
 			.Execute(choiceContext);
-		await PowerCmd.Apply<EnergyNextTurnPower>(base.Owner.Creature, base.DynamicVars.Energy.IntValue, base.Owner.Creature, this);
+		await PowerCmd.Apply<EnergyNextTurnPower>(choiceContext, base.Owner.Creature, base.DynamicVars.Energy.IntValue, base.Owner.Creature, this);
 	}
 
 	protected override void OnUpgrade()

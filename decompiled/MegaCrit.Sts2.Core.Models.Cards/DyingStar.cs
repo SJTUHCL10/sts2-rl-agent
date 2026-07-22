@@ -36,13 +36,13 @@ public sealed class DyingStar : CardModel
 	{
 		await CreatureCmd.TriggerAnim(base.Owner.Creature, "Attack", base.Owner.Character.AttackAnimDelay);
 		IReadOnlyList<Creature> enemies = base.CombatState.HittableEnemies;
-		await DamageCmd.Attack(base.DynamicVars.Damage.BaseValue).FromCard(this).TargetingAllOpponents(base.CombatState)
+		await DamageCmd.Attack(base.DynamicVars.Damage.BaseValue).FromCard(this, cardPlay).TargetingAllOpponents(base.CombatState)
 			.WithHitFx("vfx/vfx_starry_impact")
 			.SpawningHitVfxOnEachCreature()
 			.Execute(choiceContext);
 		foreach (Creature enemy in enemies)
 		{
-			await PowerCmd.Apply<DyingStarPower>(enemy, base.DynamicVars["StrengthLoss"].BaseValue, base.Owner.Creature, this);
+			await PowerCmd.Apply<DyingStarPower>(choiceContext, enemy, base.DynamicVars["StrengthLoss"].BaseValue, base.Owner.Creature, this);
 			VfxCmd.PlayOnCreature(enemy, "vfx/vfx_attack_slash");
 		}
 	}

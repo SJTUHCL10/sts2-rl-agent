@@ -141,7 +141,7 @@ class TestRegentCardEffectsReferenceParity:
 
         assert combat.play_card(0, 0)
 
-        assert enemy.current_hp == 70
+        assert enemy.current_hp == 65
         assert combat.stars == 0
 
     def test_gamma_blast_spends_stars_then_applies_weak_and_vulnerable(self):
@@ -168,7 +168,7 @@ class TestRegentCardEffectsReferenceParity:
         assert combat.play_card(0)
 
         assert combat.player.block == 13
-        assert combat.player.get_power_amount(PowerId.BLOCK_NEXT_TURN) == 6
+        assert combat.player.get_power_amount(PowerId.BLOCK_NEXT_TURN) == 7
 
     def test_hegemony_deals_damage_and_grants_energy_next_turn(self):
         combat = _make_combat()
@@ -607,7 +607,7 @@ class TestRegentCardEffectsReferenceParity:
 
         combat._apply_card_after_turn_end(CombatSide.PLAYER)  # noqa: SLF001
 
-        assert combat.player.block == 9
+        assert combat.player.block == 10
         assert card in combat.discard_pile
 
     def test_kingly_kick_gets_cheaper_each_time_it_is_drawn(self):
@@ -636,12 +636,12 @@ class TestRegentCardEffectsReferenceParity:
         combat.draw_pile = [card]
 
         combat.draw_cards(combat.player, 1)
-        assert card.base_damage == 11
+        assert card.base_damage == 12
 
         combat.energy = 1
         assert combat.play_card(0, 0)
-        assert enemy.current_hp == 89
-        assert card.base_damage == 11
+        assert enemy.current_hp == 88
+        assert card.base_damage == 12
 
     def test_kingly_punch_upgrade_preserves_drawn_damage_growth(self):
         combat = _make_combat()
@@ -651,10 +651,10 @@ class TestRegentCardEffectsReferenceParity:
         combat.draw_pile = [card]
 
         combat.draw_cards(combat.player, 1)
-        assert card.base_damage == 11
+        assert card.base_damage == 12
 
         combat.upgrade_card(card)
 
         assert card.upgraded is True
-        assert card.base_damage == 11
-        assert card.effect_vars["increase"] == 5
+        assert card.base_damage == 14
+        assert card.effect_vars["increase"] == 6

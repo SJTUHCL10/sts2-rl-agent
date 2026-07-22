@@ -20,7 +20,7 @@ public sealed class TheLegendsWereTrue : EventModel
 {
 	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new DamageVar(8m, ValueProp.Unblockable | ValueProp.Unpowered));
 
-	public override bool IsAllowed(RunState runState)
+	public override bool IsAllowed(IRunState runState)
 	{
 		if (runState.CurrentActIndex == 0 && runState.Players.All((Player p) => p.Deck.Cards.Count > 0))
 		{
@@ -48,7 +48,7 @@ public sealed class TheLegendsWereTrue : EventModel
 
 	private async Task SlowlyFindAnExit()
 	{
-		await CreatureCmd.Damage(new ThrowingPlayerChoiceContext(), base.Owner.Creature, base.DynamicVars.Damage, null, null);
+		await CreatureCmd.Damage(new ThrowingPlayerChoiceContext(), base.Owner.Creature, base.DynamicVars.Damage, null, null, null);
 		IEnumerable<PotionModel> items = base.Owner.Character.PotionPool.GetUnlockedPotions(base.Owner.UnlockState).Concat(ModelDb.PotionPool<SharedPotionPool>().GetUnlockedPotions(base.Owner.UnlockState));
 		PotionModel potionModel = base.Owner.PlayerRng.Rewards.NextItem(items);
 		if (potionModel != null)

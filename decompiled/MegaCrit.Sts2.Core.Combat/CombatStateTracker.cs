@@ -9,6 +9,7 @@ using MegaCrit.Sts2.Core.Entities.Players;
 using MegaCrit.Sts2.Core.Helpers;
 using MegaCrit.Sts2.Core.Models;
 using MegaCrit.Sts2.Core.Nodes;
+using MegaCrit.Sts2.Core.Nodes.GodotExtensions;
 using MegaCrit.Sts2.Core.TestSupport;
 
 namespace MegaCrit.Sts2.Core.Combat;
@@ -21,12 +22,17 @@ public class CombatStateTracker
 
 	private CombatState? _state;
 
+	/// <summary>
+	/// Fired whenever any part of the combat's state changes (card changes piles, power applied/removed, damage dealt,
+	/// block gained/lost, etc.).
+	/// </summary>
 	public event Action<CombatState>? CombatStateChanged;
 
 	public CombatStateTracker(CombatManager combatManager)
 	{
 		_combatManager = combatManager;
 		_combatManager.History.Changed += OnCombatHistoryChanged;
+		_combatManager.CombatBegan += OnCombatBegan;
 		_combatManager.CreaturesChanged += OnCreaturesChanged;
 		_combatManager.TurnStarted += OnTurnStarted;
 		_combatManager.TurnEnded += OnTurnEnded;
@@ -35,6 +41,7 @@ public class CombatStateTracker
 	~CombatStateTracker()
 	{
 		_combatManager.History.Changed -= OnCombatHistoryChanged;
+		_combatManager.CombatBegan -= OnCombatBegan;
 		_combatManager.CreaturesChanged -= OnCreaturesChanged;
 		_combatManager.TurnStarted -= OnTurnStarted;
 		_combatManager.TurnEnded -= OnTurnEnded;
@@ -108,13 +115,20 @@ public class CombatStateTracker
 	public void Subscribe(PlayerCombatState combatState)
 	{
 		combatState.EnergyChanged += OnPlayerCombatStateValueChanged;
+		combatState.PlayerTurnPhaseChanged += OnPlayerStateChanged;
 		combatState.StarsChanged += OnPlayerCombatStateValueChanged;
 	}
 
 	public void Unsubscribe(PlayerCombatState combatState)
 	{
 		combatState.EnergyChanged -= OnPlayerCombatStateValueChanged;
+		combatState.PlayerTurnPhaseChanged -= OnPlayerStateChanged;
 		combatState.StarsChanged -= OnPlayerCombatStateValueChanged;
+	}
+
+	private void OnCombatBegan(CombatState _)
+	{
+		NotifyCombatStateChanged("OnCombatBegan");
 	}
 
 	private void OnCardPileContentsChanged()
@@ -147,6 +161,11 @@ public class CombatStateTracker
 		NotifyCombatStateChanged("OnCreaturesChanged");
 	}
 
+	private void OnPlayerStateChanged()
+	{
+		NotifyCombatStateChanged("OnPlayerStateChanged");
+	}
+
 	private void OnPlayerCombatStateValueChanged(int _, int __)
 	{
 		NotifyCombatStateChanged("OnPlayerCombatStateValueChanged");
@@ -177,6 +196,10 @@ public class CombatStateTracker
 		NotifyCombatStateChanged("OnTurnEnded");
 	}
 
+	/// <summary>
+	/// Notify the world that something in the combat state changed.
+	/// </summary>
+	/// <param name="caller">The name of the method that triggered this.</param>
 	private void NotifyCombatStateChanged(string caller)
 	{
 		if (TestMode.IsOn)
@@ -194,9 +217,10 @@ public class CombatStateTracker
 
 	private async Task CallCombatStateChangedDeferred()
 	{
-		if (NRun.Instance != null)
+		Node instance = NRun.Instance;
+		if (instance?.GetTreeOrNull() != null)
 		{
-			await NRun.Instance.GetTree().ToSignal(NRun.Instance.GetTree(), SceneTree.SignalName.ProcessFrame);
+			await instance.AwaitProcessFrame();
 		}
 		CombatState state = _state;
 		if (state != null)

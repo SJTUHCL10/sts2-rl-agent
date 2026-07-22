@@ -361,10 +361,14 @@ def escape_plan(card: CardInstance, combat: CombatState, target: Creature | None
 
 @register_effect(CardId.EXPERTISE)
 def expertise(card: CardInstance, combat: CombatState, target: Creature | None) -> None:
-    draw = card.effect_vars.get("cards", 6)
-    draw_up_to = draw - len(combat.hand)
-    if draw_up_to > 0:
-        combat._draw_cards(draw_up_to)
+    owner = _owner(card, combat)
+    state = combat.combat_player_state_for(owner)
+    before = set(id(existing) for existing in state.hand) if state is not None else set()
+    combat.draw_cards(owner, card.effect_vars.get("cards", 2))
+    if state is not None:
+        for drawn in state.hand:
+            if id(drawn) not in before:
+                drawn.single_turn_retain = True
 
 
 @register_effect(CardId.EXPOSE)
@@ -525,15 +529,9 @@ def memento_mori(card: CardInstance, combat: CombatState, target: Creature | Non
 
 @register_effect(CardId.MIRAGE)
 def mirage(card: CardInstance, combat: CombatState, target: Creature | None) -> None:
-    # Block scales with total Poison on all enemies
-    total_poison = sum(
-        e.get_power_amount(PowerId.POISON) for e in combat.alive_enemies
+    combat.apply_power_to(
+        _owner(card, combat), PowerId.ENERGY_NEXT_TURN, card.effect_vars.get("energy", 1)
     )
-    extra = card.effect_vars.get("calc_extra", 1)
-    block_amt = total_poison * extra
-    owner = _owner(card, combat)
-    blk = calculate_block(block_amt, owner, ValueProp.MOVE, combat, card_source=card)
-    _gain_resolved_block(owner, blk, combat)
 
 
 @register_effect(CardId.NOXIOUS_FUMES_CARD)
@@ -544,10 +542,7 @@ def noxious_fumes(card: CardInstance, combat: CombatState, target: Creature | No
 @register_effect(CardId.OUTBREAK_CARD)
 def outbreak(card: CardInstance, combat: CombatState, target: Creature | None) -> None:
     owner = _owner(card, combat)
-    combat.apply_power_to(owner, PowerId.OUTBREAK, card.effect_vars.get("outbreak_power", 11))
-    outbreak_power = owner.powers.get(PowerId.OUTBREAK)
-    if outbreak_power is not None:
-        outbreak_power.repeat = card.effect_vars.get("repeat", OUTBREAK_REPEAT)
+    combat.apply_power_to(owner, PowerId.OUTBREAK, card.effect_vars.get("outbreak_power", 4))
 
 
 @register_effect(CardId.PHANTOM_BLADES_CARD)
@@ -999,7 +994,7 @@ def make_anticipate(upgraded: bool = False) -> CardInstance:
     return CardInstance(
         card_id=CardId.ANTICIPATE, cost=0, card_type=CardType.SKILL,
         target_type=TargetType.SELF, rarity=CardRarity.COMMON,
-        effect_vars={"dexterity": 5 if upgraded else 3},
+        effect_vars={"dexterity": 4 if upgraded else 3},
         upgraded=upgraded,
         instance_id=_get_next_id(),
     )
@@ -1249,7 +1244,7 @@ def make_expertise(upgraded: bool = False) -> CardInstance:
     return CardInstance(
         card_id=CardId.EXPERTISE, cost=1, card_type=CardType.SKILL,
         target_type=TargetType.SELF, rarity=CardRarity.UNCOMMON,
-        effect_vars={"cards": 7 if upgraded else 6},
+        effect_vars={"cards": 3 if upgraded else 2},
         upgraded=upgraded, instance_id=_get_next_id(),
     )
 
@@ -1374,10 +1369,9 @@ def make_memento_mori(upgraded: bool = False) -> CardInstance:
 
 def make_mirage(upgraded: bool = False) -> CardInstance:
     return CardInstance(
-        card_id=CardId.MIRAGE, cost=0 if upgraded else 1, card_type=CardType.SKILL,
+        card_id=CardId.MIRAGE, cost=0, card_type=CardType.SKILL,
         target_type=TargetType.SELF, rarity=CardRarity.UNCOMMON,
-        keywords=frozenset({"exhaust"}),
-        effect_vars={"calc_base": 0, "calc_extra": 1},
+        effect_vars={"energy": 2 if upgraded else 1},
         upgraded=upgraded, instance_id=_get_next_id(),
     )
 
@@ -1395,7 +1389,7 @@ def make_outbreak(upgraded: bool = False) -> CardInstance:
     return CardInstance(
         card_id=CardId.OUTBREAK_CARD, cost=1, card_type=CardType.POWER,
         target_type=TargetType.SELF, rarity=CardRarity.UNCOMMON,
-        effect_vars={"outbreak_power": 15 if upgraded else 11, "repeat": OUTBREAK_REPEAT},
+        effect_vars={"outbreak_power": 5 if upgraded else 4},
         upgraded=upgraded, instance_id=_get_next_id(),
     )
 
@@ -1505,9 +1499,8 @@ def make_up_my_sleeve(upgraded: bool = False) -> CardInstance:
 
 def make_well_laid_plans(upgraded: bool = False) -> CardInstance:
     return CardInstance(
-        card_id=CardId.WELL_LAID_PLANS, cost=1, card_type=CardType.POWER,
-        target_type=TargetType.SELF, rarity=CardRarity.UNCOMMON,
-        effect_vars={"retain_amount": 2 if upgraded else 1},
+        card_id=CardId.WELL_LAID_PLANS, cost=0 if upgraded else 1, card_type=CardType.POWER,
+        target_type=TargetType.SELF, rarity=CardRarity.RARE,
         upgraded=upgraded, instance_id=_get_next_id(),
     )
 
@@ -1525,7 +1518,7 @@ def make_abrasive(upgraded: bool = False) -> CardInstance:
 def make_accelerant(upgraded: bool = False) -> CardInstance:
     return CardInstance(
         card_id=CardId.ACCELERANT, cost=1, card_type=CardType.POWER,
-        target_type=TargetType.SELF, rarity=CardRarity.RARE,
+        target_type=TargetType.SELF, rarity=CardRarity.UNCOMMON,
         effect_vars={"accelerant": 2 if upgraded else 1},
         upgraded=upgraded, instance_id=_get_next_id(),
     )
@@ -1763,6 +1756,60 @@ def make_wraith_form(upgraded: bool = False) -> CardInstance:
         effect_vars={"intangible_power": 3 if upgraded else 2, "wraith_form_power": 1},
         upgraded=upgraded, instance_id=_get_next_id(),
     )
+
+
+@register_effect(CardId.BLADE_SYMPHONY)
+def blade_symphony(card: CardInstance, combat: CombatState, target: Creature | None) -> None:
+    from sts2_env.cards.status import make_shiv
+
+    count = card.effect_vars.get("cards", 2)
+    for state in combat.combat_player_states:
+        if state.creature.is_alive:
+            for _ in range(count):
+                combat.add_generated_card_to_creature_hand(state.creature, make_shiv())
+
+
+@register_effect(CardId.CONCOCT)
+def concoct(card: CardInstance, combat: CombatState, target: Creature | None) -> None:
+    assert target is not None
+    combat.apply_power_to(target, PowerId.CONCOCT, card.effect_vars.get("concoct_power", 3))
+
+
+@register_effect(CardId.FADE)
+def fade(card: CardInstance, combat: CombatState, target: Creature | None) -> None:
+    assert target is not None
+    amount = card.effect_vars.get("dexterity", 6)
+    combat.apply_power_to(target, PowerId.DEXTERITY, amount)
+    combat.apply_power_to(target, PowerId.FADE, amount)
+
+
+@register_effect(CardId.SCARE)
+def scare(card: CardInstance, combat: CombatState, target: Creature | None) -> None:
+    owner = _owner(card, combat)
+    for enemy in combat.hittable_enemies:
+        combat.apply_power_to(enemy, PowerId.WEAK, 1, applier=owner)
+
+
+def _make_new_reference_card(card_id: CardId, upgraded: bool) -> CardInstance:
+    from sts2_env.cards.factory import create_reference_card
+
+    return create_reference_card(card_id, upgraded=upgraded, allow_generation=True)
+
+
+def make_blade_symphony(upgraded: bool = False) -> CardInstance:
+    return _make_new_reference_card(CardId.BLADE_SYMPHONY, upgraded)
+
+
+def make_concoct(upgraded: bool = False) -> CardInstance:
+    return _make_new_reference_card(CardId.CONCOCT, upgraded)
+
+
+def make_fade(upgraded: bool = False) -> CardInstance:
+    return _make_new_reference_card(CardId.FADE, upgraded)
+
+
+def make_scare(upgraded: bool = False) -> CardInstance:
+    return _make_new_reference_card(CardId.SCARE, upgraded)
 
 
 def create_silent_starter_deck() -> list[CardInstance]:

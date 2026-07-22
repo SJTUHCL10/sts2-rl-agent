@@ -1,0 +1,5344 @@
+{
+  "initial_state": {
+    "act": 1,
+    "floor": 1,
+    "options": [
+      {
+        "action": "event_choice",
+        "enabled": true,
+        "index": 0
+      },
+      {
+        "action": "event_choice",
+        "enabled": true,
+        "index": 1
+      },
+      {
+        "action": "event_choice",
+        "enabled": true,
+        "index": 2
+      }
+    ],
+    "type": "event"
+  },
+  "metadata": {
+    "host": "127.0.0.1",
+    "model_path": "output/full_run_v0109_smoke_masked_20260721/final_model.zip",
+    "port": 9002
+  },
+  "mode": "combat",
+  "steps": [
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 1,
+        "options": [
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 0
+          },
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 1
+          },
+          {
+            "action": "proceed",
+            "enabled": true,
+            "index": 2
+          }
+        ],
+        "type": "reward_screen"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 1,
+        "options": [
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 0
+          },
+          {
+            "action": "proceed",
+            "enabled": true,
+            "index": 1
+          }
+        ],
+        "type": "reward_screen"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "can_skip": true,
+        "cards": [
+          {
+            "cost": 1,
+            "id": "BREAKTHROUGH",
+            "index": 0,
+            "type": "Attack"
+          },
+          {
+            "cost": 2,
+            "id": "BLOOD_WALL",
+            "index": 1,
+            "type": "Skill"
+          },
+          {
+            "cost": 2,
+            "id": "STAMPEDE",
+            "index": 2,
+            "type": "Power"
+          }
+        ],
+        "type": "card_reward"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 1,
+        "nodes": [
+          {
+            "col": 2,
+            "index": 0,
+            "row": 1,
+            "type": "Monster"
+          },
+          {
+            "col": 4,
+            "index": 1,
+            "row": 1,
+            "type": "Monster"
+          },
+          {
+            "col": 5,
+            "index": 2,
+            "row": 1,
+            "type": "Monster"
+          }
+        ],
+        "type": "map_select"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 1
+      },
+      "resulting_state": {
+        "discard_pile_count": 0,
+        "draw_pile_count": 7,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 42,
+            "id": "SLUDGE_SPINNER",
+            "intent": "Attack",
+            "intent_damage": 9,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 42,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "BREAKTHROUGH",
+            "playable": true,
+            "target": "AllEnemies",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 64,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 2,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 1,
+        "draw_pile_count": 7,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 33,
+            "id": "SLUDGE_SPINNER",
+            "intent": "Attack",
+            "intent_damage": 9,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 42,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 2,
+          "hp": 63,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 3,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 2,
+        "draw_pile_count": 7,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 33,
+            "id": "SLUDGE_SPINNER",
+            "intent": "Attack",
+            "intent_damage": 9,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 42,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 1,
+          "hp": 63,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 2,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 3,
+        "draw_pile_count": 7,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 27,
+            "id": "SLUDGE_SPINNER",
+            "intent": "Attack",
+            "intent_damage": 9,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 42,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 0,
+          "hp": 63,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "potion",
+        "slot": 0,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 3,
+        "draw_pile_count": 7,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 27,
+            "id": "SLUDGE_SPINNER",
+            "intent": "Attack",
+            "intent_damage": 9,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 42,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 0,
+          "hp": 63,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": 1,
+              "id": "BUFFER_POWER"
+            }
+          ]
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 5,
+        "draw_pile_count": 2,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 27,
+            "id": "SLUDGE_SPINNER",
+            "intent": "Attack",
+            "intent_damage": 12,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 42,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 63,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": 1,
+              "id": "WEAK_POWER"
+            }
+          ]
+        },
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 3,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 6,
+        "draw_pile_count": 2,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 27,
+            "id": "SLUDGE_SPINNER",
+            "intent": "Attack",
+            "intent_damage": 12,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 42,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 2,
+          "hp": 63,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": 1,
+              "id": "WEAK_POWER"
+            }
+          ]
+        },
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 3,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 7,
+        "draw_pile_count": 2,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 21,
+            "id": "SLUDGE_SPINNER",
+            "intent": "Attack",
+            "intent_damage": 12,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 42,
+            "powers": [
+              {
+                "amount": 2,
+                "id": "VULNERABLE_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 0,
+          "hp": 63,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": 1,
+              "id": "WEAK_POWER"
+            }
+          ]
+        },
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 0,
+        "draw_pile_count": 7,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 21,
+            "id": "SLUDGE_SPINNER",
+            "intent": "Attack",
+            "intent_damage": 7,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 42,
+            "powers": [
+              {
+                "amount": 1,
+                "id": "VULNERABLE_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          },
+          {
+            "cost": 1,
+            "id": "BREAKTHROUGH",
+            "playable": true,
+            "target": "AllEnemies",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 56,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 3,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 1,
+        "draw_pile_count": 7,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 21,
+            "id": "SLUDGE_SPINNER",
+            "intent": "Attack",
+            "intent_damage": 7,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 42,
+            "powers": [
+              {
+                "amount": 1,
+                "id": "VULNERABLE_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          },
+          {
+            "cost": 1,
+            "id": "BREAKTHROUGH",
+            "playable": true,
+            "target": "AllEnemies",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 2,
+          "hp": 56,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 2,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 2,
+        "draw_pile_count": 7,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 8,
+            "id": "SLUDGE_SPINNER",
+            "intent": "Attack",
+            "intent_damage": 7,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 42,
+            "powers": [
+              {
+                "amount": 1,
+                "id": "VULNERABLE_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 1,
+          "hp": 55,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 2,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 2,
+        "options": [
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 0
+          },
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 1
+          },
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 2
+          },
+          {
+            "action": "proceed",
+            "enabled": true,
+            "index": 3
+          }
+        ],
+        "type": "reward_screen"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 2,
+        "options": [
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 0
+          },
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 1
+          },
+          {
+            "action": "proceed",
+            "enabled": true,
+            "index": 2
+          }
+        ],
+        "type": "reward_screen"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 2,
+        "options": [
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 0
+          },
+          {
+            "action": "proceed",
+            "enabled": true,
+            "index": 1
+          }
+        ],
+        "type": "reward_screen"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "can_skip": true,
+        "cards": [
+          {
+            "cost": 2,
+            "id": "BLOOD_WALL",
+            "index": 0,
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "THUNDERCLAP",
+            "index": 1,
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "HEADBUTT",
+            "index": 2,
+            "type": "Attack"
+          }
+        ],
+        "type": "card_reward"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 2,
+        "nodes": [
+          {
+            "col": 4,
+            "index": 0,
+            "row": 2,
+            "type": "Shop"
+          }
+        ],
+        "type": "map_select"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 3,
+        "options": [
+          {
+            "action": "leave_shop",
+            "enabled": true,
+            "index": 0
+          },
+          {
+            "action": "buy_card",
+            "enabled": true,
+            "index": 1
+          },
+          {
+            "action": "buy_card",
+            "enabled": true,
+            "index": 2
+          },
+          {
+            "action": "buy_card",
+            "enabled": true,
+            "index": 3
+          },
+          {
+            "action": "buy_card",
+            "enabled": true,
+            "index": 4
+          },
+          {
+            "action": "buy_card",
+            "enabled": true,
+            "index": 5
+          },
+          {
+            "action": "buy_card",
+            "enabled": true,
+            "index": 6
+          },
+          {
+            "action": "buy_potion",
+            "enabled": true,
+            "index": 7
+          },
+          {
+            "action": "buy_potion",
+            "enabled": true,
+            "index": 8
+          },
+          {
+            "action": "buy_potion",
+            "enabled": true,
+            "index": 9
+          },
+          {
+            "action": "remove_card",
+            "enabled": true,
+            "index": 10
+          }
+        ],
+        "type": "shop"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 6
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 3,
+        "nodes": [
+          {
+            "col": 4,
+            "index": 0,
+            "row": 3,
+            "type": "Monster"
+          }
+        ],
+        "type": "map_select"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 0,
+        "draw_pile_count": 9,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 47,
+            "id": "SEAPUNK",
+            "intent": "Attack",
+            "intent_damage": 13,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 47,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "BREAKTHROUGH",
+            "playable": true,
+            "target": "AllEnemies",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 61,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 2,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 1,
+        "draw_pile_count": 9,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 47,
+            "id": "SEAPUNK",
+            "intent": "Attack",
+            "intent_damage": 13,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 47,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "BREAKTHROUGH",
+            "playable": true,
+            "target": "AllEnemies",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 2,
+          "hp": 61,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 3,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 2,
+        "draw_pile_count": 9,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 41,
+            "id": "SEAPUNK",
+            "intent": "Attack",
+            "intent_damage": 13,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 47,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "BREAKTHROUGH",
+            "playable": true,
+            "target": "AllEnemies",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 1,
+          "hp": 61,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 0,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 3,
+        "draw_pile_count": 9,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 32,
+            "id": "SEAPUNK",
+            "intent": "Attack",
+            "intent_damage": 13,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 47,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 0,
+          "hp": 60,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "potion",
+        "slot": 0,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "cards": [
+          {
+            "id": "STRIKE_IRONCLAD",
+            "type": "Attack"
+          },
+          {
+            "id": "BASH",
+            "type": "Attack"
+          }
+        ],
+        "max_select": 1,
+        "min_select": 1,
+        "type": "card_select"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 3,
+        "draw_pile_count": 9,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 32,
+            "id": "SEAPUNK",
+            "intent": "Attack",
+            "intent_damage": 13,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 47,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 0,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 0,
+          "hp": 60,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 0,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 4,
+        "draw_pile_count": 9,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 26,
+            "id": "SEAPUNK",
+            "intent": "Attack",
+            "intent_damage": 13,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 47,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 0,
+          "hp": 60,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 5,
+        "draw_pile_count": 4,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 26,
+            "id": "SEAPUNK",
+            "intent": "Attack",
+            "intent_damage": 2,
+            "intent_hits": 4,
+            "is_alive": true,
+            "max_hp": 47,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 0,
+            "id": "VOLLEY",
+            "playable": true,
+            "target": "RandomEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 52,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 3,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 6,
+        "draw_pile_count": 4,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 26,
+            "id": "SEAPUNK",
+            "intent": "Attack",
+            "intent_damage": 2,
+            "intent_hits": 4,
+            "is_alive": true,
+            "max_hp": 47,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          },
+          {
+            "cost": 0,
+            "id": "VOLLEY",
+            "playable": true,
+            "target": "RandomEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 2,
+          "hp": 52,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 3,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 7,
+        "draw_pile_count": 4,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 6,
+            "id": "SEAPUNK",
+            "intent": "Attack",
+            "intent_damage": 2,
+            "intent_hits": 4,
+            "is_alive": true,
+            "max_hp": 47,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 0,
+          "hp": 52,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 0,
+        "draw_pile_count": 8,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 6,
+            "id": "SEAPUNK",
+            "intent": "Buff",
+            "is_alive": true,
+            "max_hp": 47,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 2,
+            "id": "BLOOD_WALL",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 49,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 2,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 1,
+        "draw_pile_count": 8,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 6,
+            "id": "SEAPUNK",
+            "intent": "Buff",
+            "is_alive": true,
+            "max_hp": 47,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 16,
+          "energy": 1,
+          "hp": 47,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 3,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 2,
+        "draw_pile_count": 8,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 6,
+            "id": "SEAPUNK",
+            "intent": "Buff",
+            "is_alive": true,
+            "max_hp": 47,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 21,
+          "energy": 0,
+          "hp": 47,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 5,
+        "draw_pile_count": 3,
+        "enemies": [
+          {
+            "block": 8,
+            "hp": 6,
+            "id": "SEAPUNK",
+            "intent": "Attack",
+            "intent_damage": 15,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 47,
+            "powers": [
+              {
+                "amount": 2,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 0,
+            "id": "VOLLEY",
+            "playable": true,
+            "target": "RandomEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "BREAKTHROUGH",
+            "playable": true,
+            "target": "AllEnemies",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 47,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 4,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 3,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 6,
+        "draw_pile_count": 3,
+        "enemies": [
+          {
+            "block": 8,
+            "hp": 6,
+            "id": "SEAPUNK",
+            "intent": "Attack",
+            "intent_damage": 15,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 47,
+            "powers": [
+              {
+                "amount": 2,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 0,
+            "id": "VOLLEY",
+            "playable": true,
+            "target": "RandomEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "BREAKTHROUGH",
+            "playable": true,
+            "target": "AllEnemies",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 2,
+          "hp": 47,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 4,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 2,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 7,
+        "draw_pile_count": 3,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 5,
+            "id": "SEAPUNK",
+            "intent": "Attack",
+            "intent_damage": 15,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 47,
+            "powers": [
+              {
+                "amount": 2,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 0,
+            "id": "VOLLEY",
+            "playable": true,
+            "target": "RandomEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 1,
+          "hp": 46,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 4,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 8,
+        "draw_pile_count": 3,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 5,
+            "id": "SEAPUNK",
+            "intent": "Attack",
+            "intent_damage": 15,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 47,
+            "powers": [
+              {
+                "amount": 2,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 0,
+            "id": "VOLLEY",
+            "playable": true,
+            "target": "RandomEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 10,
+          "energy": 0,
+          "hp": 46,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 4,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 0,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 9,
+        "draw_pile_count": 3,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 5,
+            "id": "SEAPUNK",
+            "intent": "Attack",
+            "intent_damage": 15,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 47,
+            "powers": [
+              {
+                "amount": 2,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 10,
+          "energy": 0,
+          "hp": 46,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 4,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 0,
+        "draw_pile_count": 8,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 5,
+            "id": "SEAPUNK",
+            "intent": "Attack",
+            "intent_damage": 4,
+            "intent_hits": 4,
+            "is_alive": true,
+            "max_hp": 47,
+            "powers": [
+              {
+                "amount": 2,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 0,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "BREAKTHROUGH",
+            "playable": true,
+            "target": "AllEnemies",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 41,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 5,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 3,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 4,
+        "options": [
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 0
+          },
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 1
+          },
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 2
+          },
+          {
+            "action": "proceed",
+            "enabled": true,
+            "index": 3
+          }
+        ],
+        "type": "reward_screen"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 4,
+        "options": [
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 0
+          },
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 1
+          },
+          {
+            "action": "proceed",
+            "enabled": true,
+            "index": 2
+          }
+        ],
+        "type": "reward_screen"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 4,
+        "options": [
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 0
+          },
+          {
+            "action": "proceed",
+            "enabled": true,
+            "index": 1
+          }
+        ],
+        "type": "reward_screen"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "can_skip": true,
+        "cards": [
+          {
+            "cost": 1,
+            "id": "BODY_SLAM",
+            "index": 0,
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "RUPTURE",
+            "index": 1,
+            "type": "Power"
+          },
+          {
+            "cost": 2,
+            "id": "PERFECTED_STRIKE",
+            "index": 2,
+            "type": "Attack"
+          }
+        ],
+        "type": "card_reward"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 4,
+        "nodes": [
+          {
+            "col": 4,
+            "index": 0,
+            "row": 4,
+            "type": "Monster"
+          }
+        ],
+        "type": "map_select"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 0,
+        "draw_pile_count": 10,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 27,
+            "id": "CORPSE_SLUG",
+            "intent": "Attack",
+            "intent_damage": 9,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 27,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 28,
+            "id": "CORPSE_SLUG",
+            "intent": "Debuff",
+            "is_alive": true,
+            "max_hp": 28,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 46,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 2,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 1,
+        "draw_pile_count": 10,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 27,
+            "id": "CORPSE_SLUG",
+            "intent": "Attack",
+            "intent_damage": 9,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 27,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 28,
+            "id": "CORPSE_SLUG",
+            "intent": "Debuff",
+            "is_alive": true,
+            "max_hp": 28,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 2,
+          "hp": 46,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 2,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 2,
+        "draw_pile_count": 10,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 19,
+            "id": "CORPSE_SLUG",
+            "intent": "Attack",
+            "intent_damage": 9,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 27,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              },
+              {
+                "amount": 2,
+                "id": "VULNERABLE_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 28,
+            "id": "CORPSE_SLUG",
+            "intent": "Debuff",
+            "is_alive": true,
+            "max_hp": 28,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 0,
+          "hp": 46,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "potion",
+        "slot": 0,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 2,
+        "draw_pile_count": 10,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 9,
+            "id": "CORPSE_SLUG",
+            "intent": "Attack",
+            "intent_damage": 9,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 27,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              },
+              {
+                "amount": 2,
+                "id": "VULNERABLE_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 18,
+            "id": "CORPSE_SLUG",
+            "intent": "Debuff",
+            "is_alive": true,
+            "max_hp": 28,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 0,
+          "hp": 46,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 5,
+        "draw_pile_count": 5,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 9,
+            "id": "CORPSE_SLUG",
+            "intent": "Debuff",
+            "is_alive": true,
+            "max_hp": 27,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              },
+              {
+                "amount": 1,
+                "id": "VULNERABLE_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 18,
+            "id": "CORPSE_SLUG",
+            "intent": "Attack",
+            "intent_damage": 3,
+            "intent_hits": 2,
+            "is_alive": true,
+            "max_hp": 28,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          },
+          {
+            "cost": 1,
+            "id": "BREAKTHROUGH",
+            "playable": true,
+            "target": "AllEnemies",
+            "type": "Attack"
+          },
+          {
+            "cost": 2,
+            "id": "BLOOD_WALL",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 42,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": 2,
+              "id": "FRAIL_POWER"
+            }
+          ]
+        },
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 2,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 6,
+        "draw_pile_count": 5,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 9,
+            "id": "CORPSE_SLUG",
+            "intent": "Stun",
+            "is_alive": true,
+            "max_hp": 28,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              },
+              {
+                "amount": 5,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          },
+          {
+            "cost": 2,
+            "id": "BLOOD_WALL",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 2,
+          "hp": 41,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": 2,
+              "id": "FRAIL_POWER"
+            }
+          ]
+        },
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 3,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 7,
+        "draw_pile_count": 5,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 9,
+            "id": "CORPSE_SLUG",
+            "intent": "Stun",
+            "is_alive": true,
+            "max_hp": 28,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              },
+              {
+                "amount": 5,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          },
+          {
+            "cost": 2,
+            "id": "BLOOD_WALL",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 3,
+          "energy": 1,
+          "hp": 41,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": 2,
+              "id": "FRAIL_POWER"
+            }
+          ]
+        },
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 0,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 8,
+        "draw_pile_count": 5,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 3,
+            "id": "CORPSE_SLUG",
+            "intent": "Stun",
+            "is_alive": true,
+            "max_hp": 28,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              },
+              {
+                "amount": 5,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          },
+          {
+            "cost": 2,
+            "id": "BLOOD_WALL",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 3,
+          "energy": 0,
+          "hp": 41,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": 2,
+              "id": "FRAIL_POWER"
+            }
+          ]
+        },
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 9,
+        "draw_pile_count": 0,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 3,
+            "id": "CORPSE_SLUG",
+            "intent": "Attack",
+            "intent_damage": 8,
+            "intent_hits": 2,
+            "is_alive": true,
+            "max_hp": 28,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              },
+              {
+                "amount": 5,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "BODY_SLAM",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 0,
+            "id": "VOLLEY",
+            "playable": true,
+            "target": "RandomEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 41,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": 1,
+              "id": "FRAIL_POWER"
+            }
+          ]
+        },
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 2,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 10,
+        "draw_pile_count": 0,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 3,
+            "id": "CORPSE_SLUG",
+            "intent": "Attack",
+            "intent_damage": 8,
+            "intent_hits": 2,
+            "is_alive": true,
+            "max_hp": 28,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              },
+              {
+                "amount": 5,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "BODY_SLAM",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 0,
+            "id": "VOLLEY",
+            "playable": true,
+            "target": "RandomEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 3,
+          "energy": 2,
+          "hp": 41,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": 1,
+              "id": "FRAIL_POWER"
+            }
+          ]
+        },
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 2,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 5,
+        "options": [
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 0
+          },
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 1
+          },
+          {
+            "action": "proceed",
+            "enabled": true,
+            "index": 2
+          }
+        ],
+        "type": "reward_screen"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 5,
+        "options": [
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 0
+          },
+          {
+            "action": "proceed",
+            "enabled": true,
+            "index": 1
+          }
+        ],
+        "type": "reward_screen"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "can_skip": true,
+        "cards": [
+          {
+            "cost": 2,
+            "id": "UPPERCUT",
+            "index": 0,
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "TAUNT",
+            "index": 1,
+            "type": "Skill"
+          },
+          {
+            "cost": 3,
+            "id": "STOMP",
+            "index": 2,
+            "type": "Attack"
+          }
+        ],
+        "type": "card_reward"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 5,
+        "nodes": [
+          {
+            "col": 3,
+            "index": 0,
+            "row": 5,
+            "type": "Unknown"
+          },
+          {
+            "col": 4,
+            "index": 1,
+            "row": 5,
+            "type": "Monster"
+          }
+        ],
+        "type": "map_select"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 1
+      },
+      "resulting_state": {
+        "discard_pile_count": 0,
+        "draw_pile_count": 11,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 60,
+            "id": "PUNCH_CONSTRUCT",
+            "intent": "Defend",
+            "is_alive": true,
+            "max_hp": 60,
+            "powers": [
+              {
+                "amount": 1,
+                "id": "ARTIFACT_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "BODY_SLAM",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 47,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 3,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 1,
+        "draw_pile_count": 11,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 52,
+            "id": "PUNCH_CONSTRUCT",
+            "intent": "Defend",
+            "is_alive": true,
+            "max_hp": 60,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "BODY_SLAM",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 1,
+          "hp": 47,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 3,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 2,
+        "draw_pile_count": 11,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 52,
+            "id": "PUNCH_CONSTRUCT",
+            "intent": "Defend",
+            "is_alive": true,
+            "max_hp": 60,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "BODY_SLAM",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 0,
+          "hp": 47,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 5,
+        "draw_pile_count": 6,
+        "enemies": [
+          {
+            "block": 10,
+            "hp": 52,
+            "id": "PUNCH_CONSTRUCT",
+            "intent": "Attack",
+            "intent_damage": 6,
+            "intent_hits": 2,
+            "is_alive": true,
+            "max_hp": 60,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          },
+          {
+            "cost": 0,
+            "id": "VOLLEY",
+            "playable": true,
+            "target": "RandomEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "BREAKTHROUGH",
+            "playable": true,
+            "target": "AllEnemies",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 47,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 2,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 6,
+        "draw_pile_count": 6,
+        "enemies": [
+          {
+            "block": 10,
+            "hp": 52,
+            "id": "PUNCH_CONSTRUCT",
+            "intent": "Attack",
+            "intent_damage": 6,
+            "intent_hits": 2,
+            "is_alive": true,
+            "max_hp": 60,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          },
+          {
+            "cost": 0,
+            "id": "VOLLEY",
+            "playable": true,
+            "target": "RandomEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "BREAKTHROUGH",
+            "playable": true,
+            "target": "AllEnemies",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 2,
+          "hp": 47,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 3,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 7,
+        "draw_pile_count": 6,
+        "enemies": [
+          {
+            "block": 1,
+            "hp": 52,
+            "id": "PUNCH_CONSTRUCT",
+            "intent": "Attack",
+            "intent_damage": 6,
+            "intent_hits": 2,
+            "is_alive": true,
+            "max_hp": 60,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          },
+          {
+            "cost": 0,
+            "id": "VOLLEY",
+            "playable": true,
+            "target": "RandomEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 1,
+          "hp": 46,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 2,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 8,
+        "draw_pile_count": 6,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 47,
+            "id": "PUNCH_CONSTRUCT",
+            "intent": "Attack",
+            "intent_damage": 6,
+            "intent_hits": 2,
+            "is_alive": true,
+            "max_hp": 60,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          },
+          {
+            "cost": 0,
+            "id": "VOLLEY",
+            "playable": true,
+            "target": "RandomEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 0,
+          "hp": 46,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 9,
+        "draw_pile_count": 6,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 47,
+            "id": "PUNCH_CONSTRUCT",
+            "intent": "Attack",
+            "intent_damage": 6,
+            "intent_hits": 2,
+            "is_alive": true,
+            "max_hp": 60,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 0,
+          "hp": 46,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 9,
+        "draw_pile_count": 1,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 47,
+            "id": "PUNCH_CONSTRUCT",
+            "intent": "Attack",
+            "intent_damage": 16,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 60,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 2,
+            "id": "UPPERCUT",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 2,
+            "id": "BLOOD_WALL",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 39,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": 1,
+              "id": "FRAIL_POWER"
+            }
+          ]
+        },
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 3,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 10,
+        "draw_pile_count": 1,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 47,
+            "id": "PUNCH_CONSTRUCT",
+            "intent": "Attack",
+            "intent_damage": 16,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 60,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 2,
+            "id": "UPPERCUT",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 2,
+            "id": "BLOOD_WALL",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 3,
+          "energy": 2,
+          "hp": 39,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": 1,
+              "id": "FRAIL_POWER"
+            }
+          ]
+        },
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 3,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 11,
+        "draw_pile_count": 1,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 41,
+            "id": "PUNCH_CONSTRUCT",
+            "intent": "Attack",
+            "intent_damage": 16,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 60,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 2,
+            "id": "UPPERCUT",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 2,
+            "id": "BLOOD_WALL",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 3,
+          "energy": 1,
+          "hp": 39,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": 1,
+              "id": "FRAIL_POWER"
+            }
+          ]
+        },
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 2,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 12,
+        "draw_pile_count": 1,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 35,
+            "id": "PUNCH_CONSTRUCT",
+            "intent": "Attack",
+            "intent_damage": 16,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 60,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 2,
+            "id": "UPPERCUT",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 2,
+            "id": "BLOOD_WALL",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 3,
+          "energy": 0,
+          "hp": 39,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": 1,
+              "id": "FRAIL_POWER"
+            }
+          ]
+        },
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 0,
+        "draw_pile_count": 10,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 35,
+            "id": "PUNCH_CONSTRUCT",
+            "intent": "Defend",
+            "is_alive": true,
+            "max_hp": 60,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "BREAKTHROUGH",
+            "playable": true,
+            "target": "AllEnemies",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 26,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 4,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 2,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 1,
+        "draw_pile_count": 10,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 35,
+            "id": "PUNCH_CONSTRUCT",
+            "intent": "Defend",
+            "is_alive": true,
+            "max_hp": 60,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "BREAKTHROUGH",
+            "playable": true,
+            "target": "AllEnemies",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 2,
+          "hp": 26,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 4,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 3,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 2,
+        "draw_pile_count": 10,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 26,
+            "id": "PUNCH_CONSTRUCT",
+            "intent": "Defend",
+            "is_alive": true,
+            "max_hp": 60,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 1,
+          "hp": 25,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 4,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 2,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 3,
+        "draw_pile_count": 10,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 20,
+            "id": "PUNCH_CONSTRUCT",
+            "intent": "Defend",
+            "is_alive": true,
+            "max_hp": 60,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 0,
+          "hp": 25,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 4,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 5,
+        "draw_pile_count": 5,
+        "enemies": [
+          {
+            "block": 10,
+            "hp": 20,
+            "id": "PUNCH_CONSTRUCT",
+            "intent": "Attack",
+            "intent_damage": 6,
+            "intent_hits": 2,
+            "is_alive": true,
+            "max_hp": 60,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 2,
+            "id": "UPPERCUT",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 2,
+            "id": "BLOOD_WALL",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "BODY_SLAM",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 25,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 5,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 3,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 6,
+        "draw_pile_count": 5,
+        "enemies": [
+          {
+            "block": 10,
+            "hp": 20,
+            "id": "PUNCH_CONSTRUCT",
+            "intent": "Attack",
+            "intent_damage": 6,
+            "intent_hits": 2,
+            "is_alive": true,
+            "max_hp": 60,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 2,
+            "id": "UPPERCUT",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 2,
+            "id": "BLOOD_WALL",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 2,
+          "hp": 25,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 5,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 3,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 7,
+        "draw_pile_count": 5,
+        "enemies": [
+          {
+            "block": 4,
+            "hp": 20,
+            "id": "PUNCH_CONSTRUCT",
+            "intent": "Attack",
+            "intent_damage": 6,
+            "intent_hits": 2,
+            "is_alive": true,
+            "max_hp": 60,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 2,
+            "id": "UPPERCUT",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 2,
+            "id": "BLOOD_WALL",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 1,
+          "hp": 25,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 5,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 10,
+        "draw_pile_count": 0,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 20,
+            "id": "PUNCH_CONSTRUCT",
+            "intent": "Attack",
+            "intent_damage": 16,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 60,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 0,
+            "id": "VOLLEY",
+            "playable": true,
+            "target": "RandomEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 13,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": 1,
+              "id": "FRAIL_POWER"
+            }
+          ]
+        },
+        "round": 6,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 2,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 11,
+        "draw_pile_count": 0,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 14,
+            "id": "PUNCH_CONSTRUCT",
+            "intent": "Attack",
+            "intent_damage": 16,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 60,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 0,
+            "id": "VOLLEY",
+            "playable": true,
+            "target": "RandomEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 2,
+          "hp": 13,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": 1,
+              "id": "FRAIL_POWER"
+            }
+          ]
+        },
+        "round": 6,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 3,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 12,
+        "draw_pile_count": 0,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 8,
+            "id": "PUNCH_CONSTRUCT",
+            "intent": "Attack",
+            "intent_damage": 16,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 60,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 0,
+            "id": "VOLLEY",
+            "playable": true,
+            "target": "RandomEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 1,
+          "hp": 13,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": 1,
+              "id": "FRAIL_POWER"
+            }
+          ]
+        },
+        "round": 6,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 2,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 6,
+        "options": [
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 0
+          },
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 1
+          },
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 2
+          },
+          {
+            "action": "proceed",
+            "enabled": true,
+            "index": 3
+          }
+        ],
+        "type": "reward_screen"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 6,
+        "options": [
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 0
+          },
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 1
+          },
+          {
+            "action": "proceed",
+            "enabled": true,
+            "index": 2
+          }
+        ],
+        "type": "reward_screen"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 6,
+        "options": [
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 0
+          },
+          {
+            "action": "proceed",
+            "enabled": true,
+            "index": 1
+          }
+        ],
+        "type": "reward_screen"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "can_skip": true,
+        "cards": [
+          {
+            "cost": 1,
+            "id": "HEADBUTT",
+            "index": 0,
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "TWIN_STRIKE",
+            "index": 1,
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "SHRUG_IT_OFF",
+            "index": 2,
+            "type": "Skill"
+          }
+        ],
+        "type": "card_reward"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 6,
+        "nodes": [
+          {
+            "col": 4,
+            "index": 0,
+            "row": 6,
+            "type": "Elite"
+          }
+        ],
+        "type": "map_select"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 0,
+        "draw_pile_count": 12,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 150,
+            "id": "TERROR_EEL",
+            "intent": "Attack",
+            "intent_damage": 18,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 150,
+            "powers": [
+              {
+                "amount": 75,
+                "id": "SHRIEK_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "BODY_SLAM",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          },
+          {
+            "cost": 0,
+            "id": "VOLLEY",
+            "playable": true,
+            "target": "RandomEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 19,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 3,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 1,
+        "draw_pile_count": 12,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 120,
+            "id": "TERROR_EEL",
+            "intent": "Attack",
+            "intent_damage": 18,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 150,
+            "powers": [
+              {
+                "amount": 75,
+                "id": "SHRIEK_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "BODY_SLAM",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 0,
+          "hp": 19,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "potion",
+        "slot": 0,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 1,
+        "draw_pile_count": 12,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 120,
+            "id": "TERROR_EEL",
+            "intent": "Attack",
+            "intent_damage": 18,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 150,
+            "powers": [
+              {
+                "amount": 75,
+                "id": "SHRIEK_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "BODY_SLAM",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 0,
+          "hp": 19,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": 1,
+              "id": "RITUAL_POWER"
+            }
+          ]
+        },
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 4,
+        "draw_pile_count": 7,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 120,
+            "id": "TERROR_EEL",
+            "intent": "Attack",
+            "intent_damage": 4,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 150,
+            "powers": [
+              {
+                "amount": 75,
+                "id": "SHRIEK_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 2,
+            "id": "BLOOD_WALL",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "HEADBUTT",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 1,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": 1,
+              "id": "RITUAL_POWER"
+            },
+            {
+              "amount": 1,
+              "id": "STRENGTH_POWER"
+            }
+          ]
+        },
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 2,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 5,
+        "draw_pile_count": 7,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 113,
+            "id": "TERROR_EEL",
+            "intent": "Attack",
+            "intent_damage": 4,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 150,
+            "powers": [
+              {
+                "amount": 75,
+                "id": "SHRIEK_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 2,
+            "id": "BLOOD_WALL",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "HEADBUTT",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 2,
+          "hp": 1,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": 1,
+              "id": "RITUAL_POWER"
+            },
+            {
+              "amount": 1,
+              "id": "STRENGTH_POWER"
+            }
+          ]
+        },
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 2,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "cards": [
+          {
+            "id": "VOLLEY",
+            "type": "Attack"
+          },
+          {
+            "id": "DEFEND_IRONCLAD",
+            "type": "Skill"
+          },
+          {
+            "id": "BODY_SLAM",
+            "type": "Attack"
+          },
+          {
+            "id": "DEFEND_IRONCLAD",
+            "type": "Skill"
+          },
+          {
+            "id": "STRIKE_IRONCLAD",
+            "type": "Attack"
+          }
+        ],
+        "max_select": 1,
+        "min_select": 1,
+        "type": "card_select"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 2
+      },
+      "resulting_state": {
+        "discard_pile_count": 5,
+        "draw_pile_count": 8,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 103,
+            "id": "TERROR_EEL",
+            "intent": "Attack",
+            "intent_damage": 4,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 150,
+            "powers": [
+              {
+                "amount": 75,
+                "id": "SHRIEK_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 2,
+            "id": "BLOOD_WALL",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 1,
+          "hp": 1,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": 1,
+              "id": "RITUAL_POWER"
+            },
+            {
+              "amount": 1,
+              "id": "STRENGTH_POWER"
+            }
+          ]
+        },
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 2,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 6,
+        "draw_pile_count": 8,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 96,
+            "id": "TERROR_EEL",
+            "intent": "Attack",
+            "intent_damage": 4,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 150,
+            "powers": [
+              {
+                "amount": 75,
+                "id": "SHRIEK_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 2,
+            "id": "BLOOD_WALL",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 0,
+          "hp": 1,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": 1,
+              "id": "RITUAL_POWER"
+            },
+            {
+              "amount": 1,
+              "id": "STRENGTH_POWER"
+            }
+          ]
+        },
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "result": "terminated",
+        "type": "run_complete"
+      }
+    }
+  ],
+  "version": 1
+}

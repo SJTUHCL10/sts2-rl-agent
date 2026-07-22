@@ -10,6 +10,7 @@ Requires: stable-baselines3, sb3-contrib, torch
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import os
 import sys
 import time
@@ -33,10 +34,9 @@ def make_env(seed: int = 0):
 def train(args):
     try:
         from sb3_contrib import MaskablePPO
+        from sb3_contrib.common.maskable.callbacks import MaskableEvalCallback
         from sb3_contrib.common.wrappers import ActionMasker
-        from sb3_contrib.common.maskable.utils import get_action_masks
         from stable_baselines3.common.vec_env import SubprocVecEnv, DummyVecEnv
-        from stable_baselines3.common.callbacks import EvalCallback
     except ImportError:
         print("Training requires sb3-contrib and stable-baselines3.")
         print("Install with: pip install 'sts2-rl-agent[train]'")
@@ -49,11 +49,25 @@ def train(args):
     print(f"  total_timesteps: {args.total_timesteps}")
     print(f"  learning_rate:   {args.lr}")
     print(f"  batch_size:      {args.batch_size}")
+    print(f"  seed:            {args.seed}")
     print(f"  output_dir:      {args.output_dir}")
     print()
 
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
+
+    tensorboard_log: str | None = None
+    if importlib.util.find_spec("tensorboard") is not None:
+        tensorboard_log = str(output_dir / "tb_logs")
+    else:
+        print("TensorBoard is not installed; continuing without TensorBoard logs.\n")
+
+    progress_bar = all(
+        importlib.util.find_spec(module_name) is not None
+        for module_name in ("tqdm", "rich")
+    )
+    if not progress_bar:
+        print("tqdm/rich are not installed; continuing without a progress bar.\n")
 
     # Wrap env with action masker
     def mask_fn(env):
@@ -62,18 +76,21 @@ def train(args):
     def make_masked_env(seed: int):
         def _init():
             env = STS2CombatEnv()
+            env.reset(seed=seed)
             env = ActionMasker(env, mask_fn)
             return env
         return _init
 
     # Create vectorized envs
     if args.n_envs > 1:
-        train_env = SubprocVecEnv([make_masked_env(i) for i in range(args.n_envs)])
+        train_env = SubprocVecEnv(
+            [make_masked_env(args.seed + i) for i in range(args.n_envs)]
+        )
     else:
-        train_env = DummyVecEnv([make_masked_env(0)])
+        train_env = DummyVecEnv([make_masked_env(args.seed)])
 
     # Eval env (always single)
-    eval_env = DummyVecEnv([make_masked_env(9999)])
+    eval_env = DummyVecEnv([make_masked_env(args.seed + 9999)])
 
     # Create model
     model = MaskablePPO(
@@ -87,12 +104,15 @@ def train(args):
         gae_lambda=0.95,
         clip_range=0.2,
         ent_coef=args.ent_coef,
+        seed=args.seed,
         verbose=1,
-        tensorboard_log=str(output_dir / "tb_logs"),
+        tensorboard_log=tensorboard_log,
     )
 
-    # Eval callback
-    eval_callback = EvalCallback(
+    # Eval callback. The mask-aware variant is required: the environment
+    # intentionally ignores invalid actions, so unmasked evaluation can spend
+    # thousands of steps repeatedly choosing actions that cannot execute.
+    eval_callback = MaskableEvalCallback(
         eval_env,
         best_model_save_path=str(output_dir / "best_model"),
         log_path=str(output_dir / "eval_logs"),
@@ -106,7 +126,7 @@ def train(args):
     model.learn(
         total_timesteps=args.total_timesteps,
         callback=eval_callback,
-        progress_bar=True,
+        progress_bar=progress_bar,
     )
     elapsed = time.perf_counter() - start
 
@@ -174,6 +194,8 @@ def main():
                         help="Discount factor (default: 0.99)")
     parser.add_argument("--ent-coef", type=float, default=0.01,
                         help="Entropy coefficient (default: 0.01)")
+    parser.add_argument("--seed", type=int, default=0,
+                        help="Random seed (default: 0)")
     parser.add_argument("--eval-freq", type=int, default=10_000,
                         help="Evaluate every N steps (default: 10000)")
     parser.add_argument("--eval-episodes", type=int, default=20,

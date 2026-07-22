@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using Godot;
+using MegaCrit.Sts2.Core.Combat;
 using MegaCrit.Sts2.Core.Context;
 using MegaCrit.Sts2.Core.DevConsole.ConsoleCommands;
 using MegaCrit.Sts2.Core.Entities.Players;
@@ -69,6 +70,9 @@ public class DevConsole
 		}
 	}
 
+	/// <summary>
+	/// Gets structured completion results for interactive selection
+	/// </summary>
 	public CompletionResult GetCompletionResults(string inputBuffer)
 	{
 		string[] array = (inputBuffer.EndsWith(' ') ? inputBuffer.Trim().Split(' ').Append(string.Empty)
@@ -140,17 +144,47 @@ public class DevConsole
 		return GetCompletionResultsFromTokens(text, possibleTokens, inputBuffer);
 	}
 
+	/// <summary>
+	/// Calculates the inline ghost-text suffix to display for the given input and completion result,
+	/// or null when no ghost text should be shown.
+	///
+	/// Ghost text is a gray inline overlay rendered after the user's typed text, so it only makes
+	/// sense when the completion extends the input (prefix match). Fuzzy completions legitimately
+	/// replace the typed token instead of extending it (e.g. "relic sarig" -&gt; "relic KUSARIGAMA "),
+	/// so no ghost text is shown for them. This is expected, not a bug.
+	///
+	/// IMPORTANT: The space padding requires the input buffer and ghost-text label to share the SAME
+	/// MONOSPACE FONT (currently Source Code Pro). Since both start at x=0, we pad with spaces so the
+	/// ghost text sits after the user's input instead of overlaying it. If the font is changed to a
+	/// variable-width one, this alignment breaks.
+	/// </summary>
+	public static string? CalculateGhostText(string inputText, CompletionResult result)
+	{
+		if (result.Candidates.Count != 1 || string.IsNullOrEmpty(result.CommonPrefix))
+		{
+			return null;
+		}
+		string commonPrefix = result.CommonPrefix;
+		if (!commonPrefix.StartsWith(inputText, StringComparison.OrdinalIgnoreCase))
+		{
+			return null;
+		}
+		string text = commonPrefix.Substring(inputText.Length);
+		string text2 = new string(' ', inputText.Length);
+		return text2 + text;
+	}
+
 	private static CompletionResult GetCompletionResultsFromTokens(string partialToken, List<string> possibleTokens, string originalInput)
 	{
 		List<string> list = new List<string>();
 		List<string> list2 = new List<string>();
 		foreach (string possibleToken in possibleTokens)
 		{
-			if (possibleToken.StartsWith(partialToken, StringComparison.CurrentCultureIgnoreCase))
+			if (possibleToken.StartsWith(partialToken, StringComparison.OrdinalIgnoreCase))
 			{
 				list.Add(possibleToken);
 			}
-			else if (possibleToken.Contains(partialToken, StringComparison.CurrentCultureIgnoreCase))
+			else if (possibleToken.Contains(partialToken, StringComparison.OrdinalIgnoreCase))
 			{
 				list2.Add(possibleToken);
 			}
@@ -231,6 +265,12 @@ public class DevConsole
 		return string.Empty;
 	}
 
+	/// <summary>
+	/// Call this to attempt to execute a command that is issued locally.
+	/// If the command must be networked and a run is in progress, a GameAction will be enqueued to all peers before
+	/// the command is executed.
+	/// </summary>
+	/// <param name="inputValue">The command input by the player.</param>
 	public CmdResult ProcessCommand(string inputValue)
 	{
 		inputValue = inputValue.Trim();
@@ -239,9 +279,9 @@ public class DevConsole
 		SaveCommandHistory();
 		string[] array = inputValue.Split(' ');
 		Player me = LocalContext.GetMe(RunManager.Instance.DebugOnlyGetState());
-		if (!RunManager.Instance.IsSinglePlayerOrFakeMultiplayer && _commands.TryGetValue(array[0].ToLowerInvariant(), out AbstractConsoleCmd value) && value.IsNetworked && me != null)
+		if (!RunManager.Instance.IsSingleplayerOrFakeMultiplayer && _commands.TryGetValue(array[0].ToLowerInvariant(), out AbstractConsoleCmd value) && value.IsNetworked && me != null)
 		{
-			RunManager.Instance.ActionQueueSynchronizer.RequestEnqueue(new ConsoleCmdGameAction(me, inputValue));
+			RunManager.Instance.ActionQueueSynchronizer.RequestEnqueue(new ConsoleCmdGameAction(me, inputValue, CombatManager.Instance.IsInProgress));
 			return new CmdResult(success: true, $"Enqueued {array[0]} command: '{inputValue}'");
 		}
 		CmdResult result = ProcessCommandInternal(me, array);
@@ -252,6 +292,12 @@ public class DevConsole
 		return result;
 	}
 
+	/// <summary>
+	/// Call this when a networked console command is received.
+	/// You are expected to await CmdResult.task.
+	/// </summary>
+	/// <param name="player">The player that sent the command.</param>
+	/// <param name="inputValue">The command input by the player.</param>
 	public CmdResult ProcessNetCommand(Player? player, string inputValue)
 	{
 		Log.Info($"Executing DevConsole command (player {player?.NetId}): `{inputValue}`");
@@ -275,6 +321,7 @@ public class DevConsole
 		}
 		if (_commands.TryGetValue(cmdName.ToLowerInvariant(), out AbstractConsoleCmd value))
 		{
+			Log.Info("DevConsole: " + cmdName + " " + string.Join(" ", args));
 			return value.Process(player, args);
 		}
 		return new CmdResult(success: false, "The command '" + cmdName + "' does not exist.\nYou can use the 'help' to get a list of all possible commands.\n");

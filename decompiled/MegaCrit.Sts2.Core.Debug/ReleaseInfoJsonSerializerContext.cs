@@ -16,6 +16,8 @@ internal class ReleaseInfoJsonSerializerContext : JsonSerializerContext, IJsonTy
 
 	private JsonTypeInfo<DateTime>? _DateTime;
 
+	private JsonTypeInfo<int>? _Int32;
+
 	private JsonTypeInfo<string>? _String;
 
 	private static readonly JsonSerializerOptions s_defaultOptions = new JsonSerializerOptions
@@ -26,34 +28,56 @@ internal class ReleaseInfoJsonSerializerContext : JsonSerializerContext, IJsonTy
 
 	private const BindingFlags InstanceMemberBindingFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<ReleaseInfo> ReleaseInfo => _ReleaseInfo ?? (_ReleaseInfo = (JsonTypeInfo<ReleaseInfo>)base.Options.GetTypeInfo(typeof(ReleaseInfo)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<DateTime> DateTime => _DateTime ?? (_DateTime = (JsonTypeInfo<DateTime>)base.Options.GetTypeInfo(typeof(DateTime)));
 
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
+	public JsonTypeInfo<int> Int32 => _Int32 ?? (_Int32 = (JsonTypeInfo<int>)base.Options.GetTypeInfo(typeof(int)));
+
+	/// <summary>
+	/// Defines the source generated JSON serialization contract metadata for a given type.
+	/// </summary>
 	public JsonTypeInfo<string> String => _String ?? (_String = (JsonTypeInfo<string>)base.Options.GetTypeInfo(typeof(string)));
 
+	/// <summary>
+	/// The default <see cref="T:System.Text.Json.Serialization.JsonSerializerContext" /> associated with a default <see cref="T:System.Text.Json.JsonSerializerOptions" /> instance.
+	/// </summary>
 	public static ReleaseInfoJsonSerializerContext Default { get; } = new ReleaseInfoJsonSerializerContext(new JsonSerializerOptions(s_defaultOptions));
 
+	/// <summary>
+	/// The source-generated options associated with this context.
+	/// </summary>
 	protected override JsonSerializerOptions? GeneratedSerializerOptions { get; } = s_defaultOptions;
 
 	private JsonTypeInfo<ReleaseInfo> Create_ReleaseInfo(JsonSerializerOptions options)
 	{
 		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<ReleaseInfo> jsonTypeInfo))
 		{
-			JsonObjectInfoValues<ReleaseInfo> jsonObjectInfoValues = new JsonObjectInfoValues<ReleaseInfo>();
-			jsonObjectInfoValues.ObjectCreator = null;
-			jsonObjectInfoValues.ObjectWithParameterizedConstructorCreator = (object[] args) => new ReleaseInfo
+			JsonObjectInfoValues<ReleaseInfo> objectInfo = new JsonObjectInfoValues<ReleaseInfo>
 			{
-				Commit = (string)args[0],
-				Version = (string)args[1],
-				Date = (DateTime)args[2],
-				Branch = (string)args[3]
+				ObjectCreator = null,
+				ObjectWithParameterizedConstructorCreator = (object[] args) => new ReleaseInfo
+				{
+					Commit = (string)args[0],
+					Version = (string)args[1],
+					Date = (DateTime)args[2],
+					Branch = (string)args[3],
+					MainAssemblyHash = (int)args[4]
+				},
+				PropertyMetadataInitializer = (JsonSerializerContext _) => ReleaseInfoPropInit(options),
+				ConstructorParameterMetadataInitializer = ReleaseInfoCtorParamInit,
+				ConstructorAttributeProviderFactory = () => typeof(ReleaseInfo).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null),
+				SerializeHandler = null
 			};
-			jsonObjectInfoValues.PropertyMetadataInitializer = (JsonSerializerContext _) => ReleaseInfoPropInit(options);
-			jsonObjectInfoValues.ConstructorParameterMetadataInitializer = ReleaseInfoCtorParamInit;
-			jsonObjectInfoValues.ConstructorAttributeProviderFactory = () => typeof(ReleaseInfo).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null);
-			jsonObjectInfoValues.SerializeHandler = null;
-			JsonObjectInfoValues<ReleaseInfo> objectInfo = jsonObjectInfoValues;
 			jsonTypeInfo = JsonMetadataServices.CreateObjectInfo(options, objectInfo);
 			jsonTypeInfo.NumberHandling = null;
 		}
@@ -63,103 +87,129 @@ internal class ReleaseInfoJsonSerializerContext : JsonSerializerContext, IJsonTy
 
 	private static JsonPropertyInfo[] ReleaseInfoPropInit(JsonSerializerOptions options)
 	{
-		JsonPropertyInfo[] array = new JsonPropertyInfo[4];
-		JsonPropertyInfoValues<string> jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(ReleaseInfo);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((ReleaseInfo)obj).Commit;
-		jsonPropertyInfoValues.Setter = delegate
+		JsonPropertyInfo[] array = new JsonPropertyInfo[5];
+		JsonPropertyInfoValues<string> propertyInfo = new JsonPropertyInfoValues<string>
 		{
-			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(ReleaseInfo),
+			Converter = null,
+			Getter = (object obj) => ((ReleaseInfo)obj).Commit,
+			Setter = delegate
+			{
+				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Commit",
+			JsonPropertyName = "commit",
+			AttributeProviderFactory = () => typeof(ReleaseInfo).GetProperty("Commit", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "Commit";
-		jsonPropertyInfoValues.JsonPropertyName = "commit";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(ReleaseInfo).GetProperty("Commit", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<string> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsRequired = true;
 		array[0].IsGetNullable = false;
 		array[0].IsSetNullable = false;
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(ReleaseInfo);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((ReleaseInfo)obj).Version;
-		jsonPropertyInfoValues.Setter = delegate
+		JsonPropertyInfoValues<string> propertyInfo2 = new JsonPropertyInfoValues<string>
 		{
-			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(ReleaseInfo),
+			Converter = null,
+			Getter = (object obj) => ((ReleaseInfo)obj).Version,
+			Setter = delegate
+			{
+				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Version",
+			JsonPropertyName = "version",
+			AttributeProviderFactory = () => typeof(ReleaseInfo).GetProperty("Version", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "Version";
-		jsonPropertyInfoValues.JsonPropertyName = "version";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(ReleaseInfo).GetProperty("Version", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<string> propertyInfo2 = jsonPropertyInfoValues;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		array[1].IsRequired = true;
 		array[1].IsGetNullable = false;
 		array[1].IsSetNullable = false;
-		JsonPropertyInfoValues<DateTime> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<DateTime>();
-		jsonPropertyInfoValues2.IsProperty = true;
-		jsonPropertyInfoValues2.IsPublic = true;
-		jsonPropertyInfoValues2.IsVirtual = false;
-		jsonPropertyInfoValues2.DeclaringType = typeof(ReleaseInfo);
-		jsonPropertyInfoValues2.Converter = (JsonConverter<DateTime>)ExpandConverter(typeof(DateTime), new CustomDateTimeConverter(), options);
-		jsonPropertyInfoValues2.Getter = (object obj) => ((ReleaseInfo)obj).Date;
-		jsonPropertyInfoValues2.Setter = delegate
+		JsonPropertyInfoValues<DateTime> propertyInfo3 = new JsonPropertyInfoValues<DateTime>
 		{
-			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(ReleaseInfo),
+			Converter = (JsonConverter<DateTime>)ExpandConverter(typeof(DateTime), new CustomDateTimeConverter(), options),
+			Getter = (object obj) => ((ReleaseInfo)obj).Date,
+			Setter = delegate
+			{
+				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Date",
+			JsonPropertyName = "date",
+			AttributeProviderFactory = () => typeof(ReleaseInfo).GetProperty("Date", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(DateTime), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues2.IgnoreCondition = null;
-		jsonPropertyInfoValues2.HasJsonInclude = false;
-		jsonPropertyInfoValues2.IsExtensionData = false;
-		jsonPropertyInfoValues2.NumberHandling = null;
-		jsonPropertyInfoValues2.PropertyName = "Date";
-		jsonPropertyInfoValues2.JsonPropertyName = "date";
-		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(ReleaseInfo).GetProperty("Date", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(DateTime), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<DateTime> propertyInfo3 = jsonPropertyInfoValues2;
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
 		array[2].IsRequired = true;
-		jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
-		jsonPropertyInfoValues.IsProperty = true;
-		jsonPropertyInfoValues.IsPublic = true;
-		jsonPropertyInfoValues.IsVirtual = false;
-		jsonPropertyInfoValues.DeclaringType = typeof(ReleaseInfo);
-		jsonPropertyInfoValues.Converter = null;
-		jsonPropertyInfoValues.Getter = (object obj) => ((ReleaseInfo)obj).Branch;
-		jsonPropertyInfoValues.Setter = delegate
+		JsonPropertyInfoValues<string> propertyInfo4 = new JsonPropertyInfoValues<string>
 		{
-			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(ReleaseInfo),
+			Converter = null,
+			Getter = (object obj) => ((ReleaseInfo)obj).Branch,
+			Setter = delegate
+			{
+				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "Branch",
+			JsonPropertyName = "branch",
+			AttributeProviderFactory = () => typeof(ReleaseInfo).GetProperty("Branch", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null)
 		};
-		jsonPropertyInfoValues.IgnoreCondition = null;
-		jsonPropertyInfoValues.HasJsonInclude = false;
-		jsonPropertyInfoValues.IsExtensionData = false;
-		jsonPropertyInfoValues.NumberHandling = null;
-		jsonPropertyInfoValues.PropertyName = "Branch";
-		jsonPropertyInfoValues.JsonPropertyName = "branch";
-		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(ReleaseInfo).GetProperty("Branch", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null);
-		JsonPropertyInfoValues<string> propertyInfo4 = jsonPropertyInfoValues;
 		array[3] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo4);
 		array[3].IsRequired = true;
 		array[3].IsGetNullable = false;
 		array[3].IsSetNullable = false;
+		JsonPropertyInfoValues<int> propertyInfo5 = new JsonPropertyInfoValues<int>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(ReleaseInfo),
+			Converter = null,
+			Getter = (object obj) => ((ReleaseInfo)obj).MainAssemblyHash,
+			Setter = delegate
+			{
+				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "MainAssemblyHash",
+			JsonPropertyName = "main_assembly_hash",
+			AttributeProviderFactory = () => typeof(ReleaseInfo).GetProperty("MainAssemblyHash", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
+		};
+		array[4] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo5);
+		array[4].IsRequired = true;
 		return array;
 	}
 
 	private static JsonParameterInfoValues[] ReleaseInfoCtorParamInit()
 	{
-		return new JsonParameterInfoValues[4]
+		return new JsonParameterInfoValues[5]
 		{
 			new JsonParameterInfoValues
 			{
@@ -192,6 +242,14 @@ internal class ReleaseInfoJsonSerializerContext : JsonSerializerContext, IJsonTy
 				Position = 3,
 				IsNullable = false,
 				IsMemberInitializer = true
+			},
+			new JsonParameterInfoValues
+			{
+				Name = "MainAssemblyHash",
+				ParameterType = typeof(int),
+				Position = 4,
+				IsNullable = false,
+				IsMemberInitializer = true
 			}
 		};
 	}
@@ -201,6 +259,16 @@ internal class ReleaseInfoJsonSerializerContext : JsonSerializerContext, IJsonTy
 		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<DateTime> jsonTypeInfo))
 		{
 			jsonTypeInfo = JsonMetadataServices.CreateValueInfo<DateTime>(options, JsonMetadataServices.DateTimeConverter);
+		}
+		jsonTypeInfo.OriginatingResolver = this;
+		return jsonTypeInfo;
+	}
+
+	private JsonTypeInfo<int> Create_Int32(JsonSerializerOptions options)
+	{
+		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<int> jsonTypeInfo))
+		{
+			jsonTypeInfo = JsonMetadataServices.CreateValueInfo<int>(options, JsonMetadataServices.Int32Converter);
 		}
 		jsonTypeInfo.OriginatingResolver = this;
 		return jsonTypeInfo;
@@ -216,11 +284,13 @@ internal class ReleaseInfoJsonSerializerContext : JsonSerializerContext, IJsonTy
 		return jsonTypeInfo;
 	}
 
+	/// <inheritdoc />
 	public ReleaseInfoJsonSerializerContext()
 		: base(null)
 	{
 	}
 
+	/// <inheritdoc />
 	public ReleaseInfoJsonSerializerContext(JsonSerializerOptions options)
 		: base(options)
 	{
@@ -268,6 +338,7 @@ internal class ReleaseInfoJsonSerializerContext : JsonSerializerContext, IJsonTy
 		return converter;
 	}
 
+	/// <inheritdoc />
 	public override JsonTypeInfo? GetTypeInfo(Type type)
 	{
 		base.Options.TryGetTypeInfo(type, out JsonTypeInfo typeInfo);
@@ -283,6 +354,10 @@ internal class ReleaseInfoJsonSerializerContext : JsonSerializerContext, IJsonTy
 		if (type == typeof(DateTime))
 		{
 			return Create_DateTime(options);
+		}
+		if (type == typeof(int))
+		{
+			return Create_Int32(options);
 		}
 		if (type == typeof(string))
 		{

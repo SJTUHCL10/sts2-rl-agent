@@ -19,6 +19,10 @@ using MegaCrit.Sts2.Core.Runs;
 
 namespace MegaCrit.Sts2.Core.AutoSlay.Handlers.Rooms;
 
+/// <summary>
+/// Handles combat rooms (Monster, Elite, Boss).
+/// Applies massive defensive buffs and plays all cards each turn.
+/// </summary>
 public class CombatRoomHandler : IRoomHandler, IHandler
 {
 	public RoomType[] HandledTypes => new RoomType[3]
@@ -37,34 +41,45 @@ public class CombatRoomHandler : IRoomHandler, IHandler
 		AutoSlayLog.Action("Combat started, applying defensive buffs");
 		Player player = LocalContext.GetMe(RunManager.Instance.DebugOnlyGetState());
 		Creature playerCreature = player.Creature;
-		await PowerCmd.Apply<PlatingPower>(playerCreature, 999m, playerCreature, null);
-		await PowerCmd.Apply<RegenPower>(playerCreature, 999m, playerCreature, null);
+		await PowerCmd.Apply<PlatingPower>(new ThrowingPlayerChoiceContext(), playerCreature, 999m, playerCreature, null);
+		await PowerCmd.Apply<RegenPower>(new ThrowingPlayerChoiceContext(), playerCreature, 999m, playerCreature, null);
 		int turnCount = 0;
 		while (CombatManager.Instance.IsInProgress && turnCount < 100)
 		{
 			ct.ThrowIfCancellationRequested();
 			turnCount++;
-			await WaitHelper.Until(() => CombatManager.Instance.IsPlayPhase || !CombatManager.Instance.IsInProgress, ct, TimeSpan.FromSeconds(30L), "Play phase not started");
+			await WaitHelper.Until(delegate
+			{
+				PlayerCombatState? playerCombatState3 = player.PlayerCombatState;
+				return (playerCombatState3 != null && playerCombatState3.Phase == PlayerTurnPhase.Play) || !CombatManager.Instance.IsInProgress;
+			}, ct, TimeSpan.FromSeconds(30L), "Play phase not started");
 			if (!CombatManager.Instance.IsInProgress)
 			{
 				break;
 			}
 			AutoSlayer.CurrentWatchdog?.Reset($"Combat turn {turnCount}");
+			if (turnCount >= 3)
+			{
+				await PowerCmd.Apply<StrengthPower>(new ThrowingPlayerChoiceContext(), playerCreature, 200m, playerCreature, null);
+			}
 			AutoSlayLog.Action($"Turn {turnCount}: playing cards");
 			await UseAllPotions(player, random, ct);
 			int cardsPlayed = 0;
 			HashSet<CardModel> attemptedCards = new HashSet<CardModel>();
-			while (cardsPlayed < 50 && CombatManager.Instance.IsPlayPhase)
+			while (cardsPlayed < 50)
 			{
+				PlayerCombatState? playerCombatState = player.PlayerCombatState;
+				if (playerCombatState == null || playerCombatState.Phase != PlayerTurnPhase.Play)
+				{
+					break;
+				}
 				ct.ThrowIfCancellationRequested();
 				if (cardsPlayed > 0 && cardsPlayed % 10 == 0)
 				{
 					AutoSlayer.CurrentWatchdog?.Reset($"Combat turn {turnCount}, played {cardsPlayed} cards");
 				}
 				CardPile pile = PileType.Hand.GetPile(player);
-				UnplayableReason reason;
-				AbstractModel preventer;
-				List<CardModel> list = pile.Cards.Where((CardModel c) => c.CanPlay(out reason, out preventer) && !attemptedCards.Contains(c)).ToList();
+				List<CardModel> list = pile.Cards.Where((CardModel c) => c.CanPlay(out UnplayableReason _, out AbstractModel _) && !attemptedCards.Contains(c)).ToList();
 				if (list.Count == 0)
 				{
 					AutoSlayLog.Action("No more playable cards, ending turn");
@@ -78,7 +93,8 @@ public class CombatRoomHandler : IRoomHandler, IHandler
 				cardsPlayed++;
 				await Task.Delay(100, ct);
 			}
-			if (CombatManager.Instance.IsPlayPhase && CombatManager.Instance.IsInProgress)
+			PlayerCombatState? playerCombatState2 = player.PlayerCombatState;
+			if (playerCombatState2 != null && playerCombatState2.Phase == PlayerTurnPhase.Play && CombatManager.Instance.IsInProgress)
 			{
 				PlayerCmd.EndTurn(player, canBackOut: false);
 			}
@@ -93,7 +109,7 @@ public class CombatRoomHandler : IRoomHandler, IHandler
 		{
 			return null;
 		}
-		CombatState combatState = card.CombatState;
+		ICombatState combatState = card.CombatState;
 		if (combatState == null)
 		{
 			return null;
@@ -114,11 +130,12 @@ public class CombatRoomHandler : IRoomHandler, IHandler
 			return;
 		}
 		AutoSlayLog.Action($"Using {list.Count} potion(s)");
-		CombatState combatState = player.Creature.CombatState;
+		ICombatState combatState = player.Creature.CombatState;
 		foreach (PotionModel item in list)
 		{
 			ct.ThrowIfCancellationRequested();
-			if (CombatManager.Instance.IsPlayPhase && CombatManager.Instance.IsInProgress)
+			PlayerCombatState? playerCombatState = player.PlayerCombatState;
+			if (playerCombatState != null && playerCombatState.Phase == PlayerTurnPhase.Play && CombatManager.Instance.IsInProgress)
 			{
 				Creature potionTarget = GetPotionTarget(item, combatState, random);
 				if (potionTarget == null && item.TargetType.IsSingleTarget())
@@ -135,7 +152,7 @@ public class CombatRoomHandler : IRoomHandler, IHandler
 		}
 	}
 
-	private static Creature? GetPotionTarget(PotionModel potion, CombatState? combatState, Rng random)
+	private static Creature? GetPotionTarget(PotionModel potion, ICombatState? combatState, Rng random)
 	{
 		if (combatState == null)
 		{

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MegaCrit.Sts2.Core.Combat;
-using MegaCrit.Sts2.Core.Combat.History.Entries;
 using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.Entities.Creatures;
@@ -19,7 +18,7 @@ public sealed class GoldAxe : CardModel
 	{
 		new CalculationBaseVar(0m),
 		new ExtraDamageVar(1m),
-		new CalculatedDamageVar(ValueProp.Move).WithMultiplier((CardModel card, Creature? _) => CombatManager.Instance.History.CardPlaysFinished.Count((CardPlayFinishedEntry e) => e.CardPlay.Card.Owner == card.Owner))
+		new CalculatedDamageVar(ValueProp.Move).WithMultiplier((CardModel _, Creature? _) => CombatManager.Instance.History.CardPlaysFinished.Count())
 	});
 
 	public GoldAxe()
@@ -30,7 +29,7 @@ public sealed class GoldAxe : CardModel
 	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
 	{
 		ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
-		await DamageCmd.Attack(base.DynamicVars.CalculatedDamage).FromCard(this).Targeting(cardPlay.Target)
+		await DamageCmd.Attack(base.DynamicVars.CalculatedDamage).FromCard(this, cardPlay).Targeting(cardPlay.Target)
 			.WithHitFx("vfx/vfx_dramatic_stab", null, "blunt_attack.mp3")
 			.Execute(choiceContext);
 	}

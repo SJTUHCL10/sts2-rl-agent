@@ -1,17 +1,12 @@
+using System;
+
 namespace MegaCrit.Sts2.Core.Runs.Metrics;
 
-public struct EncounterMetric
+public struct EncounterMetric(string id, int damage, int turns)
 {
-	public readonly string id;
+	public readonly string id = id;
 
-	public readonly int damage;
+	public readonly int damage = Math.Clamp(damage, 0, 100);
 
-	public readonly int turns;
-
-	public EncounterMetric(string id, int damage, int turns)
-	{
-		this.id = id;
-		this.damage = damage;
-		this.turns = turns;
-	}
+	public readonly int turns = turns;
 }

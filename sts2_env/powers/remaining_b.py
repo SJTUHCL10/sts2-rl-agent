@@ -1392,10 +1392,8 @@ class OutbreakPower(PowerInstance):
     power_type = PowerType.BUFF
     stack_type = PowerStackType.COUNTER
 
-    def __init__(self, amount: int, repeat: int = 3):
+    def __init__(self, amount: int):
         super().__init__(PowerId.OUTBREAK, amount)
-        self.repeat = repeat
-        self._times_poisoned: int = 0
 
     def after_power_amount_changed(
         self,
@@ -1409,16 +1407,13 @@ class OutbreakPower(PowerInstance):
     ) -> None:
         if applier is not owner or power_id != PowerId.POISON or amount <= 0:
             return
-        self._times_poisoned += 1
-        if self._times_poisoned >= self.repeat:
-            for enemy in combat.hittable_enemies:
-                combat.deal_damage(
-                    dealer=owner,
-                    target=enemy,
-                    amount=self.amount,
-                    props=ValueProp.UNPOWERED,
-                )
-            self._times_poisoned %= self.repeat
+        for enemy in combat.hittable_enemies:
+            combat.deal_damage(
+                dealer=owner,
+                target=enemy,
+                amount=self.amount,
+                props=ValueProp.UNPOWERED,
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -1611,6 +1606,7 @@ class PillarOfCreationPower(PowerInstance):
 
     def __init__(self, amount: int):
         super().__init__(PowerId.PILLAR_OF_CREATION, amount)
+        self._triggered_turn: int | None = None
 
     def after_card_generated_for_combat(
         self,
@@ -1621,6 +1617,10 @@ class PillarOfCreationPower(PowerInstance):
     ) -> None:
         if not added_by_player or getattr(card, "owner", None) is not owner:
             return
+        turn = combat.turn_count
+        if self._triggered_turn == turn:
+            return
+        self._triggered_turn = turn
         _gain_unpowered_block(owner, self.amount, combat)
 
 

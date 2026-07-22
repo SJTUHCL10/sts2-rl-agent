@@ -18,6 +18,8 @@ from sts2_env.core.enums import (
 from sts2_env.core.constants import PERCENT_DENOMINATOR
 from sts2_env.core.damage import calculate_damage, apply_damage
 from sts2_env.potions.all import (
+    AMBERGRIS_HEAL_PERCENT,
+    AMBERGRIS_ID,
     BLOOD_POTION_HEAL_PERCENT,
     BLOOD_POTION_ID,
     ENTROPIC_BREW_ID,
@@ -30,6 +32,16 @@ from sts2_env.potions.base import register_potion_effect
 if TYPE_CHECKING:
     from sts2_env.core.creature import Creature
     from sts2_env.core.combat import CombatState
+
+
+def _ambergris(combat: CombatState, user: Creature, target: Creature | None) -> None:
+    assert target is not None
+    target.heal(target.max_hp * AMBERGRIS_HEAL_PERCENT // PERCENT_DENOMINATOR)
+    if not combat.is_over:
+        target.apply_power(PowerId.AMBERGRIS, 1, applier=user)
+
+
+register_potion_effect(AMBERGRIS_ID, _ambergris)
 
 
 # ─── Helpers ──────────────────────────────────────────────────────────

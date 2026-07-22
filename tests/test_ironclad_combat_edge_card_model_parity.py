@@ -123,7 +123,7 @@ class TestIroncladCombatEdgeCardModelParity:
         combat.energy = 1
 
         assert combat.play_card(0)
-        assert combat.player.block == COLOSSUS_BLOCK
+        assert combat.player.block == 4
         assert combat.player.get_power_amount(PowerId.COLOSSUS) == COLOSSUS_POWER_AMOUNT
 
         upgraded_combat = _make_combat()
@@ -131,7 +131,7 @@ class TestIroncladCombatEdgeCardModelParity:
         upgraded_combat.energy = 1
 
         assert upgraded_combat.play_card(0)
-        assert upgraded_combat.player.block == COLOSSUS_UPGRADED_BLOCK
+        assert upgraded_combat.player.block == 7
         assert upgraded_combat.player.get_power_amount(PowerId.COLOSSUS) == COLOSSUS_POWER_AMOUNT
 
     def test_dominate_gains_strength_equal_to_target_vulnerable_and_upgrade_removes_exhaust(self):
@@ -259,8 +259,8 @@ class TestIroncladCombatEdgeCardModelParity:
 
         assert combat.play_card(0, 0)
         assert enemy.current_hp == 91
-        assert combat.player.get_power_amount(PowerId.SETUP_STRIKE) == 3
-        assert combat.player.get_power_amount(PowerId.STRENGTH) == 3
+        assert combat.player.get_power_amount(PowerId.SETUP_STRIKE) == 4
+        assert combat.player.get_power_amount(PowerId.STRENGTH) == 4
 
         combat.player.powers[PowerId.SETUP_STRIKE].after_turn_end(combat.player, CombatSide.PLAYER, combat)
 
@@ -332,7 +332,7 @@ class TestIroncladCombatEdgeCardModelParity:
         taunt_combat.energy = 1
 
         assert taunt_combat.play_card(0, 0)
-        assert taunt_combat.player.block == 8
+        assert taunt_combat.player.block == 7
         assert taunt_enemy.get_power_amount(PowerId.VULNERABLE) == 2
 
     def test_unrelenting_makes_next_owner_attack_free(self):
@@ -499,7 +499,7 @@ class TestIroncladCombatEdgeCardModelParity:
         combat.player.block = 0
         combat._start_player_turn()  # noqa: SLF001
         assert combat.player.current_hp == start_hp - 1
-        assert combat.player.block == 8
+        assert combat.player.block == 7
 
     def test_thrash_exhausts_random_attack_and_adds_its_damage(self):
         combat = _make_combat()
@@ -629,13 +629,13 @@ class TestIroncladCombatEdgeCardModelParity:
         combat.energy = 3
 
         assert combat.play_card(0)
-        assert combat.player.get_power_amount(PowerId.DEMON_FORM) == 3
+        assert combat.player.get_power_amount(PowerId.DEMON_FORM) == 4
         combat.player.powers[PowerId.DEMON_FORM].after_side_turn_start(
             combat.player,
             CombatSide.PLAYER,
             combat,
         )
-        assert combat.player.get_power_amount(PowerId.STRENGTH) == 3
+        assert combat.player.get_power_amount(PowerId.STRENGTH) == 4
 
     def test_corruption_applies_skill_cost_and_exhaust_rules(self):
         combat = _make_combat()
@@ -840,7 +840,7 @@ class TestIroncladCombatEdgeCardModelParity:
 
         combat._apply_card_before_hand_draw(combat.player)  # noqa: SLF001
 
-        assert [enemy.current_hp for enemy in combat.enemies] == [84, 84]
+        assert [enemy.current_hp for enemy in combat.enemies] == [82, 82]
         assert card in combat.discard_pile
 
     def test_stomp_cost_drops_for_owner_attacks_played_this_turn(self):

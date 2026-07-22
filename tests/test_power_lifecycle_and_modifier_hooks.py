@@ -1157,7 +1157,7 @@ class TestPowerAmountChangedHooks:
 
         assert len(simple_combat.hand) == 2
 
-    def test_outbreak_triggers_every_third_poison_application(self, simple_combat):
+    def test_outbreak_triggers_on_every_poison_application(self, simple_combat):
         player = simple_combat.player
         enemy = simple_combat.enemies[0]
         player.apply_power(PowerId.OUTBREAK, 4)
@@ -1165,10 +1165,10 @@ class TestPowerAmountChangedHooks:
 
         simple_combat.apply_power_to(enemy, PowerId.POISON, 1)
         simple_combat.apply_power_to(enemy, PowerId.POISON, 1)
-        assert enemy.current_hp == starting_hp
+        assert enemy.current_hp == starting_hp - 8
 
         simple_combat.apply_power_to(enemy, PowerId.POISON, 1)
-        assert enemy.current_hp == starting_hp - 4
+        assert enemy.current_hp == starting_hp - 12
 
     def test_monarchs_gaze_strength_down_is_temporary(self, simple_combat):
         player = simple_combat.player

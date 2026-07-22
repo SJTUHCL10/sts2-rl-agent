@@ -5,6 +5,7 @@ using Godot;
 using Godot.Bridge;
 using Godot.NativeInterop;
 using MegaCrit.Sts2.Core.ControllerInput;
+using MegaCrit.Sts2.Core.Daily;
 using MegaCrit.Sts2.Core.Helpers;
 using MegaCrit.Sts2.Core.Nodes.Combat;
 using MegaCrit.Sts2.Core.Nodes.CommonUi;
@@ -12,49 +13,115 @@ using MegaCrit.Sts2.addons.mega_text;
 
 namespace MegaCrit.Sts2.Core.Nodes.Screens.DailyRun;
 
+/// <summary>
+/// This is pretty close to NPaginator, but NPaginator only supports a static list of options whereas this needs to
+/// - Set its text based on a DateTimeOffset that is (effectively) infinite
+/// - Dynamically enable/disable arrows based on whether the query says there is a leaderboard
+/// It uses the same scene as NPaginator but with the script replaced.
+/// </summary>
 [ScriptPath("res://src/Core/Nodes/Screens/DailyRun/NLeaderboardDayPaginator.cs")]
 public class NLeaderboardDayPaginator : Control
 {
+	/// <summary>
+	/// Cached StringNames for the methods contained in this class, for fast lookup.
+	/// </summary>
 	public new class MethodName : Control.MethodName
 	{
+		/// <summary>
+		/// Cached name for the '_Ready' method.
+		/// </summary>
 		public new static readonly StringName _Ready = "_Ready";
 
+		/// <summary>
+		/// Cached name for the '_GuiInput' method.
+		/// </summary>
 		public new static readonly StringName _GuiInput = "_GuiInput";
 
+		/// <summary>
+		/// Cached name for the 'PageLeft' method.
+		/// </summary>
 		public static readonly StringName PageLeft = "PageLeft";
 
+		/// <summary>
+		/// Cached name for the 'PageRight' method.
+		/// </summary>
 		public static readonly StringName PageRight = "PageRight";
 
+		/// <summary>
+		/// Cached name for the 'DayChangeHelper' method.
+		/// </summary>
 		public static readonly StringName DayChangeHelper = "DayChangeHelper";
 
+		/// <summary>
+		/// Cached name for the 'OnDayChanged' method.
+		/// </summary>
 		public static readonly StringName OnDayChanged = "OnDayChanged";
 
+		/// <summary>
+		/// Cached name for the 'Disable' method.
+		/// </summary>
 		public static readonly StringName Disable = "Disable";
 
+		/// <summary>
+		/// Cached name for the 'Enable' method.
+		/// </summary>
 		public static readonly StringName Enable = "Enable";
 
+		/// <summary>
+		/// Cached name for the 'OnFocus' method.
+		/// </summary>
 		public static readonly StringName OnFocus = "OnFocus";
 
+		/// <summary>
+		/// Cached name for the 'OnUnfocus' method.
+		/// </summary>
 		public static readonly StringName OnUnfocus = "OnUnfocus";
 	}
 
+	/// <summary>
+	/// Cached StringNames for the properties and fields contained in this class, for fast lookup.
+	/// </summary>
 	public new class PropertyName : Control.PropertyName
 	{
+		/// <summary>
+		/// Cached name for the '_label' field.
+		/// </summary>
 		public static readonly StringName _label = "_label";
 
+		/// <summary>
+		/// Cached name for the '_vfxLabel' field.
+		/// </summary>
 		public static readonly StringName _vfxLabel = "_vfxLabel";
 
+		/// <summary>
+		/// Cached name for the '_leftArrow' field.
+		/// </summary>
 		public static readonly StringName _leftArrow = "_leftArrow";
 
+		/// <summary>
+		/// Cached name for the '_rightArrow' field.
+		/// </summary>
 		public static readonly StringName _rightArrow = "_rightArrow";
 
+		/// <summary>
+		/// Cached name for the '_selectionReticle' field.
+		/// </summary>
 		public static readonly StringName _selectionReticle = "_selectionReticle";
 
+		/// <summary>
+		/// Cached name for the '_tween' field.
+		/// </summary>
 		public static readonly StringName _tween = "_tween";
 
+		/// <summary>
+		/// Cached name for the '_leaderboard' field.
+		/// </summary>
 		public static readonly StringName _leaderboard = "_leaderboard";
 	}
 
+	/// <summary>
+	/// Cached StringNames for the signals contained in this class, for fast lookup.
+	/// </summary>
 	public new class SignalName : Control.SignalName
 	{
 	}
@@ -116,14 +183,24 @@ public class NLeaderboardDayPaginator : Control
 
 	private void PageLeft()
 	{
-		_currentDay -= TimeSpan.FromDays(1);
-		DayChangeHelper(pagedLeft: true);
+		DateTimeOffset? dateTimeOffset = DailyRunUtility.AddLeaderboardDays(_currentDay, -1);
+		if (dateTimeOffset.HasValue)
+		{
+			DateTimeOffset valueOrDefault = dateTimeOffset.GetValueOrDefault();
+			_currentDay = valueOrDefault;
+			DayChangeHelper(pagedLeft: true);
+		}
 	}
 
 	private void PageRight()
 	{
-		_currentDay += TimeSpan.FromDays(1);
-		DayChangeHelper(pagedLeft: false);
+		DateTimeOffset? dateTimeOffset = DailyRunUtility.AddLeaderboardDays(_currentDay, 1);
+		if (dateTimeOffset.HasValue)
+		{
+			DateTimeOffset valueOrDefault = dateTimeOffset.GetValueOrDefault();
+			_currentDay = valueOrDefault;
+			DayChangeHelper(pagedLeft: false);
+		}
 	}
 
 	private void DayChangeHelper(bool pagedLeft)
@@ -181,6 +258,11 @@ public class NLeaderboardDayPaginator : Control
 		_selectionReticle.OnDeselect();
 	}
 
+	/// <summary>
+	/// Get the method information for all the methods declared in this class.
+	/// This method is used by Godot to register the available methods in the editor.
+	/// Do not call this method.
+	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	internal static List<MethodInfo> GetGodotMethodList()
 	{
@@ -211,6 +293,7 @@ public class NLeaderboardDayPaginator : Control
 		return list;
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool InvokeGodotClassMethod(in godot_string_name method, NativeVariantPtrArgs args, out godot_variant ret)
 	{
@@ -277,6 +360,7 @@ public class NLeaderboardDayPaginator : Control
 		return base.InvokeGodotClassMethod(in method, args, out ret);
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool HasGodotClassMethod(in godot_string_name method)
 	{
@@ -323,6 +407,7 @@ public class NLeaderboardDayPaginator : Control
 		return base.HasGodotClassMethod(in method);
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool SetGodotClassPropertyValue(in godot_string_name name, in godot_variant value)
 	{
@@ -364,6 +449,7 @@ public class NLeaderboardDayPaginator : Control
 		return base.SetGodotClassPropertyValue(in name, in value);
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool GetGodotClassPropertyValue(in godot_string_name name, out godot_variant value)
 	{
@@ -405,6 +491,11 @@ public class NLeaderboardDayPaginator : Control
 		return base.GetGodotClassPropertyValue(in name, out value);
 	}
 
+	/// <summary>
+	/// Get the property information for all the properties declared in this class.
+	/// This method is used by Godot to register the available properties in the editor.
+	/// Do not call this method.
+	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	internal static List<PropertyInfo> GetGodotPropertyList()
 	{
@@ -419,6 +510,7 @@ public class NLeaderboardDayPaginator : Control
 		return list;
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override void SaveGodotObjectData(GodotSerializationInfo info)
 	{
@@ -432,6 +524,7 @@ public class NLeaderboardDayPaginator : Control
 		info.AddProperty(PropertyName._leaderboard, Variant.From(in _leaderboard));
 	}
 
+	/// <inheritdoc />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override void RestoreGodotObjectData(GodotSerializationInfo info)
 	{

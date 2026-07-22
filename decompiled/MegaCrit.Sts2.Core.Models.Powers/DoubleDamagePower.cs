@@ -1,7 +1,9 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MegaCrit.Sts2.Core.Combat;
 using MegaCrit.Sts2.Core.Commands;
+using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.Entities.Creatures;
 using MegaCrit.Sts2.Core.Entities.Powers;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
@@ -15,7 +17,7 @@ public sealed class DoubleDamagePower : PowerModel
 
 	public override PowerStackType StackType => PowerStackType.Counter;
 
-	public override decimal ModifyDamageMultiplicative(Creature? target, decimal amount, ValueProp props, Creature? dealer, CardModel? cardSource)
+	public override decimal ModifyDamageMultiplicative(Creature? target, decimal amount, ValueProp props, Creature? dealer, CardModel? cardSource, CardPlay? cardPlay)
 	{
 		if (dealer != base.Owner && !base.Owner.Pets.Contains<Creature>(dealer))
 		{
@@ -32,11 +34,11 @@ public sealed class DoubleDamagePower : PowerModel
 		return 2m;
 	}
 
-	public override async Task AfterTurnEnd(PlayerChoiceContext choiceContext, CombatSide side)
+	public override async Task AfterSideTurnEnd(PlayerChoiceContext choiceContext, CombatSide side, IEnumerable<Creature> participants)
 	{
-		if (side == CombatSide.Player)
+		if (participants.Contains(base.Owner))
 		{
-			await PowerCmd.TickDownDuration(this);
+			await PowerCmd.Decrement(this);
 		}
 	}
 }
