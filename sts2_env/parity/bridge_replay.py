@@ -34,6 +34,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable
 
 from sts2_env.bridge.protocol import BridgeAction, BridgeStateType
+from sts2_env.agent_v2.schema import schema_manifest
 from sts2_env.core.enums import CardType, TargetType
 
 if TYPE_CHECKING:
@@ -157,13 +158,20 @@ class BridgeReplayRecorder:
         self,
         client: Any,
         *,
+        mode: str = "combat",
         metadata: dict[str, Any] | None = None,
         state_filter: Callable[[dict[str, Any]], bool] | None = None,
     ):
         self._client = client
         self._state_filter = state_filter or self._default_state_filter
         self._pending_action: dict[str, Any] | None = None
-        self.trace = BridgeReplayTrace(metadata=dict(metadata or {}))
+        replay_metadata = dict(metadata or {})
+        replay_metadata.setdefault("agent_interface", schema_manifest())
+        self.trace = BridgeReplayTrace(
+            version=2,
+            mode=mode,
+            metadata=replay_metadata,
+        )
 
     @staticmethod
     def _default_state_filter(state: dict[str, Any]) -> bool:
@@ -346,6 +354,46 @@ def _normalize_action_options(options: list[dict[str, Any]] | None) -> list[dict
     return normalized
 
 
+def _normalize_crystal_minigame(
+    minigame: dict[str, Any],
+) -> dict[str, Any]:
+    return {
+        "grid_width": int(minigame.get("grid_width", 11)),
+        "grid_height": int(minigame.get("grid_height", 11)),
+        "divinations_remaining": int(
+            minigame.get("divinations_remaining", 0)
+        ),
+        "tool": str(minigame.get("tool", "")),
+        "finished": bool(minigame.get("finished", False)),
+        "placed_all_items": bool(minigame.get("placed_all_items", False)),
+        "cells": [
+            {
+                "entity_id": str(cell.get(
+                    "entity_id",
+                    f"crystal-cell:{cell.get('x', 0)}:{cell.get('y', 0)}",
+                )),
+                "x": int(cell.get("x", 0)),
+                "y": int(cell.get("y", 0)),
+                "hidden": bool(cell.get("hidden", True)),
+                "clickable": bool(cell.get("clickable", False)),
+                "revealed_item_id": cell.get("revealed_item_id"),
+            }
+            for cell in minigame.get("cells", [])
+        ],
+        "revealed_items": [
+            {
+                key: item[key]
+                for key in (
+                    "entity_id", "item_type", "width", "height", "rarity",
+                    "amount", "revealed", "is_good",
+                )
+                if key in item
+            }
+            for item in minigame.get("revealed_items", [])
+        ],
+    }
+
+
 def _normalize_card_bundles(bundles: list[dict[str, Any]] | None) -> list[dict[str, Any]]:
     normalized: list[dict[str, Any]] = []
     for idx, bundle in enumerate(bundles or []):
@@ -436,9 +484,42 @@ def normalize_bridge_state(state: dict[str, Any]) -> dict[str, Any]:
             "floor": int(state.get("floor", 0)),
             "act": int(state.get("act", 0)),
         }
+    if state_type == STATE_TYPE_CRYSTAL_SPHERE:
+        normalized = {
+            "type": state_type,
+            "options": [
+                {
+                    **item,
+                    **({
+                        "x": int(option["x"]),
+                        "y": int(option["y"]),
+                        "entity_id": str(option.get(
+                            "entity_id",
+                            f"crystal-cell:{option['x']}:{option['y']}",
+                        )),
+                        "affected_cell_ids": [
+                            str(value)
+                            for value in option.get("affected_cell_ids", [])
+                        ],
+                    } if option.get("x") is not None
+                    and option.get("y") is not None else {}),
+                }
+                for item, option in zip(
+                    _normalize_action_options(state.get("options")),
+                    state.get("options", []),
+                )
+            ],
+            "floor": int(state.get("floor", 0)),
+            "act": int(state.get("act", 0)),
+        }
+        if isinstance(state.get("minigame"), dict):
+            normalized["minigame"] = _normalize_crystal_minigame(
+                state["minigame"]
+            )
+            normalized["crystal_cells"] = normalized["minigame"]["cells"]
+        return normalized
     if state_type in {
         STATE_TYPE_REWARD_SCREEN,
-        STATE_TYPE_CRYSTAL_SPHERE,
         STATE_TYPE_SHOP,
         STATE_TYPE_EVENT,
         STATE_TYPE_TREASURE,
@@ -665,6 +746,30 @@ def run_manager_to_bridge_state(run: RunManager) -> dict[str, Any]:
 
     if phase == RunManager.PHASE_EVENT:
         actions = [action for action in run.get_available_actions() if action.get("action") in EVENT_REPLAY_ACTIONS]
+        event = getattr(run, "_event_model", None)
+        minigame = getattr(event, "minigame", None)
+        if minigame is not None and not getattr(event, "_awaiting_proceed", False):
+            snapshot = minigame.public_snapshot()
+            return {
+                "type": STATE_TYPE_CRYSTAL_SPHERE,
+                "options": [
+                    {
+                        "index": index,
+                        "id": action["option_id"],
+                        "action": action.get("minigame_action", "divine_cell"),
+                        "x": action.get("x"),
+                        "y": action.get("y"),
+                        "entity_id": action.get("entity_id"),
+                        "affected_cell_ids": action.get("affected_cell_ids", []),
+                        "enabled": action.get("enabled", True),
+                    }
+                    for index, action in enumerate(actions)
+                ],
+                "minigame": snapshot,
+                "crystal_cells": snapshot["cells"],
+                "floor": run.run_state.total_floor,
+                "act": run.run_state.current_act_index + 1,
+            }
         return _run_choice_state(run, STATE_TYPE_EVENT, actions)
 
     if phase == RunManager.PHASE_TREASURE:

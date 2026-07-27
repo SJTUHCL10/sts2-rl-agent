@@ -65,6 +65,7 @@ public class RlAutoSlayer
     private const string AbandonRunProceedButtonPath =
         "/root/Game/RootSceneContainer/Run/GlobalUi/OverlayScreensContainer/GameOverScreen/UI/ProceedButton";
     private const string AbandonRunMenuButtonPath = "MainMenuTextButtons/AbandonRunButton";
+    private const string ContinueRunMenuButtonPath = "MainMenuTextButtons/ContinueButton";
     private const string AbandonPopupPrimaryYesButtonPath = "VerticalPopup/YesButton";
     private const string AbandonPopupFallbackYesButtonPath = "YesButton";
     private const string SingleplayerButtonPath = "MainMenuTextButtons/SingleplayerButton";
@@ -84,7 +85,7 @@ public class RlAutoSlayer
     private const int OverlayCloseRetryLimit = 3;
     private const int OverlayDrainSettleDelayMs = 100;
     private const int EventProceedTimeoutSeconds = 5;
-    private const int RewardsScreenTimeoutSeconds = 10;
+    private const int PostCombatScreenTimeoutSeconds = 60;
     private const int MainMenuTimeoutSeconds = 30;
     private const int AbandonPopupTimeoutSeconds = 5;
     private const int AbandonRunSettleDelayMs = 1000;
@@ -99,6 +100,7 @@ public class RlAutoSlayer
     private Watchdog? _watchdog;
     private IDisposable? _cardSelectorScope;
     private bool _completionSignalSent;
+    private bool _resumeExistingRun;
 
     public static bool IsActive { get; private set; }
 
@@ -142,13 +144,17 @@ public class RlAutoSlayer
         };
     }
 
-    public void Start(string seed, string? logFile = null)
+    public void Start(
+        string seed,
+        bool resumeExistingRun = false,
+        string? logFile = null)
     {
         if (logFile != null)
         {
             AutoSlayLog.OpenLogFile(logFile);
         }
         IsActive = true;
+        _resumeExistingRun = resumeExistingRun;
         SetAutoSlayerActive(true);
         _cts = new CancellationTokenSource();
         Task task = RunAsync(seed, _cts.Token);
@@ -215,7 +221,10 @@ public class RlAutoSlayer
         await WaitHelper.Until(() => NGame.Instance != null, ct,
             AutoSlayConfig.gameInitTimeout, "Game instance not initialized");
 
-        NGame.Instance.DebugSeedOverride = seed;
+        if (!_resumeExistingRun)
+        {
+            NGame.Instance.DebugSeedOverride = seed;
+        }
         SaveManager.Instance.PrefsSave.FastMode = FastModeType.Fast;
         SaveManager.Instance.SetFtuesEnabled(enabled: false);
 
@@ -246,7 +255,17 @@ public class RlAutoSlayer
             TimeSpan.FromSeconds(RunStateTimeoutSeconds), "Run state not initialized");
 
         RunState runState = RunManager.Instance.DebugOnlyGetState();
-        Logger.Log($"[RlAutoSlayer] RunState available. Floor: {runState.TotalFloor}");
+        if (_resumeExistingRun)
+        {
+            _random = new Rng(runState.Rng.Seed, "STS2BridgeResume");
+            Logger.Log(
+                $"[RlAutoSlayer] Resumed run '{runState.Rng.StringSeed}' "
+                + $"at Act {runState.CurrentActIndex + 1}, floor {runState.TotalFloor}.");
+        }
+        else
+        {
+            Logger.Log($"[RlAutoSlayer] RunState available. Floor: {runState.TotalFloor}");
+        }
 
         await WaitHelper.Until(
             () => {
@@ -257,10 +276,22 @@ public class RlAutoSlayer
             },
             ct, TimeSpan.FromSeconds(RoomAssignmentTimeoutSeconds), "Room type not assigned");
 
+        if (_resumeExistingRun)
+        {
+            await DrainResumedScreensAsync(runState, ct);
+        }
+
         // Main game loop
         while (runState.TotalFloor < FinalRunFloor)
         {
             ct.ThrowIfCancellationRequested();
+            if (NMapScreen.Instance?.IsOpen ?? false)
+            {
+                _watchdog.Reset("Navigating resumed map");
+                Logger.Log("[RlAutoSlayer] Resumed on map; requesting bridge choice");
+                await _mapHandler.HandleAsync(_random, ct);
+                continue;
+            }
             RoomType roomType = runState.CurrentRoom.RoomType;
             _watchdog.Reset(
                 $"Entering {roomType} room (Act {runState.CurrentActIndex + 1}, Floor {runState.ActFloor})");
@@ -269,11 +300,11 @@ public class RlAutoSlayer
 
             await HandleRoomAsync(roomType, ct);
 
-            // After combat rooms, wait for rewards screen
+            PostCombatOutcome postCombatOutcome = PostCombatOutcome.None;
             if (roomType == RoomType.Monster || roomType == RoomType.Elite ||
                 roomType == RoomType.Boss)
             {
-                await WaitForRewardsScreenAsync(ct);
+                postCombatOutcome = await WaitForPostCombatScreenAsync(ct);
             }
             else
             {
@@ -281,6 +312,15 @@ public class RlAutoSlayer
             }
 
             await DrainOverlayScreensAsync(ct);
+
+            if (postCombatOutcome == PostCombatOutcome.GameOver)
+            {
+                _watchdog.Reset("Waiting for main menu after defeat");
+                await WaitForMainMenuAsync(ct);
+                Logger.Log("[RlAutoSlayer] Defeat handled; returned to main menu");
+                _completionSignalSent = true;
+                return;
+            }
 
             if (roomType == RoomType.RestSite)
             {
@@ -338,6 +378,30 @@ public class RlAutoSlayer
 
         Logger.Log("[RlAutoSlayer] Run completed (max floor reached). Abandoning");
         await AbandonRunAsync(ct);
+    }
+
+    private async Task DrainResumedScreensAsync(
+        RunState runState,
+        CancellationToken ct)
+    {
+        NOverlayStack? overlayStack = NOverlayStack.Instance;
+        if (overlayStack != null && overlayStack.ScreenCount > 0)
+        {
+            Logger.Log(
+                $"[RlAutoSlayer] Resumed with {overlayStack.ScreenCount} overlay "
+                + "screen(s); draining before room handling");
+            await DrainOverlayScreensAsync(ct);
+        }
+
+        RoomType roomType = runState.CurrentRoom.RoomType;
+        if (roomType == RoomType.RestSite)
+        {
+            await ClickRestSiteProceedIfNeeded(ct);
+        }
+        if (roomType == RoomType.Event)
+        {
+            await ClickEventProceedIfNeeded(ct);
+        }
     }
 
     private async Task HandleRoomAsync(RoomType roomType, CancellationToken ct)
@@ -461,14 +525,35 @@ public class RlAutoSlayer
         }
     }
 
-    private async Task WaitForRewardsScreenAsync(CancellationToken ct)
+    private async Task<PostCombatOutcome> WaitForPostCombatScreenAsync(
+        CancellationToken ct)
     {
-        Logger.Log("[RlAutoSlayer] Waiting for rewards screen");
+        Logger.Log("[RlAutoSlayer] Waiting for rewards, map, or game over screen");
+        PostCombatOutcome outcome = PostCombatOutcome.None;
         await WaitHelper.Until(
-            () => NOverlayStack.Instance?.Peek() is NRewardsScreen ||
-                  (NMapScreen.Instance?.IsOpen ?? false),
-            ct, TimeSpan.FromSeconds(RewardsScreenTimeoutSeconds),
-            "Rewards screen did not appear after combat");
+            () =>
+            {
+                IOverlayScreen? screen = NOverlayStack.Instance?.Peek();
+                if (screen is NRewardsScreen)
+                {
+                    outcome = PostCombatOutcome.Rewards;
+                    return true;
+                }
+                if (screen is NGameOverScreen)
+                {
+                    outcome = PostCombatOutcome.GameOver;
+                    return true;
+                }
+                if (NMapScreen.Instance?.IsOpen ?? false)
+                {
+                    outcome = PostCombatOutcome.Map;
+                    return true;
+                }
+                return false;
+            },
+            ct, TimeSpan.FromSeconds(PostCombatScreenTimeoutSeconds),
+            "Rewards, map, or game over screen did not appear after combat");
+        return outcome;
     }
 
     private async Task WaitForMainMenuAsync(CancellationToken ct)
@@ -481,12 +566,50 @@ public class RlAutoSlayer
             "Main menu did not appear after game over");
     }
 
+    private static async Task ResumeExistingRunAsync(
+        Control mainMenu,
+        CancellationToken ct)
+    {
+        if (!SaveManager.Instance.HasRunSave)
+        {
+            throw new InvalidOperationException(
+                "resume_existing_run is enabled, but no run save exists. "
+                + "Resume mode will not fall back to starting a new run.");
+        }
+
+        NButton? continueButton = mainMenu.GetNodeOrNull<NButton>(
+            ContinueRunMenuButtonPath);
+        await WaitHelper.Until(
+            () => continueButton != null
+                && continueButton.Visible
+                && continueButton.IsEnabled,
+            ct,
+            TimeSpan.FromSeconds(MainMenuTimeoutSeconds),
+            "Continue button did not become available for saved run");
+
+        Logger.Log("[RlAutoSlayer] Clicking Continue for existing run");
+        await UiHelper.Click(continueButton!);
+        await WaitHelper.Until(
+            () => RunManager.Instance.DebugOnlyGetState() != null
+                && (!GodotObject.IsInstanceValid(mainMenu)
+                    || !mainMenu.IsVisibleInTree()),
+            ct,
+            TimeSpan.FromSeconds(RunStateTimeoutSeconds),
+            "Saved run did not finish loading after Continue");
+    }
+
     private async Task PlayMainMenuAsync(CancellationToken ct)
     {
         Logger.Log("[RlAutoSlayer] Playing main menu");
         Node root = ((SceneTree)Engine.GetMainLoop()).Root;
         Control mainMenu = await WaitHelper.ForNode<Control>(
             root, MainMenuPath, ct, TimeSpan.FromSeconds(MainMenuTimeoutSeconds));
+
+        if (_resumeExistingRun)
+        {
+            await ResumeExistingRunAsync(mainMenu, ct);
+            return;
+        }
 
         // Abandon existing run if present (best effort)
         try
@@ -632,6 +755,14 @@ public class RlAutoSlayer
         {
             Logger.Log($"[RlAutoSlayer] Could not mirror watchdog: {ex.Message}");
         }
+    }
+
+    private enum PostCombatOutcome
+    {
+        None,
+        Rewards,
+        Map,
+        GameOver,
     }
 }
 

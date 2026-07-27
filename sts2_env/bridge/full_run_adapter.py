@@ -135,7 +135,7 @@ class FullRunStateAdapter:
         elif state_type == BridgeStateType.REST_SITE:
             self._mask_sequence(mask, _REST_START, self._choice_items(state), 5)
         elif state_type in {BridgeStateType.EVENT, BridgeStateType.CRYSTAL_SPHERE}:
-            self._mask_sequence(mask, _EVENT_START, self._choice_items(state), 4)
+            self._mask_sequence(mask, _EVENT_START, self._event_choice_items(state), 4)
         elif state_type == BridgeStateType.TREASURE:
             mask[_TREASURE_START] = 1
         if not mask.any():
@@ -194,7 +194,7 @@ class FullRunStateAdapter:
         if state_type == BridgeStateType.REST_SITE:
             return self._choose(self._choice_items(state), action - _REST_START)
         if state_type in {BridgeStateType.EVENT, BridgeStateType.CRYSTAL_SPHERE}:
-            return self._choose(self._choice_items(state), action - _EVENT_START)
+            return self._choose(self._event_choice_items(state), action - _EVENT_START)
         if state_type == BridgeStateType.TREASURE:
             return self._choose(self._choice_items(state), 0)
         return {"action": BridgeAction.SKIP}
@@ -204,20 +204,25 @@ class FullRunStateAdapter:
         player = state.get("player", {}) if isinstance(state.get("player"), dict) else {}
         if not player and isinstance(run.get("player"), dict):
             player = run["player"]
+        if not player and isinstance(run.get("players"), list) and run["players"]:
+            player = run["players"][0]
         self.act = max(0, int(state.get("act", run.get("act", self.act + 1))) - 1)
         self.total_floor = int(state.get("floor", run.get("floor", self.total_floor)) or self.total_floor)
         self.act_floor = int(state.get("act_floor", run.get("act_floor", self.total_floor)) or self.act_floor)
         self.hp = int(player.get("hp", state.get("hp", self.hp)) or self.hp)
         self.max_hp = int(player.get("max_hp", state.get("max_hp", self.max_hp)) or self.max_hp)
-        self.gold = int(run.get("gold", state.get("gold", self.gold)) or 0)
-        deck = run.get("deck")
+        self.gold = int(player.get("gold", run.get("gold", state.get("gold", self.gold))) or 0)
+        deck = run.get("deck", run.get("cards"))
         self.deck_size = len(deck) if isinstance(deck, list) else int(state.get("deck_size", self.deck_size) or 0)
         relics = run.get("relics")
         self.relic_count = len(relics) if isinstance(relics, list) else int(state.get("relic_count", self.relic_count) or 0)
         potions = state.get("potions", run.get("potions"))
         if isinstance(potions, list):
             self.num_potions = sum(1 for potion in potions if potion)
-        self.max_potion_slots = int(run.get("max_potion_slots", state.get("max_potion_slots", self.max_potion_slots)) or 1)
+        self.max_potion_slots = int(player.get(
+            "max_potion_slots",
+            run.get("max_potion_slots", state.get("max_potion_slots", self.max_potion_slots)),
+        ) or 1)
         self.ascension = int(run.get("ascension", state.get("ascension", self.ascension)) or 0)
 
     @staticmethod
@@ -229,6 +234,24 @@ class FullRunStateAdapter:
             if state.get(key):
                 return self._enabled(state[key])
         return []
+
+    def _event_choice_items(self, state: dict[str, Any]) -> list[dict[str, Any]]:
+        choices = self._choice_items(state)
+        if state.get("type") != BridgeStateType.CRYSTAL_SPHERE:
+            return choices
+        minigame = state.get("minigame")
+        if not isinstance(minigame, dict):
+            return choices
+        finished = bool(minigame.get("finished"))
+        remaining = minigame.get("divinations_remaining")
+        if not finished and remaining != 0:
+            return choices
+        proceeds = [
+            option
+            for option in choices
+            if str(option.get("action", "")).lower() == "proceed"
+        ]
+        return proceeds or choices
 
     @staticmethod
     def _mask_sequence(mask: np.ndarray, start: int, items: Any, limit: int) -> None:

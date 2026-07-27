@@ -4,6 +4,15 @@ import re
 from pathlib import Path
 
 RL_AUTO_SLAYER = Path(__file__).resolve().parents[1] / "bridge_mod" / "RlAutoSlayer.cs"
+BRIDGE_MAIN = Path(__file__).resolve().parents[1] / "bridge_mod" / "MainFile.cs"
+BRIDGE_CONFIG = (
+    Path(__file__).resolve().parents[1] / "bridge_mod" / "BridgeRuntimeConfig.cs"
+)
+CRYSTAL_SPHERE_HANDLER = (
+    Path(__file__).resolve().parents[1]
+    / "bridge_mod"
+    / "RlCrystalSphereScreenHandler.cs"
+)
 CARD_SELECT_CMD = (
     Path(__file__).resolve().parents[1]
     / "decompiled"
@@ -65,6 +74,16 @@ def test_autoslay_standalone_choice_screens_route_through_rl_handlers() -> None:
     assert "[typeof(NCrystalSphereScreen)] = new RlCrystalSphereScreenHandler()" in source
 
 
+def test_crystal_sphere_finished_state_exposes_only_proceed() -> None:
+    source = CRYSTAL_SPHERE_HANDLER.read_text(encoding="utf-8")
+
+    assert "if (canProceed)" in source
+    assert '["index"] = 0' in source
+    assert '["action"] = NonCombatBridgeProtocol.ProceedAction' in source
+    assert "if (!canProceed && chosenIndex >= 0" in source
+    assert "if (canProceed && chosenIndex == 0)" in source
+
+
 def test_card_select_screens_are_guarded_by_rl_selector() -> None:
     source = _rl_auto_slayer_source()
 
@@ -91,7 +110,37 @@ def test_autoslay_run_flow_uses_named_protocol_and_timing_constants() -> None:
     assert "TimeSpan.FromMinutes(RunTimeoutMinutes)" in source
     assert "TimeSpan.FromSeconds(RunStateTimeoutSeconds)" in source
     assert "TimeSpan.FromSeconds(RoomAssignmentTimeoutSeconds)" in source
-    assert "TimeSpan.FromSeconds(RewardsScreenTimeoutSeconds)" in source
+    assert "WaitForPostCombatScreenAsync(ct)" in source
+    assert "screen is NRewardsScreen" in source
+    assert "screen is NGameOverScreen" in source
+    assert "postCombatOutcome == PostCombatOutcome.GameOver" in source
+    assert "Defeat handled; returned to main menu" in source
+    assert "TimeSpan.FromSeconds(PostCombatScreenTimeoutSeconds)" in source
+
+
+def test_resume_mode_is_explicit_fail_closed_and_skips_abandon_path() -> None:
+    source = _rl_auto_slayer_source()
+    main_source = BRIDGE_MAIN.read_text(encoding="utf-8")
+    config_source = BRIDGE_CONFIG.read_text(encoding="utf-8")
+
+    assert "BridgeRuntimeConfig.Load()" in main_source
+    assert "_autoSlayer.Start(seed, runtimeConfig.ResumeExistingRun)" in main_source
+    assert 'FileName = "STS2BridgeMod.runtime.json"' in config_source
+    assert '"resume_existing_run"' in config_source
+    assert "if (_resumeExistingRun)" in source
+    assert "await ResumeExistingRunAsync(mainMenu, ct);" in source
+    assert "SaveManager.Instance.HasRunSave" in source
+    assert "Resume mode will not fall back to starting a new run." in source
+    assert 'ContinueRunMenuButtonPath = "MainMenuTextButtons/ContinueButton"' in source
+    assert "await DrainResumedScreensAsync(runState, ct);" in source
+    assert "Resumed on map; requesting bridge choice" in source
+
+    resume_branch = source[
+        source.index("if (_resumeExistingRun)", source.index("PlayMainMenuAsync"))
+    :]
+    assert resume_branch.index("return;") < resume_branch.index(
+        "// Abandon existing run if present"
+    )
 
 
 def test_decompiled_card_select_cmd_intercepts_default_selection_screens() -> None:

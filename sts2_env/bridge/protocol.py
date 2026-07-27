@@ -110,6 +110,7 @@ class BridgeAction:
     CHOOSE = "choose"
     SKIP = "skip"
     POTION = "potion"
+    CANDIDATE = "candidate"
     PING = "ping"
 
 

@@ -756,6 +756,18 @@ class STS2RunEnv(gymnasium.Env):
             })
         return info
 
+    def entity_observation(self) -> dict[str, Any]:
+        """Return the additive v2 entity/candidate snapshot.
+
+        The Gym reset/step contract remains the frozen 151x157 v1 interface
+        until the future model-specific padded environment is introduced.
+        """
+        if self._mgr is None:
+            raise RuntimeError("Must call reset() before entity_observation()")
+        from sts2_env.agent_v2.snapshot import build_run_decision_snapshot
+
+        return build_run_decision_snapshot(self._mgr)
+
     # ------------------------------------------------------------------
     # Render
     # ------------------------------------------------------------------

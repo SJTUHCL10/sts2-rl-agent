@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Reflection;
 using Godot;
 using MegaCrit.Sts2.Core.Combat;
@@ -15,6 +16,7 @@ using MegaCrit.Sts2.Core.Nodes.Screens.CardSelection;
 using MegaCrit.Sts2.Core.Nodes.Screens.Map;
 using MegaCrit.Sts2.Core.Nodes.Screens.Overlays;
 using MegaCrit.Sts2.Core.Runs;
+using STS2AgentShared;
 
 namespace STS2AdvisorMod;
 
@@ -56,7 +58,9 @@ internal static class AdvisorStateCollector
             ["max_energy"] = pcs.MaxEnergy,
             ["powers"] = SerializePowers(player.Creature),
         };
-        var hand = pcs.Hand.Cards.Select(SerializeCard).ToList();
+        var hand = pcs.Hand.Cards
+            .Select((card, index) => SerializeCard(card, "hand", index))
+            .ToList();
         var enemies = combat.Enemies.Select(SerializeEnemy).ToList();
         var potions = SerializePotions(player);
         RunState? run = SafeRunState();
@@ -66,6 +70,7 @@ internal static class AdvisorStateCollector
             ["type"] = "combat_action",
             ["player"] = playerObj,
             ["hand"] = hand,
+            ["cards"] = SerializeCombatCards(pcs),
             ["enemies"] = enemies,
             ["potions"] = potions,
             ["available_actions"] = potions.Count > 0
@@ -141,7 +146,30 @@ internal static class AdvisorStateCollector
         return true;
     }
 
-    private static Dictionary<string, object?> SerializeCard(CardModel card)
+    private static List<Dictionary<string, object?>> SerializeCombatCards(
+        PlayerCombatState pcs)
+    {
+        var cards = new List<Dictionary<string, object?>>();
+        AddPile(cards, pcs.Hand.Cards, "hand");
+        AddPile(cards, pcs.DrawPile.Cards, "draw");
+        AddPile(cards, pcs.DiscardPile.Cards, "discard");
+        AddPile(cards, pcs.ExhaustPile.Cards, "exhaust");
+        return cards;
+    }
+
+    private static void AddPile(
+        List<Dictionary<string, object?>> output,
+        IReadOnlyList<CardModel> cards,
+        string zone)
+    {
+        for (int index = 0; index < cards.Count; index++)
+            output.Add(SerializeCard(cards[index], zone, index));
+    }
+
+    private static Dictionary<string, object?> SerializeCard(
+        CardModel card,
+        string zone = "hand",
+        int zoneIndex = -1)
     {
         int cost;
         try { cost = card.EnergyCost.GetWithModifiers(CostModifiers.All); }
@@ -151,12 +179,17 @@ internal static class AdvisorStateCollector
         var result = new Dictionary<string, object?>
         {
             ["id"] = card.Id.Entry,
+            ["entity_id"] = $"card:player:local:{zone}:{zoneIndex}:{card.Id.Entry}",
+            ["zone"] = zone,
+            ["zone_index"] = zoneIndex,
             ["cost"] = cost,
             ["type"] = card.Type.ToString(),
             ["target"] = card.TargetType.ToString(),
             ["playable"] = card.CanPlay(out reason, out preventer),
             ["upgraded"] = card.IsUpgraded,
         };
+        foreach (KeyValuePair<string, JsonNode?> feature in ProtocolV2.SerializeCardFeatures(card))
+            result[feature.Key] = feature.Value;
         AddCardModifiers(result, card);
         return result;
     }
@@ -171,6 +204,8 @@ internal static class AdvisorStateCollector
             ["cost"] = card.EnergyCost.Canonical,
             ["upgraded"] = card.IsUpgraded,
         };
+        foreach (KeyValuePair<string, JsonNode?> feature in ProtocolV2.SerializeCardFeatures(card))
+            result[feature.Key] = feature.Value;
         AddCardModifiers(result, card);
         return result;
     }
@@ -247,10 +282,16 @@ internal static class AdvisorStateCollector
     }
 
     private static List<Dictionary<string, object?>> SerializePowers(Creature creature) =>
-        creature.Powers.Select(power => new Dictionary<string, object?>
+        creature.Powers.Select(power =>
         {
-            ["id"] = power.Id.Entry,
-            ["amount"] = power.Amount,
+            var result = new Dictionary<string, object?>
+            {
+                ["id"] = power.Id.Entry,
+                ["amount"] = power.Amount,
+            };
+            foreach (KeyValuePair<string, JsonNode?> feature in ProtocolV2.SerializePowerState(power))
+                result[feature.Key] = feature.Value;
+            return result;
         }).ToList();
 
     private static List<Dictionary<string, object?>> SerializePotions(Player player)

@@ -1,5 +1,11 @@
 # STS2 Advisor Mod
 
+The Advisor and automatic Bridge share the additive v2 observation enrichment
+in `shared_mod/ProtocolV2.cs`. This adds full run-state entities, card dynamic
+variables, stable entity IDs, schema metadata, and semantic candidates without
+adding any action path to the Advisor. See
+[Agent Interface v2](AGENT_INTERFACE_V2.md).
+
 `STS2AdvisorMod` is a display-only companion for a trained full-run policy.
 It observes actionable game states and shows a recommendation, while the
 player keeps complete control of every decision and input.

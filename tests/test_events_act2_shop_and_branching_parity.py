@@ -165,12 +165,16 @@ def test_crystal_sphere_thresholds_and_choices_apply_cost_or_debt():
     assert (
         event.UNCOVER_FUTURE_BASE_COST + event.UNCOVER_FUTURE_RANDOM_MIN
         <= event._cost  # noqa: SLF001
-        <= event.UNCOVER_FUTURE_BASE_COST + event.UNCOVER_FUTURE_RANDOM_MAX
+        < event.UNCOVER_FUTURE_BASE_COST + event.UNCOVER_FUTURE_RANDOM_MAX
     )
 
     gold_before = run_state.player.gold
     pay = event.choose(run_state, "pay")
-    assert pay.finished
+    assert not pay.finished
+    assert len(pay.next_options) > 4
+    assert all(option.option_id.startswith("divine:") for option in pay.next_options)
+    assert event.minigame is not None
+    assert event.minigame.divination_count == 3
     assert run_state.player.gold == gold_before - event._cost  # noqa: SLF001
 
     debt_state = _make_run_state(904)
@@ -181,7 +185,9 @@ def test_crystal_sphere_thresholds_and_choices_apply_cost_or_debt():
     deck_before = len(debt_state.player.deck)
 
     debt = debt_event.choose(debt_state, "debt")
-    assert debt.finished
+    assert not debt.finished
+    assert debt_event.minigame is not None
+    assert debt_event.minigame.divination_count == 6
     assert len(debt_state.player.deck) == deck_before + 1
     assert debt_state.player.deck[-1].card_id == CardId.DEBT
 

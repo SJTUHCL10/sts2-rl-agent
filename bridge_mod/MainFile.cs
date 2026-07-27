@@ -114,10 +114,13 @@ public partial class MainFile : Node
         Logger.Log("[RlAutoSlay] Main menu visible. Creating RL AutoSlayer...");
 
         // Create and start the RL-driven AutoSlayer
+        BridgeRuntimeConfig runtimeConfig = BridgeRuntimeConfig.Load();
         _autoSlayer = new RlAutoSlayer();
         string seed = SeedHelper.GetRandomSeed();
-        Logger.Log($"[RlAutoSlay] Starting RL run with seed: {seed}");
-        _autoSlayer.Start(seed);
+        Logger.Log(runtimeConfig.ResumeExistingRun
+            ? "[RlAutoSlay] Starting in resume-existing-run mode"
+            : $"[RlAutoSlay] Starting new RL run with seed: {seed}");
+        _autoSlayer.Start(seed, runtimeConfig.ResumeExistingRun);
     }
 }
 

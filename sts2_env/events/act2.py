@@ -9,7 +9,13 @@ from typing import TYPE_CHECKING
 
 from sts2_env.cards.factory import create_card, eligible_registered_cards
 from sts2_env.cards.enchantments import can_enchant_card
-from sts2_env.cards.status import make_debt, make_feeding_frenzy, make_normality, make_spore_mind
+from sts2_env.cards.status import (
+    make_debt,
+    make_doubt,
+    make_feeding_frenzy,
+    make_normality,
+    make_spore_mind,
+)
 from sts2_env.core.enums import CardRarity, CardType, PotionRarity
 from sts2_env.events.shared import (
     _event_result_with_rewards,
@@ -23,10 +29,11 @@ from sts2_env.events.shared import (
     _transform_selected_cards,
     _upgrade_n_cards,
 )
-from sts2_env.potions.base import create_potion
+from sts2_env.potions.base import create_potion, normal_pool_models
 from sts2_env.relics.base import RelicId, RelicRarity
 from sts2_env.run.reward_objects import (
     AddCardsReward,
+    GoldReward,
     CardReward,
     EnchantCardsReward,
     PotionReward,
@@ -35,6 +42,14 @@ from sts2_env.run.reward_objects import (
     TransformCardsReward,
 )
 from sts2_env.run.rewards import CARD_CREATION_SOURCE_OTHER
+from sts2_env.run.rewards import (
+    CardRewardGenerationOptions,
+    generate_uniform_noncombat_reward_cards_with_options,
+)
+from sts2_env.run.crystal_sphere import (
+    CrystalSphereItemType,
+    CrystalSphereMinigame,
+)
 from sts2_env.run.events import EventModel, EventOption, EventResult, register_event
 
 if TYPE_CHECKING:
@@ -44,7 +59,7 @@ if TYPE_CHECKING:
 # ── CrystalSphere ─────────────────────────────────────────────────────
 
 class CrystalSphere(EventModel):
-    """Uncover Future: Pay 50-100g for 3 Prophesize picks.
+    """Uncover Future: Pay 51-99g for 3 Prophesize picks.
     Payment Plan: Gain Debt curse for 6 Prophesize picks.
     """
 
@@ -58,6 +73,8 @@ class CrystalSphere(EventModel):
 
     def __init__(self) -> None:
         self._cost = self.UNCOVER_FUTURE_BASE_COST
+        self._minigame: CrystalSphereMinigame | None = None
+        self._awaiting_proceed = False
 
     def is_allowed(self, run_state: RunState) -> bool:
         return (
@@ -90,27 +107,153 @@ class CrystalSphere(EventModel):
     def choose(self, run_state: RunState, option_id: str) -> EventResult:
         if option_id == "pay":
             run_state.player.lose_gold(self._cost)
-            return EventResult(finished=True,
-                               description=(
-                                   f"Paid {self._cost}g for "
-                                   f"{self.UNCOVER_FUTURE_PROPHESIZE_COUNT} Prophesize picks."
-                               ))
+            return self._start_minigame(
+                run_state,
+                self.UNCOVER_FUTURE_PROPHESIZE_COUNT,
+                f"Paid {self._cost}g.",
+            )
         if option_id == "debt":
-            if _should_defer_event_rewards(run_state):
-                return _event_result_with_rewards(
-                    (
-                        "Gained Debt curse for "
-                        f"{self.PAYMENT_PLAN_PROPHESIZE_COUNT} Prophesize picks."
-                    ),
-                    [AddCardsReward(run_state.player.player_id, [make_debt()])],
-                )
             run_state.player.add_card_instance_to_deck(make_debt())
-            return EventResult(finished=True,
-                               description=(
-                                   "Gained Debt curse for "
-                                   f"{self.PAYMENT_PLAN_PROPHESIZE_COUNT} Prophesize picks."
-                               ))
+            return self._start_minigame(
+                run_state,
+                self.PAYMENT_PLAN_PROPHESIZE_COUNT,
+                "Gained Debt curse.",
+            )
+        if option_id.startswith("divine:") and self._minigame is not None:
+            _, x_text, y_text = option_id.split(":")
+            revealed = self._minigame.click(int(x_text), int(y_text))
+            for item_index in revealed:
+                item = self._minigame.items[item_index]
+                if item.item_type is CrystalSphereItemType.CURSE:
+                    run_state.player.add_card_instance_to_deck(make_doubt())
+            if not self._minigame.is_finished:
+                return EventResult(
+                    finished=False,
+                    description="Divined a Crystal Sphere cell.",
+                    next_options=self._minigame_options(),
+                )
+            self._awaiting_proceed = True
+            return EventResult(
+                finished=False,
+                description="Crystal Sphere divination complete.",
+                next_options=[EventOption(
+                    "proceed",
+                    "Proceed",
+                    metadata={"minigame_action": "proceed"},
+                )],
+                rewards={
+                    "reward_objects": self._reward_objects(run_state),
+                },
+                preserve_reward_order=True,
+            )
+        if option_id == "proceed" and self._awaiting_proceed:
+            self._awaiting_proceed = False
+            return EventResult(
+                finished=True,
+                description="Finished consulting the Crystal Sphere.",
+            )
         return EventResult(finished=True)
+
+    @property
+    def minigame(self) -> CrystalSphereMinigame | None:
+        return self._minigame
+
+    def _start_minigame(
+        self,
+        run_state: RunState,
+        divinations: int,
+        description: str,
+    ) -> EventResult:
+        self._minigame = CrystalSphereMinigame(
+            self.get_rng(run_state),
+            divinations,
+        )
+        return EventResult(
+            finished=False,
+            description=description,
+            next_options=self._minigame_options(),
+        )
+
+    def _minigame_options(self) -> list[EventOption]:
+        assert self._minigame is not None
+        return [
+            EventOption(
+                option_id=f"divine:{x}:{y}",
+                label=f"Divine ({x}, {y})",
+                metadata={
+                    "minigame_action": "divine_cell",
+                    "x": x,
+                    "y": y,
+                    "entity_id": f"crystal-cell:{x}:{y}",
+                    "affected_cell_ids": [
+                        f"crystal-cell:{cell_x}:{cell_y}"
+                        for cell_x, cell_y
+                        in self._minigame.affected_cells(x, y)
+                    ],
+                },
+            )
+            for x, y in self._minigame.hidden_coordinates()
+        ]
+
+    def _reward_objects(self, run_state: RunState) -> list:
+        assert self._minigame is not None
+        player = run_state.player
+        rewards = []
+        for index in self._minigame.revealed_indices:
+            item = self._minigame.items[index]
+            if item.item_type is CrystalSphereItemType.CURSE:
+                continue
+            if item.item_type is CrystalSphereItemType.GOLD:
+                rewards.append(GoldReward.fixed(
+                    player.player_id,
+                    30 if item.is_big_gold else 10,
+                ))
+                continue
+            if item.item_type is CrystalSphereItemType.POTION:
+                models = [
+                    model
+                    for model in normal_pool_models(
+                        in_combat=False,
+                        character_id=player.character_id,
+                    )
+                    if model.rarity.name.title() == item.rarity
+                ]
+                potion_id = self._minigame.rng.choice(models).potion_id
+                reward = PotionReward(player.player_id, potion_id)
+                reward.is_populated = True
+                rewards.append(reward)
+                continue
+            if item.item_type is CrystalSphereItemType.RELIC:
+                rarity = player._roll_relic_rarity(self._minigame.rng)
+                relic_id = player.pull_next_relic_reward_id(rarity=rarity)
+                reward = RelicReward(player.player_id, relic_id=relic_id)
+                reward.is_populated = True
+                rewards.append(reward)
+                continue
+            if item.item_type is CrystalSphereItemType.CARD_REWARD:
+                rarity = CardRarity[item.rarity.upper()]
+                options = CardRewardGenerationOptions(
+                    num_cards=3,
+                    use_default_character_pool=True,
+                    card_creation_source=CARD_CREATION_SOURCE_OTHER,
+                    card_pool_rarity_filter=rarity,
+                    generation_context=None,
+                )
+                cards = generate_uniform_noncombat_reward_cards_with_options(
+                    run_state,
+                    options,
+                    default_character_id=player.character_id,
+                    rng=self._minigame.rng,
+                )
+                reward = CardReward(
+                    player.player_id,
+                    cards=cards,
+                    generation_context=None,
+                    card_creation_source=CARD_CREATION_SOURCE_OTHER,
+                )
+                reward.is_populated = True
+                rewards.append(reward)
+        return rewards
 
 
 register_event(CrystalSphere())

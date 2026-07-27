@@ -525,6 +525,7 @@ def generate_uniform_noncombat_reward_cards_with_options(
     *,
     default_character_id: str,
     num_cards: int | None = None,
+    rng: Rng | None = None,
 ) -> list[CardInstance]:
     candidate_ids = card_reward_candidate_ids(
         run_state,
@@ -542,18 +543,19 @@ def generate_uniform_noncombat_reward_cards_with_options(
         return []
     chosen_ids: set[CardId] = set()
     cards: list[CardInstance] = []
+    reward_rng = rng or run_state.rng.rewards
     for _ in range(num_cards if num_cards is not None else options.num_cards):
         available_ids = [card_id for card_id in filtered_ids if card_id not in chosen_ids]
         if not available_ids:
             break
-        card_id = run_state.rng.rewards.choice(available_ids)
+        card_id = reward_rng.choice(available_ids)
         chosen_ids.add(card_id)
         upgraded = False
         if options.roll_upgrade:
             upgraded = roll_for_upgrade(
                 run_state,
                 card_metadata(card_id).rarity,
-                run_state.rng.rewards,
+                reward_rng,
                 base_chance=COMBAT_CARD_UPGRADE_BASE_CHANCE,
             )
         cards.append(create_card(card_id, upgraded=upgraded))

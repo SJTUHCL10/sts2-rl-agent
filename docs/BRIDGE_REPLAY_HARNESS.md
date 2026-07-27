@@ -141,6 +141,28 @@ python -m sts2_env.bridge.agent_runner \
 
 The recorded trace will be written when the run ends or when the runner exits.
 
+### Resume an existing save for a focused recording
+
+Bridge resume mode is deliberately fail-closed and disabled by default. Create
+`STS2BridgeMod.runtime.json` beside the installed Bridge DLL:
+
+```json
+{
+  "resume_existing_run": true
+}
+```
+
+On the next modded launch, the Bridge clicks the native Continue button,
+attaches its handlers to the restored `RunState`, drains an already-open
+Crystal Sphere or reward overlay, and continues from the restored room or map.
+If no valid run save exists, it reports an error and does not start a new run.
+Set the field to `false` or remove the file to restore the normal behavior that
+abandons an old run and starts a fresh Ironclad run.
+
+For a focused Crystal Sphere trace, save before entering the event or while its
+screen is open, enable resume mode, start the Python recorder near the modded
+game launch, and stop it after the event returns to the map.
+
 ## Comparing Against the Simulator
 
 Build a deterministic factory that recreates the same combat setup:
@@ -233,18 +255,28 @@ For `rest_site`, it checks:
 - floor
 - act
 
-For `reward_screen`, `crystal_sphere`, `shop`, `event`, `treasure`, and `boss_relic`, it checks:
+For `reward_screen`, `shop`, `event`, `treasure`, and `boss_relic`, it checks:
 
 - option order
 - stable action / enabled status
 - floor
 - act
 
+For `crystal_sphere`, new v2 recordings additionally check:
+
+- option order, coordinates, affected-cell IDs, and enabled status;
+- grid dimensions, tool, remaining divinations, and completion flags;
+- every public cell's hidden/clickable/revealed-item state;
+- revealed item identity, type, size, rarity/amount, and reveal order.
+
+Legacy recordings without `minigame` retain the older option-only comparison.
+
 ## Current Limitations
 
 - No full-run replay comparison yet.
 - Run comparison currently targets actionable slices and can record terminal `game_over` / `run_complete` states, but it is not complete run lifecycle proof.
-- Reward-screen, Crystal Sphere, shop, event, treasure, and boss-relic comparison intentionally ignores localized labels and simulator-only option ids; live C# labels and Python internal ids do not always use the same naming scheme.
+- Reward-screen, shop, event, treasure, and boss-relic comparison intentionally ignores localized labels and simulator-only option ids; live C# labels and Python internal ids do not always use the same naming scheme.
+- Crystal Sphere v2 comparison covers the public logical board. UI animation timing, save/quit, multiplayer message ordering, and exact reward identity still need dedicated live traces.
 - The AutoSlay wiring guard proves that key handlers are registered, but it is
   not proof that every original UI path is reachable or intercepted correctly in
   a live client.

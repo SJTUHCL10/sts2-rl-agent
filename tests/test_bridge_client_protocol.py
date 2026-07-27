@@ -45,6 +45,23 @@ def test_send_action_preserves_explicit_request_id():
     assert _last_payload(client) == {"action": BridgeAction.CHOOSE, "index": 2, "request_id": "fresh"}
 
 
+def test_choose_candidate_echoes_request_and_decision_ids():
+    client = STS2GameClient()
+    client._sock = FakeSocket()  # noqa: SLF001
+    client._connected = True  # noqa: SLF001
+    client._last_request_id = "request-7"  # noqa: SLF001
+    client._last_decision_id = "decision-7"  # noqa: SLF001
+
+    client.choose_candidate("combat:end_turn")
+
+    assert _last_payload(client) == {
+        "action": BridgeAction.CANDIDATE,
+        "candidate_id": "combat:end_turn",
+        "decision_id": "decision-7",
+        "request_id": "request-7",
+    }
+
+
 def test_choose_many_and_skip_helpers():
     client = STS2GameClient()
     client._sock = FakeSocket()  # noqa: SLF001

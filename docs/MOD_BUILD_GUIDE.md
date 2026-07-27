@@ -167,6 +167,22 @@ Slay the Spire 2/
    "
    ```
 
+### Optional saved-run resume mode
+
+The Bridge normally abandons an existing run before starting AutoSlay. For a
+focused replay, place a machine-local `STS2BridgeMod.runtime.json` next to the
+installed DLL with:
+
+```json
+{"resume_existing_run": true}
+```
+
+Resume mode clicks the game's native Continue button and attaches to the
+restored room. It never falls back to creating a new run when the save is
+missing or invalid. Remove the file, or change the value to `false`, after the
+recording. The tracked `STS2BridgeMod.runtime.json.example` documents the
+schema; the active runtime file is intentionally gitignored.
+
 ---
 
 ## Troubleshooting Build Errors

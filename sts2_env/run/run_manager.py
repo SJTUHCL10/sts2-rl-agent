@@ -1176,6 +1176,7 @@ class RunManager:
                 "label": opt.label,
                 "description": opt.description,
                 "enabled": opt.enabled,
+                **opt.metadata,
             }
             for opt in self._event_options
             if opt.enabled

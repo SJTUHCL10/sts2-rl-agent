@@ -13,6 +13,7 @@ from sts2_env.bridge.agent_runner import (
     _pick_rest_option,
     _pick_shop_option,
     _pick_treasure_option,
+    _replay_mode_for_policy,
 )
 from sts2_env.bridge.protocol import BridgeStateType
 
@@ -22,6 +23,11 @@ def test_phase_mapping_treats_run_complete_as_terminal() -> None:
 
     assert phase == BridgeStateType.RUN_COMPLETE
     assert phase in TERMINAL_PHASES
+
+
+def test_replay_mode_matches_detected_policy_interface() -> None:
+    assert _replay_mode_for_policy(True) == "full_run"
+    assert _replay_mode_for_policy(False) == "combat"
 
 
 def test_map_policy_prefers_rest_when_hp_is_low() -> None:

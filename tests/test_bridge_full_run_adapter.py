@@ -81,3 +81,31 @@ def test_full_run_reward_screen_maps_proceed_to_policy_skip_slot():
     assert mask[120:124].tolist() == [1, 0, 0, 1]
     assert adapter.decode_action(120, state) == {"action": "choose", "index": 4}
     assert adapter.decode_action(123, state) == {"action": "choose", "index": 8}
+
+
+def test_finished_crystal_sphere_prioritizes_proceed_over_stale_cells():
+    adapter = FullRunStateAdapter()
+    state = {
+        "type": "crystal_sphere",
+        "minigame": {
+            "finished": True,
+            "divinations_remaining": 0,
+        },
+        "options": [
+            {
+                "action": "divine_cell",
+                "index": index,
+                "enabled": True,
+            }
+            for index in range(58)
+        ]
+        + [{"action": "proceed", "index": 58, "enabled": True}],
+    }
+
+    mask = adapter.compute_action_mask(state)
+
+    assert mask.sum() == 1
+    assert adapter.decode_action(mask.argmax(), state) == {
+        "action": "choose",
+        "index": 58,
+    }

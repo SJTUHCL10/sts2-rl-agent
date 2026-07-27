@@ -20,6 +20,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using STS2AgentShared;
 
 namespace STS2BridgeMod;
 
@@ -42,6 +43,7 @@ public class BridgeServer
     // when a complete line arrives.
     private TaskCompletionSource<string>? _pendingAction;
     private string? _pendingRequestId;
+    private string? _pendingStatePayload;
     private readonly object _pendingLock = new();
     private long _requestCounter;
 
@@ -138,7 +140,13 @@ public class BridgeServer
 
         try
         {
-            string payload = AttachRequestId(stateJson, requestId);
+            string payload = AttachRequestId(
+                ProtocolV2.EnrichStateJson(stateJson, decisionId: requestId),
+                requestId);
+            lock (_pendingLock)
+            {
+                _pendingStatePayload = payload;
+            }
             if (!SendStateInternal(payload))
             {
                 return null;
@@ -153,6 +161,7 @@ public class BridgeServer
                 {
                     _pendingAction = null;
                     _pendingRequestId = null;
+                    _pendingStatePayload = null;
                 }
             }
         }
@@ -373,9 +382,21 @@ public class BridgeServer
                         return;
                     }
                 }
-                _pendingAction.TrySetResult(json);
+                string resolvedJson = json;
+                try
+                {
+                    if (_pendingStatePayload != null)
+                        resolvedJson = ProtocolV2.ResolveCandidateAction(_pendingStatePayload, json);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log($"[BridgeServer] Rejecting invalid candidate action: {ex.Message}");
+                    return;
+                }
+                _pendingAction.TrySetResult(resolvedJson);
                 _pendingAction = null;
                 _pendingRequestId = null;
+                _pendingStatePayload = null;
                 return;
             }
         }
@@ -391,6 +412,7 @@ public class BridgeServer
             _pendingAction?.TrySetCanceled();
             _pendingAction = null;
             _pendingRequestId = null;
+            _pendingStatePayload = null;
         }
     }
 

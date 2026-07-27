@@ -76,6 +76,7 @@ class STS2GameClient:
         self._buffer: bytes = b""
         self._connected: bool = False
         self._last_request_id: str | None = None
+        self._last_decision_id: str | int | None = None
 
     # ----------------------------------------------------------------
     # Connection management
@@ -170,6 +171,7 @@ class STS2GameClient:
                 continue
             else:
                 self._last_request_id = data.get("request_id")
+                self._last_decision_id = data.get("decision_id")
                 # Return any game message (combat_action, map_select, card_reward, etc.)
                 return data
 
@@ -193,6 +195,7 @@ class STS2GameClient:
             self._sock.sendall(data)
             logger.debug("Sent action: %s", payload)
             self._last_request_id = None
+            self._last_decision_id = None
         except (BrokenPipeError, OSError) as e:
             self._connected = False
             raise ConnectionError(f"Lost connection while sending action: {e}") from e
@@ -243,6 +246,16 @@ class STS2GameClient:
             "slot": slot,
             "target_index": target_index,
         })
+
+    def choose_candidate(self, candidate_id: str) -> None:
+        """Choose a semantic v2 candidate from the latest decision snapshot."""
+        payload: dict[str, Any] = {
+            "action": BridgeAction.CANDIDATE,
+            "candidate_id": candidate_id,
+        }
+        if self._last_decision_id is not None:
+            payload["decision_id"] = self._last_decision_id
+        self.send_action(payload)
 
     def ping(self) -> bool:
         """Send a health-check ping. Returns True if pong received.

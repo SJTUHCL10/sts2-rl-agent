@@ -129,6 +129,14 @@ class STS2CombatEnv(gymnasium.Env):
             return mask
         return get_action_mask(self.combat)
 
+    def entity_observation(self) -> dict:
+        """Return the additive v2 entity/candidate snapshot."""
+        if self.combat is None:
+            raise RuntimeError("Must call reset() before entity_observation()")
+        from sts2_env.agent_v2.snapshot import build_combat_snapshot
+
+        return build_combat_snapshot(self.combat)
+
     def render(self):
         if self.render_mode == "ansi" and self.combat is not None:
             return str(self.combat)

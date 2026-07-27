@@ -32,6 +32,7 @@ tb_logs/
 # .NET build
 bridge_mod/bin/
 bridge_mod/obj/
+bridge_mod/STS2BridgeMod.runtime.json
 bridge_mod_v2/bin/
 bridge_mod_v2/obj/
 bridge_mod_v2/.godot/

@@ -158,7 +158,11 @@ def run_agent(
             }
             if replay_factory is not None:
                 metadata["scenario_factory"] = replay_factory
-            client = BridgeReplayRecorder(raw_client, metadata=metadata)
+            client = BridgeReplayRecorder(
+                raw_client,
+                mode=_replay_mode_for_policy(full_run_policy),
+                metadata=metadata,
+            )
             logger.info("Recording supported bridge states to %s", record_replay_path)
         else:
             client = raw_client
@@ -346,6 +350,10 @@ def run_agent(
 # ----------------------------------------------------------------
 # Heuristic decision functions for non-combat phases
 # ----------------------------------------------------------------
+
+
+def _replay_mode_for_policy(full_run_policy: bool) -> str:
+    return "full_run" if full_run_policy else "combat"
 
 
 def _phase_for_state(state: dict[str, Any]) -> str:

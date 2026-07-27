@@ -25,6 +25,7 @@ class EventOption:
     label: str
     description: str = ""
     enabled: bool = True
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def __repr__(self) -> str:
         return f"EventOption({self.option_id}: {self.label})"

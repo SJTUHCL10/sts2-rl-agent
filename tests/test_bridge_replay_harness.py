@@ -200,6 +200,12 @@ def test_bridge_replay_recorder_records_state_action_state_sequence():
     assert recorder.trace.steps[0].resulting_state["player"]["energy"] == 0
 
 
+def test_bridge_replay_recorder_preserves_explicit_full_run_mode():
+    recorder = BridgeReplayRecorder(FakeBridgeClient([]), mode="full_run")
+
+    assert recorder.trace.mode == "full_run"
+
+
 def test_bridge_replay_recorder_preserves_potion_slots_and_mask_metadata():
     base = {
         "type": BridgeStateType.COMBAT_ACTION,
@@ -452,7 +458,15 @@ def test_bridge_replay_recorder_normalizes_crystal_sphere_options():
     assert recorder.trace.initial_state == {
         "type": BridgeStateType.CRYSTAL_SPHERE,
         "options": [
-            {"index": 0, "action": "divine_cell", "enabled": True},
+            {
+                "index": 0,
+                "action": "divine_cell",
+                "enabled": True,
+                "x": 4,
+                "y": 5,
+                "entity_id": "crystal-cell:4:5",
+                "affected_cell_ids": [],
+            },
             {"index": 1, "action": "proceed", "enabled": False},
         ],
         "floor": 20,

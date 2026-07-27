@@ -17,6 +17,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Text.Json.Nodes;
 using MegaCrit.Sts2.Core.AutoSlay;
 using MegaCrit.Sts2.Core.AutoSlay.Handlers;
 using MegaCrit.Sts2.Core.AutoSlay.Helpers;
@@ -33,6 +34,7 @@ using MegaCrit.Sts2.Core.MonsterMoves.Intents;
 using MegaCrit.Sts2.Core.Random;
 using MegaCrit.Sts2.Core.Rooms;
 using MegaCrit.Sts2.Core.Runs;
+using STS2AgentShared;
 
 namespace STS2BridgeMod;
 
@@ -451,11 +453,14 @@ public class RlCombatHandler : IRoomHandler, IHandler
             var powers = new List<Dictionary<string, object>>();
             foreach (PowerModel power in playerCreature.Powers)
             {
-                powers.Add(new Dictionary<string, object>
+                var serialized = new Dictionary<string, object>
                 {
                     ["id"] = power.Id.Entry,
                     ["amount"] = power.Amount,
-                });
+                };
+                foreach (KeyValuePair<string, JsonNode?> feature in ProtocolV2.SerializePowerState(power))
+                    serialized[feature.Key] = feature.Value!;
+                powers.Add(serialized);
             }
             if (powers.Count > 0)
                 playerObj["powers"] = powers;
@@ -464,9 +469,9 @@ public class RlCombatHandler : IRoomHandler, IHandler
             var handCards = new List<Dictionary<string, object>>();
             if (pcs != null)
             {
-                foreach (CardModel card in pcs.Hand.Cards)
+                for (int index = 0; index < pcs.Hand.Cards.Count; index++)
                 {
-                    handCards.Add(SerializeCard(card));
+                    handCards.Add(SerializeCard(pcs.Hand.Cards[index], "hand", index));
                 }
             }
 
@@ -489,6 +494,9 @@ public class RlCombatHandler : IRoomHandler, IHandler
                 ["type"] = "combat_action",
                 ["player"] = playerObj,
                 ["hand"] = handCards,
+                ["cards"] = pcs == null
+                    ? handCards
+                    : SerializeCombatCards(pcs),
                 ["enemies"] = enemies,
                 ["potions"] = potions,
                 ["available_actions"] = GetAvailableActions(potions),
@@ -509,7 +517,29 @@ public class RlCombatHandler : IRoomHandler, IHandler
         }
     }
 
-    private Dictionary<string, object> SerializeCard(CardModel card)
+    private List<Dictionary<string, object>> SerializeCombatCards(PlayerCombatState pcs)
+    {
+        var cards = new List<Dictionary<string, object>>();
+        AddPile(cards, pcs.Hand.Cards, "hand");
+        AddPile(cards, pcs.DrawPile.Cards, "draw");
+        AddPile(cards, pcs.DiscardPile.Cards, "discard");
+        AddPile(cards, pcs.ExhaustPile.Cards, "exhaust");
+        return cards;
+    }
+
+    private void AddPile(
+        List<Dictionary<string, object>> output,
+        IReadOnlyList<CardModel> cards,
+        string zone)
+    {
+        for (int index = 0; index < cards.Count; index++)
+            output.Add(SerializeCard(cards[index], zone, index));
+    }
+
+    private Dictionary<string, object> SerializeCard(
+        CardModel card,
+        string zone = "hand",
+        int zoneIndex = -1)
     {
         int cost;
         try
@@ -526,11 +556,16 @@ public class RlCombatHandler : IRoomHandler, IHandler
         var result = new Dictionary<string, object>
         {
             ["id"] = card.Id.Entry,
+            ["entity_id"] = $"card:player:local:{zone}:{zoneIndex}:{card.Id.Entry}",
+            ["zone"] = zone,
+            ["zone_index"] = zoneIndex,
             ["cost"] = cost,
             ["type"] = card.Type.ToString(),
             ["target"] = card.TargetType.ToString(),
             ["playable"] = card.CanPlay(out reason, out preventer),
         };
+        foreach (KeyValuePair<string, JsonNode?> feature in ProtocolV2.SerializeCardFeatures(card))
+            result[feature.Key] = feature.Value!;
 
         if (card.IsUpgraded)
             result["upgraded"] = true;
@@ -553,11 +588,14 @@ public class RlCombatHandler : IRoomHandler, IHandler
         var powers = new List<Dictionary<string, object>>();
         foreach (PowerModel power in enemy.Powers)
         {
-            powers.Add(new Dictionary<string, object>
+            var serialized = new Dictionary<string, object>
             {
                 ["id"] = power.Id.Entry,
                 ["amount"] = power.Amount,
-            });
+            };
+            foreach (KeyValuePair<string, JsonNode?> feature in ProtocolV2.SerializePowerState(power))
+                serialized[feature.Key] = feature.Value!;
+            powers.Add(serialized);
         }
         if (powers.Count > 0)
             data["powers"] = powers;

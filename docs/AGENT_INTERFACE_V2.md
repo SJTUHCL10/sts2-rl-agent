@@ -1,0 +1,176 @@
+# Agent Interface v2
+
+This document defines the Phase 0/1 engineering contract for the next agent.
+It deliberately stops before choosing or implementing a neural-network
+architecture.
+
+## Compatibility boundary
+
+The existing interfaces are frozen:
+
+- combat v1: 131 observations, 115 discrete actions;
+- full-run v1: 151 observations, 157 discrete actions.
+
+Existing checkpoints continue to use those layouts. V2 is additive and does
+not reinterpret any v1 slot. A v2 checkpoint must store and validate:
+
+- `protocol_version`;
+- `observation_schema`;
+- `action_schema`;
+- `feature_layout_hash`;
+- card, power, and relic vocabulary hashes.
+
+The canonical manifest is returned by
+`sts2_env.agent_v2.schema.schema_manifest()`. Replay files record the same
+manifest. Python tests lock the shared C# constants to this manifest.
+
+## Observation contract
+
+V2 transports typed entity sets rather than a pre-flattened tensor:
+
+- global run and phase fields;
+- all players;
+- combat creatures, powers, and full intent lists;
+- card instances from deck, hand, draw, discard, and exhaust piles;
+- relic instances and their observable state;
+- potion slots;
+- map nodes and directed edges;
+- currently legal semantic action candidates.
+
+Each entity has a stable `entity_id` within a decision snapshot. Card instances
+include identity, owner, zone, zone index, current and original cost, type,
+target type, upgrade state, enchantments, afflictions, and dynamic variables.
+Game-side dynamic variables retain `base`, `enchanted`, and player-visible
+`preview` values.
+
+Power entities additionally carry `power_type`, `stack_type`, `amount`,
+`display_amount`, `amount_on_turn_start`, `skip_next_duration_tick`,
+`is_visible`, `dynamic_vars`, and `counters`. Relic entities carry `rarity`,
+`stack_count`, `status`, `is_used_up`, `is_melted`, `is_wax`,
+`show_counter`, `display_amount`, `floor_added`, `dynamic_vars`, and
+`counters`. The Python projection includes JSON-safe simulator counters such
+as Girya lifts and Nunchaku/Pen Nib attack counts; the game projection uses
+the authoritative public `DisplayAmount`, `ShowCounter`, status, and dynamic
+variables.
+
+Crystal Sphere is a first-class entity decision rather than an opaque event
+option list. Its snapshot contains the 11x11 public fog grid, remaining
+divinations, selected tool, completion/placement flags, fully revealed items,
+and one coordinate-stable candidate per clickable cell. Hidden cells never
+carry item identity. `affected_cell_ids` follows the game's exact Big-tool
+order: horizontal, vertical, diagonal, then the clicked cell.
+
+Absence is distinct from numeric zero. During transient game screens the C#
+collector may set `run_state_available=false`; consumers must not replace that
+with a fabricated zero-valued run.
+
+The simulator exposes the same representation through:
+
+```python
+combat_env.entity_observation()
+run_env.entity_observation()
+```
+
+The old `reset()` and `step()` observations remain unchanged.
+
+## Action contract
+
+V2 sends a variable-length `candidates` array. A candidate contains:
+
+```json
+{
+  "candidate_id": "combat:play:card:hand:0:enemy:0",
+  "action_type": "PLAY_CARD",
+  "source_id": "card:hand:0",
+  "target_id": "enemy:0",
+  "enabled": true,
+  "features": {},
+  "payload": {
+    "action": "play",
+    "card_index": 0,
+    "target_index": 0
+  }
+}
+```
+
+The future policy scores candidates; it does not predict a global action-slot
+number. The Python client responds with:
+
+```json
+{
+  "action": "candidate",
+  "candidate_id": "combat:play:card:hand:0:enemy:0",
+  "request_id": "42",
+  "decision_id": "42"
+}
+```
+
+The shared C# protocol layer validates that the candidate is present and
+enabled, then converts its stored payload to the existing handler command.
+This keeps the already-tested game-action code unchanged. Legacy action
+messages remain supported.
+
+Candidate IDs describe semantic entities, so reordering display items does not
+change action identity. Candidate ordering is nevertheless deterministic and
+must be preserved from observation through masking and selection.
+
+Card selectors with `min_select=0` expose `card_select:skip`. The current
+candidate-v2 contract represents one atomic choice per decision. Existing
+legacy `choose_many(indexes)` remains available for selectors that require
+multiple cards; a learned policy for those screens needs either an
+autoregressive selector loop or a future explicitly versioned multi-select
+action extension.
+
+## Bridge and Advisor flow
+
+`shared_mod/ProtocolV2.cs` is compiled into both mods and is the single
+game-side enrichment and candidate-resolution implementation.
+
+```text
+game state collector
+  -> frozen legacy state fields
+  -> ProtocolV2 full run snapshot + entity IDs + candidates
+  -> newline-delimited JSON
+  -> EntityStateAdapter / future entity encoder
+```
+
+The automatic Bridge resolves candidate actions before dispatching them to its
+existing handlers. The Advisor only sends enriched observations and remains
+strictly passive: no click, command, or game-action path was added.
+
+## Parity and validation
+
+Required checks before training a v2 model:
+
+1. Compare simulator and recorded real-game snapshots at the entity-field
+   level, not only inventory counts.
+2. Verify every enabled candidate resolves to the intended legacy command.
+3. Record new v2 replays; old recordings permanently lack newly added fields.
+4. Validate the manifest before loading a checkpoint or replay.
+5. Live-smoke combat, card rewards, map, events, shop, rest, treasure,
+   boss-relic, card-bundle, Crystal Sphere, and run completion.
+
+### Crystal Sphere audit boundary
+
+The Python implementation is pinned to the STS2 `0.109.0` decompilation:
+
+- event cost is `50 + NextInt(1, 50)` with an exclusive upper bound;
+- pay/debt branches start 3/6 divinations and Debt is added before play;
+- corner clearing, 15-item population order/sizes, placement candidate order,
+  retry/short-circuit behavior, and .NET-compatible RNG consumption match
+  `CrystalSphereMinigame` and `CrystalSphereItem`;
+- Big-tool affected-cell order and fully-clear reveal condition match the game;
+- Doubt is added immediately on curse reveal; good rewards are materialized in
+  reveal order using the event RNG.
+
+Source-contract tests and fixed-seed golden layouts detect implementation or
+decompilation drift. This is source-level parity evidence, not absolute
+end-to-end proof: exact live potion/card/relic identities, reward-screen
+lifecycle, save/quit, multiplayer synchronization, and UI timing still require
+a fresh v2 Bridge recording from the same game build. The replay normalizer now
+compares the public grid and revealed-item state when those fields are present;
+old v1 recordings cannot supply that evidence.
+
+Phase 0/1.1 provides the transport, compatibility, counter fields, and Crystal
+Sphere simulation foundation. The model encoder, phase-specific policy heads,
+training algorithm, batching rules, and multi-select policy are the next phase.

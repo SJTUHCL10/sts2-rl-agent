@@ -1,7 +1,9 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Godot;
+using STS2AgentShared;
 
 namespace STS2AdvisorMod;
 
@@ -63,8 +65,10 @@ internal partial class AdvisorController : Node
             return;
         }
 
-        string stateJson = JsonSerializer.Serialize(state);
-        string fingerprint = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(stateJson)));
+        string enrichedStateJson = ProtocolV2.EnrichStateJson(
+            JsonSerializer.Serialize(state));
+        string fingerprint = Convert.ToHexString(
+            SHA256.HashData(Encoding.UTF8.GetBytes(enrichedStateJson)));
         if (fingerprint == _activeFingerprint) return;
 
         _activeFingerprint = fingerprint;
@@ -73,9 +77,11 @@ internal partial class AdvisorController : Node
         _overlay?.SetWaiting(decisionType);
         if (!connected) return;
 
-        state["request_id"] = _activeRequestId;
-        state["fingerprint"] = fingerprint;
-        AdvisorServer.Instance.Send(JsonSerializer.Serialize(state));
+        JsonObject outbound = JsonNode.Parse(enrichedStateJson)!.AsObject();
+        outbound["request_id"] = _activeRequestId;
+        outbound["decision_id"] = _activeRequestId;
+        outbound["fingerprint"] = fingerprint;
+        AdvisorServer.Instance.Send(outbound.ToJsonString());
     }
 
     private void DrainAdviceMessages()

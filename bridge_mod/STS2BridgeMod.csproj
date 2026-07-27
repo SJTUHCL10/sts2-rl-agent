@@ -94,6 +94,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <Compile Include="../shared_mod/ProtocolV2.cs" Link="Shared/ProtocolV2.cs" />
         <Compile Remove="STS2BridgeMod/**" />
         <Compile Remove="materials/**" />
         <Compile Remove="shaders/**" />
@@ -130,6 +131,9 @@
         <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ModsPath)$(MSBuildProjectName)/" />
         <Copy SourceFiles="STS2BridgeMod.json" DestinationFolder="$(ModsPath)$(MSBuildProjectName)/" />
         <Copy SourceFiles="mod_manifest.json" DestinationFolder="$(ModsPath)$(MSBuildProjectName)/" />
+        <Copy SourceFiles="STS2BridgeMod.runtime.json"
+              DestinationFolder="$(ModsPath)$(MSBuildProjectName)/"
+              Condition="Exists('STS2BridgeMod.runtime.json')" />
         <Message Text="Copying BaseLib to mods folder." Importance="high" Condition="'$(CopyBaseLibToMods)' != 'false'" />
         <ItemGroup Condition="'$(CopyBaseLibToMods)' != 'false'">
             <BaseLibFiles Include="$(NuGetPackageRoot)/alchyr.sts2.baselib/**/lib/**/BaseLib.dll;$(NuGetPackageRoot)/alchyr.sts2.baselib/**/Content/BaseLib.pck;$(NuGetPackageRoot)/alchyr.sts2.baselib/**/Content/BaseLib.json;"/>

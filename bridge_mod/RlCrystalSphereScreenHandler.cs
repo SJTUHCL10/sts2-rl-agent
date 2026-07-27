@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,6 +11,7 @@ using Godot;
 using MegaCrit.Sts2.Core.AutoSlay;
 using MegaCrit.Sts2.Core.AutoSlay.Handlers;
 using MegaCrit.Sts2.Core.AutoSlay.Helpers;
+using MegaCrit.Sts2.Core.Events.Custom.CrystalSphereEvent;
 using MegaCrit.Sts2.Core.Nodes.CommonUi;
 using MegaCrit.Sts2.Core.Nodes.Events.Custom.CrystalSphere;
 using MegaCrit.Sts2.Core.Nodes.GodotExtensions;
@@ -56,7 +58,8 @@ public class RlCrystalSphereScreenHandler : IScreenHandler, IHandler
 
             NProceedButton? proceedButton = screen.GetNodeOrNull<NProceedButton>("%ProceedButton");
             List<NCrystalSphereCell> hiddenCells = HiddenCells(screen);
-            CrystalSphereChoice choice = await ChooseCrystalSphereOption(hiddenCells, proceedButton, random, ct);
+            CrystalSphereChoice choice = await ChooseCrystalSphereOption(
+                screen, hiddenCells, proceedButton, random, ct);
             if (choice.ShouldProceed)
             {
                 if (proceedButton != null)
@@ -84,25 +87,35 @@ public class RlCrystalSphereScreenHandler : IScreenHandler, IHandler
 
     private static List<NCrystalSphereCell> HiddenCells(NCrystalSphereScreen screen)
     {
+        return AllCells(screen)
+            .Where(cell => cell.Visible && cell.Entity.IsHidden)
+            .ToList();
+    }
+
+    private static List<NCrystalSphereCell> AllCells(NCrystalSphereScreen screen)
+    {
         Control? cellsContainer = screen.GetNodeOrNull<Control>("%Cells");
         if (cellsContainer == null)
         {
             return new List<NCrystalSphereCell>();
         }
         return UiHelper.FindAll<NCrystalSphereCell>(cellsContainer)
-            .Where(cell => cell.Visible && cell.Entity.IsHidden)
+            .OrderBy(cell => cell.Entity.X)
+            .ThenBy(cell => cell.Entity.Y)
             .ToList();
     }
 
     private static async Task<CrystalSphereChoice> ChooseCrystalSphereOption(
+        NCrystalSphereScreen screen,
         List<NCrystalSphereCell> hiddenCells,
         NProceedButton? proceedButton,
         Rng random,
         CancellationToken ct)
     {
+        bool canProceed = proceedButton?.IsEnabled ?? false;
         if (!BridgeServer.Instance.IsClientConnected)
         {
-            if (proceedButton?.IsEnabled ?? false)
+            if (canProceed)
             {
                 return CrystalSphereChoice.Proceed();
             }
@@ -113,17 +126,26 @@ public class RlCrystalSphereScreenHandler : IScreenHandler, IHandler
 
         try
         {
-            List<Dictionary<string, object>> options = hiddenCells
-                .Select((cell, index) => CellOption(cell, index))
-                .ToList();
-            if (proceedButton?.IsEnabled ?? false)
+            List<Dictionary<string, object>> options;
+            if (canProceed)
             {
-                options.Add(new Dictionary<string, object>
+                // Match the native AutoSlay handler: once proceed is enabled,
+                // divination is over and the only legal action is to continue.
+                options = new List<Dictionary<string, object>>
                 {
-                    ["index"] = options.Count,
-                    ["action"] = NonCombatBridgeProtocol.ProceedAction,
-                    ["enabled"] = true,
-                });
+                    new()
+                    {
+                        ["index"] = 0,
+                        ["action"] = NonCombatBridgeProtocol.ProceedAction,
+                        ["enabled"] = true,
+                    },
+                };
+            }
+            else
+            {
+                options = hiddenCells
+                    .Select((cell, index) => CellOption(cell, index))
+                    .ToList();
             }
 
             if (options.Count == 0)
@@ -132,10 +154,13 @@ public class RlCrystalSphereScreenHandler : IScreenHandler, IHandler
             }
 
             RunState runState = RunManager.Instance.DebugOnlyGetState();
+            Dictionary<string, object> minigame = SerializeMinigame(screen);
             string stateJson = JsonSerializer.Serialize(new Dictionary<string, object>
             {
                 ["type"] = NonCombatBridgeProtocol.CrystalSphereState,
                 ["options"] = options,
+                ["minigame"] = minigame,
+                ["crystal_cells"] = minigame["cells"],
                 ["floor"] = runState.TotalFloor,
                 ["act"] = runState.CurrentActIndex + ActDisplayIndexOffset,
             });
@@ -151,13 +176,13 @@ public class RlCrystalSphereScreenHandler : IScreenHandler, IHandler
             }
 
             int chosenIndex = ReadChoiceIndex(responseJson);
-            if (chosenIndex >= 0 && chosenIndex < hiddenCells.Count)
-            {
-                return CrystalSphereChoice.Click(hiddenCells[chosenIndex]);
-            }
-            if (chosenIndex == hiddenCells.Count && (proceedButton?.IsEnabled ?? false))
+            if (canProceed && chosenIndex == 0)
             {
                 return CrystalSphereChoice.Proceed();
+            }
+            if (!canProceed && chosenIndex >= 0 && chosenIndex < hiddenCells.Count)
+            {
+                return CrystalSphereChoice.Click(hiddenCells[chosenIndex]);
             }
         }
         catch (Exception ex)
@@ -165,6 +190,10 @@ public class RlCrystalSphereScreenHandler : IScreenHandler, IHandler
             AutoSlayLog.Warn("[RlCrystalSphere] Agent error: " + ex.Message);
         }
 
+        if (canProceed)
+        {
+            return CrystalSphereChoice.Proceed();
+        }
         return hiddenCells.Count > 0
             ? CrystalSphereChoice.Click(random.NextItem(hiddenCells))
             : CrystalSphereChoice.Wait();
@@ -175,11 +204,124 @@ public class RlCrystalSphereScreenHandler : IScreenHandler, IHandler
         return new Dictionary<string, object>
         {
             ["index"] = index,
+            ["id"] = $"divine:{cell.Entity.X}:{cell.Entity.Y}",
+            ["entity_id"] = $"crystal-cell:{cell.Entity.X}:{cell.Entity.Y}",
             ["action"] = NonCombatBridgeProtocol.DivineCellAction,
             ["x"] = cell.Entity.X,
             ["y"] = cell.Entity.Y,
+            ["affected_cell_ids"] = AdjacentCoordinates(cell.Entity.X, cell.Entity.Y)
+                .Select(coord => $"crystal-cell:{coord.X}:{coord.Y}")
+                .ToList(),
             ["enabled"] = true,
         };
+    }
+
+    private static Dictionary<string, object> SerializeMinigame(NCrystalSphereScreen screen)
+    {
+        FieldInfo? field = typeof(NCrystalSphereScreen).GetField(
+            "_entity",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        CrystalSphereMinigame? game = field?.GetValue(screen) as CrystalSphereMinigame;
+        IReadOnlyList<CrystalSphereItem> revealed = ReadRevealedItems(game);
+        var revealedIds = revealed.ToDictionary(item => item, ItemId);
+        var revealedItems = new List<Dictionary<string, object>>();
+        foreach (CrystalSphereItem item in revealed)
+        {
+            SerializableCrystalSphereItem serialized = item.ToSerializable();
+            var itemState = new Dictionary<string, object>
+            {
+                ["entity_id"] = revealedIds[item],
+                ["item_type"] = serialized.type.ToString(),
+                ["width"] = item.Size.X,
+                ["height"] = item.Size.Y,
+                ["revealed"] = true,
+                ["is_good"] = item.IsGood,
+            };
+            if (serialized.type == CrystalSphereItemType.CardReward)
+                itemState["rarity"] = serialized.cardRarity.ToString();
+            else if (serialized.type == CrystalSphereItemType.Potion)
+                itemState["rarity"] = serialized.potionRarity.ToString();
+            else if (serialized.type == CrystalSphereItemType.Gold)
+                itemState["amount"] = serialized.isBigGold ? 30 : 10;
+            revealedItems.Add(itemState);
+        }
+        var cells = new List<Dictionary<string, object>>();
+        foreach (NCrystalSphereCell node in AllCells(screen))
+        {
+            CrystalSphereCell cell = node.Entity;
+            string? revealedItemId = cell.Item != null
+                && revealedIds.TryGetValue(cell.Item, out string? itemId)
+                    ? itemId
+                    : null;
+            cells.Add(new Dictionary<string, object>
+            {
+                ["entity_id"] = $"crystal-cell:{cell.X}:{cell.Y}",
+                ["x"] = cell.X,
+                ["y"] = cell.Y,
+                ["hidden"] = cell.IsHidden,
+                ["clickable"] = cell.IsHidden && game?.IsFinished != true,
+                ["revealed_item_id"] = revealedItemId!,
+            });
+        }
+        return new Dictionary<string, object>
+        {
+            ["type"] = NonCombatBridgeProtocol.CrystalSphereState,
+            ["grid_width"] = game?.GridSize.X ?? 11,
+            ["grid_height"] = game?.GridSize.Y ?? 11,
+            ["divinations_remaining"] = game?.DivinationCount ?? 0,
+            ["tool"] = game?.CrystalSphereTool.ToString() ?? "Unknown",
+            ["finished"] = game?.IsFinished ?? false,
+            ["placed_all_items"] = game?.PlacedAllItems ?? false,
+            ["cells"] = cells,
+            ["revealed_items"] = revealedItems,
+        };
+    }
+
+    private static IReadOnlyList<CrystalSphereItem> ReadRevealedItems(
+        CrystalSphereMinigame? game)
+    {
+        if (game == null)
+            return Array.Empty<CrystalSphereItem>();
+        FieldInfo? field = typeof(CrystalSphereMinigame).GetField(
+            "_revealed",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        return field?.GetValue(game) as IReadOnlyList<CrystalSphereItem>
+            ?? Array.Empty<CrystalSphereItem>();
+    }
+
+    private static string ItemId(CrystalSphereItem item)
+    {
+        SerializableCrystalSphereItem serialized = item.ToSerializable();
+        return $"crystal-item:{item.Position.X}:{item.Position.Y}:{serialized.type}";
+    }
+
+    private static List<(int X, int Y)> AdjacentCoordinates(int x, int y)
+    {
+        var result = new List<(int X, int Y)>();
+        foreach (int dx in new[] { -1, 1 })
+        {
+            int nx = x + dx;
+            if (nx >= 0 && nx < 11)
+                result.Add((nx, y));
+        }
+        foreach (int dy in new[] { -1, 1 })
+        {
+            int ny = y + dy;
+            if (ny >= 0 && ny < 11)
+                result.Add((x, ny));
+        }
+        foreach (int dx in new[] { -1, 1 })
+        {
+            foreach (int dy in new[] { -1, 1 })
+            {
+                int nx = x + dx;
+                int ny = y + dy;
+                if (nx >= 0 && nx < 11 && ny >= 0 && ny < 11)
+                    result.Add((nx, ny));
+            }
+        }
+        result.Add((x, y));
+        return result;
     }
 
     private static int ReadChoiceIndex(string responseJson)

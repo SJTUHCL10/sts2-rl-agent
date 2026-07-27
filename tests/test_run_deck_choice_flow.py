@@ -1073,7 +1073,9 @@ def test_event_fixed_card_and_remove_plus_card_paths_use_reward_chain():
     mgr._event_model = crystal
     mgr._event_options = crystal.generate_initial_options(mgr.run_state)
     result = mgr._do_event_choice({"option_id": "debt"})
-    assert result["phase"] == RunManager.PHASE_MAP_CHOICE
+    assert result["phase"] == RunManager.PHASE_EVENT
+    assert crystal.minigame is not None
+    assert crystal.minigame.divination_count == 6
     assert any(card.card_id.name == "DEBT" for card in mgr.run_state.player.deck)
 
     mgr._phase = RunManager.PHASE_EVENT

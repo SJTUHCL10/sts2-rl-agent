@@ -2,6 +2,12 @@
 
 TCP communication protocol between the C# bridge mod (game side) and the Python agent (RL side).
 
+The protocol now has an additive entity/candidate v2 envelope. All legacy
+fields and actions documented below remain valid for the frozen 131x115 and
+151x157 agents. New agents should use the typed `run_state`, entity IDs, and
+semantic `candidates` described in
+[Agent Interface v2](AGENT_INTERFACE_V2.md).
+
 ---
 
 ## Overview
@@ -226,13 +232,64 @@ Sent when the Crystal Sphere minigame needs a cell click or final proceed.
 {
   "type": "crystal_sphere",
   "options": [
-    {"index": 0, "action": "divine_cell", "x": 4, "y": 5, "enabled": true},
+    {
+      "index": 0,
+      "action": "divine_cell",
+      "entity_id": "crystal-cell:4:5",
+      "x": 4,
+      "y": 5,
+      "affected_cell_ids": [
+        "crystal-cell:3:5",
+        "crystal-cell:5:5",
+        "crystal-cell:4:4",
+        "crystal-cell:4:6",
+        "crystal-cell:3:4",
+        "crystal-cell:3:6",
+        "crystal-cell:5:4",
+        "crystal-cell:5:6",
+        "crystal-cell:4:5"
+      ],
+      "enabled": true
+    },
     {"index": 1, "action": "proceed", "enabled": true}
+  ],
+  "minigame": {
+    "grid_width": 11,
+    "grid_height": 11,
+    "divinations_remaining": 2,
+    "tool": "Big",
+    "finished": false,
+    "placed_all_items": true,
+    "cells": [
+      {
+        "entity_id": "crystal-cell:4:5",
+        "x": 4,
+        "y": 5,
+        "hidden": true,
+        "clickable": true,
+        "revealed_item_id": null
+      }
+    ],
+    "revealed_items": []
+  },
+  "crystal_cells": [
+    {
+      "entity_id": "crystal-cell:4:5",
+      "x": 4,
+      "y": 5,
+      "hidden": true,
+      "clickable": true,
+      "revealed_item_id": null
+    }
   ],
   "floor": 20,
   "act": 2
 }
 ```
+
+The older compact example documented only actionable UI options; it was a
+Bridge message example, not evidence of a Python minigame simulation. V2 adds
+the public board state above. Hidden item positions/types are never serialized.
 
 ### choice option states
 
