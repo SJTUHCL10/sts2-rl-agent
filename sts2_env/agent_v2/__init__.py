@@ -13,6 +13,13 @@ from sts2_env.agent_v2.snapshot import (
     build_run_snapshot,
     build_run_decision_snapshot,
 )
+from sts2_env.agent_v2.tensorizer import (
+    DEFAULT_TENSORIZER_CONFIG,
+    TENSOR_ENCODING_VERSION,
+    TensorizerConfig,
+    observation_space,
+    tensorize_snapshot,
+)
 
 __all__ = [
     "ACTION_SCHEMA_VERSION",
@@ -25,4 +32,9 @@ __all__ = [
     "build_run_snapshot",
     "build_run_decision_snapshot",
     "schema_manifest",
+    "DEFAULT_TENSORIZER_CONFIG",
+    "TENSOR_ENCODING_VERSION",
+    "TensorizerConfig",
+    "observation_space",
+    "tensorize_snapshot",
 ]

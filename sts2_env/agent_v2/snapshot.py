@@ -345,8 +345,24 @@ def attach_v2_envelope(
 def build_run_decision_snapshot(manager: RunManager) -> dict[str, Any]:
     """Serialize the current simulator decision using the same v2 wire shape."""
     combat = manager.get_combat_state()
-    if combat is not None:
+    if combat is not None and combat.pending_choice is not None:
+        from sts2_env.parity.bridge_replay import combat_state_to_bridge_state
+
+        state = combat_state_to_bridge_state(combat)
+        combat_entities = build_combat_snapshot(combat)
+        for key in ("players", "creatures", "powers", "relics", "potions"):
+            state[key] = combat_entities.get(key, [])
+    elif combat is not None:
         state = build_combat_snapshot(combat)
+    elif manager.is_over:
+        # Gymnasium requires the observation returned by the terminal step.
+        # RUN_OVER deliberately has no candidates; the environment's action
+        # mask supplies its single sampling-safe fallback slot.
+        state = {
+            "type": "run_complete",
+            "phase": "RUN_OVER",
+            "candidates": [],
+        }
     else:
         # Reuse the parity-proven phase projection, then enrich it rather than
         # maintaining another independent option-order implementation.

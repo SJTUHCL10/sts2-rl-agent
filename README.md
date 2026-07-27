@@ -179,7 +179,9 @@ sts2-rl-agent/
 |-- scripts/
 |   |-- benchmark.py               # Throughput benchmark
 |   |-- train_combat.py            # Combat-only training
-|   +-- train_full_run.py          # Full-run training
+|   |-- train_full_run.py          # Legacy v1 full-run training
+|   |-- train_agent_v2.py          # Typed Set Transformer v2 training
+|   +-- evaluate_agent_v2.py       # Saved v2 model evaluation
 |
 |-- sts2_env/                      # Python package (headless simulator)
 |   |-- core/                      # Combat engine
@@ -328,6 +330,7 @@ Following lessons from the STS1 RL community, this project uses a two-phase stra
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Contribution guide, dev setup, adding content |
 | [docs/SIMULATOR_ARCHITECTURE.md](docs/SIMULATOR_ARCHITECTURE.md) | Python simulator internal architecture |
 | [docs/TRAINING_GUIDE.md](docs/TRAINING_GUIDE.md) | Comprehensive RL training guide |
+| [docs/TYPED_SET_TRANSFORMER_AGENT.md](docs/TYPED_SET_TRANSFORMER_AGENT.md) | Entity-v2 Typed Set Transformer model and training design |
 | [docs/PROTOCOL.md](docs/PROTOCOL.md) | TCP bridge communication protocol |
 | [docs/KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md) | Current known issues and limitations |
 | [docs/MOD_BUILD_GUIDE.md](docs/MOD_BUILD_GUIDE.md) | How to build and install the bridge mod |

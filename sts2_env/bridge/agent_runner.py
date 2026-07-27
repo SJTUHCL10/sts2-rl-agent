@@ -10,9 +10,9 @@ Usage:
   python -m sts2_env.bridge.agent_runner --model-path models/combat_ppo.zip
   python -m sts2_env.bridge.agent_runner --model-path models/combat_ppo.zip --port 9002
 
-The runner auto-detects combat-only (131x115) and full-run (151x157) models.
-Combat-only models use heuristics outside combat; full-run models drive every
-actionable phase through the learned policy.
+The runner auto-detects combat-only (131x115), legacy full-run (151x157), and
+entity-v2 Dict-observation models. Combat-only models use heuristics outside
+combat; both full-run interfaces drive every actionable phase through policy.
 """
 
 from __future__ import annotations
@@ -23,6 +23,10 @@ import sys
 import time
 from typing import Any
 
+from gymnasium import spaces
+
+from sts2_env.agent_v2.schema import validate_v2_envelope
+from sts2_env.agent_v2.tensorizer import TensorizerConfig, tensorize_snapshot
 from sts2_env.bridge.client import STS2GameClient
 from sts2_env.bridge.full_run_adapter import FullRunStateAdapter
 from sts2_env.bridge.protocol import (
@@ -108,6 +112,67 @@ def load_model(model_path: str) -> Any:
     return model
 
 
+def _detect_model_interface(model: Any) -> str:
+    observation_space = model.observation_space
+    observation_shape = getattr(observation_space, "shape", ())
+    action_count = getattr(model.action_space, "n", 0)
+    if isinstance(observation_space, spaces.Dict) and action_count == 157:
+        required = {
+            "global_categorical",
+            "global_numeric",
+            "entity_categorical",
+            "entity_numeric",
+            "entity_mask",
+            "candidate_categorical",
+            "candidate_numeric",
+        }
+        if required.issubset(observation_space.spaces):
+            return "entity_v2"
+    if observation_shape == (151,) and action_count == 157:
+        return "full_run_v1"
+    if observation_shape == (131,) and action_count == 115:
+        return "combat_v1"
+    raise ValueError(
+        "Unsupported model interface: observation space "
+        f"{observation_space}, action count {action_count}. Expected "
+        "combat 131x115, full-run 151x157, or entity-v2 Dict x157."
+    )
+
+
+def _tensorizer_config_for_model(model: Any) -> TensorizerConfig:
+    observation_space = model.observation_space
+    if not isinstance(observation_space, spaces.Dict):
+        raise TypeError("Entity-v2 model must have a Dict observation space")
+    entity_cat = observation_space["entity_categorical"]
+    entity_num = observation_space["entity_numeric"]
+    candidate_cat = observation_space["candidate_categorical"]
+    candidate_num = observation_space["candidate_numeric"]
+    global_cat = observation_space["global_categorical"]
+    global_num = observation_space["global_numeric"]
+    config = TensorizerConfig(
+        max_entities=entity_cat.shape[0],
+        num_actions=candidate_cat.shape[0],
+        categorical_buckets=int(entity_cat.high.max()) + 1,
+        entity_categorical_fields=entity_cat.shape[1],
+        entity_numeric_fields=entity_num.shape[1],
+        candidate_categorical_fields=candidate_cat.shape[1],
+        candidate_numeric_fields=candidate_num.shape[1],
+        global_categorical_fields=global_cat.shape[0],
+        global_numeric_fields=global_num.shape[0],
+    )
+    expected_hash = getattr(
+        getattr(model, "policy", None),
+        "tensorizer_layout_hash",
+        None,
+    )
+    if expected_hash and expected_hash != config.feature_layout_hash():
+        raise ValueError(
+            "Entity-v2 tensorizer layout mismatch: checkpoint expects "
+            f"{expected_hash}, runtime provides {config.feature_layout_hash()}"
+        )
+    return config
+
+
 def run_agent(
     model_path: str,
     host: str = "127.0.0.1",
@@ -132,19 +197,23 @@ def run_agent(
     model = load_model(model_path)
     adapter = StateAdapter()
     full_run_adapter = FullRunStateAdapter()
-    observation_shape = getattr(model.observation_space, "shape", ())
-    action_count = getattr(model.action_space, "n", 0)
-    full_run_policy = observation_shape == (151,) and action_count == 157
-    if full_run_policy:
-        logger.info("Detected full-run policy (151 observations, 157 actions).")
-    elif observation_shape == (131,) and action_count == 115:
-        logger.info("Detected combat policy (131 observations, 115 actions).")
-    else:
-        raise ValueError(
-            "Unsupported model interface: observation shape "
-            f"{observation_shape}, action count {action_count}. Expected "
-            "combat 131x115 or full-run 151x157."
+    model_interface = _detect_model_interface(model)
+    full_run_policy = model_interface == "full_run_v1"
+    entity_v2_policy = model_interface == "entity_v2"
+    tensorizer_config = (
+        _tensorizer_config_for_model(model)
+        if entity_v2_policy
+        else None
+    )
+    if entity_v2_policy:
+        logger.info(
+            "Detected entity-v2 Typed Set policy "
+            "(Dict observations, 157 actions)."
         )
+    elif full_run_policy:
+        logger.info("Detected full-run policy (151 observations, 157 actions).")
+    else:
+        logger.info("Detected combat policy (131 observations, 115 actions).")
 
     logger.info("Connecting to STS2 at %s:%d...", host, port)
 
@@ -160,7 +229,9 @@ def run_agent(
                 metadata["scenario_factory"] = replay_factory
             client = BridgeReplayRecorder(
                 raw_client,
-                mode=_replay_mode_for_policy(full_run_policy),
+                mode=_replay_mode_for_policy(
+                    full_run_policy or entity_v2_policy
+                ),
                 metadata=metadata,
             )
             logger.info("Recording supported bridge states to %s", record_replay_path)
@@ -209,9 +280,21 @@ def run_agent(
                     logger.warning("Game error: %s", state.get("message", ""))
                     continue
 
-                if full_run_policy and phase in Phase.ACTIONABLE:
-                    obs = full_run_adapter.encode_observation(state)
+                if (
+                    (full_run_policy or entity_v2_policy)
+                    and phase in Phase.ACTIONABLE
+                ):
                     mask = full_run_adapter.compute_action_mask(state)
+                    if entity_v2_policy:
+                        validate_v2_envelope(state)
+                        assert tensorizer_config is not None
+                        obs = tensorize_snapshot(
+                            state,
+                            mask,
+                            tensorizer_config,
+                        )
+                    else:
+                        obs = full_run_adapter.encode_observation(state)
                     action, _states = model.predict(
                         obs,
                         action_masks=mask,
@@ -221,7 +304,8 @@ def run_agent(
                     decoded = full_run_adapter.decode_action(action_int, state)
                     if verbose:
                         logger.info(
-                            "FULL_RUN: type=%s policy_action=%d command=%s",
+                            "%s: type=%s policy_action=%d command=%s",
+                            model_interface.upper(),
                             msg_type,
                             action_int,
                             decoded,

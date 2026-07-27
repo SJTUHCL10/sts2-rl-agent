@@ -1,5 +1,8 @@
 # Agent Interface v2
 
+The first neural consumer of this interface is documented in
+[Typed Set Transformer Agent v2](TYPED_SET_TRANSFORMER_AGENT.md).
+
 This document defines the Phase 0/1 engineering contract for the next agent.
 It deliberately stops before choosing or implementing a neural-network
 architecture.
@@ -119,7 +122,11 @@ candidate-v2 contract represents one atomic choice per decision. Existing
 legacy `choose_many(indexes)` remains available for selectors that require
 multiple cards; a learned policy for those screens needs either an
 autoregressive selector loop or a future explicitly versioned multi-select
-action extension.
+action extension. Simulator snapshots preserve `selected`, `selected_count`,
+`min_select`, `max_select`, and `can_confirm`, so incremental toggle/confirm is
+Markov and does not require recurrent policy state. The current game-side
+`RlCardSelector` still expects a complete multi-index response for multi-select
+screens; live incremental parity remains future work.
 
 ## Bridge and Advisor flow
 

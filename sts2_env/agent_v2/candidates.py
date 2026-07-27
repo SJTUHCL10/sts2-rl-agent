@@ -130,6 +130,19 @@ def _choice_candidates(state: dict[str, Any]) -> list[ActionCandidate]:
     state_type = str(state.get("type", "choice"))
     key, items = _choice_items(state)
     candidates: list[ActionCandidate] = []
+    selection_features = {
+        "selected_count": state.get("selected_count", 0),
+        "min_select": state.get("min_select"),
+        "max_select": state.get("max_select"),
+        "can_confirm": state.get("can_confirm", False),
+    }
+    if bool(state.get("can_confirm", False)):
+        candidates.append(ActionCandidate(
+            candidate_id=f"{state_type}:confirm",
+            action_type="CONFIRM",
+            payload={"action": "confirm_choice"},
+            features=selection_features,
+        ))
     for position, item in enumerate(items):
         if not bool(item.get("enabled", True)):
             continue
@@ -160,8 +173,10 @@ def _choice_candidates(state: dict[str, Any]) -> list[ActionCandidate]:
             source_id=source_id,
             payload={"action": "choose", "index": external_index},
             features={
+                **selection_features,
                 key: item.get("id") or item.get("type"),
                 "price": item.get("price"),
+                "selected": item.get("selected", False),
                 "x": item.get("x"),
                 "y": item.get("y"),
                 "affected_cell_ids": item.get("affected_cell_ids", []),

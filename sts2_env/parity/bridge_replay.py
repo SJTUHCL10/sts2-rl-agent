@@ -263,6 +263,10 @@ def _normalize_cards(cards: list[dict[str, Any]] | None) -> list[dict[str, Any]]
             item["playable"] = bool(card.get("playable"))
         if card.get("upgraded"):
             item["upgraded"] = True
+        if "index" in card:
+            item["index"] = int(card.get("index", len(normalized)))
+        if "selected" in card:
+            item["selected"] = bool(card.get("selected"))
         if "base_damage" in card and card.get("base_damage") is not None:
             item["base_damage"] = int(card["base_damage"])
         if "base_block" in card and card.get("base_block") is not None:
@@ -443,6 +447,8 @@ def normalize_bridge_state(state: dict[str, Any]) -> dict[str, Any]:
             "cards": _normalize_cards(state.get("cards")),
             "min_select": int(state.get("min_select", 1)),
             "max_select": int(state.get("max_select", 1)),
+            "selected_count": int(state.get("selected_count", 0)),
+            "can_confirm": bool(state.get("can_confirm", False)),
         }
     if state_type == STATE_TYPE_MAP_SELECT:
         return {
@@ -567,14 +573,20 @@ def combat_state_to_bridge_state(combat: CombatState) -> dict[str, Any]:
             "type": STATE_TYPE_CARD_SELECT,
             "cards": [
                 {
+                    "index": index,
                     "id": option.card.card_id.name,
                     "type": _CARD_TYPE_NAMES[option.card.card_type],
                     "upgraded": option.card.upgraded or None,
+                    "selected": (
+                        index in combat.pending_choice.selected_indices
+                    ),
                 }
-                for option in combat.pending_choice.options
+                for index, option in enumerate(combat.pending_choice.options)
             ],
             "min_select": combat.pending_choice.min_choices,
             "max_select": combat.pending_choice.max_choices,
+            "selected_count": len(combat.pending_choice.selected_indices),
+            "can_confirm": combat.pending_choice.can_confirm(),
         })
 
     enemies: list[dict[str, Any]] = []
@@ -670,6 +682,41 @@ def run_manager_to_bridge_state(run: RunManager) -> dict[str, Any]:
         if combat is None:
             raise ValueError("RunManager reported COMBAT without an active CombatState")
         return combat_state_to_bridge_state(combat)
+
+    available_actions = run.get_available_actions()
+    if any(
+        action.get("action") in {"choose", "confirm_choice"}
+        for action in available_actions
+    ):
+        choice = run.run_state.pending_choice
+        event = getattr(run, "_event_model", None)
+        if choice is None and event is not None:
+            choice = getattr(event, "pending_choice", None)
+        if choice is not None:
+            choose_actions = [
+                action for action in available_actions
+                if action.get("action") == "choose"
+            ]
+            cards = []
+            for fallback_index, action in enumerate(choose_actions):
+                option_index = int(action.get("index", fallback_index))
+                option = choice.options[option_index]
+                cards.append({
+                    "index": option_index,
+                    "id": str(action.get("card_id", "UNKNOWN")),
+                    "type": _CARD_TYPE_NAMES[option.card.card_type],
+                    "cost": option.card.cost,
+                    "upgraded": option.card.upgraded or None,
+                    "selected": bool(action.get("selected", False)),
+                })
+            return normalize_bridge_state({
+                "type": STATE_TYPE_CARD_SELECT,
+                "cards": cards,
+                "min_select": choice.min_choices,
+                "max_select": choice.max_choices,
+                "selected_count": len(choice.selected_indices),
+                "can_confirm": choice.can_confirm(),
+            })
 
     if phase == RunManager.PHASE_MAP_CHOICE:
         move_actions = [action for action in run.get_available_actions() if action.get("action") == "move"]

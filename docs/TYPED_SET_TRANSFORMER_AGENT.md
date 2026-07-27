@@ -1,0 +1,337 @@
+# Typed Set Transformer Agent v2
+
+## 1. 目标与边界
+
+本版本把 agent 从“固定向量打平后经过 MLP”升级为面向实体集合的
+actor-critic，但不同时更换游戏逻辑、动作语义和 PPO 算法。设计目标是：
+
+- 直接消费 `sts2-entity-v2` / `candidate-v2` 中的牌、角色、怪物、能力、
+  遗物、药水、地图节点和当前选项；
+- 不依赖实体在数组中的任意顺序；
+- 同一网络覆盖战斗内和战斗外决策，同时允许以后拆成多个 encoder/head；
+- 保留 157 个 v1 action slot 及其 mask，使现有模拟器和 Bridge 命令解码继续
+  可用；
+- 把 environment、tensorizer、encoder、policy head 和 RL algorithm 分层，
+  便于替换网络或训练算法；
+- 当前只以单人游戏为训练和验证目标；
+- 当前状态视为 Markov state，不使用 LSTM/GRU，也不编码动作历史。
+
+实现入口：
+
+- `sts2_env/agent_v2/tensorizer.py`：JSON snapshot 到固定形状 tensor；
+- `sts2_env/gym_env/entity_run_env.py`：结构化 Gymnasium 环境；
+- `sts2_env/models/typed_set_transformer.py`：encoder、actor head、critic；
+- `scripts/train_agent_v2.py`：训练/评估入口。
+
+## 2. 为什么继续使用 SB3
+
+当前继续使用 `sb3-contrib` 的 `MaskablePPO`，没有更换 RL 框架。
+
+原因是本阶段真正缺失的是 observation encoder 和 candidate-aware policy，
+不是 PPO rollout/GAE/minibatch 实现。MaskablePPO 已支持 `Dict` observation、
+离散动作、并行环境和 invalid-action masking；SB3 也允许通过
+`BaseFeaturesExtractor` 与自定义 actor-critic policy 替换网络。因此保留它
+可以减少训练框架改动，并让新模型与旧 MLP smoke model 使用相同的算法基线。
+
+需要注意：
+
+- 多进程 `SubprocVecEnv` 下，`action_masks()` 必须由环境本身实现；不能依赖
+  父进程中的 `ActionMasker`；
+- 普通 `EvalCallback` 不理解 action mask，正式加入周期评估时必须使用
+  `MaskableEvalCallback` 或显式传 mask；
+- SB3 的 rollout buffer 仍然保存 padded `Dict` observation。若以后实体上限、
+  batch 或模型显著增大导致内存成为瓶颈，可以保留本模型接口并把算法后端换成
+  CleanRL、RLlib 或自研 PPO，而不改模拟器状态协议。
+
+参考：
+
+- [Set Transformer, ICML 2019](https://proceedings.mlr.press/v97/lee19d.html)
+- [sb3-contrib MaskablePPO](https://sb3-contrib.readthedocs.io/en/master/modules/ppo_mask.html)
+- [Stable-Baselines3 custom policy](https://stable-baselines3.readthedocs.io/en/master/guide/custom_policy.html)
+
+## 3. Observation tensor
+
+`STS2EntityRunEnv` 包装现有 `STS2RunEnv`。底层 157 个动作的执行、mask 和奖励
+不变，只有 observation 从 151 维 v1 向量替换为 `spaces.Dict`：
+
+| Tensor | Shape | 含义 |
+| --- | ---: | --- |
+| `global_categorical` | `[4]` | phase、character、room、screen type |
+| `global_numeric` | `[16]` | act/floor、HP、gold、deck/relic/potion 数量、round、终局等 |
+| `entity_categorical` | `[N, 10]` | type、content ID、zone、subtype、rarity、owner、upgrade、affliction、enchantment、count bucket |
+| `entity_numeric` | `[N, 24]` | HP/block/energy/cost/damage/amount/count/map 坐标和布尔状态 |
+| `entity_mask` | `[N]` | padding mask |
+| `candidate_categorical` | `[157, 7]` | action type、slot、source/target content、phase、option ID、source zone |
+| `candidate_numeric` | `[157, 15]` | enabled、price/cost、坐标、索引、selected、selection bounds、can-confirm 等 |
+
+当前默认 `N=384`。类别 ID 使用稳定哈希桶，避免每次增加 card/relic ID 都改变
+embedding table 的形状；协议 vocab hash 和 tensorizer layout hash 仍写入模型
+metadata，用来阻止不兼容 checkpoint 被静默加载。
+
+### 3.1 Entity embedding
+
+每个实体 token 不是只有一个 entity ID embedding，而是以下各字段 embedding
+之和，再加 numeric MLP：
+
+```text
+token =
+    entity_type_embedding
+  + content_id_embedding
+  + zone_embedding
+  + subtype_embedding
+  + rarity_embedding
+  + owner_embedding
+  + upgrade_embedding
+  + affliction_embedding
+  + enchantment_embedding
+  + count_embedding
+  + numeric_projection
+```
+
+之后通过 entity-type-conditioned FiLM residual：
+
+```text
+x <- x + FFN(x) * (1 + tanh(type_scale[type])) + type_shift[type]
+```
+
+这使牌、能力、遗物、怪物等可以共享注意力空间，同时仍有不同的类型路径。以后
+可以把这个模块替换为完全独立的 type experts，而不改变 observation contract。
+
+`entity_id` 中的运行时 instance number 不进入 content embedding。候选动作会先
+通过 snapshot 的实体表把 `source_id`/`target_id` 解析为稳定的 card ID、
+relic ID 或 monster ID，否则同一张牌在不同局中会错误地得到不同类别。
+
+多选界面的 `selected`、`selected_count`、`min_select`、`max_select` 和
+`can_confirm` 必须属于当前 observation。缺少这些字段会让“选择”和“取消同一
+项”在模型看来完全相同，确定性策略可能无限切换同一项。该问题不能用 RNN
+合理解决，因为它本质上是当前状态缺失。
+
+### 3.2 重复牌与超大牌组
+
+战斗中的 hand/draw/discard/exhaust 仍按实例逐 token 编码，因为费用修改、
+enchantment、affliction、临时变量和可打出状态可能不同。
+
+永久牌组以及当前战斗中不可直接选择的 `draw/discard/exhaust` pile 使用语义
+签名分区聚合；`zone` 本身属于签名，所以不同 pile 不会合并。签名还包含 card
+ID、升级、附魔、诅咒/affliction、combat vars 及其他可见字段，但排除 instance
+ID、zone index 和 playable。
+同签名的 `n` 张牌变为一个 token：
+
+```text
+(card semantic token, exact numeric count=n, logarithmic count embedding)
+```
+
+因此 `克隆` 把同一张牌复制到极大数量时，sequence length 不随副本数增长。
+若存在超过 `N` 种不同语义实体，tensorizer 会保留高优先级的当前屏幕实体，
+并用一个 `OVERFLOW` token 记录被截断数量。这个保护是异常兜底，不应作为普通
+大牌组的主要压缩方式。
+
+### 3.3 地图
+
+第一版没有单独的 graph neural network。每个地图节点是一个 set token，包含：
+
+- `node_type` embedding；
+- `row`、`col` 数值；
+- `visited`、`reachable` 标记。
+
+Transformer 不使用 sequence positional encoding；`row/col` 是游戏语义特征，
+不是数组位置。当前版本没有显式 message passing over edges。后续可增加 Graph
+Transformer/GNN map encoder，再把输出作为一种 entity memory 注入全局集合。
+
+## 4. Typed Set Transformer
+
+实体编码器不加位置编码，结构如下：
+
+```text
+typed entity embeddings [B, N, d]
+        |
+        +--> ISAB x L
+                |
+                +--> PMA with K memory seeds [B, K, d]
+                            |
+global fields embedding ----+--> global state [B, d]
+                            |
+candidate embeddings [B,157,d]
+        +------------------- cross attention to K memories
+                            |
+                     candidate states [B,157,d]
+```
+
+默认配置：
+
+- `d_model=64`
+- `num_heads=4`
+- `num_inducing_points=16`
+- `num_isab_layers=2`
+- `num_memory_tokens=8`
+- FFN expansion `2x`
+- dropout `0`
+
+ISAB（Induced Set Attention Block）把实体 self-attention 从约 `O(N²)` 降为
+`O(NM)`。PMA（Pooling by Multihead Attention）把任意数量实体汇聚为少量 memory
+token。候选动作只 cross-attend 到这 `K` 个 memory，而不是对 384 个实体做完整
+cross-attention，因此 157 个动作的开销可控。
+
+只要同步置换 entity tensor 和 `entity_mask`，global/candidate 输出保持不变；
+回归测试对此做了数值验证。
+
+## 5. Actor 与 critic
+
+### 5.1 Candidate-aware actor
+
+actor 不使用一个 `Linear(d, 157)` 固定分类头。每个 action slot 都有自己的
+candidate token，使用共享 scorer：
+
+```text
+logit_i = MLP([global_state, candidate_state_i])
+```
+
+优点：
+
+- 同一套参数可比较 card、potion、map、event、shop 等不同候选；
+- option 的 card/relic/price/source/target 信息可以直接影响自己的 logit；
+- action slot embedding 保留当前 157 动作的兼容性；
+- 以后切换为真正动态长度 action space 时，scorer 本身无需改变。
+
+MaskablePPO 在 categorical distribution 前把无效 slot 置为不可选。模型不会
+学习“用极小 logit 猜测无效动作”。
+
+### 5.2 Critic
+
+critic 只消费 permutation-invariant global state：
+
+```text
+V(s) = MLP(global_state)
+```
+
+actor 与 critic 共享 Typed Set Transformer，减少计算量。后续若发现 value
+learning 干扰 candidate representation，可通过配置拆成独立 encoder。
+
+## 6. 战斗内外是否拆网络
+
+第一版不拆两个完整网络，原因是 deck/relic/power 等跨阶段语义应共享，而且目前
+训练数据量不足以支撑两个大型 encoder。phase embedding、entity type embedding
+和 candidate action type 已允许网络学习阶段差异。
+
+保留的实验扩展点：
+
+1. 共享 entity encoder，使用 combat/run 两个 candidate scorer；
+2. combat encoder 与 run encoder 完全分离；
+3. 共享低层 embedding，不同阶段使用独立 ISAB；
+4. 加入 mixture-of-experts router。
+
+这些变化都只涉及 `sts2_env/models/`，不需要改 `STS2EntityRunEnv`。
+
+## 7. 为什么暂时不使用时序网络
+
+当前假设完整可见 snapshot 对单人 STS2 决策近似满足 Markov 性：
+
+- 当前牌堆、能力、遗物 counter、怪物 intent、地图和候选选项已经显式编码；
+- 需要记忆的“历史”原则上应成为游戏状态字段，例如遗物计数器，而不是交给
+  LSTM 猜测；
+- Bridge 丢字段时增加状态协议和 parity test，比隐藏状态补偿更可审计。
+
+因此本版不使用 LSTM/GRU。若以后发现隐藏随机状态、事件历史或部分可观测信息
+确实影响最优决策，再引入 recurrent policy，并把它作为独立实验。
+
+## 8. 训练
+
+安装：
+
+```powershell
+conda activate C:\Users\A\Codes\sts\.conda\sts
+cd C:\Users\A\Codes\sts\sts2-rl-agent
+python -m pip install -e ".[train,dev]"
+```
+
+完整训练入口：
+
+```powershell
+python scripts/train_agent_v2.py `
+  --total-timesteps 1000000 `
+  --n-envs 4 `
+  --checkpoint-freq 100000 `
+  --eval-freq 100000 `
+  --output-dir output/typed_set_v2
+```
+
+周期评估使用 mask-aware `MaskableEvalCallback`；`--eval-freq 0`（默认）关闭
+周期评估，只保留训练后的固定 seed evaluation。checkpoint 频率按总 environment
+steps 指定，脚本会根据 `n_envs` 换算 callback 的调用频率。
+
+本阶段工程 smoke run：
+
+```powershell
+python scripts/train_agent_v2.py `
+  --total-timesteps 20480 `
+  --n-envs 4 `
+  --n-steps 512 `
+  --batch-size 256 `
+  --n-epochs 4 `
+  --seed 109 `
+  --output-dir output/typed_set_v2_smoke_20260727
+```
+
+输出包括：
+
+- `final_model.zip`
+- `model_metadata.json`
+
+metadata 保存网络、tensorizer、PPO 超参数、协议/vocab/layout hash、运行速度和
+完整 run evaluation。模型输出仍由 `.gitignore` 排除，不进入 Git。
+
+`sts2_env.bridge.agent_runner` 会自动识别 entity-v2 `Dict` observation
+checkpoint。实机运行时，它先验证 Bridge 的 v2 schema/hash，再用同一个
+tensorizer 编码 live snapshot，并复用 157-slot action mask/decoder：
+
+```powershell
+python -m sts2_env.bridge.agent_runner `
+  --model-path output/typed_set_v2/final_model.zip `
+  --record-replay artifacts/typed_set_v2_live.json
+```
+
+这条路径已经有 Python 自动化覆盖；模型质量足够之前，不应把工程 smoke
+checkpoint 当作可靠的自动通关 agent。
+
+Bridge 的单项 card-select 已能使用该路径。需要一次提交多个 index 的实机
+multi-select 仍受现有 `RlCardSelector` 命令语义限制；在修改 Bridge 为增量
+toggle/confirm 或增加 `choose_many` policy action 之前，不应声称 v2 模型已经
+覆盖所有实机多选界面。模拟器训练侧已完整编码 toggle/confirm 状态。
+
+20,480 steps 只用于验证 rollout、mask、反向传播、保存、加载和完整 run evaluation
+闭环。稀疏终局奖励下不能据此评价网络好坏。正式实验至少需要：
+
+- 多个 seed；
+- 与 v1 MLP、random 和 heuristic baseline 使用相同 evaluation seeds；
+- 充分训练步数；
+- 报告 win rate、平均/最大楼层、每阶段 action entropy、invalid mask 数量；
+- 对 tensorizer overflow、哈希碰撞和 candidate alignment 做监控。
+
+2026-07-27 的冻结 `typed-set-tensor-v2` smoke checkpoint 位于
+`output/typed_set_v2_smoke_final_20260727_v2/`。CPU 训练 20,480 steps
+耗时 486.2 秒（42.1 steps/s），policy 有 6,279,554 个参数。相同 20 个
+evaluation seeds 上：
+
+| Policy | Win | Mean floor | Max floor | Truncated |
+| --- | ---: | ---: | ---: | ---: |
+| Typed Set smoke | 0/20 | 5.60 | 10 | 2 |
+| Masked random | 0/20 | 3.45 | 7 | 0 |
+
+两个截断 episode 均为短训练策略在合法 multi-select 界面反复 toggle 同一项。
+逐步诊断确认 `selected`、`selected_count` 和 `can_confirm` 正确交替，故不是
+observation/mask 卡死；保留该结果可避免把未收敛策略误报成接口故障。
+
+## 9. 已知限制与下一步
+
+- 训练目标仍是稀疏 `+1/-1`；这有利于定义清晰，但样本效率低。可以单独实验
+  potential-based shaping 或 auxiliary prediction，不应把 shaping 写死在模型。
+- 牌、能力、遗物等 content ID 当前使用稳定哈希 embedding。未来可比较显式
+  vocabulary、文本预训练 embedding 或基于规则字段的 factorized embedding。
+- affliction/enchantment 的第一版是集合整体哈希。更强版本应把每个 modifier
+  作为子 token 或使用 DeepSets 聚合，以泛化到未见组合。
+- 地图暂未编码 edges。
+- candidate alignment 仍建立在冻结的 157 action layout 上。协议已经有 semantic
+  `candidate_id`，未来可以实现动态候选分布并消除固定 slot。
+- 不保证多人 ownership/targeting parity；多人游戏明确不在本阶段范围内。
+- 当前训练机器的 PyTorch 是 CPU build。正式大规模超参数实验建议安装与硬件
+  匹配的 CUDA PyTorch，并先重新测吞吐和 batch size。
