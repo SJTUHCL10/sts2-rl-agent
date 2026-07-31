@@ -465,7 +465,7 @@ class TestRegentCardEffectsReferenceParity:
         assert combat.play_card(0)
         assert blocked.current_hp == 100
         assert blocked.get_power_amount(PowerId.CRUSH_UNDER) == 0
-        assert hittable.current_hp == 92
+        assert hittable.current_hp == 91
         assert hittable.get_power_amount(PowerId.CRUSH_UNDER) == 2
         assert hittable.get_power_amount(PowerId.STRENGTH) == -2
 

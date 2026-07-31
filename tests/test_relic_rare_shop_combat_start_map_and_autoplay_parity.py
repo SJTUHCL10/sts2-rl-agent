@@ -301,9 +301,9 @@ def test_fur_coat_marks_combat_rooms_and_sets_marked_enemies_to_one_hp():
     ]
     rng = Rng(run_state.rng.seed + run_state.player.player_id + deterministic_hash_code("FurCoat"))
     rng.shuffle(candidates)
-    expected = [(point.col, point.row) for point in candidates[:7]]
+    expected = [(point.col, point.row) for point in candidates[:8]]
 
-    assert len(marked) == 7
+    assert len(marked) == 8
     assert [(coord.col, coord.row) for coord in marked] == expected
     assert all(
         run_state.map.get_point(coord).point_type in (MapPointType.MONSTER, MapPointType.ELITE)

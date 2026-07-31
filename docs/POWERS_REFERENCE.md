@@ -2988,17 +2988,6 @@
 - Tick: None
 - Internal State: None
 
-### OutbreakPower
-- ID: OUTBREAK
-- Type: Buff
-- Stack: Counter
-- AllowNegative: false
-- Hooks: [AfterPowerAmountChanged]
-- Logic:
-  - AfterPowerAmountChanged: Actions: deal Amount damage to base.Owner.CombatState.HittableEnemies
-- Tick: None
-- Internal State: Data{ timesPoisoned: int }; DynamicVars: RepeatVar
-
 ### PaperCutsPower
 - ID: PAPER_CUTS
 - Type: Buff
@@ -3441,7 +3430,6 @@
 | OblivionPower | OBLIVION | Debuff | Counter | false | BeforeCardPlayed, AfterCardPlayed, AfterTurnEnd |
 | OneTwoPunchPower | ONE_TWO_PUNCH | Buff | Counter | false | ModifyCardPlayCount, AfterModifyingCardPlayCount, AfterTurnEnd |
 | OrbitPower | ORBIT | Buff | Counter | false | AfterEnergySpent |
-| OutbreakPower | OUTBREAK | Buff | Counter | false | AfterPowerAmountChanged |
 | PagestormPower | PAGESTORM | Buff | Counter | false | AfterCardDrawn |
 | PainfulStabsPower | PAINFUL_STABS | Buff | Counter | false | ShouldPowerBeRemovedAfterOwnerDeath, ShouldCreatureBeRemovedFromCombatAfterDeath, AfterAttack |
 | PaleBlueDotPower | PALE_BLUE_DOT | Buff | Counter | false | ModifyHandDraw, AfterModifyingHandDraw |

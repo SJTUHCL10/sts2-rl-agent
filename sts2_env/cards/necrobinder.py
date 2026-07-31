@@ -918,7 +918,7 @@ def sacrifice(card: CardInstance, combat: CombatState, target: Creature | None) 
     osty = combat.get_osty(owner)
     if osty is None or not osty.is_alive:
         return
-    block_gain = osty.max_hp * 2
+    block_gain = osty.max_hp * 3
     combat.kill_osty(_owner(card, combat))
     _gain_resolved_block(owner, block_gain, combat)
 
@@ -1598,7 +1598,7 @@ def make_the_scythe(upgraded: bool = False) -> CardInstance:
 
     card = create_reference_card(CardId.THE_SCYTHE, upgraded=upgraded, allow_generation=True)
     card.base_damage = 13
-    card.effect_vars["increase"] = 4 if upgraded else 3
+    card.effect_vars["increase"] = 7 if upgraded else 5
     return card
 
 

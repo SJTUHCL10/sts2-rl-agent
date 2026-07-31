@@ -99,7 +99,9 @@ def test_shop_enchant_relics_apply_expected_enchantments():
     player.deck = create_ironclad_starter_deck()
 
     assert player.obtain_relic("BEAUTIFUL_BRACELET")
-    assert sum(1 for card in player.deck if card.has_enchantment("Swift")) == 3
+    swift_cards = [card for card in player.deck if card.has_enchantment("Swift")]
+    assert len(swift_cards) == 4
+    assert all(card.enchantments["Swift"] == 2 for card in swift_cards)
 
     assert player.obtain_relic("KIFUDA")
     assert sum(1 for card in player.deck if card.has_enchantment("Adroit")) == 3

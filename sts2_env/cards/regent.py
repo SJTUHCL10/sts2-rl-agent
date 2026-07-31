@@ -1483,7 +1483,7 @@ def make_devastate(upgraded: bool = False) -> CardInstance:
 
 def make_pillar_of_creation(upgraded: bool = False) -> CardInstance:
     card = _make_reference_factory_card(CardId.PILLAR_OF_CREATION, upgraded=upgraded)
-    card.effect_vars["block"] = 7 if upgraded else 5
+    card.effect_vars["block"] = 3 if upgraded else 2
     return card
 
 

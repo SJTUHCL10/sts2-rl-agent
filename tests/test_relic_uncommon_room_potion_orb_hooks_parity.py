@@ -249,11 +249,10 @@ class TestRelicUncommonRoomPotionOrbHooksParity:
             enemy.max_hp = 100
             enemy.current_hp = 100
 
-        combat.apply_power_to(combat.player, PowerId.OUTBREAK, 11)
         fire_before_side_turn_start(CombatSide.PLAYER, combat)
         for enemy in combat.enemies:
             assert enemy.get_power_amount(PowerId.POISON) == 4
-            assert enemy.current_hp == 67
+            assert enemy.current_hp == 100
             enemy.powers.pop(PowerId.POISON, None)
 
         combat.round_number = 2

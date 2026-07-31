@@ -4071,7 +4071,7 @@ class TestFixedRotation:
         combat.hand = [rocket_punch]
         first_ai.current_move.perform(combat)
         assert [card.card_id for card in combat.hand] == [CardId.ROCKET_PUNCH, CardId.TOXIC, CardId.TOXIC]
-        assert rocket_punch.cost == 0
+        assert rocket_punch.cost == 2
 
         second, second_ai = create_myte(Rng(15), slot="second")
         combat.add_enemy(second, second_ai)
@@ -4412,7 +4412,7 @@ class TestFixedRotation:
         combat.hand = [rocket_punch]
         ai.current_move.perform(combat)
         assert [card.card_id for card in combat.hand] == [CardId.ROCKET_PUNCH] + [CardId.BURN] * MECHA_KNIGHT_BURNS
-        assert rocket_punch.cost == 0
+        assert rocket_punch.cost == 2
 
         ai.on_move_performed()
         ai.roll_move(Rng(26))
@@ -4663,7 +4663,7 @@ class TestFixedRotation:
         combat.hand = [rocket_punch]
         ai.current_move.perform(combat)
         assert [card.card_id for card in combat.discard_pile] == [CardId.SLIMED] * SLIMED_BERSERKER_SLIMED
-        assert rocket_punch.cost == 0
+        assert rocket_punch.cost == 2
 
         ai.on_move_performed()
         ai.roll_move(Rng(28))
@@ -5429,7 +5429,7 @@ class TestFixedRotation:
         noisebot_ai.current_move.perform(combat)
         assert [card.card_id for card in combat.discard_pile] == [CardId.DAZED]
         assert [card.card_id for card in combat.draw_pile] == [CardId.DAZED]
-        assert rocket_punch.cost == 0
+        assert rocket_punch.cost == 2
 
         fabricator_ai.states[FABRICATOR_FABRICATE_MOVE].perform(combat)
         assert len(combat.enemies) == 7

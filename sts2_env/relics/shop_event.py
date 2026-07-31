@@ -1152,12 +1152,12 @@ class Astrolabe(RelicInstance):
 
 @register_relic
 class BeautifulBracelet(RelicInstance):
-    """Enchant 3 cards with Swift(3)."""
+    """Enchant 4 cards with Swift(2)."""
     relic_id = RelicId.BEAUTIFUL_BRACELET
     rarity = RelicRarity.ANCIENT
     pool = RelicPool.EVENT
-    CARDS = 3
-    SWIFT = 3
+    CARDS = 4
+    SWIFT = 2
 
     def after_obtained(self, owner: Creature) -> None:
         candidates = [card for card in owner.deck if can_enchant_card(card, "Swift")]
@@ -1998,7 +1998,7 @@ class Fiddle(RelicInstance):
     pool = RelicPool.EVENT
     EXTRA_DRAW = 2
 
-    def modify_hand_draw_late(self, owner: Creature, draw: int, combat: CombatState) -> int:
+    def modify_hand_draw(self, owner: Creature, draw: int, combat: CombatState) -> int:
         return draw + self.EXTRA_DRAW
 
     def should_draw(self, owner: Creature, from_hand_draw: bool, combat: CombatState) -> bool | None:
@@ -2082,11 +2082,11 @@ class FresnelLens(RelicInstance):
 
 @register_relic
 class FurCoat(RelicInstance):
-    """Mark 7 combat rooms; enemies there start at 1 HP."""
+    """Mark 8 combat rooms; enemies there start at 1 HP."""
     relic_id = RelicId.FUR_COAT
     rarity = RelicRarity.ANCIENT
     pool = RelicPool.EVENT
-    COMBATS = 7
+    COMBATS = 8
 
     def __init__(self, relic_id: RelicId):
         super().__init__(relic_id)
@@ -3357,12 +3357,12 @@ class SeaGlass(RelicInstance):
 
 @register_relic
 class SealOfGold(RelicInstance):
-    """If >= 5 gold, gain 1 energy and lose 5 gold each turn."""
+    """If >= 3 gold, gain 1 energy and lose 3 gold each turn."""
     relic_id = RelicId.SEAL_OF_GOLD
     rarity = RelicRarity.ANCIENT
     pool = RelicPool.EVENT
     ENERGY = 1
-    GOLD_COST = 5
+    GOLD_COST = 3
 
     def after_side_turn_start(self, owner: Creature, side: CombatSide, combat: CombatState) -> None:
         if side == CombatSide.PLAYER:
@@ -3406,11 +3406,11 @@ class SereTalon(RelicInstance):
 
 @register_relic
 class SignetRing(RelicInstance):
-    """Gain 999 gold."""
+    """Gain 888 gold."""
     relic_id = RelicId.SIGNET_RING
     rarity = RelicRarity.ANCIENT
     pool = RelicPool.EVENT
-    GOLD = 999
+    GOLD = 888
 
     def after_obtained(self, owner: Creature) -> None:
         owner.gain_gold(self.GOLD)
@@ -3716,28 +3716,32 @@ class ThrowingAxe(RelicInstance):
 
 @register_relic
 class ToastyMittens(RelicInstance):
-    """Each turn: exhaust top of draw pile, gain 1 Strength."""
+    """After the hand draw, exhaust a chosen hand card and gain 1 Strength."""
     relic_id = RelicId.TOASTY_MITTENS
     rarity = RelicRarity.ANCIENT
     pool = RelicPool.EVENT
     STRENGTH = 1
 
-    def before_hand_draw(self, owner: Creature, combat: CombatState) -> None:
-        from sts2_env.core.hooks import fire_after_card_exhausted
-
+    def after_player_turn_start(self, owner: Creature, combat: CombatState) -> None:
         state = combat.combat_player_state_for(owner)
         if state is None:
             return
-        combat._shuffle_if_needed(owner)  # noqa: SLF001
-        if combat.round_number == 1:
-            card = next((card for card in state.draw if not card.is_innate), None)
-            if card is not None:
-                state.draw.remove(card)
-                state.exhaust.append(card)
-                fire_after_card_exhausted(card, combat)
-        else:
-            combat.exhaust_top_of_draw_pile(owner)
-        owner.apply_power(PowerId.STRENGTH, self.STRENGTH)
+        candidates = list(state.hand)
+        if not candidates:
+            owner.apply_power(PowerId.STRENGTH, self.STRENGTH)
+            return
+
+        def _resolver(selected: object | None) -> None:
+            if selected is not None:
+                combat.exhaust_card(selected)
+            owner.apply_power(PowerId.STRENGTH, self.STRENGTH)
+
+        combat.request_card_choice(
+            prompt="Choose a hand card to exhaust",
+            cards=candidates,
+            source_pile="hand",
+            resolver=_resolver,
+        )
 
 
 @register_relic

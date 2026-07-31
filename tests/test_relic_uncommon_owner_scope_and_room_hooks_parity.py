@@ -14,6 +14,7 @@ from sts2_env.core.hooks import (
     fire_after_card_played,
     fire_after_turn_end,
     fire_before_card_played,
+    fire_before_side_turn_start,
     fire_before_turn_end,
 )
 from sts2_env.core.rng import Rng
@@ -111,27 +112,27 @@ class TestRelicUncommonOwnerScopeAndRoomHooksParity:
         relic.after_room_entered(run_state.player, RoomVisitContext(RoomType.MONSTER))
         assert run_state.player.current_hp == 0
 
-    def test_regalite_gains_block_only_for_owner_colorless_card_entering_combat(self):
-        """Matches Regalite.cs: owner gains 2 block when a colorless card enters combat."""
+    def test_regalite_gains_six_block_for_first_owner_generated_card_each_turn(self):
+        """Matches Regalite.cs: first owner-created card each turn grants 6 block."""
         combat = _make_ironclad_combat(["Regalite"], seed=1204)
         player = combat.player
         player.block = 0
 
-        colorless = create_card(CardId.VOLLEY)
-        combat.move_card_to_creature_hand(player, colorless)
-        assert player.block == 2
+        combat.add_generated_card_to_creature_hand(player, create_card(CardId.STRIKE_IRONCLAD))
+        assert player.block == 6
 
-        event_with_class_visual_pool = create_card(CardId.ENTRENCH)
-        combat.move_card_to_creature_hand(player, event_with_class_visual_pool)
-        assert player.block == 2
+        combat.add_generated_card_to_creature_hand(player, create_card(CardId.VOLLEY))
+        assert player.block == 6
 
-        non_colorless = create_card(CardId.STRIKE_IRONCLAD)
-        combat.move_card_to_creature_hand(player, non_colorless)
-        assert player.block == 2
+        fire_before_side_turn_start(CombatSide.PLAYER, combat)
+        combat.add_generated_card_to_creature_hand(player, create_card(CardId.ENTRENCH))
+        assert player.block == 12
 
+        relic = _combat_relic(combat, "REGALITE")
         other_owner_card = create_card(CardId.VOLLEY)
-        combat._apply_card_after_card_entered_combat(other_owner_card, combat.enemies[0])  # noqa: SLF001
-        assert player.block == 2
+        other_owner_card.owner = combat.enemies[0]
+        relic.after_card_generated_for_combat(player, other_owner_card, True, combat)
+        assert player.block == 12
 
     def test_regalite_block_triggers_after_block_gained_hooks(self):
         combat = _make_ironclad_combat(["Regalite"], seed=1209)
@@ -141,9 +142,9 @@ class TestRelicUncommonOwnerScopeAndRoomHooksParity:
         enemy = combat.enemies[0]
         start_hp = enemy.current_hp
 
-        combat.move_card_to_creature_hand(player, create_card(CardId.VOLLEY))
+        combat.add_generated_card_to_creature_hand(player, create_card(CardId.VOLLEY))
 
-        assert player.block == 2
+        assert player.block == 6
         assert enemy.current_hp == start_hp - 5
 
     def test_reptile_trinket_applies_temporary_strength_on_owned_potion_use(self):

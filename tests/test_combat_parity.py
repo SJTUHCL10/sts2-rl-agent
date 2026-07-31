@@ -286,7 +286,7 @@ class TestPowerTurnHooks:
 
         assert enemy.current_hp == 46
         assert combat.player.block == 3
-        assert rocket_punch.cost == 0
+        assert rocket_punch.cost == 1
         assert combat.count_generated_cards_this_combat(combat.player) == 1
 
     def test_combat_uses_run_shuffle_stream_for_initial_draw_pile(self):
@@ -484,7 +484,7 @@ class TestPowerTurnHooks:
 
         assert enemy.current_hp == 50
         assert combat.player.block == 0
-        assert rocket_punch.cost == 0
+        assert rocket_punch.cost == 2
         assert combat.count_generated_cards_this_combat(combat.player) == 0
 
     def test_trash_to_treasure_channels_when_player_generates_status(self):
@@ -593,7 +593,7 @@ class TestPowerTurnHooks:
         combat = _make_combat()
         strike = make_strike_ironclad()
         combat.hand = [strike]
-        combat.energy = 1
+        combat.energy = 2
         combat.player.apply_power(PowerId.RAGE, 3)
         combat.player.apply_power(PowerId.DUPLICATION, 1)
 
@@ -635,9 +635,9 @@ class TestCardCleanup:
         combat = _make_combat()
         well_laid_plans = make_well_laid_plans()
         combat.hand = [well_laid_plans]
-        combat.energy = 1
+        combat.energy = 2
 
-        combat.play_card(0)
+        assert combat.play_card(0)
 
         assert combat.player.has_power(PowerId.WELL_LAID_PLANS)
 

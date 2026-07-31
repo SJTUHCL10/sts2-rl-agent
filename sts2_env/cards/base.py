@@ -417,6 +417,16 @@ class CardInstance:
         self.combat_vars["_turn_cost_override"] = cost
         self.cost = cost
 
+    def add_cost_until_played(self, delta: int) -> None:
+        """Adjust energy cost across turns, restoring it after the next play."""
+        self.combat_vars.setdefault("_until_played_cost_original", self.cost)
+        self.cost = max(0, self.cost + delta)
+
+    def after_played_cleanup(self) -> None:
+        original = self.combat_vars.pop("_until_played_cost_original", None)
+        if original is not None:
+            self.cost = int(original)
+
     def set_temporary_star_cost_for_turn(self, cost: int) -> None:
         self.combat_vars["_turn_star_cost_override"] = cost
 

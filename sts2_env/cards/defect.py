@@ -61,8 +61,8 @@ ALL_FOR_ONE_DAMAGE = 10
 ALL_FOR_ONE_UPGRADED_DAMAGE = 14
 BIASED_COGNITION_FOCUS_KEY = "focus_power"
 BIASED_COGNITION_POWER_KEY = "biased_cognition_power"
-BIASED_COGNITION_FOCUS = 4
-BIASED_COGNITION_UPGRADED_FOCUS = 5
+BIASED_COGNITION_FOCUS = 5
+BIASED_COGNITION_UPGRADED_FOCUS = 6
 BIASED_COGNITION_POWER = 1
 FOCUSED_STRIKE_DAMAGE = 9
 FOCUSED_STRIKE_UPGRADED_DAMAGE = 11
@@ -800,13 +800,15 @@ def rocket_punch_after_card_generated_for_combat(
     added_by_player: bool,
     combat: CombatState,
 ) -> None:
+    if not added_by_player:
+        return
     if generated_card.card_type is not CardType.STATUS:
         return
     owner = getattr(card, "owner", None)
     generated_owner = getattr(generated_card, "owner", None)
     if owner is not None and generated_owner is not owner:
         return
-    card.set_temporary_cost_for_turn(0)
+    card.add_cost_until_played(-1)
 
 
 @register_effect(CardId.SCAVENGE)
@@ -1702,7 +1704,7 @@ def make_refract(upgraded: bool = False) -> CardInstance:
     return CardInstance(
         card_id=CardId.REFRACT, cost=3, card_type=CardType.ATTACK,
         target_type=TargetType.ANY_ENEMY, rarity=CardRarity.UNCOMMON,
-        base_damage=12 if upgraded else 9,
+        base_damage=13 if upgraded else 10,
         effect_vars={REFRACT_REPEAT_KEY: REFRACT_REPEAT},
         upgraded=upgraded,
         instance_id=_get_next_id(),
@@ -1809,10 +1811,13 @@ def make_synchronize(upgraded: bool = False) -> CardInstance:
     return CardInstance(
         card_id=CardId.SYNCHRONIZE, cost=1, card_type=CardType.SKILL,
         target_type=TargetType.SELF, rarity=CardRarity.UNCOMMON,
-        keywords=frozenset() if upgraded else frozenset({"exhaust"}),
         effect_vars={
             SYNCHRONIZE_CALC_BASE_KEY: SYNCHRONIZE_CALC_BASE,
-            SYNCHRONIZE_CALC_EXTRA_KEY: SYNCHRONIZE_FOCUS_PER_ORB_TYPE,
+            SYNCHRONIZE_CALC_EXTRA_KEY: (
+                SYNCHRONIZE_FOCUS_PER_ORB_TYPE + 1
+                if upgraded
+                else SYNCHRONIZE_FOCUS_PER_ORB_TYPE
+            ),
         },
         upgraded=upgraded,
         instance_id=_get_next_id(),

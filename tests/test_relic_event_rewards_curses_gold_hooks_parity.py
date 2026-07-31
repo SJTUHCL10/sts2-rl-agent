@@ -73,7 +73,7 @@ class TestRelicEventRewardsCursesGoldHooksParity:
         assert isinstance(reward, UpgradeCardsReward)
         assert reward.count == 6
 
-    def test_seal_of_gold_spends_five_gold_for_one_energy_each_player_turn(self):
+    def test_seal_of_gold_spends_three_gold_for_one_energy_each_player_turn(self):
         combat = CombatState(
             player_hp=80,
             player_max_hp=80,
@@ -87,11 +87,11 @@ class TestRelicEventRewardsCursesGoldHooksParity:
         combat.add_enemy(creature, ai)
         combat.start_combat()
 
-        assert combat.gold == 15
+        assert combat.gold == 17
         assert combat.energy == 4
 
         combat.end_player_turn()
-        assert combat.gold == 10
+        assert combat.gold == 14
         assert combat.energy == 4
 
     def test_sere_talon_deferred_followups_queue_two_curses_and_three_wishes(self):

@@ -569,7 +569,7 @@ SILENT_CARD_POOL: tuple[CardId, ...] = (
     CardId.FLANKING,
     CardId.FLECHETTES,
     CardId.FLICK_FLACK,
-    CardId.SCARE,
+    CardId.SIDESTEP,
     CardId.FOOTWORK,
     CardId.GRAND_FINALE,
     CardId.HAND_TRICK,

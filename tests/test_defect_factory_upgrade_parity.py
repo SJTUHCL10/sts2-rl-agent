@@ -125,7 +125,7 @@ BULK_UP_UPGRADED_POWER = 3
 CHAOS_UPGRADED_REPEAT = 2
 ADAPTIVE_STRIKE_UPGRADED_DAMAGE = 23
 ALL_FOR_ONE_UPGRADED_DAMAGE = 14
-BIASED_COGNITION_UPGRADED_FOCUS = 5
+BIASED_COGNITION_UPGRADED_FOCUS = 6
 BIASED_COGNITION_POWER = 1
 FOCUSED_STRIKE_UPGRADED_DAMAGE = 11
 FOCUSED_STRIKE_UPGRADED_POWER = 2
@@ -859,7 +859,7 @@ def test_subroutine_factory_upgrade_costs_zero_and_keeps_power_amount():
     assert combat.player.get_power_amount(PowerId.SUBROUTINE) == SUBROUTINE_POWER
 
 
-def test_synchronize_factory_upgrade_removes_exhaust_and_keeps_focus_formula():
+def test_synchronize_factory_upgrade_adds_one_focus_per_unique_orb_type():
     combat = _make_combat()
     combat.channel_orb(combat.player, "LIGHTNING")
     combat.channel_orb(combat.player, "FROST")
@@ -871,7 +871,7 @@ def test_synchronize_factory_upgrade_removes_exhaust_and_keeps_focus_formula():
     assert card.exhausts is False
     assert combat.play_card(HAND_CARD_INDEX)
 
-    expected_focus = THREE_ORB_TYPES * SYNCHRONIZE_FOCUS_PER_ORB_TYPE
+    expected_focus = THREE_ORB_TYPES * (SYNCHRONIZE_FOCUS_PER_ORB_TYPE + 1)
     assert combat.player.get_power_amount(PowerId.SYNCHRONIZE) == expected_focus
     assert combat.player.get_power_amount(PowerId.FOCUS) == expected_focus
     assert card in combat.discard_pile

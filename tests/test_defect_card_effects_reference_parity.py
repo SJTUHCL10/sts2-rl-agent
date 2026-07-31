@@ -93,8 +93,8 @@ COLD_SNAP_UPGRADED_DAMAGE = 9
 FIGHT_THROUGH_BLOCK = 13
 FIGHT_THROUGH_UPGRADED_BLOCK = 17
 FIGHT_THROUGH_WOUND_COUNT = 2
-REFRACT_DAMAGE = 9
-REFRACT_UPGRADED_DAMAGE = 12
+REFRACT_DAMAGE = 10
+REFRACT_UPGRADED_DAMAGE = 13
 REFRACT_HITS = 2
 REFRACT_GLASS_ORBS = 2
 ICE_LANCE_DAMAGE = 19
@@ -1136,19 +1136,19 @@ class TestDefectCardEffectsReferenceParity:
         assert [orb.orb_type for orb in combat.orb_queue.orbs] == [OrbType.GLASS]
 
     def test_biased_cognition_applies_focus_then_delayed_focus_loss(self):
-        """Matches BiasedCognition.cs: apply Focus(4), then BiasedCognition(1)."""
+        """Matches BiasedCognition.cs: apply Focus(5), then BiasedCognition(1)."""
         combat = _make_combat()
         combat.hand = [make_biased_cognition()]
         combat.energy = 1
 
         assert combat.play_card(0)
 
-        assert combat.player.get_power_amount(PowerId.FOCUS) == 4
+        assert combat.player.get_power_amount(PowerId.FOCUS) == 5
         assert combat.player.get_power_amount(PowerId.BIASED_COGNITION) == 1
 
         combat.end_player_turn()
 
-        assert combat.player.get_power_amount(PowerId.FOCUS) == 3
+        assert combat.player.get_power_amount(PowerId.FOCUS) == 4
 
     def test_creative_ai_applies_power(self):
         """Matches CreativeAI.cs: apply CreativeAiPower(1)."""
@@ -1210,7 +1210,7 @@ class TestDefectCardEffectsReferenceParity:
         creative_ai = create_card(CardId.CREATIVE_AI_CARD, upgraded=True)
         machine_learning = create_card(CardId.MACHINE_LEARNING_CARD, upgraded=True)
 
-        assert biased.effect_vars["focus_power"] == 5
+        assert biased.effect_vars["focus_power"] == 6
         assert biased.cost == 1
         assert creative_ai.cost == 2
         assert creative_ai.effect_vars["creative_ai"] == 1

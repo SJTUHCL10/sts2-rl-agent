@@ -673,25 +673,38 @@ class RedMask(RelicInstance):
 
 @register_relic
 class Regalite(RelicInstance):
-    """When colorless card enters combat, gain 2 block."""
+    """The first time the owner creates a card each turn, gain 6 block."""
     relic_id = RelicId.REGALITE
     rarity = RelicRarity.UNCOMMON
     pool = RelicPool.REGENT
-    BLOCK = 2
+    BLOCK = 6
 
-    def after_card_entered_combat(self, owner: Creature, card: object, combat: CombatState) -> None:
-        if getattr(card, "owner", None) is not owner:
+    def __init__(self, relic_id: RelicId) -> None:
+        super().__init__(relic_id)
+        self._used_this_turn = False
+
+    def after_card_generated_for_combat(
+        self,
+        owner: Creature,
+        card: object,
+        added_by_player: bool,
+        combat: CombatState,
+    ) -> None:
+        if (
+            not added_by_player
+            or getattr(card, "owner", None) is not owner
+            or self._used_this_turn
+        ):
             return
-        visual_card_pool = getattr(card, "visual_card_pool", None)
-        is_visual_colorless = getattr(card, "is_visual_colorless", None)
-        is_colorless = bool(
-            getattr(card, "is_colorless", False)
-            or getattr(card, "visual_card_pool_is_colorless", False)
-            or (callable(is_visual_colorless) and is_visual_colorless())
-            or getattr(visual_card_pool, "is_colorless", False)
-        )
-        if is_colorless:
-            _gain_unpowered_block(owner, self.BLOCK, combat)
+        self._used_this_turn = True
+        _gain_unpowered_block(owner, self.BLOCK, combat)
+
+    def before_side_turn_start(self, owner: Creature, side: CombatSide, combat: CombatState) -> None:
+        if side == owner.side:
+            self._used_this_turn = False
+
+    def after_combat_end(self, owner: Creature, combat: CombatState) -> None:
+        self._used_this_turn = False
 
 
 @register_relic

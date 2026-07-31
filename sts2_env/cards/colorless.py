@@ -1545,10 +1545,9 @@ def abundance(card: CardInstance, combat: CombatState, target: Creature | None) 
     ][:3]
     if not candidates:
         return
-    if card.upgraded:
-        from sts2_env.cards.factory import create_card
+    from sts2_env.cards.factory import create_card
 
-        candidates = [create_card(candidate.card_id, upgraded=True) for candidate in candidates]
+    candidates = [create_card(candidate.card_id, upgraded=True) for candidate in candidates]
 
     def _resolver(selected: CardInstance | None) -> None:
         if selected is None:

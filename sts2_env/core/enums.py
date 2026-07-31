@@ -1127,7 +1127,7 @@ class CardId(Enum):
     LANTERN_KEY = auto()
     SPOILS_MAP = auto()
 
-    # v0.108.0-v0.109.0 additions
+    # v0.108.0-v0.110.0 additions
     ABUNDANCE = auto()
     BLADE_SYMPHONY = auto()
     BLAZE = auto()
@@ -1143,7 +1143,7 @@ class CardId(Enum):
     ONE_FOR_ALL = auto()
     OUTRAGE = auto()
     PLOT = auto()
-    SCARE = auto()
+    SIDESTEP = auto()
     SOULBOUND = auto()
     THE_BALL = auto()
     TUTOR = auto()

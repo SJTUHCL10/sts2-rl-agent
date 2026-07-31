@@ -52,8 +52,8 @@ from sts2_env.powers.base import PowerInstance
 BLUR_BLOCK = 5
 BLUR_UPGRADED_BLOCK = 8
 BLUR_POWER_AMOUNT = 1
-OUTBREAK_POWER_AMOUNT = 4
-OUTBREAK_UPGRADED_POWER_AMOUNT = 5
+OUTBREAK_POISON = 9
+OUTBREAK_UPGRADED_POISON = 12
 SNEAKY_POWER_AMOUNT = 1
 SNEAKY_UPGRADED_POWER_AMOUNT = 2
 SPEEDSTER_POWER_AMOUNT = 2
@@ -151,16 +151,18 @@ class TestSilentCardEffectsReferenceParity:
         assert combat.is_over
         assert combat.player_won is False
 
-    def test_haze_applies_poison_only_to_hittable_enemies(self):
+    def test_haze_applies_poison_and_weak_only_to_hittable_enemies(self):
         combat = _make_combat(extra_enemies=1)
         blocked, hittable = combat.enemies
         blocked.powers[PowerId.COVERED] = _CannotHitPower()
         combat.hand = [make_haze()]
-        combat.energy = 3
+        combat.energy = 2
 
         assert combat.play_card(0)
         assert blocked.get_power_amount(PowerId.POISON) == 0
+        assert blocked.get_power_amount(PowerId.WEAK) == 0
         assert hittable.get_power_amount(PowerId.POISON) == 4
+        assert hittable.get_power_amount(PowerId.WEAK) == 1
 
     def test_poisoned_stab_deals_damage_and_applies_poison(self):
         combat = _make_combat()
@@ -460,12 +462,11 @@ class TestSilentCardEffectsReferenceParity:
         assert combat.play_card(1)
         assert shiv.is_retain
 
-    def test_corrosive_wave_poison_uses_owner_applier_triggers_outbreak(self):
+    def test_corrosive_wave_poison_does_not_deal_immediate_damage(self):
         combat = _make_combat(extra_enemies=2)
         for enemy in combat.enemies:
             enemy.max_hp = 100
             enemy.current_hp = 100
-        combat.apply_power_to(combat.player, PowerId.OUTBREAK, 11)
         combat.apply_power_to(combat.player, PowerId.CORROSIVE_WAVE, 3)
         combat.draw_pile = [make_defend_silent()]
         combat.hand = []
@@ -473,7 +474,7 @@ class TestSilentCardEffectsReferenceParity:
         combat.draw_cards(combat.player, 1)
 
         assert [enemy.get_power_amount(PowerId.POISON) for enemy in combat.enemies] == [3, 3, 3]
-        assert [enemy.current_hp for enemy in combat.enemies] == [67, 67, 67]
+        assert [enemy.current_hp for enemy in combat.enemies] == [100, 100, 100]
 
     def test_corrosive_wave_applies_poison_only_to_hittable_enemies(self):
         combat = _make_combat(extra_enemies=1)
@@ -528,34 +529,42 @@ class TestSilentCardEffectsReferenceParity:
         assert combat.player.block == BLUR_UPGRADED_BLOCK
         assert combat.player.get_power_amount(PowerId.BLUR) == BLUR_POWER_AMOUNT
 
-    def test_outbreak_card_applies_reference_power_amounts(self):
+    def test_outbreak_applies_poison_then_triggers_it_immediately(self):
         combat = _make_combat()
+        enemy = combat.enemies[0]
+        enemy.current_hp = enemy.max_hp = 100
         combat.hand = [silent_cards.make_outbreak()]
-        combat.energy = 1
+        combat.energy = 3
 
         assert combat.play_card(0)
-        assert combat.player.get_power_amount(PowerId.OUTBREAK) == OUTBREAK_POWER_AMOUNT
+        assert enemy.current_hp == 100 - OUTBREAK_POISON
+        assert enemy.get_power_amount(PowerId.POISON) == OUTBREAK_POISON - 1
 
         upgraded_combat = _make_combat()
+        upgraded_enemy = upgraded_combat.enemies[0]
+        upgraded_enemy.current_hp = upgraded_enemy.max_hp = 100
         upgraded_combat.hand = [silent_cards.make_outbreak(upgraded=True)]
-        upgraded_combat.energy = 1
+        upgraded_combat.energy = 3
 
         assert upgraded_combat.play_card(0)
-        assert upgraded_combat.player.get_power_amount(PowerId.OUTBREAK) == OUTBREAK_UPGRADED_POWER_AMOUNT
+        assert upgraded_enemy.current_hp == 100 - OUTBREAK_UPGRADED_POISON
+        assert upgraded_enemy.get_power_amount(PowerId.POISON) == OUTBREAK_UPGRADED_POISON - 1
 
-    def test_outbreak_damage_hits_only_hittable_enemies(self):
+    def test_outbreak_applies_and_triggers_poison_only_on_hittable_enemies(self):
         combat = _make_combat(extra_enemies=1)
         blocked, hittable = combat.enemies
         blocked.max_hp = blocked.current_hp = 100
         hittable.max_hp = hittable.current_hp = 100
         blocked.powers[PowerId.COVERED] = _CannotHitPower()
-        combat.apply_power_to(combat.player, PowerId.OUTBREAK, 11)
+        combat.hand = [silent_cards.make_outbreak()]
+        combat.energy = 3
 
-        for _ in range(3):
-            combat.apply_power_to(hittable, PowerId.POISON, 1, applier=combat.player)
+        assert combat.play_card(0)
 
         assert blocked.current_hp == 100
-        assert hittable.current_hp == 67
+        assert blocked.get_power_amount(PowerId.POISON) == 0
+        assert hittable.current_hp == 91
+        assert hittable.get_power_amount(PowerId.POISON) == 8
 
     def test_speedster_card_applies_reference_power_amounts(self):
         combat = _make_combat()
@@ -606,19 +615,18 @@ class TestSilentCardEffectsReferenceParity:
         assert upgraded_combat.play_card(0)
         assert upgraded_combat.player.get_power_amount(PowerId.SNEAKY) == SNEAKY_UPGRADED_POWER_AMOUNT
 
-    def test_envenom_poison_uses_owner_applier_triggers_outbreak(self):
+    def test_envenom_poison_does_not_add_removed_outbreak_damage(self):
         combat = _make_combat(extra_enemies=2)
         for enemy in combat.enemies:
             enemy.max_hp = 100
             enemy.current_hp = 100
-        combat.apply_power_to(combat.player, PowerId.OUTBREAK, 11)
         combat.hand = [silent_cards.make_envenom(), make_dagger_spray()]
         combat.energy = 3
 
         assert combat.play_card(0)
         assert combat.play_card(0)
         assert [enemy.get_power_amount(PowerId.POISON) for enemy in combat.enemies] == [2, 2, 2]
-        assert [enemy.current_hp for enemy in combat.enemies] == [26, 26, 26]
+        assert [enemy.current_hp for enemy in combat.enemies] == [92, 92, 92]
 
     def test_bubble_bubble_only_adds_poison_to_already_poisoned_target(self):
         combat = _make_combat()
@@ -780,8 +788,8 @@ class TestSilentCardEffectsReferenceParity:
         combat.energy = 1
 
         assert combat.play_card(0)
-        assert combat.player.block == 0
-        assert combat.player.get_power_amount(PowerId.ENERGY_NEXT_TURN) == 1
+        assert combat.player.block == 4
+        assert combat.player.get_power_amount(PowerId.ENERGY_NEXT_TURN) == 0
 
     def test_predator_and_shadowmeld_apply_reference_powers(self):
         predator_combat = _make_combat()

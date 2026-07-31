@@ -585,9 +585,7 @@ class PoisonPower(PowerInstance):
     def __init__(self, amount: int):
         super().__init__(PowerId.POISON, amount)
 
-    def after_side_turn_start(self, owner: Creature, side: CombatSide, combat: CombatState) -> None:
-        if side != owner.side:
-            return
+    def trigger(self, owner: Creature, combat: CombatState) -> None:
         if owner.is_alive and self.amount > 0:
             opponents = [creature for creature in combat.get_enemies_of(owner) if creature.is_alive]
             trigger_count = min(
@@ -606,6 +604,12 @@ class PoisonPower(PowerInstance):
                 )
                 if owner.is_alive:
                     self.amount -= 1
+            if self.amount <= 0:
+                owner.powers.pop(PowerId.POISON, None)
+
+    def after_side_turn_start(self, owner: Creature, side: CombatSide, combat: CombatState) -> None:
+        if side == owner.side:
+            self.trigger(owner, combat)
 
 
 class ConstrictPower(PowerInstance):

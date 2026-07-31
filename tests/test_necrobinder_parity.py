@@ -107,8 +107,8 @@ class TestNecrobinderParity:
         souls = [card for card in combat.draw_pile if card.card_id == CardId.SOUL]
         assert len(souls) == 3
 
-    def test_sacrifice_kills_osty_and_gains_double_osty_hp_as_block(self):
-        """Matches Sacrifice.cs: kill Osty, then gain block equal to twice its max HP."""
+    def test_sacrifice_kills_osty_and_gains_triple_osty_hp_as_block(self):
+        """Matches Sacrifice.cs: kill Osty, then gain block equal to triple its max HP."""
         combat = _make_combat()
         combat.summon_osty(combat.player, 5)
         combat.hand = [make_sacrifice()]
@@ -117,7 +117,7 @@ class TestNecrobinderParity:
         assert combat.play_card(0)
         assert combat.osty is not None
         assert not combat.osty.is_alive
-        assert combat.player.block == 10
+        assert combat.player.block == 15
 
     def test_transfigure_requests_choice_then_grants_replay_and_cost(self):
         """Matches Transfigure.cs: a single hand card is auto-selected."""
@@ -311,7 +311,7 @@ class TestNecrobinderParity:
         assert combat.play_card_from_creature(ally, 0)
         assert primary_osty.is_alive
         assert not ally_osty.is_alive
-        assert ally.block == 8
+        assert ally.block == 12
         assert combat.player.block == 0
 
     def test_ally_spur_heals_and_grows_only_ally_osty(self):

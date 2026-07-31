@@ -130,7 +130,7 @@ class TestStatusCurseCardEffectsParity:
         combat.energy = 3
 
         assert combat.play_card(0)
-        assert combat.player.block == 17
+        assert combat.player.block == 18
         assert combat.player.get_power_amount(PowerId.DRAW_CARDS_NEXT_TURN) == 3
         assert combat.player.get_power_amount(PowerId.ENERGY_NEXT_TURN) == 3
 
@@ -159,15 +159,15 @@ class TestStatusCurseCardEffectsParity:
 
         assert combat.play_card(0, 0)
 
-        assert played.base_damage == 6
-        assert in_draw.base_damage == 6
-        assert in_discard.base_damage == 6
+        assert played.base_damage == 7
+        assert in_draw.base_damage == 7
+        assert in_discard.base_damage == 7
 
         combat.upgrade_card(in_draw)
 
         assert in_draw.upgraded is True
-        assert in_draw.base_damage == 7
-        assert in_draw.effect_vars["increase"] == 2
+        assert in_draw.base_damage == 8
+        assert in_draw.effect_vars["increase"] == 3
 
     def test_neows_fury_shuffles_full_discard_pile_before_returning_cards(self):
         combat = _make_combat()

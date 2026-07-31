@@ -809,7 +809,7 @@ class TestIroncladCombatEdgeCardModelParity:
         combat.energy = 3
 
         assert combat.play_card(0, 0)
-        assert enemy.current_hp == 80
+        assert enemy.current_hp == 74
         assert enemy.get_power_amount(PowerId.MANGLE) == 15
         assert enemy.get_power_amount(PowerId.STRENGTH) == -11
 

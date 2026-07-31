@@ -7,7 +7,7 @@ JugglingPower, KnockdownPower, LeadershipPower, LightningRodPower,
 MagicBombPower, ManglePower, MasterPlannerPower, MindRotPower,
 MonarchsGazePower, MonarchsGazeStrengthDownPower, NemesisPower,
 NeurosurgePower, NightmarePower, NoDrawPower, NostalgiaPower, OblivionPower,
-OrbitPower, OutbreakPower, PagestormPower, PaleBlueDotPower, PaperCutsPower,
+OrbitPower, PagestormPower, PaleBlueDotPower, PaperCutsPower,
 ParryPower, PiercingWailPower, PillarOfCreationPower, PossessSpeedPower,
 PossessStrengthPower, PrepTimePower, PyrePower, RadiancePower, RampartPower,
 ReaperFormPower.
@@ -1376,47 +1376,6 @@ class OrbitPower(PowerInstance):
 
 
 # ---------------------------------------------------------------------------
-# OutbreakPower
-# ---------------------------------------------------------------------------
-class OutbreakPower(PowerInstance):
-    """Every 3rd time the owner applies Poison, deal Amount damage to all
-    enemies (unpowered).
-
-    C# ref: OutbreakPower.cs
-    - AfterPowerAmountChanged: if owner applied Poison (amount > 0),
-      increment counter. Every 3rd application, deal Amount damage to all
-      hittable enemies.
-    StackType.Counter.
-    """
-
-    power_type = PowerType.BUFF
-    stack_type = PowerStackType.COUNTER
-
-    def __init__(self, amount: int):
-        super().__init__(PowerId.OUTBREAK, amount)
-
-    def after_power_amount_changed(
-        self,
-        owner: Creature,
-        target: Creature,
-        power_id: PowerId,
-        amount: int,
-        applier: Creature | None,
-        source: object | None,
-        combat: CombatState,
-    ) -> None:
-        if applier is not owner or power_id != PowerId.POISON or amount <= 0:
-            return
-        for enemy in combat.hittable_enemies:
-            combat.deal_damage(
-                dealer=owner,
-                target=enemy,
-                amount=self.amount,
-                props=ValueProp.UNPOWERED,
-            )
-
-
-# ---------------------------------------------------------------------------
 # PagestormPower
 # ---------------------------------------------------------------------------
 class PagestormPower(PowerInstance):
@@ -1606,7 +1565,6 @@ class PillarOfCreationPower(PowerInstance):
 
     def __init__(self, amount: int):
         super().__init__(PowerId.PILLAR_OF_CREATION, amount)
-        self._triggered_turn: int | None = None
 
     def after_card_generated_for_combat(
         self,
@@ -1617,10 +1575,6 @@ class PillarOfCreationPower(PowerInstance):
     ) -> None:
         if not added_by_player or getattr(card, "owner", None) is not owner:
             return
-        turn = combat.turn_count
-        if self._triggered_turn == turn:
-            return
-        self._triggered_turn = turn
         _gain_unpowered_block(owner, self.amount, combat)
 
 
@@ -1918,7 +1872,6 @@ _ALL_POWERS: dict[PowerId, type[PowerInstance]] = {
     PowerId.NOSTALGIA: NostalgiaPower,
     PowerId.OBLIVION: OblivionPower,
     PowerId.ORBIT: OrbitPower,
-    PowerId.OUTBREAK: OutbreakPower,
     PowerId.PAGESTORM: PagestormPower,
     PowerId.PALE_BLUE_DOT: PaleBlueDotPower,
     PowerId.PAPER_CUTS: PaperCutsPower,

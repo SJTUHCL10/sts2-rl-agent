@@ -2880,7 +2880,7 @@ class TestStatusParity:
             ("Silent", create_ironclad_starter_deck(), make_survivor(), 8),
             ("Defect", create_defect_starter_deck(), make_charge_battery(), 7),
             ("Ironclad", create_ironclad_starter_deck(), make_stack(), 3),
-            ("Necrobinder", create_necrobinder_starter_deck(), make_sacrifice(), 10),
+            ("Necrobinder", create_necrobinder_starter_deck(), make_sacrifice(), 15),
         ]
         for character_id, deck, card, expected_block in cases:
             combat = _make_combat(deck, character_id)
@@ -3231,7 +3231,7 @@ class TestStatusParity:
         assert combat.osty is not None
         assert combat.osty.max_hp == 20
 
-    def test_sacrifice_kills_osty_and_gains_double_max_hp_block(self):
+    def test_sacrifice_kills_osty_and_gains_triple_max_hp_block(self):
         combat = _make_combat(create_necrobinder_starter_deck(), "Necrobinder")
         combat.summon_osty(combat.player, 5)
         card = make_sacrifice()
@@ -3241,7 +3241,7 @@ class TestStatusParity:
         assert combat.play_card(0)
         assert combat.osty is not None
         assert not combat.osty.is_alive
-        assert combat.player.block == 10
+        assert combat.player.block == 15
 
     def test_end_of_days_immediately_kills_doomed_enemies(self):
         combat = _make_combat(create_necrobinder_starter_deck(), "Necrobinder")

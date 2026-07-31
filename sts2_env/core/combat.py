@@ -1437,6 +1437,7 @@ class CombatState:
                     return
 
             if ctx["remaining_plays"] <= 0:
+                card.after_played_cleanup()
                 if card in owner_state.play:
                     owner_state.play.remove(card)
 
@@ -2706,6 +2707,7 @@ class CombatState:
 
         current_cost = card.cost
         had_turn_override = "_turn_cost_override" in card.combat_vars
+        had_until_played_override = "_until_played_cost_original" in card.combat_vars
         card.card_type = upgraded.card_type
         card.target_type = upgraded.target_type
         card.rarity = upgraded.rarity
@@ -2722,7 +2724,7 @@ class CombatState:
         card.has_energy_cost_x = upgraded.has_energy_cost_x
         card.star_cost = upgraded.star_cost
         card.original_cost = upgraded.original_cost
-        if had_turn_override:
+        if had_turn_override or had_until_played_override:
             card.cost = current_cost
         else:
             card.cost = upgraded.cost

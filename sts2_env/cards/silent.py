@@ -19,7 +19,6 @@ from sts2_env.core.combat import CombatState
 
 
 LEADING_STRIKE_SHIVS = 1
-OUTBREAK_REPEAT = 3
 
 
 def _owner(card: CardInstance, combat: CombatState) -> Creature:
@@ -460,8 +459,10 @@ def hand_trick(card: CardInstance, combat: CombatState, target: Creature | None)
 @register_effect(CardId.HAZE)
 def haze(card: CardInstance, combat: CombatState, target: Creature | None) -> None:
     poison = card.effect_vars.get("poison_power", 4)
+    weak = card.effect_vars.get("weak_power", 1)
     for enemy in combat.hittable_enemies:
         combat.apply_power_to(enemy, PowerId.POISON, poison)
+        combat.apply_power_to(enemy, PowerId.WEAK, weak)
 
 
 @register_effect(CardId.HIDDEN_DAGGERS)
@@ -529,9 +530,14 @@ def memento_mori(card: CardInstance, combat: CombatState, target: Creature | Non
 
 @register_effect(CardId.MIRAGE)
 def mirage(card: CardInstance, combat: CombatState, target: Creature | None) -> None:
-    combat.apply_power_to(
-        _owner(card, combat), PowerId.ENERGY_NEXT_TURN, card.effect_vars.get("energy", 1)
+    owner = _owner(card, combat)
+    poison = sum(
+        enemy.get_power_amount(PowerId.POISON)
+        for enemy in combat.enemies
+        if enemy.is_alive
     )
+    block = calculate_block(poison, owner, ValueProp.MOVE, combat, card_source=card)
+    _gain_resolved_block(owner, block, combat)
 
 
 @register_effect(CardId.NOXIOUS_FUMES_CARD)
@@ -542,7 +548,17 @@ def noxious_fumes(card: CardInstance, combat: CombatState, target: Creature | No
 @register_effect(CardId.OUTBREAK_CARD)
 def outbreak(card: CardInstance, combat: CombatState, target: Creature | None) -> None:
     owner = _owner(card, combat)
-    combat.apply_power_to(owner, PowerId.OUTBREAK, card.effect_vars.get("outbreak_power", 4))
+    poison = card.effect_vars.get("poison_power", 9)
+    poisoned: list[Creature] = []
+    for enemy in list(combat.hittable_enemies):
+        combat.apply_power_to(enemy, PowerId.POISON, poison, applier=owner, source=card)
+        if enemy.has_power(PowerId.POISON):
+            poisoned.append(enemy)
+    for enemy in poisoned:
+        power = enemy.powers.get(PowerId.POISON)
+        trigger = getattr(power, "trigger", None)
+        if callable(trigger):
+            trigger(enemy, combat)
 
 
 @register_effect(CardId.PHANTOM_BLADES_CARD)
@@ -1320,10 +1336,12 @@ def make_hand_trick(upgraded: bool = False) -> CardInstance:
 
 def make_haze(upgraded: bool = False) -> CardInstance:
     return CardInstance(
-        card_id=CardId.HAZE, cost=3, card_type=CardType.SKILL,
+        card_id=CardId.HAZE, cost=2, card_type=CardType.SKILL,
         target_type=TargetType.ALL_ENEMIES, rarity=CardRarity.UNCOMMON,
-        keywords=frozenset({"sly"}),
-        effect_vars={"poison_power": 6 if upgraded else 4},
+        effect_vars={
+            "poison_power": 6 if upgraded else 4,
+            "weak_power": 2 if upgraded else 1,
+        },
         upgraded=upgraded, instance_id=_get_next_id(),
     )
 
@@ -1369,9 +1387,8 @@ def make_memento_mori(upgraded: bool = False) -> CardInstance:
 
 def make_mirage(upgraded: bool = False) -> CardInstance:
     return CardInstance(
-        card_id=CardId.MIRAGE, cost=0, card_type=CardType.SKILL,
+        card_id=CardId.MIRAGE, cost=0 if upgraded else 1, card_type=CardType.SKILL,
         target_type=TargetType.SELF, rarity=CardRarity.UNCOMMON,
-        effect_vars={"energy": 2 if upgraded else 1},
         upgraded=upgraded, instance_id=_get_next_id(),
     )
 
@@ -1387,9 +1404,9 @@ def make_noxious_fumes(upgraded: bool = False) -> CardInstance:
 
 def make_outbreak(upgraded: bool = False) -> CardInstance:
     return CardInstance(
-        card_id=CardId.OUTBREAK_CARD, cost=1, card_type=CardType.POWER,
-        target_type=TargetType.SELF, rarity=CardRarity.UNCOMMON,
-        effect_vars={"outbreak_power": 5 if upgraded else 4},
+        card_id=CardId.OUTBREAK_CARD, cost=3, card_type=CardType.SKILL,
+        target_type=TargetType.ALL_ENEMIES, rarity=CardRarity.RARE,
+        effect_vars={"poison_power": 12 if upgraded else 9},
         upgraded=upgraded, instance_id=_get_next_id(),
     )
 
@@ -1499,7 +1516,7 @@ def make_up_my_sleeve(upgraded: bool = False) -> CardInstance:
 
 def make_well_laid_plans(upgraded: bool = False) -> CardInstance:
     return CardInstance(
-        card_id=CardId.WELL_LAID_PLANS, cost=0 if upgraded else 1, card_type=CardType.POWER,
+        card_id=CardId.WELL_LAID_PLANS, cost=1 if upgraded else 2, card_type=CardType.POWER,
         target_type=TargetType.SELF, rarity=CardRarity.RARE,
         upgraded=upgraded, instance_id=_get_next_id(),
     )
@@ -1592,7 +1609,7 @@ def make_corrosive_wave(upgraded: bool = False) -> CardInstance:
 def make_echoing_slash(upgraded: bool = False) -> CardInstance:
     return CardInstance(
         card_id=CardId.ECHOING_SLASH, cost=1, card_type=CardType.ATTACK,
-        target_type=TargetType.ALL_ENEMIES, rarity=CardRarity.RARE,
+        target_type=TargetType.ALL_ENEMIES, rarity=CardRarity.UNCOMMON,
         base_damage=13 if upgraded else 10,
         effect_vars={"damage": 13 if upgraded else 10},
         upgraded=upgraded, instance_id=_get_next_id(),
@@ -1783,11 +1800,10 @@ def fade(card: CardInstance, combat: CombatState, target: Creature | None) -> No
     combat.apply_power_to(target, PowerId.FADE, amount)
 
 
-@register_effect(CardId.SCARE)
-def scare(card: CardInstance, combat: CombatState, target: Creature | None) -> None:
+@register_effect(CardId.SIDESTEP)
+def sidestep(card: CardInstance, combat: CombatState, target: Creature | None) -> None:
     owner = _owner(card, combat)
-    for enemy in combat.hittable_enemies:
-        combat.apply_power_to(enemy, PowerId.WEAK, 1, applier=owner)
+    combat.apply_power_to(owner, PowerId.ENERGY_NEXT_TURN, card.effect_vars.get("energy", 1))
 
 
 def _make_new_reference_card(card_id: CardId, upgraded: bool) -> CardInstance:
@@ -1808,8 +1824,10 @@ def make_fade(upgraded: bool = False) -> CardInstance:
     return _make_new_reference_card(CardId.FADE, upgraded)
 
 
-def make_scare(upgraded: bool = False) -> CardInstance:
-    return _make_new_reference_card(CardId.SCARE, upgraded)
+def make_sidestep(upgraded: bool = False) -> CardInstance:
+    card = _make_new_reference_card(CardId.SIDESTEP, upgraded)
+    card.effect_vars["energy"] = 2 if upgraded else 1
+    return card
 
 
 def create_silent_starter_deck() -> list[CardInstance]:

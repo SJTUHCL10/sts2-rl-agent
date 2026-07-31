@@ -1,4 +1,4 @@
-"""0.109.0 decompiled-parity tests for the Crystal Sphere minigame."""
+"""0.110.0 decompiled-parity tests for the Crystal Sphere minigame."""
 
 from __future__ import annotations
 

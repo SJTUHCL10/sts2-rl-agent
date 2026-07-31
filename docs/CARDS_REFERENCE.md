@@ -629,8 +629,8 @@ Generated from spire-codex JSON. This file is also consumed by the Python card f
 - **Target:** AnyEnemy
 - **Keywords:** None
 - **Tags:** None
-- **Vars:** {Damage: 15, StrengthLoss: 10}
-- **Upgrade:** Damage+5; StrengthLoss+5
+- **Vars:** {Damage: 20, StrengthLoss: 10}
+- **Upgrade:** Damage+6; StrengthLoss+5
 
 ### Midnight
 - **ID:** MIDNIGHT
@@ -713,7 +713,7 @@ Generated from spire-codex JSON. This file is also consumed by the Python card f
 - **Target:** AllEnemies
 - **Keywords:** None
 - **Tags:** None
-- **Vars:** {Damage: 17, Cards: 3}
+- **Vars:** {Damage: 18, Cards: 3}
 - **Upgrade:** Damage+6
 
 ### Perfected Strike
@@ -1445,7 +1445,7 @@ Generated from spire-codex JSON. This file is also consumed by the Python card f
 - **Color:** silent
 - **Cost:** 1
 - **Type:** Attack
-- **Rarity:** Rare
+- **Rarity:** Uncommon
 - **Target:** AllEnemies
 - **Keywords:** None
 - **Tags:** None
@@ -1611,14 +1611,14 @@ Generated from spire-codex JSON. This file is also consumed by the Python card f
 ### Haze
 - **ID:** HAZE
 - **Color:** silent
-- **Cost:** 3
+- **Cost:** 2
 - **Type:** Skill
 - **Rarity:** Uncommon
 - **Target:** AllEnemies
-- **Keywords:** Sly
+- **Keywords:** None
 - **Tags:** None
-- **Vars:** {PoisonPower: 4}
-- **Upgrade:** Poison+2
+- **Vars:** {PoisonPower: 4, Weak: 1}
+- **Upgrade:** Poison+2; Weak+1
 
 ### Hidden Daggers
 - **ID:** HIDDEN_DAGGERS
@@ -1719,14 +1719,14 @@ Generated from spire-codex JSON. This file is also consumed by the Python card f
 ### Mirage
 - **ID:** MIRAGE
 - **Color:** silent
-- **Cost:** 0
+- **Cost:** 1
 - **Type:** Skill
 - **Rarity:** Uncommon
 - **Target:** Self
 - **Keywords:** None
 - **Tags:** None
-- **Vars:** {Energy: 1}
-- **Upgrade:** Energy+1
+- **Vars:** {CalcBase: 0, CalcExtra: 1}
+- **Upgrade:** Cost-1
 
 ### Murder
 - **ID:** MURDER
@@ -1779,14 +1779,14 @@ Generated from spire-codex JSON. This file is also consumed by the Python card f
 ### Outbreak
 - **ID:** OUTBREAK
 - **Color:** silent
-- **Cost:** 1
-- **Type:** Power
-- **Rarity:** Uncommon
-- **Target:** Self
+- **Cost:** 3
+- **Type:** Skill
+- **Rarity:** Rare
+- **Target:** AllEnemies
 - **Keywords:** None
 - **Tags:** None
-- **Vars:** {OutbreakPower: 4}
-- **Upgrade:** OutbreakPower+1
+- **Vars:** {PoisonPower: 9}
+- **Upgrade:** Poison+3
 
 ### Phantom Blades
 - **ID:** PHANTOM_BLADES
@@ -1908,18 +1908,6 @@ Generated from spire-codex JSON. This file is also consumed by the Python card f
 - **Vars:** {Damage: 3, Repeat: 4}
 - **Upgrade:** Repeat+1
 
-### Scare
-- **ID:** SCARE
-- **Color:** silent
-- **Cost:** 0
-- **Type:** Skill
-- **Rarity:** Uncommon
-- **Target:** AllEnemies
-- **Keywords:** Exhaust
-- **Tags:** None
-- **Vars:** {}
-- **Upgrade:** Remove Exhaust
-
 ### Serpent Form
 - **ID:** SERPENT_FORM
 - **Color:** silent
@@ -1955,6 +1943,18 @@ Generated from spire-codex JSON. This file is also consumed by the Python card f
 - **Tags:** None
 - **Vars:** {Cards: 3}
 - **Upgrade:** Cost-1
+
+### Sidestep
+- **ID:** SIDESTEP
+- **Color:** silent
+- **Cost:** 0
+- **Type:** Skill
+- **Rarity:** Uncommon
+- **Target:** Self
+- **Keywords:** None
+- **Tags:** None
+- **Vars:** {Energy: 1}
+- **Upgrade:** Energy+1
 
 ### Skewer
 - **ID:** SKEWER
@@ -2163,7 +2163,7 @@ Generated from spire-codex JSON. This file is also consumed by the Python card f
 ### Well-Laid Plans
 - **ID:** WELL_LAID_PLANS
 - **Color:** silent
-- **Cost:** 1
+- **Cost:** 2
 - **Type:** Power
 - **Rarity:** Rare
 - **Target:** Self
@@ -2257,7 +2257,7 @@ Generated from spire-codex JSON. This file is also consumed by the Python card f
 - **Target:** Self
 - **Keywords:** None
 - **Tags:** None
-- **Vars:** {FocusPower: 4, BiasedCognitionPower: 1}
+- **Vars:** {FocusPower: 5, BiasedCognitionPower: 1}
 - **Upgrade:** FocusPower+1
 
 ### Boost Away
@@ -2965,7 +2965,7 @@ Generated from spire-codex JSON. This file is also consumed by the Python card f
 - **Target:** AnyEnemy
 - **Keywords:** None
 - **Tags:** None
-- **Vars:** {Repeat: 2, Damage: 9}
+- **Vars:** {Repeat: 2, Damage: 10}
 - **Upgrade:** Damage+3
 
 ### Rocket Punch
@@ -3155,10 +3155,10 @@ Generated from spire-codex JSON. This file is also consumed by the Python card f
 - **Type:** Skill
 - **Rarity:** Uncommon
 - **Target:** Self
-- **Keywords:** Exhaust
+- **Keywords:** None
 - **Tags:** None
 - **Vars:** {CalcBase: 0, CalcExtra: 2}
-- **Upgrade:** Remove Exhaust
+- **Upgrade:** CalcExtra+1
 
 ### Synthesis
 - **ID:** SYNTHESIS
@@ -4289,8 +4289,8 @@ Generated from spire-codex JSON. This file is also consumed by the Python card f
 - **Target:** AnyEnemy
 - **Keywords:** Exhaust
 - **Tags:** None
-- **Vars:** {Increase: 4}
-- **Upgrade:** Increase+1
+- **Vars:** {Increase: 5}
+- **Upgrade:** Increase+2
 
 ### Time's Up
 - **ID:** TIMES_UP
@@ -4653,7 +4653,7 @@ Generated from spire-codex JSON. This file is also consumed by the Python card f
 - **Target:** AllEnemies
 - **Keywords:** None
 - **Tags:** None
-- **Vars:** {Damage: 7, StrengthLoss: 1}
+- **Vars:** {Damage: 8, StrengthLoss: 1}
 - **Upgrade:** Damage+1; StrengthLoss+1
 
 ### Decisions, Decisions
@@ -5133,8 +5133,8 @@ Generated from spire-codex JSON. This file is also consumed by the Python card f
 - **Target:** Self
 - **Keywords:** None
 - **Tags:** None
-- **Vars:** {Block: 5}
-- **Upgrade:** Block+2
+- **Vars:** {Block: 2}
+- **Upgrade:** Block+1
 
 ### Plot
 - **ID:** PLOT
@@ -5385,8 +5385,8 @@ Generated from spire-codex JSON. This file is also consumed by the Python card f
 - **Target:** Self
 - **Keywords:** None
 - **Tags:** None
-- **Vars:** {Vigor: 6}
-- **Upgrade:** Vigor+2
+- **Vars:** {Vigor: 7}
+- **Upgrade:** Vigor+3
 
 ### The Sealed Throne
 - **ID:** THE_SEALED_THRONE
@@ -6270,7 +6270,7 @@ Generated from spire-codex JSON. This file is also consumed by the Python card f
 - **Keywords:** Exhaust
 - **Tags:** None
 - **Vars:** {}
-- **Upgrade:** Description changed
+- **Upgrade:** Cost-1
 
 ### Apotheosis
 - **ID:** APOTHEOSIS
@@ -6449,7 +6449,7 @@ Generated from spire-codex JSON. This file is also consumed by the Python card f
 - **Target:** AnyEnemy
 - **Keywords:** None
 - **Tags:** None
-- **Vars:** {Damage: 5, Increase: 1}
+- **Vars:** {Damage: 5, Increase: 2}
 - **Upgrade:** Damage+1; Increase+1
 
 ### Metamorphosis
@@ -6521,7 +6521,7 @@ Generated from spire-codex JSON. This file is also consumed by the Python card f
 - **Target:** Self
 - **Keywords:** Exhaust
 - **Tags:** None
-- **Vars:** {Block: 15, Cards: 2, Energy: 2}
+- **Vars:** {Block: 16, Cards: 2, Energy: 2}
 - **Upgrade:** Block+2; Cards+1; Energy+1
 
 ### Rip and Tear
@@ -6575,7 +6575,7 @@ Generated from spire-codex JSON. This file is also consumed by the Python card f
 ### Whistle
 - **ID:** WHISTLE
 - **Color:** event
-- **Cost:** 3
+- **Cost:** 2
 - **Type:** Attack
 - **Rarity:** Ancient
 - **Target:** AnyEnemy

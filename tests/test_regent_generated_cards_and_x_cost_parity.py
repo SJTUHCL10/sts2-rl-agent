@@ -119,9 +119,9 @@ class TestRegentGeneratedCardsAndXCostParity:
         combat.energy = 2
 
         assert combat.play_card(0)
-        assert combat.player.get_power_amount(PowerId.VIGOR) == 6
+        assert combat.player.get_power_amount(PowerId.VIGOR) == 7
         assert combat.play_card(0, 0)
-        assert enemy.current_hp == start_hp - 12
+        assert enemy.current_hp == start_hp - 13
         assert combat.player.get_power_amount(PowerId.VIGOR) == 0
 
     def test_genesis_applies_power_and_grants_stars_at_next_player_turn_start(self):

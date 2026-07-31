@@ -47,7 +47,7 @@ class TestSilentDrawRetainDiscardParity:
         combat.hand = [make_backflip()]
         combat.draw_pile = [first_draw, second_draw]
         combat.discard_pile = []
-        combat.energy = 1
+        combat.energy = 2
 
         assert combat.play_card(0)
         assert combat.player.block == 5
@@ -78,7 +78,7 @@ class TestSilentDrawRetainDiscardParity:
         for enemy in combat.enemies:
             enemy.apply_power(PowerId.STRENGTH, 2)
         combat.hand = [make_piercing_wail()]
-        combat.energy = 1
+        combat.energy = 2
 
         assert combat.play_card(0)
         for enemy in combat.enemies:
@@ -123,7 +123,7 @@ class TestSilentDrawRetainDiscardParity:
         combat.hand = [make_well_laid_plans(), keep, toss]
         combat.draw_pile = []
         combat.discard_pile = []
-        combat.energy = 1
+        combat.energy = 2
 
         assert combat.play_card(0)
         assert combat.player.get_power_amount(PowerId.WELL_LAID_PLANS) == 1

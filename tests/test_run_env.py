@@ -353,13 +353,14 @@ class TestActionMasksPerPhase:
         env.step(_COMBAT_START + 1)
         env.step(_COMBAT_START + 2)
         env.step(_COMBAT_START + 3)
+        env.step(_COMBAT_START + 4)
         obs, reward, terminated, truncated, info = env.step(_COMBAT_START)
 
         assert not terminated
         assert not truncated
         assert mgr.phase == RunManager.PHASE_MAP_CHOICE
         assert mgr.run_state.pending_choice is None
-        assert sum(1 for card in mgr.run_state.player.deck if card.has_enchantment("Swift")) == 3
+        assert sum(1 for card in mgr.run_state.player.deck if card.has_enchantment("Swift")) == 4
 
     def test_card_reward_mask(self, env):
         """Force into CARD_REWARD phase and verify mask."""

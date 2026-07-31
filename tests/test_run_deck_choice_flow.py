@@ -141,11 +141,12 @@ def test_manager_context_requires_full_enchant_choice_before_confirm():
     assert mgr.run_state.pending_choice is not None
     mgr.take_action({"action": "choose", "index": 1})
     mgr.take_action({"action": "choose", "index": 2})
+    mgr.take_action({"action": "choose", "index": 3})
     final = mgr.take_action({"action": "confirm_choice"})
 
     assert final["phase"] == RunManager.PHASE_MAP_CHOICE
     assert mgr.run_state.pending_choice is None
-    assert sum(1 for card in mgr.run_state.player.deck if card.has_enchantment("Swift")) == 3
+    assert sum(1 for card in mgr.run_state.player.deck if card.has_enchantment("Swift")) == 4
 
 
 def test_remove_card_reward_uses_run_level_deck_choice():
@@ -330,6 +331,7 @@ def test_treasure_relic_with_enchant_reward_pauses_then_returns_to_map():
     mgr.take_action({"action": "choose", "index": 0})
     mgr.take_action({"action": "choose", "index": 1})
     mgr.take_action({"action": "choose", "index": 2})
+    mgr.take_action({"action": "choose", "index": 3})
     final = mgr.take_action({"action": "confirm_choice"})
     assert final["phase"] == RunManager.PHASE_MAP_CHOICE
 
@@ -745,11 +747,12 @@ def test_shop_buy_relic_with_multi_choice_resumes_shop_after_confirm():
     assert mgr.take_action({"action": "confirm_choice"})["success"] is False
     mgr.take_action({"action": "choose", "index": 1})
     mgr.take_action({"action": "choose", "index": 2})
+    mgr.take_action({"action": "choose", "index": 3})
     final = mgr.take_action({"action": "confirm_choice"})
 
     assert final["phase"] == RunManager.PHASE_SHOP
     assert mgr.run_state.pending_choice is None
-    assert sum(1 for card in mgr.run_state.player.deck if card.has_enchantment("Swift")) == 3
+    assert sum(1 for card in mgr.run_state.player.deck if card.has_enchantment("Swift")) == 4
 
 
 def test_boss_relic_pick_with_deck_choice_resumes_to_next_act_after_confirm():
@@ -767,6 +770,7 @@ def test_boss_relic_pick_with_deck_choice_resumes_to_next_act_after_confirm():
     assert mgr.take_action({"action": "confirm_choice"})["success"] is False
     mgr.take_action({"action": "choose", "index": 1})
     mgr.take_action({"action": "choose", "index": 2})
+    mgr.take_action({"action": "choose", "index": 3})
     final = mgr.take_action({"action": "confirm_choice"})
 
     assert final["phase"] == RunManager.PHASE_MAP_CHOICE

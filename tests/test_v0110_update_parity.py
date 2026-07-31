@@ -1,4 +1,4 @@
-"""Focused regression tests for the v0.108-v0.109 reference refresh."""
+"""Focused regression tests for the v0.108-v0.110 reference refresh."""
 
 import sts2_env.potions  # noqa: F401
 import sts2_env.powers  # noqa: F401
@@ -43,7 +43,7 @@ NEW_CARD_IDS = (
     CardId.NOT_YET,
     CardId.ONE_FOR_ALL,
     CardId.PLOT,
-    CardId.SCARE,
+    CardId.SIDESTEP,
     CardId.SOULBOUND,
     CardId.TUTOR,
     CardId.UNDERWORLD,
@@ -131,6 +131,44 @@ def test_new_ancient_relic_pickups_add_their_rewards() -> None:
 def test_new_card_and_ancient_relic_factories_are_registered() -> None:
     assert all(create_card(card_id).card_id is card_id for card_id in NEW_CARD_IDS)
     assert all(create_relic(relic_id).relic_id is relic_id for relic_id in NEW_ANCIENT_RELIC_IDS)
+
+
+def test_sidestep_grants_next_turn_energy_and_upgrades_the_amount() -> None:
+    combat = _combat()
+    combat.hand = [create_card(CardId.SIDESTEP, upgraded=True)]
+    combat.energy = 0
+
+    assert combat.play_card(0)
+    assert combat.player.get_power_amount(PowerId.ENERGY_NEXT_TURN) == 2
+
+
+def test_abundance_always_offers_upgraded_powers_and_upgrade_reduces_cost() -> None:
+    combat = _combat()
+    abundance = create_card(CardId.ABUNDANCE)
+    assert abundance.cost == 1
+    assert create_card(CardId.ABUNDANCE, upgraded=True).cost == 0
+    combat.hand = [abundance]
+    combat.energy = 1
+
+    assert combat.play_card(0)
+    assert combat.pending_choice is not None
+    assert all(option.card.upgraded for option in combat.pending_choice.options)
+
+
+def test_rocket_punch_cost_reduction_persists_until_the_card_is_played() -> None:
+    combat = _combat()
+    rocket_punch = create_card(CardId.ROCKET_PUNCH)
+    combat.hand = [rocket_punch]
+
+    combat.add_generated_card_to_creature_hand(combat.player, create_card(CardId.DAZED))
+    assert rocket_punch.cost == 1
+    rocket_punch.end_of_turn_cleanup()
+    assert rocket_punch.cost == 1
+
+    combat.hand = [rocket_punch]
+    combat.energy = 1
+    assert combat.play_card(0, 0)
+    assert rocket_punch.cost == 2
 
 
 def test_seapunk_normal_replaces_toadpoles_normal() -> None:

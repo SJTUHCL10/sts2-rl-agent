@@ -125,18 +125,17 @@ class TestSilentPoisonTrackingXCostParity:
         for enemy in combat.enemies:
             assert enemy.get_power_amount(PowerId.POISON) == 2
 
-    def test_noxious_fumes_poison_uses_owner_applier_triggers_outbreak(self):
+    def test_noxious_fumes_poison_does_not_deal_immediate_damage(self):
         combat = _make_combat(extra_enemies=2)
         for enemy in combat.enemies:
             enemy.max_hp = 100
             enemy.current_hp = 100
-        combat.apply_power_to(combat.player, PowerId.OUTBREAK, 11)
         combat.apply_power_to(combat.player, PowerId.NOXIOUS_FUMES, 2)
 
         fire_after_side_turn_start(CombatSide.PLAYER, combat)
 
         assert [enemy.get_power_amount(PowerId.POISON) for enemy in combat.enemies] == [2, 2, 2]
-        assert [enemy.current_hp for enemy in combat.enemies] == [67, 67, 67]
+        assert [enemy.current_hp for enemy in combat.enemies] == [100, 100, 100]
 
     def test_phantom_blades_applies_power_and_buffs_only_first_shiv_each_turn(self):
         combat = _make_combat()

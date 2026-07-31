@@ -159,7 +159,7 @@ Required checks before training a v2 model:
 
 ### Crystal Sphere audit boundary
 
-The Python implementation is pinned to the STS2 `0.109.0` decompilation:
+The Python implementation is pinned to the STS2 `0.110.0` decompilation:
 
 - event cost is `50 + NextInt(1, 50)` with an exclusive upper bound;
 - pay/debt branches start 3/6 divinations and Debt is added before play;

@@ -1157,18 +1157,10 @@ class TestPowerAmountChangedHooks:
 
         assert len(simple_combat.hand) == 2
 
-    def test_outbreak_triggers_on_every_poison_application(self, simple_combat):
+    def test_removed_outbreak_power_is_not_applied(self, simple_combat):
         player = simple_combat.player
-        enemy = simple_combat.enemies[0]
         player.apply_power(PowerId.OUTBREAK, 4)
-        starting_hp = enemy.current_hp
-
-        simple_combat.apply_power_to(enemy, PowerId.POISON, 1)
-        simple_combat.apply_power_to(enemy, PowerId.POISON, 1)
-        assert enemy.current_hp == starting_hp - 8
-
-        simple_combat.apply_power_to(enemy, PowerId.POISON, 1)
-        assert enemy.current_hp == starting_hp - 12
+        assert not player.has_power(PowerId.OUTBREAK)
 
     def test_monarchs_gaze_strength_down_is_temporary(self, simple_combat):
         player = simple_combat.player
@@ -1395,9 +1387,10 @@ class TestPowerAmountChangedHooks:
         simple_combat.player.apply_power(PowerId.PILLAR_OF_CREATION, 3)
 
         simple_combat.add_generated_card_to_creature_hand(simple_combat.player, make_rebound())
+        simple_combat.add_generated_card_to_creature_hand(simple_combat.player, make_rebound())
 
-        assert simple_combat.player.block == 3
-        assert counter.calls == [3]
+        assert simple_combat.player.block == 6
+        assert counter.calls == [3, 3]
 
     def test_rampart_targets_turret_operator_and_triggers_after_block_gained_hooks(self, simple_combat):
         shield = simple_combat.enemies[0]

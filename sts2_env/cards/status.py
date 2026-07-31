@@ -531,7 +531,7 @@ def maul_effect(card: CardInstance, combat: CombatState, target: Creature | None
         if target.is_dead:
             break
     # All Maul copies gain +increase damage permanently
-    increase = card.effect_vars.get("increase", 1)
+    increase = card.effect_vars.get("increase", 2)
     for maul in combat._all_cards_for_creature(_owner(card, combat)):
         if maul.card_id == CardId.MAUL:
             increase_base_damage(maul, increase)
@@ -545,7 +545,7 @@ def make_maul(upgraded: bool = False) -> CardInstance:
         card_id=CardId.MAUL, cost=1, card_type=CardType.ATTACK,
         target_type=TargetType.ANY_ENEMY, rarity=CardRarity.ANCIENT,
         base_damage=6 if upgraded else 5, upgraded=upgraded,
-        effect_vars={"increase": 2 if upgraded else 1},
+        effect_vars={"increase": 3 if upgraded else 2},
         instance_id=_get_next_id(),
     )
 
@@ -586,7 +586,7 @@ def make_relax(upgraded: bool = False) -> CardInstance:
     return CardInstance(
         card_id=CardId.RELAX, cost=3, card_type=CardType.SKILL,
         target_type=TargetType.SELF, rarity=CardRarity.ANCIENT,
-        base_block=17 if upgraded else 15, upgraded=upgraded,
+        base_block=18 if upgraded else 16, upgraded=upgraded,
         keywords=frozenset({"exhaust"}),
         effect_vars={
             "cards": 3 if upgraded else 2,
@@ -605,7 +605,7 @@ def whistle_effect(card: CardInstance, combat: CombatState, target: Creature | N
 
 def make_whistle(upgraded: bool = False) -> CardInstance:
     return CardInstance(
-        card_id=CardId.WHISTLE, cost=3, card_type=CardType.ATTACK,
+        card_id=CardId.WHISTLE, cost=2, card_type=CardType.ATTACK,
         target_type=TargetType.ANY_ENEMY, rarity=CardRarity.ANCIENT,
         base_damage=44 if upgraded else 33, upgraded=upgraded,
         keywords=frozenset({"exhaust"}), instance_id=_get_next_id(),
