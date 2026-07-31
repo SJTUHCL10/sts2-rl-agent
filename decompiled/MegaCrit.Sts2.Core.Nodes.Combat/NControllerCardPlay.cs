@@ -156,12 +156,12 @@ public class NControllerCardPlay : NCardPlay
 			EmitSignal(SignalName.Confirmed);
 			GetViewport()?.SetInputAsHandled();
 		}
-		if (inputEventAction.IsActionPressed(MegaInput.cancel) || inputEventAction.IsActionPressed(MegaInput.topPanel))
+		if (inputEventAction.IsActionPressed(MegaInput.cancel) || inputEventAction.IsActionPressed(MegaInput.pauseAndBack) || inputEventAction.IsActionPressed(MegaInput.topPanel))
 		{
 			EmitSignal(SignalName.Canceled);
-			if (inputEvent.IsActionPressed(MegaInput.cancel))
+			if (inputEvent.IsActionPressed(MegaInput.cancel) || inputEventAction.IsActionPressed(MegaInput.pauseAndBack))
 			{
-				GetViewport().SetInputAsHandled();
+				GetViewport()?.SetInputAsHandled();
 			}
 		}
 	}
@@ -241,7 +241,7 @@ public class NControllerCardPlay : NCardPlay
 		_signalsConnected = true;
 		try
 		{
-			instance.StartTargeting(targetType, base.CardNode, TargetMode.Controller, () => !GodotObject.IsInstanceValid(this) || !NControllerManager.Instance.IsUsingController, null);
+			instance.StartTargeting(targetType, base.CardNode, TargetMode.Controller, () => !GodotObject.IsInstanceValid(this) || !NControllerManager.Instance.IsUsingDirectionalNavigation, null);
 			NCombatRoom.Instance.RestrictControllerNavigation(list2.Select((NCreature n) => n.Hitbox));
 			NCreature nCreature = list2.First();
 			if (NCombatRoom.Instance.LastTargetedCreature != null && NCombatRoom.Instance.LastTargetedCreature.IsHittable)

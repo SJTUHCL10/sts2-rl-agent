@@ -30,14 +30,9 @@ public class NTopBarBossIcon : NClickableControl
 		public new static readonly StringName _Ready = "_Ready";
 
 		/// <summary>
-		/// Cached name for the '_EnterTree' method.
+		/// Cached name for the '_Notification' method.
 		/// </summary>
-		public new static readonly StringName _EnterTree = "_EnterTree";
-
-		/// <summary>
-		/// Cached name for the '_ExitTree' method.
-		/// </summary>
-		public new static readonly StringName _ExitTree = "_ExitTree";
+		public new static readonly StringName _Notification = "_Notification";
 
 		/// <summary>
 		/// Cached name for the 'OnRoomEntered' method.
@@ -146,6 +141,8 @@ public class NTopBarBossIcon : NClickableControl
 	{
 		_bossIcon = GetNode<TextureRect>("Icon");
 		_bossIconOutline = GetNode<TextureRect>("Icon/Outline");
+		RunManager.Instance.ActEntered += OnActEntered;
+		RunManager.Instance.RoomEntered += OnRoomEntered;
 		ConnectSignals();
 	}
 
@@ -155,16 +152,13 @@ public class NTopBarBossIcon : NClickableControl
 		OnActEntered();
 	}
 
-	public override void _EnterTree()
+	public override void _Notification(int what)
 	{
-		RunManager.Instance.ActEntered += OnActEntered;
-		RunManager.Instance.RoomEntered += OnRoomEntered;
-	}
-
-	public override void _ExitTree()
-	{
-		RunManager.Instance.ActEntered -= OnActEntered;
-		RunManager.Instance.RoomEntered -= OnRoomEntered;
+		if ((long)what == 1)
+		{
+			RunManager.Instance.ActEntered -= OnActEntered;
+			RunManager.Instance.RoomEntered -= OnRoomEntered;
+		}
 	}
 
 	private void OnRoomEntered()
@@ -279,10 +273,12 @@ public class NTopBarBossIcon : NClickableControl
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	internal new static List<MethodInfo> GetGodotMethodList()
 	{
-		List<MethodInfo> list = new List<MethodInfo>(9);
+		List<MethodInfo> list = new List<MethodInfo>(8);
 		list.Add(new MethodInfo(MethodName._Ready, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
-		list.Add(new MethodInfo(MethodName._EnterTree, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
-		list.Add(new MethodInfo(MethodName._ExitTree, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
+		list.Add(new MethodInfo(MethodName._Notification, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
+		{
+			new PropertyInfo(Variant.Type.Int, "what", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false)
+		}, null));
 		list.Add(new MethodInfo(MethodName.OnRoomEntered, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName.OnActEntered, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName.RefreshBossIcon, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
@@ -302,15 +298,9 @@ public class NTopBarBossIcon : NClickableControl
 			ret = default(godot_variant);
 			return true;
 		}
-		if (method == MethodName._EnterTree && args.Count == 0)
+		if (method == MethodName._Notification && args.Count == 1)
 		{
-			_EnterTree();
-			ret = default(godot_variant);
-			return true;
-		}
-		if (method == MethodName._ExitTree && args.Count == 0)
-		{
-			_ExitTree();
+			_Notification(VariantUtils.ConvertTo<int>(in args[0]));
 			ret = default(godot_variant);
 			return true;
 		}
@@ -361,11 +351,7 @@ public class NTopBarBossIcon : NClickableControl
 		{
 			return true;
 		}
-		if (method == MethodName._EnterTree)
-		{
-			return true;
-		}
-		if (method == MethodName._ExitTree)
+		if (method == MethodName._Notification)
 		{
 			return true;
 		}

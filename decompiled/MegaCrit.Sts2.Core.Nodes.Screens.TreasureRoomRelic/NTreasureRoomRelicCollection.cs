@@ -375,14 +375,12 @@ public class NTreasureRoomRelicCollection : Control, IScreenContext
 	/// <summary>
 	/// Animates in the relic collection.
 	/// </summary>
-	/// <param name="chestVisual">Chest visual to fade out.</param>
-	public void AnimIn(Node chestVisual)
+	public void AnimIn()
 	{
 		base.Visible = true;
 		base.Modulate = Colors.Transparent;
 		Tween tween = CreateTween().SetParallel();
 		tween.TweenProperty(this, "modulate", Colors.White, 0.4);
-		tween.TweenProperty(chestVisual, "modulate", StsColors.halfTransparentWhite, 0.4);
 		if (_isEmptyChest)
 		{
 			LocalContext.GetMe(_runState)?.Relics.OfType<SilverCrucible>().FirstOrDefault()?.Flash();
@@ -415,13 +413,11 @@ public class NTreasureRoomRelicCollection : Control, IScreenContext
 	/// <summary>
 	/// Animates out the relic collection, after relic picking is done.
 	/// </summary>
-	/// <param name="chestVisual">Chest visual to fade back in.</param>
-	public void AnimOut(Node chestVisual)
+	public void AnimOut()
 	{
 		base.Modulate = Colors.White;
 		Tween tween = CreateTween().Parallel();
 		tween.TweenProperty(this, "modulate", StsColors.transparentWhite, 0.3);
-		tween.TweenProperty(chestVisual, "modulate", Colors.White, 0.3);
 		tween.TweenCallback(Callable.From(() => base.Visible = false));
 		NRun.Instance.ScreenStateTracker.SetIsInSharedRelicPickingScreen(isInSharedRelicPicking: false);
 	}
@@ -554,14 +550,8 @@ public class NTreasureRoomRelicCollection : Control, IScreenContext
 		{
 			new PropertyInfo(Variant.Type.Bool, "isEnabled", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false)
 		}, null));
-		list.Add(new MethodInfo(MethodName.AnimIn, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
-		{
-			new PropertyInfo(Variant.Type.Object, "chestVisual", PropertyHint.None, "", PropertyUsageFlags.Default, new StringName("Node"), exported: false)
-		}, null));
-		list.Add(new MethodInfo(MethodName.AnimOut, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
-		{
-			new PropertyInfo(Variant.Type.Object, "chestVisual", PropertyHint.None, "", PropertyUsageFlags.Default, new StringName("Node"), exported: false)
-		}, null));
+		list.Add(new MethodInfo(MethodName.AnimIn, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
+		list.Add(new MethodInfo(MethodName.AnimOut, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName.PickRelic, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
 		{
 			new PropertyInfo(Variant.Type.Object, "holder", PropertyHint.None, "", PropertyUsageFlags.Default, new StringName("Control"), exported: false)
@@ -610,15 +600,15 @@ public class NTreasureRoomRelicCollection : Control, IScreenContext
 			ret = default(godot_variant);
 			return true;
 		}
-		if (method == MethodName.AnimIn && args.Count == 1)
+		if (method == MethodName.AnimIn && args.Count == 0)
 		{
-			AnimIn(VariantUtils.ConvertTo<Node>(in args[0]));
+			AnimIn();
 			ret = default(godot_variant);
 			return true;
 		}
-		if (method == MethodName.AnimOut && args.Count == 1)
+		if (method == MethodName.AnimOut && args.Count == 0)
 		{
-			AnimOut(VariantUtils.ConvertTo<Node>(in args[0]));
+			AnimOut();
 			ret = default(godot_variant);
 			return true;
 		}

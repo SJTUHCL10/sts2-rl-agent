@@ -221,8 +221,8 @@ public abstract class NCardsViewScreen : Control, ICapstoneScreen, IScreenContex
 
 	private void OnControllerStateUpdated()
 	{
-		_showUpgrades.Visible = !NControllerManager.Instance.IsUsingController;
-		if (NControllerManager.Instance.IsUsingController)
+		_showUpgrades.Visible = !NControllerManager.Instance.IsUsingDirectionalNavigation;
+		if (NControllerManager.Instance.IsUsingDirectionalNavigation)
 		{
 			_showUpgrades.IsTicked = false;
 			ToggleShowUpgrades(_showUpgrades);

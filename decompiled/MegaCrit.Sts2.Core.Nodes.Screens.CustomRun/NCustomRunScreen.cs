@@ -26,6 +26,7 @@ using MegaCrit.Sts2.Core.Nodes.GodotExtensions;
 using MegaCrit.Sts2.Core.Nodes.Multiplayer;
 using MegaCrit.Sts2.Core.Nodes.Screens.CharacterSelect;
 using MegaCrit.Sts2.Core.Nodes.Screens.MainMenu;
+using MegaCrit.Sts2.Core.Nodes.Vfx.Ui;
 using MegaCrit.Sts2.Core.Platform;
 using MegaCrit.Sts2.Core.Random;
 using MegaCrit.Sts2.Core.Runs;
@@ -299,7 +300,7 @@ public class NCustomRunScreen : NSubmenu, IStartRunLobbyListener, ICharacterSele
 
 	private NCustomRunModifiersList _modifiersList;
 
-	private TextureRect _modifiersHotkeyIcon;
+	private NHotkeyIcon _modifiersHotkeyIcon;
 
 	private StartRunLobby _lobby;
 
@@ -336,7 +337,7 @@ public class NCustomRunScreen : NSubmenu, IStartRunLobbyListener, ICharacterSele
 		_confirmButton = GetNode<NConfirmButton>("ConfirmButton");
 		_backButton = GetNode<NBackButton>("BackButton");
 		_unreadyButton = GetNode<NBackButton>("UnreadyButton");
-		_modifiersHotkeyIcon = GetNode<TextureRect>("%ModifiersHotkeyIcon");
+		_modifiersHotkeyIcon = GetNode<NHotkeyIcon>("%ModifiersHotkeyIcon");
 		_randomizeButton.Connect(NClickableControl.SignalName.Released, Callable.From<NButton>(OnRandomizePressed));
 		_confirmButton.Connect(NClickableControl.SignalName.Released, Callable.From<NButton>(OnEmbarkPressed));
 		_unreadyButton.Connect(NClickableControl.SignalName.Released, Callable.From<NButton>(OnUnreadyPressed));
@@ -471,7 +472,7 @@ public class NCustomRunScreen : NSubmenu, IStartRunLobbyListener, ICharacterSele
 			_seedInput.Text = _lobby.Seed ?? "";
 		}
 		_readyAndWaitingContainer.Visible = false;
-		foreach (LobbyPlayer player in _lobby.Players)
+		foreach (StartRunLobbyPlayer player in _lobby.Players)
 		{
 			RefreshButtonSelectionForPlayer(player);
 		}
@@ -501,7 +502,7 @@ public class NCustomRunScreen : NSubmenu, IStartRunLobbyListener, ICharacterSele
 		{
 			RandomizeLocalCharacter();
 		}
-		IReadOnlyCollection<ModifierModel> tickedModifiers = ModifierModel.Pick2Good1Bad(Rng.Chaotic, _lobby.Players.Select((LobbyPlayer p) => p.character));
+		IReadOnlyCollection<ModifierModel> tickedModifiers = ModifierModel.Pick2Good1Bad(Rng.Chaotic, _lobby.Players.Select((StartRunLobbyPlayer p) => p.character));
 		_modifiersList.SetTickedModifiers(tickedModifiers);
 	}
 
@@ -568,8 +569,18 @@ public class NCustomRunScreen : NSubmenu, IStartRunLobbyListener, ICharacterSele
 		}
 	}
 
+	private void RemoteClientFailedToConnectToLocalHost(ClientConnectionFailedMessage message, ulong sender)
+	{
+		string formattedText = message.GetLocString(PeerVersionInfo.LocalDefault()).GetFormattedText();
+		LocString locString = new LocString("main_menu_ui", "NETWORK_ERROR.HOST.PREFIX.body");
+		locString.Add("playerName", PlatformUtil.GetPlayerName(_lobby.NetService.Platform, sender));
+		locString.Add("info", formattedText);
+		this.AddChildSafely(NFailedJoinVfx.Create(locString.GetFormattedText()));
+	}
+
 	private void CleanUpLobby(bool disconnectSession, NetError error = NetError.Quit)
 	{
+		_lobby.PlayerFailedToConnect -= RemoteClientFailedToConnectToLocalHost;
 		_lobby.CleanUp(disconnectSession, error);
 		_lobby = null;
 	}
@@ -673,14 +684,14 @@ public class NCustomRunScreen : NSubmenu, IStartRunLobbyListener, ICharacterSele
 		_ascensionPanel.SetMaxAscension(_lobby.MaxAscension);
 	}
 
-	public void PlayerConnected(LobbyPlayer player)
+	public void PlayerConnected(StartRunLobbyPlayer player)
 	{
 		_remotePlayerContainer.OnPlayerConnected(player);
 		RefreshButtonSelectionForPlayer(player);
 		UpdateRichPresence();
 	}
 
-	public void PlayerChanged(LobbyPlayer player, bool isRandomCharacterResolution)
+	public void PlayerChanged(StartRunLobbyPlayer player, bool isRandomCharacterResolution)
 	{
 		if (isRandomCharacterResolution)
 		{
@@ -690,7 +701,7 @@ public class NCustomRunScreen : NSubmenu, IStartRunLobbyListener, ICharacterSele
 		RefreshButtonSelectionForPlayer(player);
 	}
 
-	private void RefreshButtonSelectionForPlayer(LobbyPlayer player)
+	private void RefreshButtonSelectionForPlayer(StartRunLobbyPlayer player)
 	{
 		if (player.id == _lobby.LocalPlayer.id)
 		{
@@ -736,7 +747,7 @@ public class NCustomRunScreen : NSubmenu, IStartRunLobbyListener, ICharacterSele
 		}
 	}
 
-	public void RemotePlayerDisconnected(LobbyPlayer player)
+	public void RemotePlayerDisconnected(StartRunLobbyPlayer player)
 	{
 		_remotePlayerContainer.OnPlayerDisconnected(player);
 		foreach (NCharacterSelectButton item in _charButtonContainer.GetChildren().OfType<NCharacterSelectButton>())
@@ -786,9 +797,10 @@ public class NCustomRunScreen : NSubmenu, IStartRunLobbyListener, ICharacterSele
 
 	private void AfterInitialized()
 	{
-		NGame.Instance.RemoteCursorContainer.Initialize(_lobby.InputSynchronizer, _lobby.Players.Select((LobbyPlayer p) => p.id));
+		NGame.Instance.RemoteCursorContainer.Initialize(_lobby.InputSynchronizer, _lobby.Players.Select((StartRunLobbyPlayer p) => p.id));
 		NGame.Instance.ReactionContainer.InitializeNetworking(_lobby.NetService);
 		NGame.Instance.TimeoutOverlay.Initialize(_lobby.NetService, isGameLevel: true);
+		_lobby.PlayerFailedToConnect += RemoteClientFailedToConnectToLocalHost;
 		UpdateRichPresence();
 		if (!string.IsNullOrEmpty(_seedInput.Text))
 		{
@@ -805,8 +817,8 @@ public class NCustomRunScreen : NSubmenu, IStartRunLobbyListener, ICharacterSele
 		MultiplayerUiMode uiMode = _uiMode;
 		if ((uint)(uiMode - 1) <= 1u)
 		{
-			_modifiersHotkeyIcon.Visible = NControllerManager.Instance.IsUsingController;
-			_modifiersHotkeyIcon.Texture = NInputManager.Instance.GetHotkeyIcon(ModifiersHotkey);
+			_modifiersHotkeyIcon.Visible = NControllerManager.Instance.IsUsingDirectionalNavigation;
+			_modifiersHotkeyIcon.UpdateInput(ModifiersHotkey);
 		}
 		else
 		{
@@ -1237,7 +1249,7 @@ public class NCustomRunScreen : NSubmenu, IStartRunLobbyListener, ICharacterSele
 		}
 		if (name == PropertyName._modifiersHotkeyIcon)
 		{
-			_modifiersHotkeyIcon = VariantUtils.ConvertTo<TextureRect>(in value);
+			_modifiersHotkeyIcon = VariantUtils.ConvertTo<NHotkeyIcon>(in value);
 			return true;
 		}
 		if (name == PropertyName._uiMode)
@@ -1439,7 +1451,7 @@ public class NCustomRunScreen : NSubmenu, IStartRunLobbyListener, ICharacterSele
 		}
 		if (info.TryGetProperty(PropertyName._modifiersHotkeyIcon, out var value13))
 		{
-			_modifiersHotkeyIcon = value13.As<TextureRect>();
+			_modifiersHotkeyIcon = value13.As<NHotkeyIcon>();
 		}
 		if (info.TryGetProperty(PropertyName._uiMode, out var value14))
 		{

@@ -31,6 +31,7 @@ using MegaCrit.Sts2.Core.Nodes.Ftue;
 using MegaCrit.Sts2.Core.Nodes.GodotExtensions;
 using MegaCrit.Sts2.Core.Nodes.Multiplayer;
 using MegaCrit.Sts2.Core.Nodes.Screens.MainMenu;
+using MegaCrit.Sts2.Core.Nodes.Vfx.Ui;
 using MegaCrit.Sts2.Core.Nodes.Vfx.Utilities;
 using MegaCrit.Sts2.Core.Platform;
 using MegaCrit.Sts2.Core.Rooms;
@@ -530,7 +531,7 @@ public class NCharacterSelectScreen : NSubmenu, IStartRunLobbyListener, ICharact
 			return;
 		}
 		bool visible = false;
-		foreach (LobbyPlayer player in _lobby.Players)
+		foreach (StartRunLobbyPlayer player in _lobby.Players)
 		{
 			UnlockState unlockState = UnlockState.FromSerializable(player.unlockState);
 			bool flag = true;
@@ -600,7 +601,7 @@ public class NCharacterSelectScreen : NSubmenu, IStartRunLobbyListener, ICharact
 		_actDropdown.Visible = ShouldShowActDropdown;
 		_actDropdownLabel.Visible = _actDropdown.Visible;
 		_readyAndWaitingContainer.Visible = false;
-		foreach (LobbyPlayer player in _lobby.Players)
+		foreach (StartRunLobbyPlayer player in _lobby.Players)
 		{
 			RefreshButtonSelectionForPlayer(player);
 		}
@@ -682,6 +683,7 @@ public class NCharacterSelectScreen : NSubmenu, IStartRunLobbyListener, ICharact
 
 	private void CleanUpLobby(bool disconnectSession, NetError error = NetError.Quit)
 	{
+		_lobby.PlayerFailedToConnect -= RemoteClientFailedToConnectToLocalHost;
 		_lobby.CleanUp(disconnectSession, error);
 		_lobby = null;
 	}
@@ -740,7 +742,7 @@ public class NCharacterSelectScreen : NSubmenu, IStartRunLobbyListener, ICharact
 				RunState runState;
 				try
 				{
-					runState = RunState.CreateForNewRun(_lobby.Players.Select((LobbyPlayer p) => Player.CreateForNewRun(p.character, UnlockState.FromSerializable(p.unlockState), p.id)).ToList(), acts.Select((ActModel a) => a.ToMutable()).ToList(), _settings.Modifiers, GameMode.Standard, _lobby.Ascension, seed);
+					runState = RunState.CreateForNewRun(_lobby.Players.Select((StartRunLobbyPlayer p) => Player.CreateForNewRun(p.character, UnlockState.FromSerializable(p.unlockState), p.id)).ToList(), acts.Select((ActModel a) => a.ToMutable()).ToList(), _settings.Modifiers, GameMode.Standard, _lobby.Ascension, seed);
 					RunManager.Instance.SetUpNewMultiplayer(runState, _lobby, _settings.SaveRunHistory);
 					await PreloadManager.LoadRunAssets(runState.Players.Select((Player p) => p.Character));
 					await RunManager.Instance.FinalizeStartingRelics();
@@ -793,6 +795,15 @@ public class NCharacterSelectScreen : NSubmenu, IStartRunLobbyListener, ICharact
 			}
 			CleanUpLobby(disconnectSession: false);
 		}
+	}
+
+	private void RemoteClientFailedToConnectToLocalHost(ClientConnectionFailedMessage message, ulong sender)
+	{
+		string formattedText = message.GetLocString(PeerVersionInfo.LocalDefault()).GetFormattedText();
+		LocString locString = new LocString("main_menu_ui", "NETWORK_ERROR.HOST.PREFIX.body");
+		locString.Add("playerName", PlatformUtil.GetPlayerName(_lobby.NetService.Platform, sender));
+		locString.Add("info", formattedText);
+		this.AddChildSafely(NFailedJoinVfx.Create(locString.GetFormattedText()));
 	}
 
 	/// <summary>
@@ -941,7 +952,7 @@ public class NCharacterSelectScreen : NSubmenu, IStartRunLobbyListener, ICharact
 		_ascensionPanel.SetMaxAscension(_lobby.MaxAscension);
 	}
 
-	public void PlayerConnected(LobbyPlayer player)
+	public void PlayerConnected(StartRunLobbyPlayer player)
 	{
 		_remotePlayerContainer.OnPlayerConnected(player);
 		RefreshButtonSelectionForPlayer(player);
@@ -949,7 +960,7 @@ public class NCharacterSelectScreen : NSubmenu, IStartRunLobbyListener, ICharact
 		UpdateRandomCharacterVisibility();
 	}
 
-	public void PlayerChanged(LobbyPlayer player, bool isRandomCharacterResolution)
+	public void PlayerChanged(StartRunLobbyPlayer player, bool isRandomCharacterResolution)
 	{
 		if (player.id == _lobby.LocalPlayer.id && isRandomCharacterResolution)
 		{
@@ -959,7 +970,7 @@ public class NCharacterSelectScreen : NSubmenu, IStartRunLobbyListener, ICharact
 		RefreshButtonSelectionForPlayer(player);
 	}
 
-	private void RefreshButtonSelectionForPlayer(LobbyPlayer player)
+	private void RefreshButtonSelectionForPlayer(StartRunLobbyPlayer player)
 	{
 		if (player.id == _lobby.LocalPlayer.id)
 		{
@@ -997,7 +1008,7 @@ public class NCharacterSelectScreen : NSubmenu, IStartRunLobbyListener, ICharact
 		throw new NotImplementedException("Modifiers should not be changed in standard mode!");
 	}
 
-	public void RemotePlayerDisconnected(LobbyPlayer player)
+	public void RemotePlayerDisconnected(StartRunLobbyPlayer player)
 	{
 		_remotePlayerContainer.OnPlayerDisconnected(player);
 		foreach (NCharacterSelectButton item in _charButtonContainer.GetChildren().OfType<NCharacterSelectButton>())
@@ -1054,9 +1065,10 @@ public class NCharacterSelectScreen : NSubmenu, IStartRunLobbyListener, ICharact
 
 	private void AfterInitialized()
 	{
-		NGame.Instance.RemoteCursorContainer.Initialize(_lobby.InputSynchronizer, _lobby.Players.Select((LobbyPlayer p) => p.id));
+		NGame.Instance.RemoteCursorContainer.Initialize(_lobby.InputSynchronizer, _lobby.Players.Select((StartRunLobbyPlayer p) => p.id));
 		NGame.Instance.ReactionContainer.InitializeNetworking(_lobby.NetService);
 		NGame.Instance.TimeoutOverlay.Initialize(_lobby.NetService, isGameLevel: true);
+		_lobby.PlayerFailedToConnect += RemoteClientFailedToConnectToLocalHost;
 		UpdateRichPresence();
 		UpdateRandomCharacterVisibility();
 		MegaCrit.Sts2.Core.Logging.Logger.logLevelTypeMap[LogType.Network] = ((_lobby.NetService.Type == NetGameType.Singleplayer) ? LogLevel.Info : LogLevel.Debug);

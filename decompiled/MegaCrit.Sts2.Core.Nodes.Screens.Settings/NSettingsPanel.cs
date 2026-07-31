@@ -87,7 +87,7 @@ public class NSettingsPanel : Control
 
 	private float _minPadding = 50f;
 
-	protected Control? _firstControl;
+	private Control? _firstControl;
 
 	private Tween? _tween;
 

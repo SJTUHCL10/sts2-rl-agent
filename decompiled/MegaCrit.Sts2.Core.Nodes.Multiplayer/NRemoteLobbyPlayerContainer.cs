@@ -104,14 +104,14 @@ public class NRemoteLobbyPlayerContainer : Control
 		_displayLocalPlayer = displayLocalPlayer;
 		_inviteButton.Initialize(lobby);
 		_lobby = lobby;
-		foreach (LobbyPlayer player in _lobby.Players)
+		foreach (StartRunLobbyPlayer player in _lobby.Players)
 		{
 			OnPlayerConnected(player);
 		}
 		RefreshSoloLabelVisibility();
 	}
 
-	public void OnPlayerConnected(LobbyPlayer player)
+	public void OnPlayerConnected(StartRunLobbyPlayer player)
 	{
 		StartRunLobby lobby = _lobby;
 		if (lobby != null && (player.id != lobby.LocalPlayer.id || _displayLocalPlayer))
@@ -124,7 +124,7 @@ public class NRemoteLobbyPlayerContainer : Control
 		}
 	}
 
-	public void OnPlayerDisconnected(LobbyPlayer player)
+	public void OnPlayerDisconnected(StartRunLobbyPlayer player)
 	{
 		if (_lobby == null)
 		{
@@ -143,7 +143,7 @@ public class NRemoteLobbyPlayerContainer : Control
 		RefreshSoloLabelVisibility();
 	}
 
-	public void OnPlayerChanged(LobbyPlayer player)
+	public void OnPlayerChanged(StartRunLobbyPlayer player)
 	{
 		StartRunLobby lobby = _lobby;
 		if (lobby != null && (player.id != lobby.LocalPlayer.id || _displayLocalPlayer))

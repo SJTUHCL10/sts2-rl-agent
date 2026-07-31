@@ -81,9 +81,9 @@ public class NModMenuRow : NClickableControl
 		public static readonly StringName Hotkey = "Hotkey";
 
 		/// <summary>
-		/// Cached name for the '_controllerIcon' field.
+		/// Cached name for the '_hotkeyIcon' field.
 		/// </summary>
-		public static readonly StringName _controllerIcon = "_controllerIcon";
+		public static readonly StringName _hotkeyIcon = "_hotkeyIcon";
 
 		/// <summary>
 		/// Cached name for the '_selectionHighlight' field.
@@ -113,7 +113,7 @@ public class NModMenuRow : NClickableControl
 	{
 	}
 
-	private TextureRect _controllerIcon;
+	private NHotkeyIcon _hotkeyIcon;
 
 	private static readonly string _scenePath = SceneHelper.GetScenePath("screens/modding/modding_screen_row");
 
@@ -127,7 +127,7 @@ public class NModMenuRow : NClickableControl
 
 	private bool _isSelected;
 
-	private string Hotkey => MegaInput.accept;
+	private string Hotkey => MegaInput.confirm;
 
 	public Mod? Mod { get; private set; }
 
@@ -151,7 +151,7 @@ public class NModMenuRow : NClickableControl
 			_tickbox = GetNode<NTickbox>("Tickbox");
 			MegaRichTextLabel node = GetNode<MegaRichTextLabel>("Title");
 			TextureRect node2 = GetNode<TextureRect>("PlatformIcon");
-			_controllerIcon = GetNode<TextureRect>("ControllerIcon");
+			_hotkeyIcon = GetNode<NHotkeyIcon>("%HotkeyIcon");
 			_tickbox = GetNode<NTickbox>("Tickbox");
 			Panel selectionHighlight = _selectionHighlight;
 			Color color = _selectionHighlight.Modulate;
@@ -219,8 +219,8 @@ public class NModMenuRow : NClickableControl
 
 	private void UpdateControllerButton()
 	{
-		_controllerIcon.SetVisible(_isSelected && NControllerManager.Instance.IsUsingController);
-		_controllerIcon.Texture = NInputManager.Instance.GetHotkeyIcon(Hotkey);
+		_hotkeyIcon.SetVisible(_isSelected && NControllerManager.Instance.IsUsingDirectionalNavigation);
+		_hotkeyIcon.UpdateInput(Hotkey);
 	}
 
 	protected override void OnUnfocus()
@@ -443,9 +443,9 @@ public class NModMenuRow : NClickableControl
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool SetGodotClassPropertyValue(in godot_string_name name, in godot_variant value)
 	{
-		if (name == PropertyName._controllerIcon)
+		if (name == PropertyName._hotkeyIcon)
 		{
-			_controllerIcon = VariantUtils.ConvertTo<TextureRect>(in value);
+			_hotkeyIcon = VariantUtils.ConvertTo<NHotkeyIcon>(in value);
 			return true;
 		}
 		if (name == PropertyName._selectionHighlight)
@@ -480,9 +480,9 @@ public class NModMenuRow : NClickableControl
 			value = VariantUtils.CreateFrom<string>(Hotkey);
 			return true;
 		}
-		if (name == PropertyName._controllerIcon)
+		if (name == PropertyName._hotkeyIcon)
 		{
-			value = VariantUtils.CreateFrom(in _controllerIcon);
+			value = VariantUtils.CreateFrom(in _hotkeyIcon);
 			return true;
 		}
 		if (name == PropertyName._selectionHighlight)
@@ -518,7 +518,7 @@ public class NModMenuRow : NClickableControl
 	{
 		List<PropertyInfo> list = new List<PropertyInfo>();
 		list.Add(new PropertyInfo(Variant.Type.String, PropertyName.Hotkey, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
-		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._controllerIcon, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._hotkeyIcon, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._selectionHighlight, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._tickbox, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._screen, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
@@ -531,7 +531,7 @@ public class NModMenuRow : NClickableControl
 	protected override void SaveGodotObjectData(GodotSerializationInfo info)
 	{
 		base.SaveGodotObjectData(info);
-		info.AddProperty(PropertyName._controllerIcon, Variant.From(in _controllerIcon));
+		info.AddProperty(PropertyName._hotkeyIcon, Variant.From(in _hotkeyIcon));
 		info.AddProperty(PropertyName._selectionHighlight, Variant.From(in _selectionHighlight));
 		info.AddProperty(PropertyName._tickbox, Variant.From(in _tickbox));
 		info.AddProperty(PropertyName._screen, Variant.From(in _screen));
@@ -543,9 +543,9 @@ public class NModMenuRow : NClickableControl
 	protected override void RestoreGodotObjectData(GodotSerializationInfo info)
 	{
 		base.RestoreGodotObjectData(info);
-		if (info.TryGetProperty(PropertyName._controllerIcon, out var value))
+		if (info.TryGetProperty(PropertyName._hotkeyIcon, out var value))
 		{
-			_controllerIcon = value.As<TextureRect>();
+			_hotkeyIcon = value.As<NHotkeyIcon>();
 		}
 		if (info.TryGetProperty(PropertyName._selectionHighlight, out var value2))
 		{

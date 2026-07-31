@@ -92,14 +92,14 @@ public class NSettingsTabManager : Control
 		public static readonly StringName _scrollContainer = "_scrollContainer";
 
 		/// <summary>
-		/// Cached name for the '_leftTriggerIcon' field.
+		/// Cached name for the '_leftTabIcon' field.
 		/// </summary>
-		public static readonly StringName _leftTriggerIcon = "_leftTriggerIcon";
+		public static readonly StringName _leftTabIcon = "_leftTabIcon";
 
 		/// <summary>
-		/// Cached name for the '_rightTriggerIcon' field.
+		/// Cached name for the '_rightTabIcon' field.
 		/// </summary>
-		public static readonly StringName _rightTriggerIcon = "_rightTriggerIcon";
+		public static readonly StringName _rightTabIcon = "_rightTabIcon";
 
 		/// <summary>
 		/// Cached name for the '_scrollbarTween' field.
@@ -132,9 +132,9 @@ public class NSettingsTabManager : Control
 
 	private readonly Dictionary<NSettingsTab, NSettingsPanel> _tabs = new Dictionary<NSettingsTab, NSettingsPanel>();
 
-	private TextureRect _leftTriggerIcon;
+	private NHotkeyIcon _leftTabIcon;
 
-	private TextureRect _rightTriggerIcon;
+	private NHotkeyIcon _rightTabIcon;
 
 	private Tween? _scrollbarTween;
 
@@ -172,8 +172,8 @@ public class NSettingsTabManager : Control
 	/// </summary>
 	public override void _Ready()
 	{
-		_leftTriggerIcon = GetNode<TextureRect>("LeftTriggerIcon");
-		_rightTriggerIcon = GetNode<TextureRect>("RightTriggerIcon");
+		_leftTabIcon = GetNode<NHotkeyIcon>("LeftTabIcon");
+		_rightTabIcon = GetNode<NHotkeyIcon>("RightTabIcon");
 		_scrollContainer = GetNode<NScrollableContainer>("%ScrollContainer");
 		_scrollContainer.DisableScrollingIfContentFits();
 		NSettingsTab node = GetNode<NSettingsTab>("General");
@@ -263,10 +263,10 @@ public class NSettingsTabManager : Control
 
 	private void UpdateControllerButton()
 	{
-		_leftTriggerIcon.Visible = NControllerManager.Instance.IsUsingController;
-		_rightTriggerIcon.Visible = NControllerManager.Instance.IsUsingController;
-		_leftTriggerIcon.Texture = NInputManager.Instance.GetHotkeyIcon(MegaInput.viewDeckAndTabLeft);
-		_rightTriggerIcon.Texture = NInputManager.Instance.GetHotkeyIcon(MegaInput.viewExhaustPileAndTabRight);
+		_leftTabIcon.Visible = NControllerManager.Instance.IsUsingDirectionalNavigation;
+		_rightTabIcon.Visible = NControllerManager.Instance.IsUsingDirectionalNavigation;
+		_leftTabIcon.UpdateInput(MegaInput.viewDeckAndTabLeft);
+		_rightTabIcon.UpdateInput(MegaInput.viewExhaustPileAndTabRight);
 	}
 
 	/// <summary>
@@ -400,14 +400,14 @@ public class NSettingsTabManager : Control
 			_scrollContainer = VariantUtils.ConvertTo<NScrollableContainer>(in value);
 			return true;
 		}
-		if (name == PropertyName._leftTriggerIcon)
+		if (name == PropertyName._leftTabIcon)
 		{
-			_leftTriggerIcon = VariantUtils.ConvertTo<TextureRect>(in value);
+			_leftTabIcon = VariantUtils.ConvertTo<NHotkeyIcon>(in value);
 			return true;
 		}
-		if (name == PropertyName._rightTriggerIcon)
+		if (name == PropertyName._rightTabIcon)
 		{
-			_rightTriggerIcon = VariantUtils.ConvertTo<TextureRect>(in value);
+			_rightTabIcon = VariantUtils.ConvertTo<NHotkeyIcon>(in value);
 			return true;
 		}
 		if (name == PropertyName._scrollbarTween)
@@ -442,14 +442,14 @@ public class NSettingsTabManager : Control
 			value = VariantUtils.CreateFrom(in _scrollContainer);
 			return true;
 		}
-		if (name == PropertyName._leftTriggerIcon)
+		if (name == PropertyName._leftTabIcon)
 		{
-			value = VariantUtils.CreateFrom(in _leftTriggerIcon);
+			value = VariantUtils.CreateFrom(in _leftTabIcon);
 			return true;
 		}
-		if (name == PropertyName._rightTriggerIcon)
+		if (name == PropertyName._rightTabIcon)
 		{
-			value = VariantUtils.CreateFrom(in _rightTriggerIcon);
+			value = VariantUtils.CreateFrom(in _rightTabIcon);
 			return true;
 		}
 		if (name == PropertyName._scrollbarTween)
@@ -472,8 +472,8 @@ public class NSettingsTabManager : Control
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._currentTab, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._scrollContainer, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName.CurrentlyDisplayedPanel, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
-		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._leftTriggerIcon, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
-		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._rightTriggerIcon, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._leftTabIcon, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._rightTabIcon, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._scrollbarTween, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName.DefaultFocusedControl, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		return list;
@@ -486,8 +486,8 @@ public class NSettingsTabManager : Control
 		base.SaveGodotObjectData(info);
 		info.AddProperty(PropertyName._currentTab, Variant.From(in _currentTab));
 		info.AddProperty(PropertyName._scrollContainer, Variant.From(in _scrollContainer));
-		info.AddProperty(PropertyName._leftTriggerIcon, Variant.From(in _leftTriggerIcon));
-		info.AddProperty(PropertyName._rightTriggerIcon, Variant.From(in _rightTriggerIcon));
+		info.AddProperty(PropertyName._leftTabIcon, Variant.From(in _leftTabIcon));
+		info.AddProperty(PropertyName._rightTabIcon, Variant.From(in _rightTabIcon));
 		info.AddProperty(PropertyName._scrollbarTween, Variant.From(in _scrollbarTween));
 		info.AddSignalEventDelegate(SignalName.TabChanged, backing_TabChanged);
 	}
@@ -505,13 +505,13 @@ public class NSettingsTabManager : Control
 		{
 			_scrollContainer = value2.As<NScrollableContainer>();
 		}
-		if (info.TryGetProperty(PropertyName._leftTriggerIcon, out var value3))
+		if (info.TryGetProperty(PropertyName._leftTabIcon, out var value3))
 		{
-			_leftTriggerIcon = value3.As<TextureRect>();
+			_leftTabIcon = value3.As<NHotkeyIcon>();
 		}
-		if (info.TryGetProperty(PropertyName._rightTriggerIcon, out var value4))
+		if (info.TryGetProperty(PropertyName._rightTabIcon, out var value4))
 		{
-			_rightTriggerIcon = value4.As<TextureRect>();
+			_rightTabIcon = value4.As<NHotkeyIcon>();
 		}
 		if (info.TryGetProperty(PropertyName._scrollbarTween, out var value5))
 		{

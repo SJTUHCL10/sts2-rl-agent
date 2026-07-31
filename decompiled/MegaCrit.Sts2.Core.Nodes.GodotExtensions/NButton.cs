@@ -118,9 +118,9 @@ public class NButton : NClickableControl
 		public static readonly StringName HasControllerHotkey = "HasControllerHotkey";
 
 		/// <summary>
-		/// Cached name for the '_controllerHotkeyIcon' field.
+		/// Cached name for the '_hotkeyIcon' field.
 		/// </summary>
-		public static readonly StringName _controllerHotkeyIcon = "_controllerHotkeyIcon";
+		public static readonly StringName _hotkeyIcon = "_hotkeyIcon";
 	}
 
 	/// <summary>
@@ -130,7 +130,7 @@ public class NButton : NClickableControl
 	{
 	}
 
-	protected TextureRect? _controllerHotkeyIcon;
+	protected NHotkeyIcon? _hotkeyIcon;
 
 	protected virtual string? ClickedSfx => "event:/sfx/ui/clicks/ui_click";
 
@@ -175,7 +175,7 @@ public class NButton : NClickableControl
 
 	protected virtual void GetControllerIconNode()
 	{
-		_controllerHotkeyIcon = GetNodeOrNull<TextureRect>("%ControllerIcon");
+		_hotkeyIcon = GetNodeOrNull<NHotkeyIcon>("%HotkeyIcon");
 	}
 
 	public override void _EnterTree()
@@ -230,22 +230,13 @@ public class NButton : NClickableControl
 
 	protected void UpdateControllerButton()
 	{
-		if (_controllerHotkeyIcon == null)
-		{
-			return;
-		}
 		NControllerManager instance = NControllerManager.Instance;
-		if (instance == null)
+		if (instance != null && _hotkeyIcon != null)
 		{
-			return;
-		}
-		_controllerHotkeyIcon.Visible = instance.IsUsingController && _isEnabled;
-		if (ControllerIconHotkey != null)
-		{
-			Texture2D hotkeyIcon = NInputManager.Instance.GetHotkeyIcon(ControllerIconHotkey);
-			if (hotkeyIcon != null)
+			_hotkeyIcon.Visible = instance.IsUsingDirectionalNavigation && _isEnabled;
+			if (ControllerIconHotkey != null)
 			{
-				_controllerHotkeyIcon.Texture = hotkeyIcon;
+				_hotkeyIcon.UpdateInput(ControllerIconHotkey);
 			}
 		}
 	}
@@ -466,9 +457,9 @@ public class NButton : NClickableControl
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool SetGodotClassPropertyValue(in godot_string_name name, in godot_variant value)
 	{
-		if (name == PropertyName._controllerHotkeyIcon)
+		if (name == PropertyName._hotkeyIcon)
 		{
-			_controllerHotkeyIcon = VariantUtils.ConvertTo<TextureRect>(in value);
+			_hotkeyIcon = VariantUtils.ConvertTo<NHotkeyIcon>(in value);
 			return true;
 		}
 		return base.SetGodotClassPropertyValue(in name, in value);
@@ -507,9 +498,9 @@ public class NButton : NClickableControl
 			value = VariantUtils.CreateFrom<bool>(HasControllerHotkey);
 			return true;
 		}
-		if (name == PropertyName._controllerHotkeyIcon)
+		if (name == PropertyName._hotkeyIcon)
 		{
-			value = VariantUtils.CreateFrom(in _controllerHotkeyIcon);
+			value = VariantUtils.CreateFrom(in _hotkeyIcon);
 			return true;
 		}
 		return base.GetGodotClassPropertyValue(in name, out value);
@@ -529,7 +520,7 @@ public class NButton : NClickableControl
 		list.Add(new PropertyInfo(Variant.Type.PackedStringArray, PropertyName.Hotkeys, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.String, PropertyName.ControllerIconHotkey, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Bool, PropertyName.HasControllerHotkey, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
-		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._controllerHotkeyIcon, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._hotkeyIcon, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		return list;
 	}
 
@@ -538,7 +529,7 @@ public class NButton : NClickableControl
 	protected override void SaveGodotObjectData(GodotSerializationInfo info)
 	{
 		base.SaveGodotObjectData(info);
-		info.AddProperty(PropertyName._controllerHotkeyIcon, Variant.From(in _controllerHotkeyIcon));
+		info.AddProperty(PropertyName._hotkeyIcon, Variant.From(in _hotkeyIcon));
 	}
 
 	/// <inheritdoc />
@@ -546,9 +537,9 @@ public class NButton : NClickableControl
 	protected override void RestoreGodotObjectData(GodotSerializationInfo info)
 	{
 		base.RestoreGodotObjectData(info);
-		if (info.TryGetProperty(PropertyName._controllerHotkeyIcon, out var value))
+		if (info.TryGetProperty(PropertyName._hotkeyIcon, out var value))
 		{
-			_controllerHotkeyIcon = value.As<TextureRect>();
+			_hotkeyIcon = value.As<NHotkeyIcon>();
 		}
 	}
 }

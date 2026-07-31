@@ -11,6 +11,7 @@ using MegaCrit.Sts2.Core.ControllerInput.ControllerConfigs;
 using MegaCrit.Sts2.Core.Localization;
 using MegaCrit.Sts2.Core.Logging;
 using MegaCrit.Sts2.Core.Nodes.Screens.ScreenContext;
+using MegaCrit.Sts2.Core.Saves;
 using MegaCrit.Sts2.addons.mega_text;
 
 namespace MegaCrit.Sts2.Core.Nodes.CommonUi;
@@ -66,6 +67,21 @@ public class NControllerManager : Node
 		public static readonly StringName CheckForControllerInput = "CheckForControllerInput";
 
 		/// <summary>
+		/// Cached name for the 'CheckForArrowKeyInput' method.
+		/// </summary>
+		public static readonly StringName CheckForArrowKeyInput = "CheckForArrowKeyInput";
+
+		/// <summary>
+		/// Cached name for the 'ForceMouseMode' method.
+		/// </summary>
+		public static readonly StringName ForceMouseMode = "ForceMouseMode";
+
+		/// <summary>
+		/// Cached name for the 'SwitchToMouseMode' method.
+		/// </summary>
+		public static readonly StringName SwitchToMouseMode = "SwitchToMouseMode";
+
+		/// <summary>
 		/// Cached name for the 'ControlModeChanged' method.
 		/// </summary>
 		public static readonly StringName ControlModeChanged = "ControlModeChanged";
@@ -74,6 +90,16 @@ public class NControllerManager : Node
 		/// Cached name for the 'OnScreenContextChanged' method.
 		/// </summary>
 		public static readonly StringName OnScreenContextChanged = "OnScreenContextChanged";
+
+		/// <summary>
+		/// Cached name for the 'StartListeningForRebind' method.
+		/// </summary>
+		public static readonly StringName StartListeningForRebind = "StartListeningForRebind";
+
+		/// <summary>
+		/// Cached name for the 'StopListeningForRebind' method.
+		/// </summary>
+		public static readonly StringName StopListeningForRebind = "StopListeningForRebind";
 
 		/// <summary>
 		/// Cached name for the 'GetHotkeyIcon' method.
@@ -97,9 +123,19 @@ public class NControllerManager : Node
 		public static readonly StringName ShouldAllowControllerRebinding = "ShouldAllowControllerRebinding";
 
 		/// <summary>
-		/// Cached name for the 'IsUsingController' property.
+		/// Cached name for the 'ShouldShowInputGlyphs' property.
 		/// </summary>
-		public static readonly StringName IsUsingController = "IsUsingController";
+		public static readonly StringName ShouldShowInputGlyphs = "ShouldShowInputGlyphs";
+
+		/// <summary>
+		/// Cached name for the 'InputType' property.
+		/// </summary>
+		public static readonly StringName InputType = "InputType";
+
+		/// <summary>
+		/// Cached name for the 'IsUsingDirectionalNavigation' property.
+		/// </summary>
+		public static readonly StringName IsUsingDirectionalNavigation = "IsUsingDirectionalNavigation";
 
 		/// <summary>
 		/// Cached name for the 'ControllerMappingType' property.
@@ -125,6 +161,11 @@ public class NControllerManager : Node
 		/// Cached name for the '_notifyTween' field.
 		/// </summary>
 		public static readonly StringName _notifyTween = "_notifyTween";
+
+		/// <summary>
+		/// Cached name for the '_inputTypeCheckingDisabled' field.
+		/// </summary>
+		public static readonly StringName _inputTypeCheckingDisabled = "_inputTypeCheckingDisabled";
 	}
 
 	/// <summary>
@@ -178,6 +219,12 @@ public class NControllerManager : Node
 
 	private Tween? _notifyTween;
 
+	/// <summary>
+	/// Make sure you know what you are doing when using this.
+	/// used to disable switching between InputTypes while we are listening for inputs to rebind them
+	/// </summary>
+	private bool _inputTypeCheckingDisabled;
+
 	private ControllerDetectedEventHandler backing_ControllerDetected;
 
 	private MouseDetectedEventHandler backing_MouseDetected;
@@ -198,7 +245,33 @@ public class NControllerManager : Node
 
 	public bool ShouldAllowControllerRebinding => _inputStrategy?.ShouldAllowControllerRebinding ?? true;
 
-	public bool IsUsingController { get; private set; }
+	public bool ShouldShowInputGlyphs
+	{
+		get
+		{
+			InputType inputType = InputType;
+			if ((uint)(inputType - 1) <= 1u)
+			{
+				return true;
+			}
+			return false;
+		}
+	}
+
+	public InputType InputType { get; private set; }
+
+	public bool IsUsingDirectionalNavigation
+	{
+		get
+		{
+			InputType inputType = InputType;
+			if ((uint)(inputType - 1) <= 1u)
+			{
+				return true;
+			}
+			return false;
+		}
+	}
 
 	public Dictionary<StringName, StringName> GetDefaultControllerInputMap
 	{
@@ -279,10 +352,6 @@ public class NControllerManager : Node
 
 	public override void _Process(double delta)
 	{
-		if (_skipMouseCheckFrames > 0)
-		{
-			_skipMouseCheckFrames--;
-		}
 		if (NGame.IsGameFocusedWindow())
 		{
 			_inputStrategy?.ProcessInput();
@@ -291,13 +360,20 @@ public class NControllerManager : Node
 
 	public override void _Input(InputEvent inputEvent)
 	{
-		if (IsUsingController)
+		if (!_inputTypeCheckingDisabled)
 		{
-			CheckForMouseInput(inputEvent);
-		}
-		else
-		{
-			CheckForControllerInput(inputEvent);
+			if (InputType != InputType.Controller)
+			{
+				CheckForControllerInput(inputEvent);
+			}
+			if (InputType != InputType.MouseAndKeyboard)
+			{
+				CheckForMouseInput(inputEvent);
+			}
+			if (InputType != InputType.KeyboardOnlyMode)
+			{
+				CheckForArrowKeyInput(inputEvent);
+			}
 		}
 	}
 
@@ -314,14 +390,9 @@ public class NControllerManager : Node
 	{
 		bool flag = inputEvent is InputEventMouseButton;
 		bool flag2 = inputEvent is InputEventMouseMotion { Velocity: var velocity } inputEventMouseMotion && velocity.LengthSquared() > 100f && _skipMouseCheckFrames <= 0 && inputEventMouseMotion.Relative.LengthSquared() <= 250000f;
-		Viewport viewport = GetViewport();
 		if (flag || flag2)
 		{
-			IsUsingController = false;
-			Input.WarpMouse(_lastMousePosition);
-			viewport?.GuiReleaseFocus();
-			EmitSignal(SignalName.MouseDetected);
-			ControlModeChanged();
+			SwitchToMouseMode();
 		}
 	}
 
@@ -333,21 +404,54 @@ public class NControllerManager : Node
 	{
 		if (NGame.IsGameFocusedWindow() && Controller.AllControllerInputs.Any((StringName i) => inputEvent.IsActionPressed(i)))
 		{
-			IsUsingController = true;
+			InputType = InputType.Controller;
 			Viewport viewport = GetViewport();
-			if (viewport != null)
-			{
-				Vector2I vector2I = DisplayServer.MouseGetPosition();
-				Vector2I vector2I2 = DisplayServer.WindowGetPosition();
-				_lastMousePosition = new Vector2(vector2I.X - vector2I2.X, vector2I.Y - vector2I2.Y);
-				viewport.WarpMouse(_offscreenPos);
-				_skipMouseCheckFrames = 2;
-			}
+			NGame.Instance?.SetMouseBehaviorRecursive(Control.MouseBehaviorRecursiveEnum.Disabled);
 			ActiveScreenContext.Instance.FocusOnDefaultControl();
 			EmitSignal(SignalName.ControllerDetected);
 			ControlModeChanged();
 			viewport?.SetInputAsHandled();
 		}
+	}
+
+	private void CheckForArrowKeyInput(InputEvent inputEvent)
+	{
+		if (NGame.IsGameFocusedWindow() && inputEvent is InputEventKey inputEventKey && inputEventKey.IsPressed() && (inputEventKey.Keycode == Key.Up || inputEventKey.Keycode == Key.Down || inputEventKey.Keycode == Key.Left || inputEventKey.Keycode == Key.Right))
+		{
+			Viewport viewport = GetViewport();
+			if (SaveManager.Instance.PrefsSave.KeyboardMode)
+			{
+				InputType = InputType.KeyboardOnlyMode;
+				NGame.Instance?.SetMouseBehaviorRecursive(Control.MouseBehaviorRecursiveEnum.Disabled);
+				ActiveScreenContext.Instance.FocusOnDefaultControl();
+				EmitSignal(SignalName.ControllerDetected);
+				ControlModeChanged();
+				viewport?.SetInputAsHandled();
+			}
+			else if (InputType == InputType.Controller)
+			{
+				SwitchToMouseMode();
+			}
+		}
+	}
+
+	/// <summary>
+	/// WARNING: Normally this should be handled by CheckForMouseInput.
+	/// Make sure you know what you are doing if you use this.
+	/// </summary>
+	public void ForceMouseMode()
+	{
+		SwitchToMouseMode();
+	}
+
+	private void SwitchToMouseMode()
+	{
+		Viewport viewport = GetViewport();
+		InputType = InputType.MouseAndKeyboard;
+		viewport?.GuiReleaseFocus();
+		NGame.Instance?.SetMouseBehaviorRecursive(Control.MouseBehaviorRecursiveEnum.Inherited);
+		EmitSignal(SignalName.MouseDetected);
+		ControlModeChanged();
 	}
 
 	private void ControlModeChanged()
@@ -357,20 +461,26 @@ public class NControllerManager : Node
 		_notifyTween.TweenProperty(_label, "modulate", Colors.White, 0.25);
 		_notifyTween.TweenInterval(0.5);
 		_notifyTween.TweenProperty(_label, "modulate", Colors.Transparent, 0.75);
-		if (IsUsingController)
+		switch (InputType)
 		{
+		case InputType.Controller:
 			_label.SetTextAutoSize(new LocString("main_menu_ui", "CONTROLLER_DETECTED").GetFormattedText());
 			Log.Info("CONTROLLER DETECTED: " + ((_inputStrategy != null) ? _inputStrategy.GetControllerName() : "NONE"));
-		}
-		else
-		{
+			break;
+		case InputType.MouseAndKeyboard:
 			_label.SetTextAutoSize(new LocString("main_menu_ui", "MOUSE_DETECTED").GetFormattedText());
+			Log.Info("MOUSE DETECTED");
+			break;
+		case InputType.KeyboardOnlyMode:
+			_label.SetTextAutoSize(new LocString("main_menu_ui", "KEYBOARD_ONLY_DETECTED").GetFormattedText());
+			Log.Info("KEYBOARD-MODE DETECTED");
+			break;
 		}
 	}
 
 	private void OnScreenContextChanged()
 	{
-		if (IsUsingController)
+		if (IsUsingDirectionalNavigation)
 		{
 			Callable.From(delegate
 			{
@@ -383,6 +493,16 @@ public class NControllerManager : Node
 		inputEventMouseMotion.Position = mousePosition;
 		inputEventMouseMotion.GlobalPosition = mousePosition;
 		Input.ParseInputEvent(inputEventMouseMotion);
+	}
+
+	public void StartListeningForRebind()
+	{
+		_inputTypeCheckingDisabled = true;
+	}
+
+	public void StopListeningForRebind()
+	{
+		_inputTypeCheckingDisabled = false;
 	}
 
 	public Texture2D? GetHotkeyIcon(string hotkey)
@@ -403,7 +523,7 @@ public class NControllerManager : Node
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	internal static List<MethodInfo> GetGodotMethodList()
 	{
-		List<MethodInfo> list = new List<MethodInfo>(10);
+		List<MethodInfo> list = new List<MethodInfo>(15);
 		list.Add(new MethodInfo(MethodName._ExitTree, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName._Process, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
 		{
@@ -422,8 +542,16 @@ public class NControllerManager : Node
 		{
 			new PropertyInfo(Variant.Type.Object, "inputEvent", PropertyHint.None, "", PropertyUsageFlags.Default, new StringName("InputEvent"), exported: false)
 		}, null));
+		list.Add(new MethodInfo(MethodName.CheckForArrowKeyInput, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
+		{
+			new PropertyInfo(Variant.Type.Object, "inputEvent", PropertyHint.None, "", PropertyUsageFlags.Default, new StringName("InputEvent"), exported: false)
+		}, null));
+		list.Add(new MethodInfo(MethodName.ForceMouseMode, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
+		list.Add(new MethodInfo(MethodName.SwitchToMouseMode, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName.ControlModeChanged, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName.OnScreenContextChanged, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
+		list.Add(new MethodInfo(MethodName.StartListeningForRebind, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
+		list.Add(new MethodInfo(MethodName.StopListeningForRebind, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName.GetHotkeyIcon, new PropertyInfo(Variant.Type.Object, "", PropertyHint.None, "", PropertyUsageFlags.Default, new StringName("Texture2D"), exported: false), MethodFlags.Normal, new List<PropertyInfo>
 		{
 			new PropertyInfo(Variant.Type.String, "hotkey", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false)
@@ -472,6 +600,24 @@ public class NControllerManager : Node
 			ret = default(godot_variant);
 			return true;
 		}
+		if (method == MethodName.CheckForArrowKeyInput && args.Count == 1)
+		{
+			CheckForArrowKeyInput(VariantUtils.ConvertTo<InputEvent>(in args[0]));
+			ret = default(godot_variant);
+			return true;
+		}
+		if (method == MethodName.ForceMouseMode && args.Count == 0)
+		{
+			ForceMouseMode();
+			ret = default(godot_variant);
+			return true;
+		}
+		if (method == MethodName.SwitchToMouseMode && args.Count == 0)
+		{
+			SwitchToMouseMode();
+			ret = default(godot_variant);
+			return true;
+		}
 		if (method == MethodName.ControlModeChanged && args.Count == 0)
 		{
 			ControlModeChanged();
@@ -481,6 +627,18 @@ public class NControllerManager : Node
 		if (method == MethodName.OnScreenContextChanged && args.Count == 0)
 		{
 			OnScreenContextChanged();
+			ret = default(godot_variant);
+			return true;
+		}
+		if (method == MethodName.StartListeningForRebind && args.Count == 0)
+		{
+			StartListeningForRebind();
+			ret = default(godot_variant);
+			return true;
+		}
+		if (method == MethodName.StopListeningForRebind && args.Count == 0)
+		{
+			StopListeningForRebind();
 			ret = default(godot_variant);
 			return true;
 		}
@@ -525,11 +683,31 @@ public class NControllerManager : Node
 		{
 			return true;
 		}
+		if (method == MethodName.CheckForArrowKeyInput)
+		{
+			return true;
+		}
+		if (method == MethodName.ForceMouseMode)
+		{
+			return true;
+		}
+		if (method == MethodName.SwitchToMouseMode)
+		{
+			return true;
+		}
 		if (method == MethodName.ControlModeChanged)
 		{
 			return true;
 		}
 		if (method == MethodName.OnScreenContextChanged)
+		{
+			return true;
+		}
+		if (method == MethodName.StartListeningForRebind)
+		{
+			return true;
+		}
+		if (method == MethodName.StopListeningForRebind)
 		{
 			return true;
 		}
@@ -548,9 +726,9 @@ public class NControllerManager : Node
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool SetGodotClassPropertyValue(in godot_string_name name, in godot_variant value)
 	{
-		if (name == PropertyName.IsUsingController)
+		if (name == PropertyName.InputType)
 		{
-			IsUsingController = VariantUtils.ConvertTo<bool>(in value);
+			InputType = VariantUtils.ConvertTo<InputType>(in value);
 			return true;
 		}
 		if (name == PropertyName._lastMousePosition)
@@ -573,6 +751,11 @@ public class NControllerManager : Node
 			_notifyTween = VariantUtils.ConvertTo<Tween>(in value);
 			return true;
 		}
+		if (name == PropertyName._inputTypeCheckingDisabled)
+		{
+			_inputTypeCheckingDisabled = VariantUtils.ConvertTo<bool>(in value);
+			return true;
+		}
 		return base.SetGodotClassPropertyValue(in name, in value);
 	}
 
@@ -587,9 +770,20 @@ public class NControllerManager : Node
 			value = VariantUtils.CreateFrom(in from);
 			return true;
 		}
-		if (name == PropertyName.IsUsingController)
+		if (name == PropertyName.ShouldShowInputGlyphs)
 		{
-			from = IsUsingController;
+			from = ShouldShowInputGlyphs;
+			value = VariantUtils.CreateFrom(in from);
+			return true;
+		}
+		if (name == PropertyName.InputType)
+		{
+			value = VariantUtils.CreateFrom<InputType>(InputType);
+			return true;
+		}
+		if (name == PropertyName.IsUsingDirectionalNavigation)
+		{
+			from = IsUsingDirectionalNavigation;
 			value = VariantUtils.CreateFrom(in from);
 			return true;
 		}
@@ -618,6 +812,11 @@ public class NControllerManager : Node
 			value = VariantUtils.CreateFrom(in _notifyTween);
 			return true;
 		}
+		if (name == PropertyName._inputTypeCheckingDisabled)
+		{
+			value = VariantUtils.CreateFrom(in _inputTypeCheckingDisabled);
+			return true;
+		}
 		return base.GetGodotClassPropertyValue(in name, out value);
 	}
 
@@ -631,11 +830,14 @@ public class NControllerManager : Node
 	{
 		List<PropertyInfo> list = new List<PropertyInfo>();
 		list.Add(new PropertyInfo(Variant.Type.Bool, PropertyName.ShouldAllowControllerRebinding, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Bool, PropertyName.ShouldShowInputGlyphs, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Vector2, PropertyName._lastMousePosition, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Int, PropertyName._skipMouseCheckFrames, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._label, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._notifyTween, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
-		list.Add(new PropertyInfo(Variant.Type.Bool, PropertyName.IsUsingController, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Bool, PropertyName._inputTypeCheckingDisabled, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Int, PropertyName.InputType, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Bool, PropertyName.IsUsingDirectionalNavigation, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Int, PropertyName.ControllerMappingType, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		return list;
 	}
@@ -645,11 +847,12 @@ public class NControllerManager : Node
 	protected override void SaveGodotObjectData(GodotSerializationInfo info)
 	{
 		base.SaveGodotObjectData(info);
-		info.AddProperty(PropertyName.IsUsingController, Variant.From<bool>(IsUsingController));
+		info.AddProperty(PropertyName.InputType, Variant.From<InputType>(InputType));
 		info.AddProperty(PropertyName._lastMousePosition, Variant.From(in _lastMousePosition));
 		info.AddProperty(PropertyName._skipMouseCheckFrames, Variant.From(in _skipMouseCheckFrames));
 		info.AddProperty(PropertyName._label, Variant.From(in _label));
 		info.AddProperty(PropertyName._notifyTween, Variant.From(in _notifyTween));
+		info.AddProperty(PropertyName._inputTypeCheckingDisabled, Variant.From(in _inputTypeCheckingDisabled));
 		info.AddSignalEventDelegate(SignalName.ControllerDetected, backing_ControllerDetected);
 		info.AddSignalEventDelegate(SignalName.MouseDetected, backing_MouseDetected);
 		info.AddSignalEventDelegate(SignalName.ControllerTypeChanged, backing_ControllerTypeChanged);
@@ -660,9 +863,9 @@ public class NControllerManager : Node
 	protected override void RestoreGodotObjectData(GodotSerializationInfo info)
 	{
 		base.RestoreGodotObjectData(info);
-		if (info.TryGetProperty(PropertyName.IsUsingController, out var value))
+		if (info.TryGetProperty(PropertyName.InputType, out var value))
 		{
-			IsUsingController = value.As<bool>();
+			InputType = value.As<InputType>();
 		}
 		if (info.TryGetProperty(PropertyName._lastMousePosition, out var value2))
 		{
@@ -680,17 +883,21 @@ public class NControllerManager : Node
 		{
 			_notifyTween = value5.As<Tween>();
 		}
-		if (info.TryGetSignalEventDelegate<ControllerDetectedEventHandler>(SignalName.ControllerDetected, out var value6))
+		if (info.TryGetProperty(PropertyName._inputTypeCheckingDisabled, out var value6))
 		{
-			backing_ControllerDetected = value6;
+			_inputTypeCheckingDisabled = value6.As<bool>();
 		}
-		if (info.TryGetSignalEventDelegate<MouseDetectedEventHandler>(SignalName.MouseDetected, out var value7))
+		if (info.TryGetSignalEventDelegate<ControllerDetectedEventHandler>(SignalName.ControllerDetected, out var value7))
 		{
-			backing_MouseDetected = value7;
+			backing_ControllerDetected = value7;
 		}
-		if (info.TryGetSignalEventDelegate<ControllerTypeChangedEventHandler>(SignalName.ControllerTypeChanged, out var value8))
+		if (info.TryGetSignalEventDelegate<MouseDetectedEventHandler>(SignalName.MouseDetected, out var value8))
 		{
-			backing_ControllerTypeChanged = value8;
+			backing_MouseDetected = value8;
+		}
+		if (info.TryGetSignalEventDelegate<ControllerTypeChangedEventHandler>(SignalName.ControllerTypeChanged, out var value9))
+		{
+			backing_ControllerTypeChanged = value9;
 		}
 	}
 

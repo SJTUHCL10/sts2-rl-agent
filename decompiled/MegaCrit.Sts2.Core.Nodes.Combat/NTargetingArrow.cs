@@ -6,6 +6,7 @@ using Godot.Bridge;
 using Godot.NativeInterop;
 using MegaCrit.Sts2.Core.Assets;
 using MegaCrit.Sts2.Core.Helpers;
+using MegaCrit.Sts2.Core.Nodes.CommonUi;
 
 namespace MegaCrit.Sts2.Core.Nodes.Combat;
 
@@ -265,7 +266,7 @@ public class NTargetingArrow : Node2D
 	public void StartDrawingFrom(Vector2 from, bool usingController)
 	{
 		_followMouse = !usingController;
-		if (_followMouse)
+		if (!NControllerManager.Instance.IsUsingDirectionalNavigation && _followMouse)
 		{
 			Input.MouseMode = Input.MouseModeEnum.Hidden;
 		}
@@ -302,7 +303,7 @@ public class NTargetingArrow : Node2D
 
 	public void StopDrawing()
 	{
-		if (_followMouse)
+		if (!NControllerManager.Instance.IsUsingDirectionalNavigation && _followMouse)
 		{
 			Input.MouseMode = Input.MouseModeEnum.Visible;
 		}

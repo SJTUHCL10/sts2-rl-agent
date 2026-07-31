@@ -223,7 +223,7 @@ public class NAncientMapPoint : NMapPoint
 		if (IsInputAllowed())
 		{
 			AnimHover();
-			if (NControllerManager.Instance.IsUsingController)
+			if (NControllerManager.Instance.IsUsingDirectionalNavigation)
 			{
 				_controllerSelectionReticle.OnSelect();
 			}

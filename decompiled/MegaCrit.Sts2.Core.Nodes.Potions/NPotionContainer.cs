@@ -48,6 +48,11 @@ public class NPotionContainer : Control
 		public new static readonly StringName _ExitTree = "_ExitTree";
 
 		/// <summary>
+		/// Cached name for the '_Notification' method.
+		/// </summary>
+		public new static readonly StringName _Notification = "_Notification";
+
+		/// <summary>
 		/// Cached name for the 'ConnectPlayerEvents' method.
 		/// </summary>
 		public static readonly StringName ConnectPlayerEvents = "ConnectPlayerEvents";
@@ -170,28 +175,34 @@ public class NPotionContainer : Control
 
 	public override void _Ready()
 	{
-		Callable.From(UpdateNavigation).CallDeferred();
-	}
-
-	public override void _EnterTree()
-	{
-		_cts = new CancellationTokenSource();
 		_potionHolders = GetNode<Control>("MarginContainer/PotionHolders");
 		_potionErrorBg = GetNode<Control>("PotionErrorBg");
 		_potionShortcutButton = GetNode<NButton>("PotionShortcutButton");
 		_potionErrorBg.Modulate = Colors.Transparent;
 		_potionShortcutButton.Connect(NClickableControl.SignalName.Released, Callable.From<NButton>(OnPotionShortcutPressed));
 		CombatManager.Instance.CombatSetUp += OnCombatSetUp;
+		Callable.From(UpdateNavigation).CallDeferred();
 		ConnectPlayerEvents();
+	}
+
+	public override void _EnterTree()
+	{
+		_cts = new CancellationTokenSource();
 	}
 
 	public override void _ExitTree()
 	{
 		_cts.Cancel();
-		DisconnectPlayerEvents();
-		_player = null;
-		_potionShortcutButton.Disconnect(NClickableControl.SignalName.Released, Callable.From<NButton>(OnPotionShortcutPressed));
-		CombatManager.Instance.CombatSetUp -= OnCombatSetUp;
+	}
+
+	public override void _Notification(int what)
+	{
+		if ((long)what == 1)
+		{
+			DisconnectPlayerEvents();
+			_player = null;
+			CombatManager.Instance.CombatSetUp -= OnCombatSetUp;
+		}
 	}
 
 	public void Initialize(IRunState runState)
@@ -268,13 +279,13 @@ public class NPotionContainer : Control
 
 	private void UpdateNavigation()
 	{
-		Control control = NRun.Instance.GlobalUi.RelicInventory.RelicNodes.FirstOrDefault();
+		Control control = NRun.Instance?.GlobalUi.RelicInventory.RelicNodes.FirstOrDefault();
 		if (control != null)
 		{
 			for (int i = 0; i < _holders.Count; i++)
 			{
-				_holders[i].FocusNeighborLeft = ((i > 0) ? _holders[i - 1].GetPath() : NRun.Instance.GlobalUi.TopBar.Gold.GetPath());
-				_holders[i].FocusNeighborRight = ((i < _holders.Count - 1) ? _holders[i + 1].GetPath() : NRun.Instance.GlobalUi.TopBar.RoomIcon.GetPath());
+				_holders[i].FocusNeighborLeft = ((i > 0) ? _holders[i - 1].GetPath() : NRun.Instance?.GlobalUi.TopBar.Gold.GetPath());
+				_holders[i].FocusNeighborRight = ((i < _holders.Count - 1) ? _holders[i + 1].GetPath() : NRun.Instance?.GlobalUi.TopBar.RoomIcon.GetPath());
 				_holders[i].FocusNeighborBottom = control.GetPath();
 				_holders[i].FocusNeighborTop = _holders[i].GetPath();
 			}
@@ -423,10 +434,14 @@ public class NPotionContainer : Control
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	internal static List<MethodInfo> GetGodotMethodList()
 	{
-		List<MethodInfo> list = new List<MethodInfo>(12);
+		List<MethodInfo> list = new List<MethodInfo>(13);
 		list.Add(new MethodInfo(MethodName._Ready, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName._EnterTree, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName._ExitTree, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
+		list.Add(new MethodInfo(MethodName._Notification, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
+		{
+			new PropertyInfo(Variant.Type.Int, "what", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false)
+		}, null));
 		list.Add(new MethodInfo(MethodName.ConnectPlayerEvents, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName.DisconnectPlayerEvents, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName.GrowPotionHolders, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
@@ -470,6 +485,12 @@ public class NPotionContainer : Control
 		if (method == MethodName._ExitTree && args.Count == 0)
 		{
 			_ExitTree();
+			ret = default(godot_variant);
+			return true;
+		}
+		if (method == MethodName._Notification && args.Count == 1)
+		{
+			_Notification(VariantUtils.ConvertTo<int>(in args[0]));
 			ret = default(godot_variant);
 			return true;
 		}
@@ -543,6 +564,10 @@ public class NPotionContainer : Control
 			return true;
 		}
 		if (method == MethodName._ExitTree)
+		{
+			return true;
+		}
+		if (method == MethodName._Notification)
 		{
 			return true;
 		}

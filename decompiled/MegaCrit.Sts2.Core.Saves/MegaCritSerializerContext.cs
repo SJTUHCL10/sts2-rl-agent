@@ -6572,7 +6572,7 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 
 	private static JsonPropertyInfo[] PrefsSavePropInit(JsonSerializerOptions options)
 	{
-		JsonPropertyInfo[] array = new JsonPropertyInfo[12];
+		JsonPropertyInfo[] array = new JsonPropertyInfo[13];
 		JsonPropertyInfoValues<int> propertyInfo = new JsonPropertyInfoValues<int>
 		{
 			IsProperty = true,
@@ -6825,6 +6825,27 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 			AttributeProviderFactory = () => typeof(PrefsSave).GetProperty("IsBestiaryActionsPreferred", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
 		};
 		array[11] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo12);
+		JsonPropertyInfoValues<bool> propertyInfo13 = new JsonPropertyInfoValues<bool>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(PrefsSave),
+			Converter = null,
+			Getter = (object obj) => ((PrefsSave)obj).KeyboardMode,
+			Setter = delegate(object obj, bool value)
+			{
+				((PrefsSave)obj).KeyboardMode = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "KeyboardMode",
+			JsonPropertyName = "keyboard_mode",
+			AttributeProviderFactory = () => typeof(PrefsSave).GetProperty("KeyboardMode", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
+		};
+		array[12] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo13);
 		return array;
 	}
 
@@ -11905,7 +11926,7 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 
 	private static JsonPropertyInfo[] SettingsSavePropInit(JsonSerializerOptions options)
 	{
-		JsonPropertyInfo[] array = new JsonPropertyInfo[23];
+		JsonPropertyInfo[] array = new JsonPropertyInfo[24];
 		JsonPropertyInfoValues<int> propertyInfo = new JsonPropertyInfoValues<int>
 		{
 			IsProperty = true,
@@ -12286,7 +12307,30 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 		array[17] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo18);
 		array[17].IsGetNullable = false;
 		array[17].IsSetNullable = false;
-		JsonPropertyInfoValues<ControllerMappingType> propertyInfo19 = new JsonPropertyInfoValues<ControllerMappingType>
+		JsonPropertyInfoValues<Dictionary<string, string>> propertyInfo19 = new JsonPropertyInfoValues<Dictionary<string, string>>
+		{
+			IsProperty = true,
+			IsPublic = true,
+			IsVirtual = false,
+			DeclaringType = typeof(SettingsSave),
+			Converter = null,
+			Getter = (object obj) => ((SettingsSave)obj).KbOnlyMapping,
+			Setter = delegate(object obj, Dictionary<string, string>? value)
+			{
+				((SettingsSave)obj).KbOnlyMapping = value;
+			},
+			IgnoreCondition = null,
+			HasJsonInclude = false,
+			IsExtensionData = false,
+			NumberHandling = null,
+			PropertyName = "KbOnlyMapping",
+			JsonPropertyName = "keyboard_only_mapping",
+			AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("KbOnlyMapping", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(Dictionary<string, string>), Array.Empty<Type>(), null)
+		};
+		array[18] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo19);
+		array[18].IsGetNullable = false;
+		array[18].IsSetNullable = false;
+		JsonPropertyInfoValues<ControllerMappingType> propertyInfo20 = new JsonPropertyInfoValues<ControllerMappingType>
 		{
 			IsProperty = true,
 			IsPublic = true,
@@ -12306,8 +12350,8 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 			JsonPropertyName = "controller_mapping_type",
 			AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("ControllerMappingType", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ControllerMappingType), Array.Empty<Type>(), null)
 		};
-		array[18] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo19);
-		JsonPropertyInfoValues<Dictionary<string, string>> propertyInfo20 = new JsonPropertyInfoValues<Dictionary<string, string>>
+		array[19] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo20);
+		JsonPropertyInfoValues<Dictionary<string, string>> propertyInfo21 = new JsonPropertyInfoValues<Dictionary<string, string>>
 		{
 			IsProperty = true,
 			IsPublic = true,
@@ -12327,10 +12371,10 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 			JsonPropertyName = "controller_mapping",
 			AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("ControllerMapping", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(Dictionary<string, string>), Array.Empty<Type>(), null)
 		};
-		array[19] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo20);
-		array[19].IsGetNullable = false;
-		array[19].IsSetNullable = false;
-		JsonPropertyInfoValues<bool> propertyInfo21 = new JsonPropertyInfoValues<bool>
+		array[20] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo21);
+		array[20].IsGetNullable = false;
+		array[20].IsSetNullable = false;
+		JsonPropertyInfoValues<bool> propertyInfo22 = new JsonPropertyInfoValues<bool>
 		{
 			IsProperty = true,
 			IsPublic = true,
@@ -12350,8 +12394,8 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 			JsonPropertyName = "limit_fps_in_background",
 			AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("LimitFpsInBackground", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
 		};
-		array[20] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo21);
-		JsonPropertyInfoValues<bool> propertyInfo22 = new JsonPropertyInfoValues<bool>
+		array[21] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo22);
+		JsonPropertyInfoValues<bool> propertyInfo23 = new JsonPropertyInfoValues<bool>
 		{
 			IsProperty = true,
 			IsPublic = true,
@@ -12371,8 +12415,8 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 			JsonPropertyName = "full_console",
 			AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("FullConsole", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
 		};
-		array[21] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo22);
-		JsonPropertyInfoValues<bool> propertyInfo23 = new JsonPropertyInfoValues<bool>
+		array[22] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo23);
+		JsonPropertyInfoValues<bool> propertyInfo24 = new JsonPropertyInfoValues<bool>
 		{
 			IsProperty = true,
 			IsPublic = true,
@@ -12392,7 +12436,7 @@ internal class MegaCritSerializerContext : JsonSerializerContext, IJsonTypeInfoR
 			JsonPropertyName = "seen_ea_disclaimer",
 			AttributeProviderFactory = () => typeof(SettingsSave).GetProperty("SeenEaDisclaimer", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
 		};
-		array[22] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo23);
+		array[23] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo24);
 		return array;
 	}
 

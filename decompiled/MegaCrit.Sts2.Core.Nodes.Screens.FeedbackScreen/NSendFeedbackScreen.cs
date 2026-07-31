@@ -26,7 +26,7 @@ using MegaCrit.Sts2.Core.Platform;
 using MegaCrit.Sts2.Core.Saves;
 using MegaCrit.Sts2.Core.TestSupport;
 using MegaCrit.Sts2.addons.mega_text;
-using Sentry;
+using Sentry.Godot;
 
 namespace MegaCrit.Sts2.Core.Nodes.Screens.FeedbackScreen;
 

@@ -7,7 +7,6 @@ using Godot;
 using Godot.Bridge;
 using Godot.NativeInterop;
 using MegaCrit.Sts2.Core.Audio.Debug;
-using MegaCrit.Sts2.Core.ControllerInput;
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.Entities.Creatures;
 using MegaCrit.Sts2.Core.Helpers;
@@ -224,7 +223,7 @@ public class NMouseCardPlay : NCardPlay
 				break;
 			}
 		}
-		if (inputEvent.IsActionPressed(_cancelShortcut) || inputEvent.IsActionPressed(MegaInput.releaseCard))
+		if (inputEvent.IsActionPressed(_cancelShortcut))
 		{
 			CancelPlayCard();
 			GetViewport()?.SetInputAsHandled();

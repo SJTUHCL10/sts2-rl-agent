@@ -6,6 +6,7 @@ using Godot.NativeInterop;
 using MegaCrit.Sts2.Core.Assets;
 using MegaCrit.Sts2.Core.Helpers;
 using MegaCrit.Sts2.Core.Models;
+using MegaCrit.Sts2.Core.Nodes.CommonUi;
 using MegaCrit.Sts2.Core.Nodes.GodotExtensions;
 using MegaCrit.Sts2.addons.mega_text;
 
@@ -130,6 +131,7 @@ public class NBestiaryMoveButton : NButton
 		_label.SetTextAutoSize(Move.displayName);
 		_label.PivotOffset = new Vector2(0f, _label.Size.Y * 0.5f);
 		_buttonAnimator.PivotOffset = new Vector2(0f, _buttonAnimator.Size.Y * 0.5f);
+		GetNode<NHotkeyIcon>("%HotkeyIcon").UpdateInput(_hotkeys[0]);
 	}
 
 	public static NBestiaryMoveButton Create(BestiaryMonsterMove move, StringName setHotkey)

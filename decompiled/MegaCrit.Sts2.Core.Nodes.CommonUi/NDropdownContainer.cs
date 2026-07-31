@@ -237,7 +237,7 @@ public class NDropdownContainer : Control
 
 	private void ProcessGuiFocus(Control focusedControl)
 	{
-		if (IsVisibleInTree() && _scrollbar.Visible && NControllerManager.Instance.IsUsingController && _dropdownItems.IsAncestorOf(focusedControl))
+		if (IsVisibleInTree() && _scrollbar.Visible && NControllerManager.Instance.IsUsingDirectionalNavigation && _dropdownItems.IsAncestorOf(focusedControl))
 		{
 			float num = _dropdownItems.GlobalPosition.Y - focusedControl.GlobalPosition.Y;
 			float value = num + base.Size.Y * 0.5f;

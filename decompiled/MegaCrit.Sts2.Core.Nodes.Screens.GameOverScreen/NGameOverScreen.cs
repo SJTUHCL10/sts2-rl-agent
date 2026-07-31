@@ -247,11 +247,6 @@ public class NGameOverScreen : NClickableControl, IOverlayScreen, IScreenContext
 		public static readonly StringName _scoreThreshold = "_scoreThreshold";
 
 		/// <summary>
-		/// Cached name for the '_scoreUnlockedEpochId' field.
-		/// </summary>
-		public static readonly StringName _scoreUnlockedEpochId = "_scoreUnlockedEpochId";
-
-		/// <summary>
 		/// Cached name for the '_leaderboard' field.
 		/// </summary>
 		public static readonly StringName _leaderboard = "_leaderboard";
@@ -374,8 +369,6 @@ public class NGameOverScreen : NClickableControl, IOverlayScreen, IScreenContext
 	private int _score;
 
 	private int _scoreThreshold;
-
-	private string? _scoreUnlockedEpochId;
 
 	private NDailyRunLeaderboard _leaderboard;
 
@@ -689,6 +682,7 @@ public class NGameOverScreen : NClickableControl, IOverlayScreen, IScreenContext
 		if (!_serializableRun.GameMode.AreAchievementsAndEpochsLocked())
 		{
 			SaveBadgesToProgress(badges);
+			SaveManager.Instance.SaveProgressFile();
 		}
 		await Cmd.Wait(0.25f, _cts.Token);
 		foreach (NBadge item2 in _badgeContainer.GetChildren().OfType<NBadge>())
@@ -764,7 +758,6 @@ public class NGameOverScreen : NClickableControl, IOverlayScreen, IScreenContext
 			{
 				Log.Info("New Unlock, yay!");
 				MegaLabel node = GetNode<MegaLabel>("%UnlockText");
-				_scoreUnlockedEpochId = SaveManager.Instance.IncrementUnlock();
 				currentScore -= _scoreThreshold;
 				int newThreshold = GetScoreThreshold(unlocksRemaining - 1);
 				string locEntryKey = ((newThreshold == 0) ? "SCORE.unlockedAllMessage" : "SCORE.unlockedEpochMessage");
@@ -782,10 +775,9 @@ public class NGameOverScreen : NClickableControl, IOverlayScreen, IScreenContext
 				{
 					return;
 				}
-				if (_scoreUnlockedEpochId != null && !SaveManager.Instance.IsEpochRevealed(_scoreUnlockedEpochId))
+				EpochModel epochModel = SaveManager.Instance.GrantNextUnlock();
+				if (epochModel != null)
 				{
-					EpochModel epochModel = EpochModel.Get(_scoreUnlockedEpochId);
-					SaveManager.Instance.ObtainEpoch(_scoreUnlockedEpochId);
 					NGame.Instance.AddChildSafely(NGainEpochVfx.Create(epochModel));
 					_localPlayer.DiscoveredEpochs.Add(epochModel.Id);
 					LocalContext.GetMe(_serializableRun).DiscoveredEpochs.Add(epochModel.Id);
@@ -795,43 +787,48 @@ public class NGameOverScreen : NClickableControl, IOverlayScreen, IScreenContext
 				_unlocksRemaining.SetTextAutoSize(locString2.GetFormattedText());
 				_scoreThreshold = newThreshold;
 				currentScore += _score;
+				int currentScore2;
 				if (newThreshold == 0 || currentScore == 0)
 				{
 					Log.Info("Player has gotten all unlocks or they've overflowed exactly 0");
-					SaveManager.Instance.Progress.CurrentScore = 0;
+					currentScore2 = 0;
 				}
 				else if (currentScore >= newThreshold)
 				{
 					Log.Info("Score is too awesome. Disallow double unlock.");
-					scoreTween.Kill();
-					scoreTween = CreateTween().SetParallel();
-					scoreTween.TweenInterval(0.5);
-					scoreTween.Chain();
-					scoreTween.TweenMethod(Callable.From<int>(TweenScore), 0, newThreshold * 99 / 100, 1.0).SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Cubic);
-					scoreTween.TweenProperty(_scoreFg, "scale:x", 1f, 1.0).SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Cubic)
-						.From(0f);
-					if (!(await scoreTween.AwaitFinished(this)))
-					{
-						return;
-					}
-					SaveManager.Instance.Progress.CurrentScore = newThreshold - 1;
+					currentScore2 = newThreshold - 1;
 				}
 				else
 				{
 					Log.Info("Animate overflow score.");
+					currentScore2 = currentScore;
+				}
+				SaveManager.Instance.Progress.CurrentScore = currentScore2;
+				SaveManager.Instance.SaveProgressFile();
+				if (newThreshold != 0 && currentScore != 0)
+				{
 					scoreTween.Kill();
 					scoreTween = CreateTween().SetParallel();
-					scoreTween.Chain();
-					scoreTween.TweenInterval(0.5);
-					scoreTween.Chain();
-					scoreTween.TweenMethod(Callable.From<int>(TweenScore), 0, currentScore, 1.0).SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Cubic);
-					scoreTween.TweenProperty(_scoreFg, "scale:x", (float)currentScore / (float)newThreshold, 1.0).SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Cubic)
-						.From(0f);
-					if (!(await scoreTween.AwaitFinished(this)))
+					if (currentScore >= newThreshold)
 					{
-						return;
+						scoreTween.TweenInterval(0.5);
+						scoreTween.Chain();
+						scoreTween.TweenMethod(Callable.From<int>(TweenScore), 0, newThreshold * 99 / 100, 1.0).SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Cubic);
+						scoreTween.TweenProperty(_scoreFg, "scale:x", 1f, 1.0).SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Cubic)
+							.From(0f);
 					}
-					SaveManager.Instance.Progress.CurrentScore = currentScore;
+					else
+					{
+						scoreTween.Chain();
+						scoreTween.TweenInterval(0.5);
+						scoreTween.Chain();
+						scoreTween.TweenMethod(Callable.From<int>(TweenScore), 0, currentScore, 1.0).SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Cubic);
+						scoreTween.TweenProperty(_scoreFg, "scale:x", (float)currentScore / (float)newThreshold, 1.0).SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Cubic)
+							.From(0f);
+					}
+					if (await scoreTween.AwaitFinished(this))
+					{
+					}
 				}
 			}
 			else
@@ -842,8 +839,8 @@ public class NGameOverScreen : NClickableControl, IOverlayScreen, IScreenContext
 				scoreTween.TweenMethod(Callable.From<int>(TweenScore), currentScore, currentScore + _score, 1.0);
 				scoreTween.TweenProperty(_scoreFg, "scale:x", (float)(currentScore + _score) / (float)_scoreThreshold, 1.0);
 				SaveManager.Instance.Progress.CurrentScore += _score;
+				SaveManager.Instance.SaveProgressFile();
 			}
-			SaveManager.Instance.SaveProgressFile();
 		}
 		else
 		{
@@ -863,13 +860,13 @@ public class NGameOverScreen : NClickableControl, IOverlayScreen, IScreenContext
 
 	/// <summary>
 	/// Lookup table of score thresholds based on the total number of unlocks the player has completed.
-	/// Must match: <see cref="M:MegaCrit.Sts2.Core.Saves.SaveManager.GetEpochIdForUnlock" />.
+	/// Must have one entry per epoch in <see cref="P:MegaCrit.Sts2.Core.Timeline.EpochModel.AgnosticUnlockOrder" />.
 	/// </summary>
 	/// <param name="unlocksRemaining"></param>
 	/// <returns></returns>
 	private int GetScoreThreshold(int unlocksRemaining)
 	{
-		return (18 - unlocksRemaining) switch
+		return (SaveManager.TotalAgnosticUnlocks - unlocksRemaining) switch
 		{
 			0 => 200, 
 			1 => 500, 
@@ -1487,11 +1484,6 @@ public class NGameOverScreen : NClickableControl, IOverlayScreen, IScreenContext
 			_scoreThreshold = VariantUtils.ConvertTo<int>(in value);
 			return true;
 		}
-		if (name == PropertyName._scoreUnlockedEpochId)
-		{
-			_scoreUnlockedEpochId = VariantUtils.ConvertTo<string>(in value);
-			return true;
-		}
 		if (name == PropertyName._leaderboard)
 		{
 			_leaderboard = VariantUtils.ConvertTo<NDailyRunLeaderboard>(in value);
@@ -1662,11 +1654,6 @@ public class NGameOverScreen : NClickableControl, IOverlayScreen, IScreenContext
 			value = VariantUtils.CreateFrom(in _scoreThreshold);
 			return true;
 		}
-		if (name == PropertyName._scoreUnlockedEpochId)
-		{
-			value = VariantUtils.CreateFrom(in _scoreUnlockedEpochId);
-			return true;
-		}
 		if (name == PropertyName._leaderboard)
 		{
 			value = VariantUtils.CreateFrom(in _leaderboard);
@@ -1771,7 +1758,6 @@ public class NGameOverScreen : NClickableControl, IOverlayScreen, IScreenContext
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._unlocksRemaining, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Int, PropertyName._score, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Int, PropertyName._scoreThreshold, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
-		list.Add(new PropertyInfo(Variant.Type.String, PropertyName._scoreUnlockedEpochId, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._leaderboard, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._creatureContainer, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._summaryContainer, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
@@ -1812,7 +1798,6 @@ public class NGameOverScreen : NClickableControl, IOverlayScreen, IScreenContext
 		info.AddProperty(PropertyName._unlocksRemaining, Variant.From(in _unlocksRemaining));
 		info.AddProperty(PropertyName._score, Variant.From(in _score));
 		info.AddProperty(PropertyName._scoreThreshold, Variant.From(in _scoreThreshold));
-		info.AddProperty(PropertyName._scoreUnlockedEpochId, Variant.From(in _scoreUnlockedEpochId));
 		info.AddProperty(PropertyName._leaderboard, Variant.From(in _leaderboard));
 		info.AddProperty(PropertyName._creatureContainer, Variant.From(in _creatureContainer));
 		info.AddProperty(PropertyName._summaryContainer, Variant.From(in _summaryContainer));
@@ -1884,73 +1869,69 @@ public class NGameOverScreen : NClickableControl, IOverlayScreen, IScreenContext
 		{
 			_scoreThreshold = value12.As<int>();
 		}
-		if (info.TryGetProperty(PropertyName._scoreUnlockedEpochId, out var value13))
+		if (info.TryGetProperty(PropertyName._leaderboard, out var value13))
 		{
-			_scoreUnlockedEpochId = value13.As<string>();
+			_leaderboard = value13.As<NDailyRunLeaderboard>();
 		}
-		if (info.TryGetProperty(PropertyName._leaderboard, out var value14))
+		if (info.TryGetProperty(PropertyName._creatureContainer, out var value14))
 		{
-			_leaderboard = value14.As<NDailyRunLeaderboard>();
+			_creatureContainer = value14.As<Control>();
 		}
-		if (info.TryGetProperty(PropertyName._creatureContainer, out var value15))
+		if (info.TryGetProperty(PropertyName._summaryContainer, out var value15))
 		{
-			_creatureContainer = value15.As<Control>();
+			_summaryContainer = value15.As<NRunSummary>();
 		}
-		if (info.TryGetProperty(PropertyName._summaryContainer, out var value16))
+		if (info.TryGetProperty(PropertyName._fullBlackBackstop, out var value16))
 		{
-			_summaryContainer = value16.As<NRunSummary>();
+			_fullBlackBackstop = value16.As<ColorRect>();
 		}
-		if (info.TryGetProperty(PropertyName._fullBlackBackstop, out var value17))
+		if (info.TryGetProperty(PropertyName._summaryBackstop, out var value17))
 		{
-			_fullBlackBackstop = value17.As<ColorRect>();
+			_summaryBackstop = value17.As<ColorRect>();
 		}
-		if (info.TryGetProperty(PropertyName._summaryBackstop, out var value18))
+		if (info.TryGetProperty(PropertyName._backstop, out var value18))
 		{
-			_summaryBackstop = value18.As<ColorRect>();
+			_backstop = value18.As<ColorRect>();
 		}
-		if (info.TryGetProperty(PropertyName._backstop, out var value19))
+		if (info.TryGetProperty(PropertyName._banner, out var value19))
 		{
-			_backstop = value19.As<ColorRect>();
+			_banner = value19.As<NCommonBanner>();
 		}
-		if (info.TryGetProperty(PropertyName._banner, out var value20))
+		if (info.TryGetProperty(PropertyName._deathQuote, out var value20))
 		{
-			_banner = value20.As<NCommonBanner>();
+			_deathQuote = value20.As<MegaRichTextLabel>();
 		}
-		if (info.TryGetProperty(PropertyName._deathQuote, out var value21))
+		if (info.TryGetProperty(PropertyName._victoryDamageLabel, out var value21))
 		{
-			_deathQuote = value21.As<MegaRichTextLabel>();
+			_victoryDamageLabel = value21.As<MegaRichTextLabel>();
 		}
-		if (info.TryGetProperty(PropertyName._victoryDamageLabel, out var value22))
+		if (info.TryGetProperty(PropertyName._uiNode, out var value22))
 		{
-			_victoryDamageLabel = value22.As<MegaRichTextLabel>();
+			_uiNode = value22.As<Control>();
 		}
-		if (info.TryGetProperty(PropertyName._uiNode, out var value23))
+		if (info.TryGetProperty(PropertyName._screenshakeContainer, out var value23))
 		{
-			_uiNode = value23.As<Control>();
+			_screenshakeContainer = value23.As<Control>();
 		}
-		if (info.TryGetProperty(PropertyName._screenshakeContainer, out var value24))
+		if (info.TryGetProperty(PropertyName._discoveryLabel, out var value24))
 		{
-			_screenshakeContainer = value24.As<Control>();
+			_discoveryLabel = value24.As<MegaLabel>();
 		}
-		if (info.TryGetProperty(PropertyName._discoveryLabel, out var value25))
+		if (info.TryGetProperty(PropertyName._encounterQuote, out var value25))
 		{
-			_discoveryLabel = value25.As<MegaLabel>();
+			_encounterQuote = value25.As<string>();
 		}
-		if (info.TryGetProperty(PropertyName._encounterQuote, out var value26))
+		if (info.TryGetProperty(PropertyName._isAnimatingSummary, out var value26))
 		{
-			_encounterQuote = value26.As<string>();
+			_isAnimatingSummary = value26.As<bool>();
 		}
-		if (info.TryGetProperty(PropertyName._isAnimatingSummary, out var value27))
+		if (info.TryGetProperty(PropertyName._backstopMaterial, out var value27))
 		{
-			_isAnimatingSummary = value27.As<bool>();
+			_backstopMaterial = value27.As<ShaderMaterial>();
 		}
-		if (info.TryGetProperty(PropertyName._backstopMaterial, out var value28))
+		if (info.TryGetProperty(PropertyName._quoteTween, out var value28))
 		{
-			_backstopMaterial = value28.As<ShaderMaterial>();
-		}
-		if (info.TryGetProperty(PropertyName._quoteTween, out var value29))
-		{
-			_quoteTween = value29.As<Tween>();
+			_quoteTween = value28.As<Tween>();
 		}
 	}
 }

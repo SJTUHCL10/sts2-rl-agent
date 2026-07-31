@@ -308,11 +308,6 @@ public class NBestiary : NSubmenu
 		public static readonly StringName _modeButton = "_modeButton";
 
 		/// <summary>
-		/// Cached name for the '_modeLabel' field.
-		/// </summary>
-		public static readonly StringName _modeLabel = "_modeLabel";
-
-		/// <summary>
 		/// Cached name for the '_isStatsMode' field.
 		/// </summary>
 		public static readonly StringName _isStatsMode = "_isStatsMode";
@@ -431,15 +426,13 @@ public class NBestiary : NSubmenu
 
 	private const string _thoughtTailPath = "res://images/ui/thought_tail.png";
 
-	private NButton _modeButton;
-
-	private MegaLabel _modeLabel;
+	private NBestiaryModeButton _modeButton;
 
 	private bool _isStatsMode;
 
-	private TextureRect _pageLeftIcon;
+	private NHotkeyIcon _pageLeftIcon;
 
-	private TextureRect _pageRightIcon;
+	private NHotkeyIcon _pageRightIcon;
 
 	private static readonly StringName _filterLeftHotkey = MegaInput.viewDeckAndTabLeft;
 
@@ -519,9 +512,8 @@ public class NBestiary : NSubmenu
 		_dialogueTailShadow = GetNode<TextureRect>("%DialogueTailShadow");
 		_modeButton = GetNode<NBestiaryModeButton>("%ModeButton");
 		_modeButton.Connect(NClickableControl.SignalName.Released, Callable.From<NButton>(ToggleMode));
-		_modeLabel = GetNode<MegaLabel>("%ModeLabel");
-		_pageLeftIcon = GetNode<TextureRect>("%PageLeftIcon");
-		_pageRightIcon = GetNode<TextureRect>("%PageRightIcon");
+		_pageLeftIcon = GetNode<NHotkeyIcon>("%PageLeftIcon");
+		_pageRightIcon = GetNode<NHotkeyIcon>("%PageRightIcon");
 		NControllerManager.Instance.Connect(NControllerManager.SignalName.MouseDetected, Callable.From(UpdatePageIcons));
 		NControllerManager.Instance.Connect(NControllerManager.SignalName.ControllerDetected, Callable.From(UpdatePageIcons));
 		NInputManager.Instance.Connect(NInputManager.SignalName.InputRebound, Callable.From(UpdatePageIcons));
@@ -540,7 +532,7 @@ public class NBestiary : NSubmenu
 		_isStatsMode = !_isStatsMode;
 		if (_isStatsMode)
 		{
-			_modeLabel.SetTextAutoSize(new LocString("bestiary", "MODE.viewActions").GetRawText());
+			_modeButton.SetLabel(new LocString("bestiary", "MODE.viewActions").GetRawText());
 			ShowStatsPanel();
 			DisplayCharacterData();
 			EnableStatsModeHotkeys();
@@ -548,7 +540,7 @@ public class NBestiary : NSubmenu
 		}
 		else
 		{
-			_modeLabel.SetTextAutoSize(new LocString("bestiary", "MODE.viewStats").GetRawText());
+			_modeButton.SetLabel(new LocString("bestiary", "MODE.viewStats").GetRawText());
 			ShowMovesPanel();
 			HideDialogue();
 			DisableStatsModeHotkeys();
@@ -616,31 +608,49 @@ public class NBestiary : NSubmenu
 		}
 		BestiaryEntry entry = _selectedEntry.Entry;
 		EnemyStats enemyStats = null;
+		EncounterStats encounterStats = null;
 		if (entry.monsterModel != null)
 		{
 			enemyStats = _progress.EnemyStats.FirstOrDefault((EnemyStats e) => e.Id == entry.monsterModel.Id);
 		}
 		else
 		{
-			Log.Warn($"Need to handle special case: {entry.encounterModel.Id}");
+			encounterStats = _progress.EncounterStats.FirstOrDefault((EncounterStats e) => e.Id == entry.encounterModel.Id);
 		}
 		foreach (Node child in _filterContainer.GetChildren())
 		{
 			NBestiaryCharacterFilter filter = child as NBestiaryCharacterFilter;
-			if (filter == null || enemyStats == null)
+			if (filter == null)
 			{
 				continue;
 			}
-			if (filter.character != null)
+			if (enemyStats != null)
 			{
-				FightStats fightStats = enemyStats.FightStats.FirstOrDefault((FightStats f) => f.Character == filter.character.Id);
-				filter.kills = fightStats?.Wins ?? 0;
-				filter.deaths = fightStats?.Losses ?? 0;
+				if (filter.character != null)
+				{
+					FightStats fightStats = enemyStats.FightStats.FirstOrDefault((FightStats f) => f.Character == filter.character.Id);
+					filter.kills = fightStats?.Wins ?? 0;
+					filter.deaths = fightStats?.Losses ?? 0;
+				}
+				else
+				{
+					filter.kills = enemyStats.TotalWins;
+					filter.deaths = enemyStats.TotalLosses;
+				}
 			}
-			else
+			else if (encounterStats != null)
 			{
-				filter.kills = enemyStats.TotalWins;
-				filter.deaths = enemyStats.TotalLosses;
+				if (filter.character != null)
+				{
+					FightStats fightStats2 = encounterStats.FightStats.FirstOrDefault((FightStats f) => f.Character == filter.character.Id);
+					filter.kills = fightStats2?.Wins ?? 0;
+					filter.deaths = fightStats2?.Losses ?? 0;
+				}
+				else
+				{
+					filter.kills = encounterStats.TotalWins;
+					filter.deaths = encounterStats.TotalLosses;
+				}
 			}
 			filter.IsLocked = filter.kills + filter.deaths <= 0;
 		}
@@ -654,10 +664,6 @@ public class NBestiary : NSubmenu
 			return;
 		}
 		BestiaryEntry entry = _selectedEntry.Entry;
-		if (entry.monsterModel == null)
-		{
-			return;
-		}
 		LocString locString = new LocString("bestiary", "STATS.layout");
 		if (_currentFilter.Total == 0)
 		{
@@ -746,11 +752,11 @@ public class NBestiary : NSubmenu
 		_isStatsMode = !SaveManager.Instance.PrefsSave.IsBestiaryActionsPreferred;
 		if (_isStatsMode)
 		{
-			_modeLabel.SetTextAutoSize(new LocString("bestiary", "MODE.viewActions").GetRawText());
+			_modeButton.SetLabel(new LocString("bestiary", "MODE.viewActions").GetRawText());
 		}
 		else
 		{
-			_modeLabel.SetTextAutoSize(new LocString("bestiary", "MODE.viewStats").GetRawText());
+			_modeButton.SetLabel(new LocString("bestiary", "MODE.viewStats").GetRawText());
 		}
 		CreateFilters();
 		CreateEntries();
@@ -1045,7 +1051,7 @@ public class NBestiary : NSubmenu
 
 	private NBestiaryMoveButton CreateBestiaryMoveButton(BestiaryMonsterMove move, int moveIndex)
 	{
-		if (NControllerManager.Instance?.IsUsingController ?? false)
+		if (NControllerManager.Instance?.IsUsingDirectionalNavigation ?? false)
 		{
 			return moveIndex switch
 			{
@@ -1216,13 +1222,13 @@ public class NBestiary : NSubmenu
 
 	private void UpdatePageIcons()
 	{
-		bool flag = _isStatsMode && NControllerManager.Instance.IsUsingController;
+		bool flag = _isStatsMode && NControllerManager.Instance.IsUsingDirectionalNavigation;
 		_pageLeftIcon.Visible = flag;
 		_pageRightIcon.Visible = flag;
 		if (flag)
 		{
-			_pageLeftIcon.Texture = NInputManager.Instance.GetHotkeyIcon(MegaInput.viewDeckAndTabLeft);
-			_pageRightIcon.Texture = NInputManager.Instance.GetHotkeyIcon(MegaInput.viewExhaustPileAndTabRight);
+			_pageLeftIcon.UpdateInput(MegaInput.viewDeckAndTabLeft);
+			_pageRightIcon.UpdateInput(MegaInput.viewExhaustPileAndTabRight);
 		}
 	}
 
@@ -1723,12 +1729,7 @@ public class NBestiary : NSubmenu
 		}
 		if (name == PropertyName._modeButton)
 		{
-			_modeButton = VariantUtils.ConvertTo<NButton>(in value);
-			return true;
-		}
-		if (name == PropertyName._modeLabel)
-		{
-			_modeLabel = VariantUtils.ConvertTo<MegaLabel>(in value);
+			_modeButton = VariantUtils.ConvertTo<NBestiaryModeButton>(in value);
 			return true;
 		}
 		if (name == PropertyName._isStatsMode)
@@ -1738,12 +1739,12 @@ public class NBestiary : NSubmenu
 		}
 		if (name == PropertyName._pageLeftIcon)
 		{
-			_pageLeftIcon = VariantUtils.ConvertTo<TextureRect>(in value);
+			_pageLeftIcon = VariantUtils.ConvertTo<NHotkeyIcon>(in value);
 			return true;
 		}
 		if (name == PropertyName._pageRightIcon)
 		{
-			_pageRightIcon = VariantUtils.ConvertTo<TextureRect>(in value);
+			_pageRightIcon = VariantUtils.ConvertTo<NHotkeyIcon>(in value);
 			return true;
 		}
 		if (name == PropertyName._moveList)
@@ -1918,11 +1919,6 @@ public class NBestiary : NSubmenu
 			value = VariantUtils.CreateFrom(in _modeButton);
 			return true;
 		}
-		if (name == PropertyName._modeLabel)
-		{
-			value = VariantUtils.CreateFrom(in _modeLabel);
-			return true;
-		}
 		if (name == PropertyName._isStatsMode)
 		{
 			value = VariantUtils.CreateFrom(in _isStatsMode);
@@ -2019,7 +2015,6 @@ public class NBestiary : NSubmenu
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._dialogueTail, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._dialogueTailShadow, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._modeButton, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
-		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._modeLabel, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Bool, PropertyName._isStatsMode, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._pageLeftIcon, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._pageRightIcon, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
@@ -2064,7 +2059,6 @@ public class NBestiary : NSubmenu
 		info.AddProperty(PropertyName._dialogueTail, Variant.From(in _dialogueTail));
 		info.AddProperty(PropertyName._dialogueTailShadow, Variant.From(in _dialogueTailShadow));
 		info.AddProperty(PropertyName._modeButton, Variant.From(in _modeButton));
-		info.AddProperty(PropertyName._modeLabel, Variant.From(in _modeLabel));
 		info.AddProperty(PropertyName._isStatsMode, Variant.From(in _isStatsMode));
 		info.AddProperty(PropertyName._pageLeftIcon, Variant.From(in _pageLeftIcon));
 		info.AddProperty(PropertyName._pageRightIcon, Variant.From(in _pageRightIcon));
@@ -2163,63 +2157,59 @@ public class NBestiary : NSubmenu
 		}
 		if (info.TryGetProperty(PropertyName._modeButton, out var value20))
 		{
-			_modeButton = value20.As<NButton>();
+			_modeButton = value20.As<NBestiaryModeButton>();
 		}
-		if (info.TryGetProperty(PropertyName._modeLabel, out var value21))
+		if (info.TryGetProperty(PropertyName._isStatsMode, out var value21))
 		{
-			_modeLabel = value21.As<MegaLabel>();
+			_isStatsMode = value21.As<bool>();
 		}
-		if (info.TryGetProperty(PropertyName._isStatsMode, out var value22))
+		if (info.TryGetProperty(PropertyName._pageLeftIcon, out var value22))
 		{
-			_isStatsMode = value22.As<bool>();
+			_pageLeftIcon = value22.As<NHotkeyIcon>();
 		}
-		if (info.TryGetProperty(PropertyName._pageLeftIcon, out var value23))
+		if (info.TryGetProperty(PropertyName._pageRightIcon, out var value23))
 		{
-			_pageLeftIcon = value23.As<TextureRect>();
+			_pageRightIcon = value23.As<NHotkeyIcon>();
 		}
-		if (info.TryGetProperty(PropertyName._pageRightIcon, out var value24))
+		if (info.TryGetProperty(PropertyName._moveList, out var value24))
 		{
-			_pageRightIcon = value24.As<TextureRect>();
+			_moveList = value24.As<Control>();
 		}
-		if (info.TryGetProperty(PropertyName._moveList, out var value25))
+		if (info.TryGetProperty(PropertyName._moveContainer, out var value25))
 		{
-			_moveList = value25.As<Control>();
+			_moveContainer = value25.As<Control>();
 		}
-		if (info.TryGetProperty(PropertyName._moveContainer, out var value26))
+		if (info.TryGetProperty(PropertyName._statsContainer, out var value26))
 		{
-			_moveContainer = value26.As<Control>();
+			_statsContainer = value26.As<Control>();
 		}
-		if (info.TryGetProperty(PropertyName._statsContainer, out var value27))
+		if (info.TryGetProperty(PropertyName._filterContainer, out var value27))
 		{
-			_statsContainer = value27.As<Control>();
+			_filterContainer = value27.As<Control>();
 		}
-		if (info.TryGetProperty(PropertyName._filterContainer, out var value28))
+		if (info.TryGetProperty(PropertyName._statsLabel, out var value28))
 		{
-			_filterContainer = value28.As<Control>();
+			_statsLabel = value28.As<MegaRichTextLabel>();
 		}
-		if (info.TryGetProperty(PropertyName._statsLabel, out var value29))
+		if (info.TryGetProperty(PropertyName._currentFilter, out var value29))
 		{
-			_statsLabel = value29.As<MegaRichTextLabel>();
+			_currentFilter = value29.As<NBestiaryCharacterFilter>();
 		}
-		if (info.TryGetProperty(PropertyName._currentFilter, out var value30))
+		if (info.TryGetProperty(PropertyName._selectedEntry, out var value30))
 		{
-			_currentFilter = value30.As<NBestiaryCharacterFilter>();
+			_selectedEntry = value30.As<NBestiaryEntry>();
 		}
-		if (info.TryGetProperty(PropertyName._selectedEntry, out var value31))
+		if (info.TryGetProperty(PropertyName._previousScreenshakeTarget, out var value31))
 		{
-			_selectedEntry = value31.As<NBestiaryEntry>();
+			_previousScreenshakeTarget = value31.As<Control>();
 		}
-		if (info.TryGetProperty(PropertyName._previousScreenshakeTarget, out var value32))
+		if (info.TryGetProperty(PropertyName._tween, out var value32))
 		{
-			_previousScreenshakeTarget = value32.As<Control>();
+			_tween = value32.As<Tween>();
 		}
-		if (info.TryGetProperty(PropertyName._tween, out var value33))
+		if (info.TryGetProperty(PropertyName._dialogueTween, out var value33))
 		{
-			_tween = value33.As<Tween>();
-		}
-		if (info.TryGetProperty(PropertyName._dialogueTween, out var value34))
-		{
-			_dialogueTween = value34.As<Tween>();
+			_dialogueTween = value33.As<Tween>();
 		}
 	}
 }

@@ -393,7 +393,7 @@ public class NEpochSlot : NButton
 		_isGlowPulsing = false;
 		_hoverTween?.Kill();
 		_hoverTween = CreateTween().SetParallel();
-		if (NControllerManager.Instance.IsUsingController)
+		if (NControllerManager.Instance.IsUsingDirectionalNavigation)
 		{
 			_selectionReticle.OnSelect();
 		}

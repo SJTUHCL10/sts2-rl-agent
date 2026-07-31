@@ -49,6 +49,11 @@ public class NTopBar : Control
 		public new static readonly StringName _ExitTree = "_ExitTree";
 
 		/// <summary>
+		/// Cached name for the '_Notification' method.
+		/// </summary>
+		public new static readonly StringName _Notification = "_Notification";
+
+		/// <summary>
 		/// Cached name for the 'ToggleAnimState' method.
 		/// </summary>
 		public static readonly StringName ToggleAnimState = "ToggleAnimState";
@@ -344,14 +349,17 @@ public class NTopBar : Control
 
 	public override void _EnterTree()
 	{
-		base._EnterTree();
 		ActiveScreenContext.Instance.Updated += UpdateNavigation;
 	}
 
 	public override void _ExitTree()
 	{
 		ActiveScreenContext.Instance.Updated -= UpdateNavigation;
-		if (_player != null)
+	}
+
+	public override void _Notification(int what)
+	{
+		if ((long)what == 1 && _player != null)
 		{
 			_player.RelicObtained -= OnRelicsUpdated;
 			_player.RelicRemoved -= OnRelicsUpdated;
@@ -416,7 +424,7 @@ public class NTopBar : Control
 
 	private void UpdateNavigation()
 	{
-		Control control = NRun.Instance.GlobalUi.RelicInventory.RelicNodes.FirstOrDefault();
+		Control control = NRun.Instance?.GlobalUi.RelicInventory.RelicNodes.FirstOrDefault();
 		if (control == null)
 		{
 			return;
@@ -489,10 +497,14 @@ public class NTopBar : Control
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	internal static List<MethodInfo> GetGodotMethodList()
 	{
-		List<MethodInfo> list = new List<MethodInfo>(10);
+		List<MethodInfo> list = new List<MethodInfo>(11);
 		list.Add(new MethodInfo(MethodName._Ready, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName._EnterTree, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName._ExitTree, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
+		list.Add(new MethodInfo(MethodName._Notification, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
+		{
+			new PropertyInfo(Variant.Type.Int, "what", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false)
+		}, null));
 		list.Add(new MethodInfo(MethodName.ToggleAnimState, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
 		{
 			new PropertyInfo(Variant.Type.Object, "_", PropertyHint.None, "", PropertyUsageFlags.Default, new StringName("Node"), exported: false)
@@ -531,6 +543,12 @@ public class NTopBar : Control
 		if (method == MethodName._ExitTree && args.Count == 0)
 		{
 			_ExitTree();
+			ret = default(godot_variant);
+			return true;
+		}
+		if (method == MethodName._Notification && args.Count == 1)
+		{
+			_Notification(VariantUtils.ConvertTo<int>(in args[0]));
 			ret = default(godot_variant);
 			return true;
 		}
@@ -592,6 +610,10 @@ public class NTopBar : Control
 			return true;
 		}
 		if (method == MethodName._ExitTree)
+		{
+			return true;
+		}
+		if (method == MethodName._Notification)
 		{
 			return true;
 		}

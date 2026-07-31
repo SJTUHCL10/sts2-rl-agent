@@ -133,14 +133,14 @@ public class NAscensionPanel : Control
 		public static readonly StringName _info = "_info";
 
 		/// <summary>
-		/// Cached name for the '_leftTriggerIcon' field.
+		/// Cached name for the '_leftTabIcon' field.
 		/// </summary>
-		public static readonly StringName _leftTriggerIcon = "_leftTriggerIcon";
+		public static readonly StringName _leftTabIcon = "_leftTabIcon";
 
 		/// <summary>
-		/// Cached name for the '_rightTriggerIcon' field.
+		/// Cached name for the '_rightTabIcon' field.
 		/// </summary>
-		public static readonly StringName _rightTriggerIcon = "_rightTriggerIcon";
+		public static readonly StringName _rightTabIcon = "_rightTabIcon";
 
 		/// <summary>
 		/// Cached name for the '_iconHsv' field.
@@ -198,9 +198,9 @@ public class NAscensionPanel : Control
 
 	private MegaRichTextLabel _info;
 
-	private TextureRect _leftTriggerIcon;
+	private NHotkeyIcon _leftTabIcon;
 
-	private TextureRect _rightTriggerIcon;
+	private NHotkeyIcon _rightTabIcon;
 
 	private ShaderMaterial _iconHsv;
 
@@ -229,8 +229,8 @@ public class NAscensionPanel : Control
 
 	public override void _Ready()
 	{
-		_leftTriggerIcon = GetNode<TextureRect>("%LeftTriggerIcon");
-		_rightTriggerIcon = GetNode<TextureRect>("%RightTriggerIcon");
+		_leftTabIcon = GetNode<NHotkeyIcon>("%LeftTabIcon");
+		_rightTabIcon = GetNode<NHotkeyIcon>("%RightTabIcon");
 		_leftArrow = GetNode<NButton>("HBoxContainer/LeftArrowContainer/LeftArrow");
 		_rightArrow = GetNode<NButton>("HBoxContainer/RightArrowContainer/RightArrow");
 		_ascensionLevel = GetNode<MegaLabel>("HBoxContainer/AscensionIconContainer/AscensionIcon/AscensionLevel");
@@ -380,15 +380,15 @@ public class NAscensionPanel : Control
 		MultiplayerUiMode mode = _mode;
 		if ((uint)(mode - 1) <= 1u)
 		{
-			_leftTriggerIcon.Visible = NControllerManager.Instance.IsUsingController;
-			_rightTriggerIcon.Visible = NControllerManager.Instance.IsUsingController;
-			_leftTriggerIcon.Texture = NInputManager.Instance.GetHotkeyIcon(MegaInput.viewDeckAndTabLeft);
-			_rightTriggerIcon.Texture = NInputManager.Instance.GetHotkeyIcon(MegaInput.viewExhaustPileAndTabRight);
+			_leftTabIcon.Visible = NControllerManager.Instance.IsUsingDirectionalNavigation;
+			_rightTabIcon.Visible = NControllerManager.Instance.IsUsingDirectionalNavigation;
+			_leftTabIcon.UpdateInput(MegaInput.viewDeckAndTabLeft);
+			_rightTabIcon.UpdateInput(MegaInput.viewExhaustPileAndTabRight);
 		}
 		else
 		{
-			_leftTriggerIcon.Visible = false;
-			_rightTriggerIcon.Visible = false;
+			_leftTabIcon.Visible = false;
+			_rightTabIcon.Visible = false;
 		}
 	}
 
@@ -396,8 +396,8 @@ public class NAscensionPanel : Control
 	{
 		_leftArrow.Disable();
 		_rightArrow.Disable();
-		_leftTriggerIcon.Visible = false;
-		_rightTriggerIcon.Visible = false;
+		_leftTabIcon.Visible = false;
+		_rightTabIcon.Visible = false;
 	}
 
 	/// <summary>
@@ -623,14 +623,14 @@ public class NAscensionPanel : Control
 			_info = VariantUtils.ConvertTo<MegaRichTextLabel>(in value);
 			return true;
 		}
-		if (name == PropertyName._leftTriggerIcon)
+		if (name == PropertyName._leftTabIcon)
 		{
-			_leftTriggerIcon = VariantUtils.ConvertTo<TextureRect>(in value);
+			_leftTabIcon = VariantUtils.ConvertTo<NHotkeyIcon>(in value);
 			return true;
 		}
-		if (name == PropertyName._rightTriggerIcon)
+		if (name == PropertyName._rightTabIcon)
 		{
-			_rightTriggerIcon = VariantUtils.ConvertTo<TextureRect>(in value);
+			_rightTabIcon = VariantUtils.ConvertTo<NHotkeyIcon>(in value);
 			return true;
 		}
 		if (name == PropertyName._iconHsv)
@@ -690,14 +690,14 @@ public class NAscensionPanel : Control
 			value = VariantUtils.CreateFrom(in _info);
 			return true;
 		}
-		if (name == PropertyName._leftTriggerIcon)
+		if (name == PropertyName._leftTabIcon)
 		{
-			value = VariantUtils.CreateFrom(in _leftTriggerIcon);
+			value = VariantUtils.CreateFrom(in _leftTabIcon);
 			return true;
 		}
-		if (name == PropertyName._rightTriggerIcon)
+		if (name == PropertyName._rightTabIcon)
 		{
-			value = VariantUtils.CreateFrom(in _rightTriggerIcon);
+			value = VariantUtils.CreateFrom(in _rightTabIcon);
 			return true;
 		}
 		if (name == PropertyName._iconHsv)
@@ -738,8 +738,8 @@ public class NAscensionPanel : Control
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._rightArrow, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._ascensionLevel, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._info, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
-		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._leftTriggerIcon, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
-		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._rightTriggerIcon, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._leftTabIcon, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._rightTabIcon, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._iconHsv, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Bool, PropertyName._arrowsVisible, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Int, PropertyName._mode, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
@@ -758,8 +758,8 @@ public class NAscensionPanel : Control
 		info.AddProperty(PropertyName._rightArrow, Variant.From(in _rightArrow));
 		info.AddProperty(PropertyName._ascensionLevel, Variant.From(in _ascensionLevel));
 		info.AddProperty(PropertyName._info, Variant.From(in _info));
-		info.AddProperty(PropertyName._leftTriggerIcon, Variant.From(in _leftTriggerIcon));
-		info.AddProperty(PropertyName._rightTriggerIcon, Variant.From(in _rightTriggerIcon));
+		info.AddProperty(PropertyName._leftTabIcon, Variant.From(in _leftTabIcon));
+		info.AddProperty(PropertyName._rightTabIcon, Variant.From(in _rightTabIcon));
 		info.AddProperty(PropertyName._iconHsv, Variant.From(in _iconHsv));
 		info.AddProperty(PropertyName._arrowsVisible, Variant.From(in _arrowsVisible));
 		info.AddProperty(PropertyName._mode, Variant.From(in _mode));
@@ -796,13 +796,13 @@ public class NAscensionPanel : Control
 		{
 			_info = value6.As<MegaRichTextLabel>();
 		}
-		if (info.TryGetProperty(PropertyName._leftTriggerIcon, out var value7))
+		if (info.TryGetProperty(PropertyName._leftTabIcon, out var value7))
 		{
-			_leftTriggerIcon = value7.As<TextureRect>();
+			_leftTabIcon = value7.As<NHotkeyIcon>();
 		}
-		if (info.TryGetProperty(PropertyName._rightTriggerIcon, out var value8))
+		if (info.TryGetProperty(PropertyName._rightTabIcon, out var value8))
 		{
-			_rightTriggerIcon = value8.As<TextureRect>();
+			_rightTabIcon = value8.As<NHotkeyIcon>();
 		}
 		if (info.TryGetProperty(PropertyName._iconHsv, out var value9))
 		{

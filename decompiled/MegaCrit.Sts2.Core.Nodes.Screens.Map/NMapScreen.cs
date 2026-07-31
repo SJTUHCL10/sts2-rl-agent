@@ -57,9 +57,9 @@ public class NMapScreen : Control, IScreenContext, INetCursorPositionTranslator
 		public new static readonly StringName _Ready = "_Ready";
 
 		/// <summary>
-		/// Cached name for the '_ExitTree' method.
+		/// Cached name for the '_Notification' method.
 		/// </summary>
-		public new static readonly StringName _ExitTree = "_ExitTree";
+		public new static readonly StringName _Notification = "_Notification";
 
 		/// <summary>
 		/// Cached name for the 'GetLineEndpoint' method.
@@ -318,6 +318,11 @@ public class NMapScreen : Control, IScreenContext, INetCursorPositionTranslator
 		public static readonly StringName _points = "_points";
 
 		/// <summary>
+		/// Cached name for the '_shareButton' field.
+		/// </summary>
+		public static readonly StringName _shareButton = "_shareButton";
+
+		/// <summary>
 		/// Cached name for the '_bossPointNode' field.
 		/// </summary>
 		public static readonly StringName _bossPointNode = "_bossPointNode";
@@ -497,6 +502,8 @@ public class NMapScreen : Control, IScreenContext, INetCursorPositionTranslator
 
 	private Control _points;
 
+	private NMapShareButton _shareButton;
+
 	private NBossMapPoint? _bossPointNode;
 
 	private NBossMapPoint? _secondBossPointNode;
@@ -509,7 +516,7 @@ public class NMapScreen : Control, IScreenContext, INetCursorPositionTranslator
 
 	private NBackButton _backButton;
 
-	private TextureRect _drawingToolsHotkeyIcon;
+	private NHotkeyIcon _drawingToolsHotkeyIcon;
 
 	private Control _drawingTools;
 
@@ -523,7 +530,7 @@ public class NMapScreen : Control, IScreenContext, INetCursorPositionTranslator
 
 	private Control _legendItems;
 
-	private TextureRect _legendHotkeyIcon;
+	private NHotkeyIcon _legendHotkeyIcon;
 
 	private Control _backstop;
 
@@ -613,10 +620,18 @@ public class NMapScreen : Control, IScreenContext, INetCursorPositionTranslator
 	{
 		get
 		{
-			NMapPoint nMapPoint = _mapPointDictionary.Values.FirstOrDefault((NMapPoint n) => n.IsEnabled);
-			if (nMapPoint != null)
+			List<NMapPoint> list = _mapPointDictionary.Values.Where((NMapPoint n) => n.IsEnabled).ToList();
+			if (list.Count > 0)
 			{
-				return nMapPoint;
+				if (_runState.CurrentMapPoint != null)
+				{
+					NMapPoint nMapPoint = list.FirstOrDefault((NMapPoint mp) => _runState.CurrentMapPoint.Children.Contains(mp.Point));
+					if (nMapPoint != null)
+					{
+						return nMapPoint;
+					}
+				}
+				return list.First();
 			}
 			return this;
 		}
@@ -662,11 +677,12 @@ public class NMapScreen : Control, IScreenContext, INetCursorPositionTranslator
 		_backButton = GetNode<NBackButton>("Back");
 		_backButton.Connect(NClickableControl.SignalName.Released, Callable.From<NButton>(OnBackButtonPressed));
 		_backButton.Disable();
-		_mapLegend = GetNode<Control>("MapLegend");
+		_mapLegend = GetNode<Control>("%MapLegend");
 		_legendItems = GetNode<Control>("MapLegend/LegendItems");
-		_legendHotkeyIcon = GetNode<TextureRect>("MapLegend/LegendHotkeyIcon");
-		_drawingToolsHotkeyIcon = GetNode<TextureRect>("DrawingToolsHotkey");
+		_legendHotkeyIcon = GetNode<NHotkeyIcon>("%LegendHotkeyIcon");
+		_drawingToolsHotkeyIcon = GetNode<NHotkeyIcon>("%DrawingToolsHotkey");
 		_backstop = GetNode<Control>("%Backstop");
+		_shareButton = GetNode<NMapShareButton>("%ShareButton");
 		_drawingTools = GetNode<Control>("%DrawingTools");
 		_mapDrawingButton = GetNode<NMapDrawButton>("%DrawButton");
 		_mapDrawingButton.Connect(NClickableControl.SignalName.Released, Callable.From<NButton>(OnMapDrawingButtonPressed));
@@ -674,6 +690,7 @@ public class NMapScreen : Control, IScreenContext, INetCursorPositionTranslator
 		_mapErasingButton.Connect(NClickableControl.SignalName.Released, Callable.From<NButton>(OnMapErasingButtonPressed));
 		_mapClearButton = GetNode<NMapClearButton>("%ClearButton");
 		_mapClearButton.Connect(NClickableControl.SignalName.Released, Callable.From<NButton>(OnClearMapDrawingButtonPressed));
+		_shareButton.Initialize(this, _mapContainer, _mapBgContainer);
 		RunManager.Instance.MapSelectionSynchronizer.PlayerVoteChanged += OnPlayerVoteChanged;
 		RunManager.Instance.MapSelectionSynchronizer.PlayerVoteCancelled += OnPlayerVoteCancelled;
 		base.ProcessMode = (ProcessModeEnum)(base.Visible ? 0 : 4);
@@ -692,10 +709,13 @@ public class NMapScreen : Control, IScreenContext, INetCursorPositionTranslator
 		UpdateHotkeyDisplay();
 	}
 
-	public override void _ExitTree()
+	public override void _Notification(int what)
 	{
-		RunManager.Instance.MapSelectionSynchronizer.PlayerVoteChanged -= OnPlayerVoteChanged;
-		RunManager.Instance.MapSelectionSynchronizer.PlayerVoteCancelled -= OnPlayerVoteCancelled;
+		if ((long)what == 1)
+		{
+			RunManager.Instance.MapSelectionSynchronizer.PlayerVoteChanged -= OnPlayerVoteChanged;
+			RunManager.Instance.MapSelectionSynchronizer.PlayerVoteCancelled -= OnPlayerVoteCancelled;
+		}
 	}
 
 	public void Initialize(RunState runState)
@@ -1103,7 +1123,7 @@ public class NMapScreen : Control, IScreenContext, INetCursorPositionTranslator
 
 	public override void _Process(double delta)
 	{
-		if (IsVisibleInTree() && (_actAnimTween == null || !_actAnimTween.IsRunning()))
+		if (IsVisibleInTree() && (_actAnimTween == null || !_actAnimTween.IsRunning()) && !_shareButton.IsTakingScreenshot())
 		{
 			UpdateScrollPosition(delta);
 		}
@@ -1268,7 +1288,7 @@ public class NMapScreen : Control, IScreenContext, INetCursorPositionTranslator
 		{
 			value.RefreshVisualsInstantly();
 		}
-		_mapPointDictionary.Values.FirstOrDefault((NMapPoint n) => n.IsEnabled)?.TryGrabFocus();
+		DefaultFocusedControl.TryGrabFocus();
 	}
 
 	private void PlayStartOfActAnimation()
@@ -1412,7 +1432,7 @@ public class NMapScreen : Control, IScreenContext, INetCursorPositionTranslator
 			IsOpen = false;
 			base.FocusMode = FocusModeEnum.None;
 			NRun.Instance.GlobalUi.TopBar.Map.StopOscillation();
-			NHotkeyManager.Instance.RemoveHotkeyPressedBinding(MegaInput.accept, OnLegendHotkeyPressed);
+			NHotkeyManager.Instance.RemoveHotkeyPressedBinding(MegaInput.confirm, OnLegendHotkeyPressed);
 			NHotkeyManager.Instance.RemoveHotkeyPressedBinding(MegaInput.viewExhaustPileAndTabRight, OnDrawingToolsHotkeyPressed);
 			if (RunManager.Instance.IsSingleplayerOrFakeMultiplayer)
 			{
@@ -1467,7 +1487,7 @@ public class NMapScreen : Control, IScreenContext, INetCursorPositionTranslator
 		IsOpen = true;
 		base.Visible = true;
 		_backButton.MoveToHidePosition();
-		NHotkeyManager.Instance.PushHotkeyPressedBinding(MegaInput.accept, OnLegendHotkeyPressed);
+		NHotkeyManager.Instance.PushHotkeyPressedBinding(MegaInput.confirm, OnLegendHotkeyPressed);
 		NHotkeyManager.Instance.PushHotkeyPressedBinding(MegaInput.viewExhaustPileAndTabRight, OnDrawingToolsHotkeyPressed);
 		if (_runState.ActFloor > 0)
 		{
@@ -1664,7 +1684,7 @@ public class NMapScreen : Control, IScreenContext, INetCursorPositionTranslator
 		List<NMapLegendItem> list = _legendItems.GetChildren().OfType<NMapLegendItem>().ToList();
 		if (list.Any((NMapLegendItem c) => GetViewport().GuiGetFocusOwner() == c))
 		{
-			_mapPointDictionary.Values.FirstOrDefault((NMapPoint n) => n.IsEnabled)?.TryGrabFocus();
+			DefaultFocusedControl.TryGrabFocus();
 			return;
 		}
 		NMapPoint nMapPoint = _mapPointDictionary.Values.LastOrDefault((NMapPoint n) => n.IsEnabled);
@@ -1739,10 +1759,10 @@ public class NMapScreen : Control, IScreenContext, INetCursorPositionTranslator
 
 	private void UpdateHotkeyDisplay()
 	{
-		_legendHotkeyIcon.Visible = NControllerManager.Instance.IsUsingController;
-		_legendHotkeyIcon.Texture = NInputManager.Instance.GetHotkeyIcon(MegaInput.accept);
-		_drawingToolsHotkeyIcon.Visible = NControllerManager.Instance.IsUsingController;
-		_drawingToolsHotkeyIcon.Texture = NInputManager.Instance.GetHotkeyIcon(MegaInput.viewExhaustPileAndTabRight);
+		_legendHotkeyIcon.Visible = NControllerManager.Instance.IsUsingDirectionalNavigation;
+		_legendHotkeyIcon.UpdateInput(MegaInput.confirm);
+		_drawingToolsHotkeyIcon.Visible = NControllerManager.Instance.IsUsingDirectionalNavigation;
+		_drawingToolsHotkeyIcon.UpdateInput(MegaInput.viewExhaustPileAndTabRight);
 	}
 
 	/// <summary>
@@ -1755,7 +1775,10 @@ public class NMapScreen : Control, IScreenContext, INetCursorPositionTranslator
 	{
 		List<MethodInfo> list = new List<MethodInfo>(42);
 		list.Add(new MethodInfo(MethodName._Ready, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
-		list.Add(new MethodInfo(MethodName._ExitTree, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
+		list.Add(new MethodInfo(MethodName._Notification, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
+		{
+			new PropertyInfo(Variant.Type.Int, "what", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false)
+		}, null));
 		list.Add(new MethodInfo(MethodName.GetLineEndpoint, new PropertyInfo(Variant.Type.Vector2, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
 		{
 			new PropertyInfo(Variant.Type.Object, "point", PropertyHint.None, "", PropertyUsageFlags.Default, new StringName("Control"), exported: false)
@@ -1878,9 +1901,9 @@ public class NMapScreen : Control, IScreenContext, INetCursorPositionTranslator
 			ret = default(godot_variant);
 			return true;
 		}
-		if (method == MethodName._ExitTree && args.Count == 0)
+		if (method == MethodName._Notification && args.Count == 1)
 		{
-			_ExitTree();
+			_Notification(VariantUtils.ConvertTo<int>(in args[0]));
 			ret = default(godot_variant);
 			return true;
 		}
@@ -2128,7 +2151,7 @@ public class NMapScreen : Control, IScreenContext, INetCursorPositionTranslator
 		{
 			return true;
 		}
-		if (method == MethodName._ExitTree)
+		if (method == MethodName._Notification)
 		{
 			return true;
 		}
@@ -2339,6 +2362,11 @@ public class NMapScreen : Control, IScreenContext, INetCursorPositionTranslator
 			_points = VariantUtils.ConvertTo<Control>(in value);
 			return true;
 		}
+		if (name == PropertyName._shareButton)
+		{
+			_shareButton = VariantUtils.ConvertTo<NMapShareButton>(in value);
+			return true;
+		}
 		if (name == PropertyName._bossPointNode)
 		{
 			_bossPointNode = VariantUtils.ConvertTo<NBossMapPoint>(in value);
@@ -2371,7 +2399,7 @@ public class NMapScreen : Control, IScreenContext, INetCursorPositionTranslator
 		}
 		if (name == PropertyName._drawingToolsHotkeyIcon)
 		{
-			_drawingToolsHotkeyIcon = VariantUtils.ConvertTo<TextureRect>(in value);
+			_drawingToolsHotkeyIcon = VariantUtils.ConvertTo<NHotkeyIcon>(in value);
 			return true;
 		}
 		if (name == PropertyName._drawingTools)
@@ -2406,7 +2434,7 @@ public class NMapScreen : Control, IScreenContext, INetCursorPositionTranslator
 		}
 		if (name == PropertyName._legendHotkeyIcon)
 		{
-			_legendHotkeyIcon = VariantUtils.ConvertTo<TextureRect>(in value);
+			_legendHotkeyIcon = VariantUtils.ConvertTo<NHotkeyIcon>(in value);
 			return true;
 		}
 		if (name == PropertyName._backstop)
@@ -2544,6 +2572,11 @@ public class NMapScreen : Control, IScreenContext, INetCursorPositionTranslator
 		if (name == PropertyName._points)
 		{
 			value = VariantUtils.CreateFrom(in _points);
+			return true;
+		}
+		if (name == PropertyName._shareButton)
+		{
+			value = VariantUtils.CreateFrom(in _shareButton);
 			return true;
 		}
 		if (name == PropertyName._bossPointNode)
@@ -2719,6 +2752,7 @@ public class NMapScreen : Control, IScreenContext, INetCursorPositionTranslator
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._mapContainer, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._pathsContainer, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._points, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._shareButton, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._bossPointNode, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._secondBossPointNode, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._startingPointNode, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
@@ -2770,6 +2804,7 @@ public class NMapScreen : Control, IScreenContext, INetCursorPositionTranslator
 		info.AddProperty(PropertyName._mapContainer, Variant.From(in _mapContainer));
 		info.AddProperty(PropertyName._pathsContainer, Variant.From(in _pathsContainer));
 		info.AddProperty(PropertyName._points, Variant.From(in _points));
+		info.AddProperty(PropertyName._shareButton, Variant.From(in _shareButton));
 		info.AddProperty(PropertyName._bossPointNode, Variant.From(in _bossPointNode));
 		info.AddProperty(PropertyName._secondBossPointNode, Variant.From(in _secondBossPointNode));
 		info.AddProperty(PropertyName._startingPointNode, Variant.From(in _startingPointNode));
@@ -2840,129 +2875,133 @@ public class NMapScreen : Control, IScreenContext, INetCursorPositionTranslator
 		{
 			_points = value8.As<Control>();
 		}
-		if (info.TryGetProperty(PropertyName._bossPointNode, out var value9))
+		if (info.TryGetProperty(PropertyName._shareButton, out var value9))
 		{
-			_bossPointNode = value9.As<NBossMapPoint>();
+			_shareButton = value9.As<NMapShareButton>();
 		}
-		if (info.TryGetProperty(PropertyName._secondBossPointNode, out var value10))
+		if (info.TryGetProperty(PropertyName._bossPointNode, out var value10))
 		{
-			_secondBossPointNode = value10.As<NBossMapPoint>();
+			_bossPointNode = value10.As<NBossMapPoint>();
 		}
-		if (info.TryGetProperty(PropertyName._startingPointNode, out var value11))
+		if (info.TryGetProperty(PropertyName._secondBossPointNode, out var value11))
 		{
-			_startingPointNode = value11.As<NMapPoint>();
+			_secondBossPointNode = value11.As<NBossMapPoint>();
 		}
-		if (info.TryGetProperty(PropertyName._mapBgContainer, out var value12))
+		if (info.TryGetProperty(PropertyName._startingPointNode, out var value12))
 		{
-			_mapBgContainer = value12.As<NMapBg>();
+			_startingPointNode = value12.As<NMapPoint>();
 		}
-		if (info.TryGetProperty(PropertyName._marker, out var value13))
+		if (info.TryGetProperty(PropertyName._mapBgContainer, out var value13))
 		{
-			_marker = value13.As<NMapMarker>();
+			_mapBgContainer = value13.As<NMapBg>();
 		}
-		if (info.TryGetProperty(PropertyName._backButton, out var value14))
+		if (info.TryGetProperty(PropertyName._marker, out var value14))
 		{
-			_backButton = value14.As<NBackButton>();
+			_marker = value14.As<NMapMarker>();
 		}
-		if (info.TryGetProperty(PropertyName._drawingToolsHotkeyIcon, out var value15))
+		if (info.TryGetProperty(PropertyName._backButton, out var value15))
 		{
-			_drawingToolsHotkeyIcon = value15.As<TextureRect>();
+			_backButton = value15.As<NBackButton>();
 		}
-		if (info.TryGetProperty(PropertyName._drawingTools, out var value16))
+		if (info.TryGetProperty(PropertyName._drawingToolsHotkeyIcon, out var value16))
 		{
-			_drawingTools = value16.As<Control>();
+			_drawingToolsHotkeyIcon = value16.As<NHotkeyIcon>();
 		}
-		if (info.TryGetProperty(PropertyName._mapDrawingButton, out var value17))
+		if (info.TryGetProperty(PropertyName._drawingTools, out var value17))
 		{
-			_mapDrawingButton = value17.As<NMapDrawButton>();
+			_drawingTools = value17.As<Control>();
 		}
-		if (info.TryGetProperty(PropertyName._mapErasingButton, out var value18))
+		if (info.TryGetProperty(PropertyName._mapDrawingButton, out var value18))
 		{
-			_mapErasingButton = value18.As<NMapEraseButton>();
+			_mapDrawingButton = value18.As<NMapDrawButton>();
 		}
-		if (info.TryGetProperty(PropertyName._mapClearButton, out var value19))
+		if (info.TryGetProperty(PropertyName._mapErasingButton, out var value19))
 		{
-			_mapClearButton = value19.As<NMapClearButton>();
+			_mapErasingButton = value19.As<NMapEraseButton>();
 		}
-		if (info.TryGetProperty(PropertyName._mapLegend, out var value20))
+		if (info.TryGetProperty(PropertyName._mapClearButton, out var value20))
 		{
-			_mapLegend = value20.As<Control>();
+			_mapClearButton = value20.As<NMapClearButton>();
 		}
-		if (info.TryGetProperty(PropertyName._legendItems, out var value21))
+		if (info.TryGetProperty(PropertyName._mapLegend, out var value21))
 		{
-			_legendItems = value21.As<Control>();
+			_mapLegend = value21.As<Control>();
 		}
-		if (info.TryGetProperty(PropertyName._legendHotkeyIcon, out var value22))
+		if (info.TryGetProperty(PropertyName._legendItems, out var value22))
 		{
-			_legendHotkeyIcon = value22.As<TextureRect>();
+			_legendItems = value22.As<Control>();
 		}
-		if (info.TryGetProperty(PropertyName._backstop, out var value23))
+		if (info.TryGetProperty(PropertyName._legendHotkeyIcon, out var value23))
 		{
-			_backstop = value23.As<Control>();
+			_legendHotkeyIcon = value23.As<NHotkeyIcon>();
 		}
-		if (info.TryGetProperty(PropertyName._tween, out var value24))
+		if (info.TryGetProperty(PropertyName._backstop, out var value24))
 		{
-			_tween = value24.As<Tween>();
+			_backstop = value24.As<Control>();
 		}
-		if (info.TryGetProperty(PropertyName._startDragPos, out var value25))
+		if (info.TryGetProperty(PropertyName._tween, out var value25))
 		{
-			_startDragPos = value25.As<Vector2>();
+			_tween = value25.As<Tween>();
 		}
-		if (info.TryGetProperty(PropertyName._targetDragPos, out var value26))
+		if (info.TryGetProperty(PropertyName._startDragPos, out var value26))
 		{
-			_targetDragPos = value26.As<Vector2>();
+			_startDragPos = value26.As<Vector2>();
 		}
-		if (info.TryGetProperty(PropertyName._isDragging, out var value27))
+		if (info.TryGetProperty(PropertyName._targetDragPos, out var value27))
 		{
-			_isDragging = value27.As<bool>();
+			_targetDragPos = value27.As<Vector2>();
 		}
-		if (info.TryGetProperty(PropertyName._hasPlayedAnimation, out var value28))
+		if (info.TryGetProperty(PropertyName._isDragging, out var value28))
 		{
-			_hasPlayedAnimation = value28.As<bool>();
+			_isDragging = value28.As<bool>();
 		}
-		if (info.TryGetProperty(PropertyName._controllerScrollAmount, out var value29))
+		if (info.TryGetProperty(PropertyName._hasPlayedAnimation, out var value29))
 		{
-			_controllerScrollAmount = value29.As<float>();
+			_hasPlayedAnimation = value29.As<bool>();
 		}
-		if (info.TryGetProperty(PropertyName._distX, out var value30))
+		if (info.TryGetProperty(PropertyName._controllerScrollAmount, out var value30))
 		{
-			_distX = value30.As<float>();
+			_controllerScrollAmount = value30.As<float>();
 		}
-		if (info.TryGetProperty(PropertyName._distY, out var value31))
+		if (info.TryGetProperty(PropertyName._distX, out var value31))
 		{
-			_distY = value31.As<float>();
+			_distX = value31.As<float>();
 		}
-		if (info.TryGetProperty(PropertyName._actAnimTween, out var value32))
+		if (info.TryGetProperty(PropertyName._distY, out var value32))
 		{
-			_actAnimTween = value32.As<Tween>();
+			_distY = value32.As<float>();
 		}
-		if (info.TryGetProperty(PropertyName._mapScrollAnimTimer, out var value33))
+		if (info.TryGetProperty(PropertyName._actAnimTween, out var value33))
 		{
-			_mapScrollAnimTimer = value33.As<float>();
+			_actAnimTween = value33.As<Tween>();
 		}
-		if (info.TryGetProperty(PropertyName._canInterruptAnim, out var value34))
+		if (info.TryGetProperty(PropertyName._mapScrollAnimTimer, out var value34))
 		{
-			_canInterruptAnim = value34.As<bool>();
+			_mapScrollAnimTimer = value34.As<float>();
 		}
-		if (info.TryGetProperty(PropertyName._isInputDisabled, out var value35))
+		if (info.TryGetProperty(PropertyName._canInterruptAnim, out var value35))
 		{
-			_isInputDisabled = value35.As<bool>();
+			_canInterruptAnim = value35.As<bool>();
 		}
-		if (info.TryGetProperty(PropertyName._promptTween, out var value36))
+		if (info.TryGetProperty(PropertyName._isInputDisabled, out var value36))
 		{
-			_promptTween = value36.As<Tween>();
+			_isInputDisabled = value36.As<bool>();
 		}
-		if (info.TryGetProperty(PropertyName._drawingInput, out var value37))
+		if (info.TryGetProperty(PropertyName._promptTween, out var value37))
 		{
-			_drawingInput = value37.As<NMapDrawingInput>();
+			_promptTween = value37.As<Tween>();
 		}
-		if (info.TryGetSignalEventDelegate<OpenedEventHandler>(SignalName.Opened, out var value38))
+		if (info.TryGetProperty(PropertyName._drawingInput, out var value38))
 		{
-			backing_Opened = value38;
+			_drawingInput = value38.As<NMapDrawingInput>();
 		}
-		if (info.TryGetSignalEventDelegate<ClosedEventHandler>(SignalName.Closed, out var value39))
+		if (info.TryGetSignalEventDelegate<OpenedEventHandler>(SignalName.Opened, out var value39))
 		{
-			backing_Closed = value39;
+			backing_Opened = value39;
+		}
+		if (info.TryGetSignalEventDelegate<ClosedEventHandler>(SignalName.Closed, out var value40))
+		{
+			backing_Closed = value40;
 		}
 	}
 

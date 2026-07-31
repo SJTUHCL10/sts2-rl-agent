@@ -298,7 +298,7 @@ public abstract class NMerchantSlot : Control
 		{
 			TaskHelper.RunSafely(OnSelected());
 		}
-		else if (inputEvent.IsActionPressed(MegaInput.accept))
+		else if (inputEvent.IsActionPressed(MegaInput.confirm))
 		{
 			OnPreview();
 			GetViewport().SetInputAsHandled();

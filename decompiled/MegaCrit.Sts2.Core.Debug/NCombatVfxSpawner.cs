@@ -144,7 +144,7 @@ public class NCombatVfxSpawner : Control
 	}
 
 	[Export(PropertyHint.None, "")]
-	private Node2D _backCombatVfxContainer;
+	private Control _backCombatVfxContainer;
 
 	[Export(PropertyHint.None, "")]
 	private Control _combatVfxContainer;
@@ -425,7 +425,7 @@ public class NCombatVfxSpawner : Control
 	{
 		if (name == PropertyName._backCombatVfxContainer)
 		{
-			_backCombatVfxContainer = VariantUtils.ConvertTo<Node2D>(in value);
+			_backCombatVfxContainer = VariantUtils.ConvertTo<Control>(in value);
 			return true;
 		}
 		if (name == PropertyName._combatVfxContainer)
@@ -572,7 +572,7 @@ public class NCombatVfxSpawner : Control
 	internal static List<PropertyInfo> GetGodotPropertyList()
 	{
 		List<PropertyInfo> list = new List<PropertyInfo>();
-		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._backCombatVfxContainer, PropertyHint.NodeType, "Node2D", PropertyUsageFlags.Default | PropertyUsageFlags.ScriptVariable, exported: true));
+		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._backCombatVfxContainer, PropertyHint.NodeType, "Control", PropertyUsageFlags.Default | PropertyUsageFlags.ScriptVariable, exported: true));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._combatVfxContainer, PropertyHint.NodeType, "Control", PropertyUsageFlags.Default | PropertyUsageFlags.ScriptVariable, exported: true));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._env, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._playerTopPosition, PropertyHint.NodeType, "Node2D", PropertyUsageFlags.Default | PropertyUsageFlags.ScriptVariable, exported: true));
@@ -615,7 +615,7 @@ public class NCombatVfxSpawner : Control
 		base.RestoreGodotObjectData(info);
 		if (info.TryGetProperty(PropertyName._backCombatVfxContainer, out var value))
 		{
-			_backCombatVfxContainer = value.As<Node2D>();
+			_backCombatVfxContainer = value.As<Control>();
 		}
 		if (info.TryGetProperty(PropertyName._combatVfxContainer, out var value2))
 		{

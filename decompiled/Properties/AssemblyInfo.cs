@@ -67,6 +67,7 @@ using MegaCrit.Sts2.Core.Nodes.Vfx.Backgrounds;
 using MegaCrit.Sts2.Core.Nodes.Vfx.Cards;
 using MegaCrit.Sts2.Core.Nodes.Vfx.Events;
 using MegaCrit.Sts2.Core.Nodes.Vfx.Examples;
+using MegaCrit.Sts2.Core.Nodes.Vfx.Forms;
 using MegaCrit.Sts2.Core.Nodes.Vfx.Ui;
 using MegaCrit.Sts2.Core.Nodes.Vfx.Utilities;
 using MegaCrit.Sts2.Core.RichTextTags;
@@ -82,13 +83,14 @@ using RiderTestRunner;
 [assembly: AssemblyCopyright("© 2023 Mega Crit Games")]
 [assembly: AssemblyDescription("sts2")]
 [assembly: AssemblyFileVersion("0.1.0.0")]
-[assembly: AssemblyInformationalVersion("0.1.0+c12f634d6773b2484e1152f12d7a7311b1dab949")]
+[assembly: AssemblyInformationalVersion("0.1.0+eecc8c4d0350bb5457209a0e4797bb8bc1343f89")]
 [assembly: AssemblyProduct("sts2")]
 [assembly: AssemblyTitle("sts2")]
 [assembly: AssemblyHasScripts(new Type[]
 {
 	typeof(MegaLabel),
 	typeof(MegaRichTextLabel),
+	typeof(SentryBootstrap),
 	typeof(CiCoreRunner),
 	typeof(NetCoreRunner),
 	typeof(AtlasResourceLoader),
@@ -97,6 +99,7 @@ using RiderTestRunner;
 	typeof(NBgLayerDebug),
 	typeof(NCombatVfxSpawner),
 	typeof(NDebugVfxSpawner),
+	typeof(NSpineSpriteCopierTester),
 	typeof(NTrailTest),
 	typeof(LocTextLabel),
 	typeof(NDecimillipedeSegmentDriver),
@@ -167,6 +170,7 @@ using RiderTestRunner;
 	typeof(NGlobalUi),
 	typeof(NGoldArrowButton),
 	typeof(NGridCardPreviewContainer),
+	typeof(NHotkeyIcon),
 	typeof(NHotkeyManager),
 	typeof(NInputManager),
 	typeof(NLoadingOverlay),
@@ -188,6 +192,7 @@ using RiderTestRunner;
 	typeof(NDebugAspectRatio),
 	typeof(NDebugInfoLabelManager),
 	typeof(NDevConsole),
+	typeof(NFormVfxTester),
 	typeof(NFpsVisualizer),
 	typeof(NOrbVfxTester),
 	typeof(NParticleCounter),
@@ -406,6 +411,7 @@ using RiderTestRunner;
 	typeof(NMapMarker),
 	typeof(NMapPoint),
 	typeof(NMapScreen),
+	typeof(NMapShareButton),
 	typeof(NMouseHeldMapDrawingInput),
 	typeof(NMouseModeMapDrawingInput),
 	typeof(NNormalMapPoint),
@@ -471,6 +477,8 @@ using RiderTestRunner;
 	typeof(NInputSettingsPanel),
 	typeof(NIntroLogoHoverTip),
 	typeof(NIntroLogoTickbox),
+	typeof(NKeyboardOnlyModeHoverTip),
+	typeof(NKeyboardOnlyModeTickbox),
 	typeof(NLanguageButton),
 	typeof(NLanguageDropdown),
 	typeof(NLanguageDropdownItem),
@@ -499,6 +507,7 @@ using RiderTestRunner;
 	typeof(NSettingsButton),
 	typeof(NSettingsDropdown),
 	typeof(NSettingsGradientMask),
+	typeof(NSettingsPaginatorArrow),
 	typeof(NSettingsPanel),
 	typeof(NSettingsScreen),
 	typeof(NSettingsSlider),
@@ -597,6 +606,12 @@ using RiderTestRunner;
 	typeof(NGlowExampleVfx),
 	typeof(NNoiseScroller),
 	typeof(NSaturationExampleVfx),
+	typeof(NDemonFormVfx),
+	typeof(NEchoFormVfx),
+	typeof(NFormVfx),
+	typeof(NReaperFormVfx),
+	typeof(NSerpentFormVfx),
+	typeof(NVoidFormVfx),
 	typeof(NAdditiveOverlayVfx),
 	typeof(NAeonGlassVfx),
 	typeof(NAmalgamVfx),
@@ -754,8 +769,11 @@ using RiderTestRunner;
 	typeof(NParticlesContainer),
 	typeof(NScreenShake),
 	typeof(NShaker),
+	typeof(NSpineSpriteBoneFollower),
+	typeof(NSpineSpriteCopier),
 	typeof(NSpriteAnimator),
 	typeof(NTrail2D),
+	typeof(NValueRamp),
 	typeof(NVfxParticleSystem),
 	typeof(NVfxProjectile),
 	typeof(NVfxProjectileHandler),

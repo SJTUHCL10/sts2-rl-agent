@@ -11,6 +11,10 @@ using MegaCrit.Sts2.addons.mega_text;
 
 namespace MegaCrit.Sts2.Core.Nodes.Ftue;
 
+/// <summary>
+/// Generic button used to close any FTUE popups.
+/// Be warned, it's not actually used by every FTUE.
+/// </summary>
 [ScriptPath("res://src/Core/Nodes/Ftue/NFtueConfirmButton.cs")]
 public class NFtueConfirmButton : NButton
 {

@@ -5,6 +5,7 @@ using Godot.Bridge;
 using Godot.NativeInterop;
 using MegaCrit.Sts2.Core.ControllerInput;
 using MegaCrit.Sts2.Core.Nodes.GodotExtensions;
+using MegaCrit.Sts2.addons.mega_text;
 
 namespace MegaCrit.Sts2.Core.Nodes.Screens.Bestiary;
 
@@ -20,6 +21,11 @@ public class NBestiaryModeButton : NButton
 		/// Cached name for the '_Ready' method.
 		/// </summary>
 		public new static readonly StringName _Ready = "_Ready";
+
+		/// <summary>
+		/// Cached name for the 'SetLabel' method.
+		/// </summary>
+		public static readonly StringName SetLabel = "SetLabel";
 
 		/// <summary>
 		/// Cached name for the 'OnFocus' method.
@@ -61,6 +67,11 @@ public class NBestiaryModeButton : NButton
 		/// Cached name for the '_tween' field.
 		/// </summary>
 		public static readonly StringName _tween = "_tween";
+
+		/// <summary>
+		/// Cached name for the '_modeLabel' field.
+		/// </summary>
+		public static readonly StringName _modeLabel = "_modeLabel";
 	}
 
 	/// <summary>
@@ -72,15 +83,23 @@ public class NBestiaryModeButton : NButton
 
 	private Tween? _tween;
 
+	private MegaLabel _modeLabel;
+
 	protected override string ClickedSfx => "event:/sfx/ui/timeline/ui_timeline_close_epoch";
 
-	protected override string[] Hotkeys => new string[1] { MegaInput.accept };
+	protected override string[] Hotkeys => new string[1] { MegaInput.confirm };
 
-	protected override string ControllerIconHotkey => MegaInput.accept;
+	protected override string ControllerIconHotkey => MegaInput.confirm;
 
 	public override void _Ready()
 	{
 		ConnectSignals();
+		_modeLabel = GetNode<MegaLabel>("%ModeLabel");
+	}
+
+	public void SetLabel(string str)
+	{
+		_modeLabel.SetTextAutoSize(str);
 	}
 
 	protected override void OnFocus()
@@ -115,8 +134,12 @@ public class NBestiaryModeButton : NButton
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	internal new static List<MethodInfo> GetGodotMethodList()
 	{
-		List<MethodInfo> list = new List<MethodInfo>(4);
+		List<MethodInfo> list = new List<MethodInfo>(5);
 		list.Add(new MethodInfo(MethodName._Ready, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
+		list.Add(new MethodInfo(MethodName.SetLabel, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
+		{
+			new PropertyInfo(Variant.Type.String, "str", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false)
+		}, null));
 		list.Add(new MethodInfo(MethodName.OnFocus, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName.OnUnfocus, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName.OnPress, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
@@ -130,6 +153,12 @@ public class NBestiaryModeButton : NButton
 		if (method == MethodName._Ready && args.Count == 0)
 		{
 			_Ready();
+			ret = default(godot_variant);
+			return true;
+		}
+		if (method == MethodName.SetLabel && args.Count == 1)
+		{
+			SetLabel(VariantUtils.ConvertTo<string>(in args[0]));
 			ret = default(godot_variant);
 			return true;
 		}
@@ -162,6 +191,10 @@ public class NBestiaryModeButton : NButton
 		{
 			return true;
 		}
+		if (method == MethodName.SetLabel)
+		{
+			return true;
+		}
 		if (method == MethodName.OnFocus)
 		{
 			return true;
@@ -184,6 +217,11 @@ public class NBestiaryModeButton : NButton
 		if (name == PropertyName._tween)
 		{
 			_tween = VariantUtils.ConvertTo<Tween>(in value);
+			return true;
+		}
+		if (name == PropertyName._modeLabel)
+		{
+			_modeLabel = VariantUtils.ConvertTo<MegaLabel>(in value);
 			return true;
 		}
 		return base.SetGodotClassPropertyValue(in name, in value);
@@ -216,6 +254,11 @@ public class NBestiaryModeButton : NButton
 			value = VariantUtils.CreateFrom(in _tween);
 			return true;
 		}
+		if (name == PropertyName._modeLabel)
+		{
+			value = VariantUtils.CreateFrom(in _modeLabel);
+			return true;
+		}
 		return base.GetGodotClassPropertyValue(in name, out value);
 	}
 
@@ -230,6 +273,7 @@ public class NBestiaryModeButton : NButton
 		List<PropertyInfo> list = new List<PropertyInfo>();
 		list.Add(new PropertyInfo(Variant.Type.String, PropertyName.ClickedSfx, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._tween, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._modeLabel, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.PackedStringArray, PropertyName.Hotkeys, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.String, PropertyName.ControllerIconHotkey, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		return list;
@@ -241,6 +285,7 @@ public class NBestiaryModeButton : NButton
 	{
 		base.SaveGodotObjectData(info);
 		info.AddProperty(PropertyName._tween, Variant.From(in _tween));
+		info.AddProperty(PropertyName._modeLabel, Variant.From(in _modeLabel));
 	}
 
 	/// <inheritdoc />
@@ -251,6 +296,10 @@ public class NBestiaryModeButton : NButton
 		if (info.TryGetProperty(PropertyName._tween, out var value))
 		{
 			_tween = value.As<Tween>();
+		}
+		if (info.TryGetProperty(PropertyName._modeLabel, out var value2))
+		{
+			_modeLabel = value2.As<MegaLabel>();
 		}
 	}
 }

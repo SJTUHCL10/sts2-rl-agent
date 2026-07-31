@@ -6,7 +6,6 @@ using Godot;
 using Godot.Bridge;
 using Godot.NativeInterop;
 using MegaCrit.Sts2.Core.Assets;
-using MegaCrit.Sts2.Core.Bindings.MegaSpine;
 using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Players;
 using MegaCrit.Sts2.Core.Helpers;
@@ -18,6 +17,7 @@ using MegaCrit.Sts2.Core.Nodes.GodotExtensions;
 using MegaCrit.Sts2.Core.Nodes.Screens.Map;
 using MegaCrit.Sts2.Core.Nodes.Screens.ScreenContext;
 using MegaCrit.Sts2.Core.Nodes.Screens.TreasureRoomRelic;
+using MegaCrit.Sts2.Core.Nodes.TreasureRooms;
 using MegaCrit.Sts2.Core.Rooms;
 using MegaCrit.Sts2.Core.Runs;
 using MegaCrit.Sts2.Core.Saves;
@@ -82,11 +82,6 @@ public class NTreasureRoom : Control, IScreenContext, IRoomWithProceedButton
 		public static readonly StringName OnMouseExited = "OnMouseExited";
 
 		/// <summary>
-		/// Cached name for the 'UpdateChestSkin' method.
-		/// </summary>
-		public static readonly StringName UpdateChestSkin = "UpdateChestSkin";
-
-		/// <summary>
 		/// Cached name for the 'OnActiveScreenChanged' method.
 		/// </summary>
 		public static readonly StringName OnActiveScreenChanged = "OnActiveScreenChanged";
@@ -116,11 +111,6 @@ public class NTreasureRoom : Control, IScreenContext, IRoomWithProceedButton
 		/// Cached name for the '_chestButton' field.
 		/// </summary>
 		public static readonly StringName _chestButton = "_chestButton";
-
-		/// <summary>
-		/// Cached name for the '_chestNode' field.
-		/// </summary>
-		public static readonly StringName _chestNode = "_chestNode";
 
 		/// <summary>
 		/// Cached name for the '_proceedButton' field.
@@ -166,17 +156,9 @@ public class NTreasureRoom : Control, IScreenContext, IRoomWithProceedButton
 
 	private NCommonBanner _banner;
 
-	private NButton _chestButton;
-
-	private Node2D _chestNode;
-
-	private MegaSprite _chestAnimController;
+	private NTreasureButton _chestButton;
 
 	private NProceedButton _proceedButton;
-
-	private MegaSkin? _regularChestSkin;
-
-	private MegaSkin? _outlineChestSkin;
 
 	private GpuParticles2D _goldParticles;
 
@@ -232,35 +214,19 @@ public class NTreasureRoom : Control, IScreenContext, IRoomWithProceedButton
 			_banner.label.SetTextAutoSize(new LocString("gameplay_ui", "CHOOSE_SHARED_RELIC_HEADER").GetRawText());
 		}
 		_proceedButton = GetNode<NProceedButton>("%ProceedButton");
-		_chestNode = GetNode<Node2D>("%ChestVisual");
-		_chestAnimController = new MegaSprite(_chestNode);
 		_goldParticles = GetNode<GpuParticles2D>("%GoldExplosion");
 		_relicCollection = GetNode<NTreasureRoomRelicCollection>("%RelicCollection");
 		_skipVoteContainer = GetNode<NMultiplayerVoteContainer>("%SkipMultiplayerVoteContainer");
 		_relicCollection.Initialize(_runState);
 		_relicCollection.Visible = false;
-		_chestAnimController.SetSkeletonDataRes(_runState.Act.ChestSpineResource);
-		MegaSkeleton skeleton = _chestAnimController.GetSkeleton();
-		if (skeleton != null)
-		{
-			MegaSkeletonDataResource data = skeleton.GetData();
-			_regularChestSkin = data.FindSkin(_runState.Act.ChestSpineSkinNameNormal);
-			_outlineChestSkin = data.FindSkin(_runState.Act.ChestSpineSkinNameStroke);
-			skeleton.SetSlotsToSetupPose();
-			_chestAnimController.GetAnimationState().Apply(skeleton);
-			MegaAnimationState animationState = _chestAnimController.GetAnimationState();
-			animationState.SetAnimation("animation", loop: false);
-			_chestAnimController.GetAnimationState().AddAnimation("shine_fade", 0f, loop: false);
-			animationState.SetTimeScale(0f);
-			UpdateChestSkin(showOutline: false);
-		}
 		_proceedButton.Connect(NClickableControl.SignalName.Released, Callable.From<NButton>(OnProceedButtonPressed));
 		_proceedButton.UpdateText(NProceedButton.ProceedLoc);
 		_skipVoteContainer.Initialize(IsPlayerVotingForSkip, _runState.Players);
-		_chestButton = GetNode<NButton>("%Chest");
+		_chestButton = GetNode<NTreasureButton>("%Chest");
 		_chestButton.Connect(Control.SignalName.MouseEntered, Callable.From(OnMouseEntered));
 		_chestButton.Connect(Control.SignalName.MouseExited, Callable.From(OnMouseExited));
 		_chestButton.Connect(NClickableControl.SignalName.Released, Callable.From<NButton>(OnChestButtonReleased));
+		_chestButton.Setup(_runState.Act);
 		NGame.Instance.SetScreenShakeTarget(this);
 	}
 
@@ -314,21 +280,20 @@ public class NTreasureRoom : Control, IScreenContext, IRoomWithProceedButton
 
 	private void OnMouseEntered()
 	{
-		UpdateChestSkin(showOutline: true);
+		_chestButton.UpdateChestSkin(showOutline: true);
 	}
 
 	private void OnMouseExited()
 	{
-		UpdateChestSkin(showOutline: false);
+		_chestButton.UpdateChestSkin(showOutline: false);
 	}
 
 	private async Task OpenChest()
 	{
 		_banner.AnimateIn();
 		_proceedButton.Disable();
-		UpdateChestSkin(showOutline: false);
+		_chestButton.UpdateChestSkin(showOutline: false);
 		SfxCmd.Play(_runState.Act.ChestOpenSfx);
-		_chestAnimController.GetAnimationState().SetTimeScale(1f);
 		_chestButton.MouseFilter = MouseFilterEnum.Ignore;
 		int num = await _room.DoNormalRewards();
 		if (num > 0)
@@ -338,7 +303,8 @@ public class NTreasureRoom : Control, IScreenContext, IRoomWithProceedButton
 		}
 		await _room.DoExtraRewardsIfNeeded();
 		_relicCollection.InitializeRelics();
-		_relicCollection.AnimIn(_chestNode);
+		_relicCollection.AnimIn();
+		_chestButton.AnimOut();
 		_isRelicCollectionOpen = true;
 		DefaultFocusedControl?.TryGrabFocus();
 		TaskHelper.RunSafely(RelicFtueCheck());
@@ -359,7 +325,8 @@ public class NTreasureRoom : Control, IScreenContext, IRoomWithProceedButton
 		_proceedButton.Enable();
 		_banner.AnimateOut();
 		NMapScreen.Instance.SetTravelEnabled(enabled: true);
-		_relicCollection.AnimOut(_chestNode);
+		_relicCollection.AnimOut();
+		_chestButton.AnimIn();
 	}
 
 	private async Task EnableSkipAfterDelay(float delay, CancellationToken token)
@@ -381,17 +348,6 @@ public class NTreasureRoom : Control, IScreenContext, IRoomWithProceedButton
 			_relicCollection.SetSelectionEnabled(isEnabled: true);
 			NModalContainer.Instance.Add(NRelicRewardFtue.Create(relicReward));
 			SaveManager.Instance.MarkFtueAsComplete("obtain_relic_ftue");
-		}
-	}
-
-	private void UpdateChestSkin(bool showOutline)
-	{
-		MegaSkeleton skeleton = _chestAnimController.GetSkeleton();
-		if (skeleton != null)
-		{
-			skeleton.SetSkin(showOutline ? _outlineChestSkin : _regularChestSkin);
-			skeleton.SetSlotsToSetupPose();
-			_chestAnimController.GetAnimationState().Apply(skeleton);
 		}
 	}
 
@@ -431,7 +387,7 @@ public class NTreasureRoom : Control, IScreenContext, IRoomWithProceedButton
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	internal static List<MethodInfo> GetGodotMethodList()
 	{
-		List<MethodInfo> list = new List<MethodInfo>(11);
+		List<MethodInfo> list = new List<MethodInfo>(10);
 		list.Add(new MethodInfo(MethodName._Ready, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName._EnterTree, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName._ExitTree, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
@@ -450,10 +406,6 @@ public class NTreasureRoom : Control, IScreenContext, IRoomWithProceedButton
 		}, null));
 		list.Add(new MethodInfo(MethodName.OnMouseEntered, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName.OnMouseExited, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
-		list.Add(new MethodInfo(MethodName.UpdateChestSkin, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
-		{
-			new PropertyInfo(Variant.Type.Bool, "showOutline", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false)
-		}, null));
 		list.Add(new MethodInfo(MethodName.OnActiveScreenChanged, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		return list;
 	}
@@ -516,12 +468,6 @@ public class NTreasureRoom : Control, IScreenContext, IRoomWithProceedButton
 			ret = default(godot_variant);
 			return true;
 		}
-		if (method == MethodName.UpdateChestSkin && args.Count == 1)
-		{
-			UpdateChestSkin(VariantUtils.ConvertTo<bool>(in args[0]));
-			ret = default(godot_variant);
-			return true;
-		}
 		if (method == MethodName.OnActiveScreenChanged && args.Count == 0)
 		{
 			OnActiveScreenChanged();
@@ -571,10 +517,6 @@ public class NTreasureRoom : Control, IScreenContext, IRoomWithProceedButton
 		{
 			return true;
 		}
-		if (method == MethodName.UpdateChestSkin)
-		{
-			return true;
-		}
 		if (method == MethodName.OnActiveScreenChanged)
 		{
 			return true;
@@ -593,12 +535,7 @@ public class NTreasureRoom : Control, IScreenContext, IRoomWithProceedButton
 		}
 		if (name == PropertyName._chestButton)
 		{
-			_chestButton = VariantUtils.ConvertTo<NButton>(in value);
-			return true;
-		}
-		if (name == PropertyName._chestNode)
-		{
-			_chestNode = VariantUtils.ConvertTo<Node2D>(in value);
+			_chestButton = VariantUtils.ConvertTo<NTreasureButton>(in value);
 			return true;
 		}
 		if (name == PropertyName._proceedButton)
@@ -658,11 +595,6 @@ public class NTreasureRoom : Control, IScreenContext, IRoomWithProceedButton
 			value = VariantUtils.CreateFrom(in _chestButton);
 			return true;
 		}
-		if (name == PropertyName._chestNode)
-		{
-			value = VariantUtils.CreateFrom(in _chestNode);
-			return true;
-		}
 		if (name == PropertyName._proceedButton)
 		{
 			value = VariantUtils.CreateFrom(in _proceedButton);
@@ -707,7 +639,6 @@ public class NTreasureRoom : Control, IScreenContext, IRoomWithProceedButton
 		List<PropertyInfo> list = new List<PropertyInfo>();
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._banner, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._chestButton, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
-		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._chestNode, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._proceedButton, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName.ProceedButton, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._goldParticles, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
@@ -726,7 +657,6 @@ public class NTreasureRoom : Control, IScreenContext, IRoomWithProceedButton
 		base.SaveGodotObjectData(info);
 		info.AddProperty(PropertyName._banner, Variant.From(in _banner));
 		info.AddProperty(PropertyName._chestButton, Variant.From(in _chestButton));
-		info.AddProperty(PropertyName._chestNode, Variant.From(in _chestNode));
 		info.AddProperty(PropertyName._proceedButton, Variant.From(in _proceedButton));
 		info.AddProperty(PropertyName._goldParticles, Variant.From(in _goldParticles));
 		info.AddProperty(PropertyName._relicCollection, Variant.From(in _relicCollection));
@@ -746,35 +676,31 @@ public class NTreasureRoom : Control, IScreenContext, IRoomWithProceedButton
 		}
 		if (info.TryGetProperty(PropertyName._chestButton, out var value2))
 		{
-			_chestButton = value2.As<NButton>();
+			_chestButton = value2.As<NTreasureButton>();
 		}
-		if (info.TryGetProperty(PropertyName._chestNode, out var value3))
+		if (info.TryGetProperty(PropertyName._proceedButton, out var value3))
 		{
-			_chestNode = value3.As<Node2D>();
+			_proceedButton = value3.As<NProceedButton>();
 		}
-		if (info.TryGetProperty(PropertyName._proceedButton, out var value4))
+		if (info.TryGetProperty(PropertyName._goldParticles, out var value4))
 		{
-			_proceedButton = value4.As<NProceedButton>();
+			_goldParticles = value4.As<GpuParticles2D>();
 		}
-		if (info.TryGetProperty(PropertyName._goldParticles, out var value5))
+		if (info.TryGetProperty(PropertyName._relicCollection, out var value5))
 		{
-			_goldParticles = value5.As<GpuParticles2D>();
+			_relicCollection = value5.As<NTreasureRoomRelicCollection>();
 		}
-		if (info.TryGetProperty(PropertyName._relicCollection, out var value6))
+		if (info.TryGetProperty(PropertyName._skipVoteContainer, out var value6))
 		{
-			_relicCollection = value6.As<NTreasureRoomRelicCollection>();
+			_skipVoteContainer = value6.As<NMultiplayerVoteContainer>();
 		}
-		if (info.TryGetProperty(PropertyName._skipVoteContainer, out var value7))
+		if (info.TryGetProperty(PropertyName._isRelicCollectionOpen, out var value7))
 		{
-			_skipVoteContainer = value7.As<NMultiplayerVoteContainer>();
+			_isRelicCollectionOpen = value7.As<bool>();
 		}
-		if (info.TryGetProperty(PropertyName._isRelicCollectionOpen, out var value8))
+		if (info.TryGetProperty(PropertyName._hasChestBeenOpened, out var value8))
 		{
-			_isRelicCollectionOpen = value8.As<bool>();
-		}
-		if (info.TryGetProperty(PropertyName._hasChestBeenOpened, out var value9))
-		{
-			_hasChestBeenOpened = value9.As<bool>();
+			_hasChestBeenOpened = value8.As<bool>();
 		}
 	}
 }

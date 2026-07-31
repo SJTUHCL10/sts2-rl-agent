@@ -1,10 +1,11 @@
 using MegaCrit.Sts2.Core.Models;
+using MegaCrit.Sts2.Core.Multiplayer;
 using MegaCrit.Sts2.Core.Multiplayer.Serialization;
 using MegaCrit.Sts2.Core.Unlocks;
 
 namespace MegaCrit.Sts2.Core.Entities.Multiplayer;
 
-public struct LobbyPlayer : IPacketSerializable
+public struct StartRunLobbyPlayer : IPacketSerializable
 {
 	public ulong id;
 
@@ -16,6 +17,8 @@ public struct LobbyPlayer : IPacketSerializable
 
 	public int maxMultiplayerAscensionUnlocked;
 
+	public PeerVersionInfo versionInfo;
+
 	public bool isReady;
 
 	public void Serialize(PacketWriter writer)
@@ -25,6 +28,7 @@ public struct LobbyPlayer : IPacketSerializable
 		writer.WriteModel(character);
 		writer.Write(unlockState);
 		writer.WriteInt(maxMultiplayerAscensionUnlocked);
+		writer.Write(versionInfo);
 		writer.WriteBool(isReady);
 	}
 
@@ -35,6 +39,7 @@ public struct LobbyPlayer : IPacketSerializable
 		character = reader.ReadModel<CharacterModel>();
 		unlockState = reader.Read<SerializableUnlockState>();
 		maxMultiplayerAscensionUnlocked = reader.ReadInt();
+		versionInfo = reader.Read<PeerVersionInfo>();
 		isReady = reader.ReadBool();
 	}
 

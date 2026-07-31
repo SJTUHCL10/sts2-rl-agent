@@ -121,7 +121,7 @@ public class NMegaTextEdit : TextEdit
 
 	private void OnFocus()
 	{
-		if (NControllerManager.Instance.IsUsingController)
+		if (NControllerManager.Instance.IsUsingDirectionalNavigation)
 		{
 			_selectionReticle?.OnSelect();
 		}
