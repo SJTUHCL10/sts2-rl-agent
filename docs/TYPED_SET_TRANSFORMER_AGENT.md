@@ -285,13 +285,20 @@ checkpoint。实机运行时，它先验证 Bridge 的 v2 schema/hash，再用�
 tensorizer 编码 live snapshot，并复用 157-slot action mask/decoder：
 
 ```powershell
+$modelPath = "output/typed_set_v2_smoke_final_20260727_v2/final_model.zip"
+if (-not (Test-Path $modelPath)) {
+  throw "Missing local entity-v2 checkpoint: $modelPath"
+}
+
 python -m sts2_env.bridge.agent_runner `
-  --model-path output/typed_set_v2/final_model.zip `
+  --model-path $modelPath `
   --record-replay artifacts/typed_set_v2_live.json
 ```
 
-这条路径已经有 Python 自动化覆盖；模型质量足够之前，不应把工程 smoke
-checkpoint 当作可靠的自动通关 agent。
+这里使用的是本机现有的 20,480-step entity-v2 工程 smoke checkpoint；
+`output/typed_set_v2/final_model.zip` 只有在训练时明确指定该 output directory
+后才会存在。这条加载路径已经有 Python 自动化覆盖；模型质量足够之前，不应
+把工程 smoke checkpoint 当作可靠的自动通关 agent。
 
 Bridge 的单项 card-select 已能使用该路径。需要一次提交多个 index 的实机
 multi-select 仍受现有 `RlCardSelector` 命令语义限制；在修改 Bridge 为增量
@@ -333,5 +340,6 @@ observation/mask 卡死；保留该结果可避免把未收敛策略误报成接
 - candidate alignment 仍建立在冻结的 157 action layout 上。协议已经有 semantic
   `candidate_id`，未来可以实现动态候选分布并消除固定 slot。
 - 不保证多人 ownership/targeting parity；多人游戏明确不在本阶段范围内。
-- 当前训练机器的 PyTorch 是 CPU build。正式大规模超参数实验建议安装与硬件
-  匹配的 CUDA PyTorch，并先重新测吞吐和 batch size。
+- 当前训练机器已安装 `torch 2.12.1+cu130`，并在 RTX 4070 SUPER 上验证
+  CUDA 训练。CPU/GPU 分阶段性能数据、复现命令和优化建议见
+  [AGENT_V2_PERFORMANCE.md](AGENT_V2_PERFORMANCE.md)。

@@ -78,6 +78,11 @@ Measure simulation throughput with random actions:
 python scripts/benchmark.py
 ```
 
+For the entity-v2 Typed Set Transformer, use
+`python scripts/benchmark_agent_v2.py --device cpu` (or `cuda`) to separate
+environment, policy, and PPO-update costs. See
+[docs/AGENT_V2_PERFORMANCE.md](docs/AGENT_V2_PERFORMANCE.md).
+
 Expected output on a modern CPU:
 
 ```
@@ -178,6 +183,7 @@ sts2-rl-agent/
 |-- pyproject.toml                 # Package config, dependencies
 |-- scripts/
 |   |-- benchmark.py               # Throughput benchmark
+|   |-- benchmark_agent_v2.py      # Entity-v2 CPU/CUDA profiler
 |   |-- train_combat.py            # Combat-only training
 |   |-- train_full_run.py          # Legacy v1 full-run training
 |   |-- train_agent_v2.py          # Typed Set Transformer v2 training

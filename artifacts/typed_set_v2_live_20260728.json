@@ -1,0 +1,5027 @@
+{
+  "initial_state": {
+    "act": 1,
+    "floor": 1,
+    "options": [
+      {
+        "action": "event_choice",
+        "enabled": true,
+        "index": 0
+      },
+      {
+        "action": "event_choice",
+        "enabled": true,
+        "index": 1
+      },
+      {
+        "action": "event_choice",
+        "enabled": true,
+        "index": 2
+      }
+    ],
+    "type": "event"
+  },
+  "metadata": {
+    "agent_interface": {
+      "action_schema": "candidate-v2",
+      "feature_layout_hash": "f30670de5d3a336cb9c4bbfb2ee2ad942958d98ac39260a0db4ba23fba922223",
+      "observation_schema": "sts2-entity-v2",
+      "protocol_version": 2,
+      "vocabulary_hashes": {
+        "cards": "0f85fe9339f896bd5f8eec3909d50675f9c9f03145944fea7aa9ddecc349af13",
+        "powers": "16c3ea06d23f0c353053feeea5ad4ddfdad086e9c34fc32e279d66638e4a8654",
+        "relics": "1950f6bb4b049b5ea1a20a8d09b940187c573cee11a39eaf6592806357b9e1b7"
+      },
+      "vocabulary_sizes": {
+        "cards": 601,
+        "powers": 280,
+        "relics": 299
+      }
+    },
+    "host": "127.0.0.1",
+    "model_path": "output/typed_set_v2_smoke_final_20260727_v2/final_model.zip",
+    "port": 9002
+  },
+  "mode": "full_run",
+  "steps": [
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 1,
+        "options": [
+          {
+            "action": "event_choice",
+            "enabled": true,
+            "index": 0
+          }
+        ],
+        "type": "event"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 1,
+        "nodes": [
+          {
+            "col": 0,
+            "index": 0,
+            "row": 1,
+            "type": "Monster"
+          },
+          {
+            "col": 3,
+            "index": 1,
+            "row": 1,
+            "type": "Monster"
+          },
+          {
+            "col": 6,
+            "index": 2,
+            "row": 1,
+            "type": "Monster"
+          }
+        ],
+        "type": "map_select"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 2
+      },
+      "resulting_state": {
+        "discard_pile_count": 0,
+        "draw_pile_count": 6,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 29,
+            "id": "CORPSE_SLUG",
+            "intent": "Attack",
+            "intent_damage": 9,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 29,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 27,
+            "id": "CORPSE_SLUG",
+            "intent": "Debuff",
+            "is_alive": true,
+            "max_hp": 27,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 64,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "potions": [],
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 0,
+        "target_index": 1
+      },
+      "resulting_state": {
+        "discard_pile_count": 1,
+        "draw_pile_count": 6,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 29,
+            "id": "CORPSE_SLUG",
+            "intent": "Attack",
+            "intent_damage": 9,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 29,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 21,
+            "id": "CORPSE_SLUG",
+            "intent": "Debuff",
+            "is_alive": true,
+            "max_hp": 27,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 2,
+          "hp": 64,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "potions": [],
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 2,
+        "draw_pile_count": 6,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 23,
+            "id": "CORPSE_SLUG",
+            "intent": "Attack",
+            "intent_damage": 9,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 29,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 21,
+            "id": "CORPSE_SLUG",
+            "intent": "Debuff",
+            "is_alive": true,
+            "max_hp": 27,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 1,
+          "hp": 64,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "potions": [],
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 2,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 3,
+        "draw_pile_count": 6,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 23,
+            "id": "CORPSE_SLUG",
+            "intent": "Attack",
+            "intent_damage": 9,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 29,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 21,
+            "id": "CORPSE_SLUG",
+            "intent": "Debuff",
+            "is_alive": true,
+            "max_hp": 27,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 0,
+          "hp": 64,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "potions": [],
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 4,
+        "draw_pile_count": 1,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 23,
+            "id": "CORPSE_SLUG",
+            "intent": "Debuff",
+            "is_alive": true,
+            "max_hp": 29,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 21,
+            "id": "CORPSE_SLUG",
+            "intent": "Attack",
+            "intent_damage": 3,
+            "intent_hits": 2,
+            "is_alive": true,
+            "max_hp": 27,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 60,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": 2,
+              "id": "FRAIL_POWER"
+            }
+          ]
+        },
+        "potions": [],
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 2,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 5,
+        "draw_pile_count": 1,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 17,
+            "id": "CORPSE_SLUG",
+            "intent": "Debuff",
+            "is_alive": true,
+            "max_hp": 29,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 21,
+            "id": "CORPSE_SLUG",
+            "intent": "Attack",
+            "intent_damage": 3,
+            "intent_hits": 2,
+            "is_alive": true,
+            "max_hp": 27,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 2,
+          "hp": 60,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": 2,
+              "id": "FRAIL_POWER"
+            }
+          ]
+        },
+        "potions": [],
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 3,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 6,
+        "draw_pile_count": 1,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 11,
+            "id": "CORPSE_SLUG",
+            "intent": "Debuff",
+            "is_alive": true,
+            "max_hp": 29,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 21,
+            "id": "CORPSE_SLUG",
+            "intent": "Attack",
+            "intent_damage": 3,
+            "intent_hits": 2,
+            "is_alive": true,
+            "max_hp": 27,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 1,
+          "hp": 60,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": 2,
+              "id": "FRAIL_POWER"
+            }
+          ]
+        },
+        "potions": [],
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 2,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 7,
+        "draw_pile_count": 1,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 11,
+            "id": "CORPSE_SLUG",
+            "intent": "Debuff",
+            "is_alive": true,
+            "max_hp": 29,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 21,
+            "id": "CORPSE_SLUG",
+            "intent": "Attack",
+            "intent_damage": 3,
+            "intent_hits": 2,
+            "is_alive": true,
+            "max_hp": 27,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 3,
+          "energy": 0,
+          "hp": 60,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": 2,
+              "id": "FRAIL_POWER"
+            }
+          ]
+        },
+        "potions": [],
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 0,
+        "draw_pile_count": 5,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 11,
+            "id": "CORPSE_SLUG",
+            "intent": "Attack",
+            "intent_damage": 3,
+            "intent_hits": 2,
+            "is_alive": true,
+            "max_hp": 29,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 21,
+            "id": "CORPSE_SLUG",
+            "intent": "Attack",
+            "intent_damage": 9,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 27,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 57,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": 3,
+              "id": "FRAIL_POWER"
+            }
+          ]
+        },
+        "potions": [],
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 3,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 1,
+        "draw_pile_count": 5,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 5,
+            "id": "CORPSE_SLUG",
+            "intent": "Attack",
+            "intent_damage": 3,
+            "intent_hits": 2,
+            "is_alive": true,
+            "max_hp": 29,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 21,
+            "id": "CORPSE_SLUG",
+            "intent": "Attack",
+            "intent_damage": 9,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 27,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 2,
+          "hp": 57,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": 3,
+              "id": "FRAIL_POWER"
+            }
+          ]
+        },
+        "potions": [],
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 0,
+        "target_index": 1
+      },
+      "resulting_state": {
+        "discard_pile_count": 2,
+        "draw_pile_count": 5,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 5,
+            "id": "CORPSE_SLUG",
+            "intent": "Attack",
+            "intent_damage": 3,
+            "intent_hits": 2,
+            "is_alive": true,
+            "max_hp": 29,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 15,
+            "id": "CORPSE_SLUG",
+            "intent": "Attack",
+            "intent_damage": 9,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 27,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 1,
+          "hp": 57,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": 3,
+              "id": "FRAIL_POWER"
+            }
+          ]
+        },
+        "potions": [],
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 2,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 3,
+        "draw_pile_count": 5,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 5,
+            "id": "CORPSE_SLUG",
+            "intent": "Attack",
+            "intent_damage": 3,
+            "intent_hits": 2,
+            "is_alive": true,
+            "max_hp": 29,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 15,
+            "id": "CORPSE_SLUG",
+            "intent": "Attack",
+            "intent_damage": 9,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 27,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 3,
+          "energy": 0,
+          "hp": 57,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": 3,
+              "id": "FRAIL_POWER"
+            }
+          ]
+        },
+        "potions": [],
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 5,
+        "draw_pile_count": 0,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 5,
+            "id": "CORPSE_SLUG",
+            "intent": "Attack",
+            "intent_damage": 9,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 29,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 15,
+            "id": "CORPSE_SLUG",
+            "intent": "Debuff",
+            "is_alive": true,
+            "max_hp": 27,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 45,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": 2,
+              "id": "FRAIL_POWER"
+            }
+          ]
+        },
+        "potions": [],
+        "round": 4,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 3,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 6,
+        "draw_pile_count": 0,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 15,
+            "id": "CORPSE_SLUG",
+            "intent": "Stun",
+            "is_alive": true,
+            "max_hp": 27,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              },
+              {
+                "amount": 5,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 2,
+          "hp": 45,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": 2,
+              "id": "FRAIL_POWER"
+            }
+          ]
+        },
+        "potions": [],
+        "round": 4,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 7,
+        "draw_pile_count": 0,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 9,
+            "id": "CORPSE_SLUG",
+            "intent": "Stun",
+            "is_alive": true,
+            "max_hp": 27,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              },
+              {
+                "amount": 5,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 1,
+          "hp": 45,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": 2,
+              "id": "FRAIL_POWER"
+            }
+          ]
+        },
+        "potions": [],
+        "round": 4,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 0,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 8,
+        "draw_pile_count": 0,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 3,
+            "id": "CORPSE_SLUG",
+            "intent": "Stun",
+            "is_alive": true,
+            "max_hp": 27,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              },
+              {
+                "amount": 5,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 0,
+          "hp": 45,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": 2,
+              "id": "FRAIL_POWER"
+            }
+          ]
+        },
+        "potions": [],
+        "round": 4,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 0,
+        "draw_pile_count": 5,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 3,
+            "id": "CORPSE_SLUG",
+            "intent": "Debuff",
+            "is_alive": true,
+            "max_hp": 27,
+            "powers": [
+              {
+                "amount": 5,
+                "id": "RAVENOUS_POWER"
+              },
+              {
+                "amount": 5,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 45,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": 1,
+              "id": "FRAIL_POWER"
+            }
+          ]
+        },
+        "potions": [],
+        "round": 5,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 0,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 2,
+        "options": [
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 0
+          },
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 1
+          },
+          {
+            "action": "proceed",
+            "enabled": true,
+            "index": 2
+          }
+        ],
+        "type": "reward_screen"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 1
+      },
+      "resulting_state": {
+        "can_skip": true,
+        "cards": [
+          {
+            "cost": 0,
+            "id": "SPITE",
+            "index": 0,
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "SETUP_STRIKE",
+            "index": 1,
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "SWORD_BOOMERANG",
+            "index": 2,
+            "type": "Attack"
+          }
+        ],
+        "type": "card_reward"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 2
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 2,
+        "options": [
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 0
+          },
+          {
+            "action": "proceed",
+            "enabled": true,
+            "index": 1
+          }
+        ],
+        "type": "reward_screen"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 2,
+        "nodes": [
+          {
+            "col": 5,
+            "index": 0,
+            "row": 2,
+            "type": "Monster"
+          },
+          {
+            "col": 6,
+            "index": 1,
+            "row": 2,
+            "type": "Unknown"
+          }
+        ],
+        "type": "map_select"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 1
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 3,
+        "options": [
+          {
+            "action": "event_choice",
+            "enabled": true,
+            "index": 0
+          },
+          {
+            "action": "event_choice",
+            "enabled": true,
+            "index": 1
+          }
+        ],
+        "type": "event"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 3,
+        "options": [
+          {
+            "action": "event_choice",
+            "enabled": true,
+            "index": 0
+          }
+        ],
+        "type": "event"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 3,
+        "nodes": [
+          {
+            "col": 6,
+            "index": 0,
+            "row": 3,
+            "type": "Unknown"
+          }
+        ],
+        "type": "map_select"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 4,
+        "options": [
+          {
+            "action": "event_choice",
+            "enabled": true,
+            "index": 0
+          },
+          {
+            "action": "event_choice",
+            "enabled": true,
+            "index": 1
+          }
+        ],
+        "type": "event"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "can_confirm": false,
+        "cards": [
+          {
+            "id": "SETUP_STRIKE",
+            "index": 0,
+            "type": "Attack"
+          },
+          {
+            "id": "ANGER",
+            "index": 1,
+            "type": "Attack"
+          },
+          {
+            "id": "TWIN_STRIKE",
+            "index": 2,
+            "type": "Attack"
+          },
+          {
+            "id": "TAUNT",
+            "index": 3,
+            "type": "Skill"
+          },
+          {
+            "id": "BLOOD_WALL",
+            "index": 4,
+            "type": "Skill"
+          },
+          {
+            "id": "CINDER",
+            "index": 5,
+            "type": "Attack"
+          },
+          {
+            "id": "SWORD_BOOMERANG",
+            "index": 6,
+            "type": "Attack"
+          },
+          {
+            "id": "SHRUG_IT_OFF",
+            "index": 7,
+            "type": "Skill"
+          }
+        ],
+        "max_select": 2,
+        "min_select": 2,
+        "selected_count": 0,
+        "type": "card_select"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 3
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 4,
+        "options": [
+          {
+            "action": "event_choice",
+            "enabled": true,
+            "index": 0
+          }
+        ],
+        "type": "event"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 4,
+        "nodes": [
+          {
+            "col": 6,
+            "index": 0,
+            "row": 4,
+            "type": "Unknown"
+          }
+        ],
+        "type": "map_select"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 5,
+        "options": [
+          {
+            "action": "event_choice",
+            "enabled": true,
+            "index": 0
+          },
+          {
+            "action": "event_choice",
+            "enabled": true,
+            "index": 1
+          },
+          {
+            "action": "event_choice",
+            "enabled": true,
+            "index": 2
+          }
+        ],
+        "type": "event"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 5,
+        "options": [
+          {
+            "action": "event_choice",
+            "enabled": true,
+            "index": 0
+          }
+        ],
+        "type": "event"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 5,
+        "nodes": [
+          {
+            "col": 6,
+            "index": 0,
+            "row": 5,
+            "type": "Monster"
+          }
+        ],
+        "type": "map_select"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 0,
+        "draw_pile_count": 9,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 24,
+            "id": "TOADPOLE",
+            "intent": "Buff",
+            "is_alive": true,
+            "max_hp": 24,
+            "powers": []
+          },
+          {
+            "block": 0,
+            "hp": 26,
+            "id": "TOADPOLE",
+            "intent": "Attack",
+            "intent_damage": 8,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 26,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack",
+            "upgraded": true
+          },
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill",
+            "upgraded": true
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill",
+            "upgraded": true
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack",
+            "upgraded": true
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 51,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "potions": [],
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 0,
+        "target_index": 1
+      },
+      "resulting_state": {
+        "discard_pile_count": 1,
+        "draw_pile_count": 9,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 24,
+            "id": "TOADPOLE",
+            "intent": "Buff",
+            "is_alive": true,
+            "max_hp": 24,
+            "powers": []
+          },
+          {
+            "block": 0,
+            "hp": 17,
+            "id": "TOADPOLE",
+            "intent": "Attack",
+            "intent_damage": 8,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 26,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill",
+            "upgraded": true
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill",
+            "upgraded": true
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack",
+            "upgraded": true
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 2,
+          "hp": 51,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "potions": [],
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 3,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 2,
+        "draw_pile_count": 9,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 15,
+            "id": "TOADPOLE",
+            "intent": "Buff",
+            "is_alive": true,
+            "max_hp": 24,
+            "powers": []
+          },
+          {
+            "block": 0,
+            "hp": 17,
+            "id": "TOADPOLE",
+            "intent": "Attack",
+            "intent_damage": 8,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 26,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill",
+            "upgraded": true
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill",
+            "upgraded": true
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 1,
+          "hp": 51,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "potions": [],
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 2,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 3,
+        "draw_pile_count": 9,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 15,
+            "id": "TOADPOLE",
+            "intent": "Buff",
+            "is_alive": true,
+            "max_hp": 24,
+            "powers": []
+          },
+          {
+            "block": 0,
+            "hp": 17,
+            "id": "TOADPOLE",
+            "intent": "Attack",
+            "intent_damage": 8,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 26,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill",
+            "upgraded": true
+          }
+        ],
+        "player": {
+          "block": 8,
+          "energy": 0,
+          "hp": 51,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "potions": [],
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 4,
+        "draw_pile_count": 4,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 15,
+            "id": "TOADPOLE",
+            "intent": "Attack",
+            "intent_damage": 4,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 24,
+            "powers": [
+              {
+                "amount": 2,
+                "id": "THORNS_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 17,
+            "id": "TOADPOLE",
+            "intent": "Buff",
+            "is_alive": true,
+            "max_hp": 26,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "SWORD_BOOMERANG",
+            "playable": true,
+            "target": "RandomEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 0,
+            "id": "ANGER",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 51,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "potions": [],
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 0,
+        "target_index": 1
+      },
+      "resulting_state": {
+        "discard_pile_count": 5,
+        "draw_pile_count": 4,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 15,
+            "id": "TOADPOLE",
+            "intent": "Attack",
+            "intent_damage": 4,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 24,
+            "powers": [
+              {
+                "amount": 2,
+                "id": "THORNS_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 11,
+            "id": "TOADPOLE",
+            "intent": "Buff",
+            "is_alive": true,
+            "max_hp": 26,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "SWORD_BOOMERANG",
+            "playable": true,
+            "target": "RandomEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 0,
+            "id": "ANGER",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 2,
+          "hp": 51,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "potions": [],
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 6,
+        "draw_pile_count": 4,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 15,
+            "id": "TOADPOLE",
+            "intent": "Attack",
+            "intent_damage": 4,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 24,
+            "powers": [
+              {
+                "amount": 2,
+                "id": "THORNS_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 11,
+            "id": "TOADPOLE",
+            "intent": "Buff",
+            "is_alive": true,
+            "max_hp": 26,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "SWORD_BOOMERANG",
+            "playable": true,
+            "target": "RandomEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 0,
+            "id": "ANGER",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 1,
+          "hp": 51,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "potions": [],
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 0,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 7,
+        "draw_pile_count": 4,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 9,
+            "id": "TOADPOLE",
+            "intent": "Attack",
+            "intent_damage": 4,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 24,
+            "powers": [
+              {
+                "amount": 2,
+                "id": "THORNS_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 8,
+            "id": "TOADPOLE",
+            "intent": "Buff",
+            "is_alive": true,
+            "max_hp": 26,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 0,
+            "id": "ANGER",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 1,
+          "energy": 0,
+          "hp": 51,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "potions": [],
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 9,
+        "draw_pile_count": 4,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 3,
+            "id": "TOADPOLE",
+            "intent": "Attack",
+            "intent_damage": 4,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 24,
+            "powers": [
+              {
+                "amount": 2,
+                "id": "THORNS_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 8,
+            "id": "TOADPOLE",
+            "intent": "Buff",
+            "is_alive": true,
+            "max_hp": 26,
+            "powers": []
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 0,
+          "hp": 50,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "potions": [],
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 0,
+        "draw_pile_count": 9,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 3,
+            "id": "TOADPOLE",
+            "intent": "Attack",
+            "intent_damage": 8,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 24,
+            "powers": []
+          },
+          {
+            "block": 0,
+            "hp": 8,
+            "id": "TOADPOLE",
+            "intent": "Attack",
+            "intent_damage": 4,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 26,
+            "powers": [
+              {
+                "amount": 2,
+                "id": "THORNS_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "SETUP_STRIKE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 0,
+            "id": "ANGER",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 38,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "potions": [],
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 3,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 1,
+        "draw_pile_count": 9,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 8,
+            "id": "TOADPOLE",
+            "intent": "Attack",
+            "intent_damage": 4,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 26,
+            "powers": [
+              {
+                "amount": 2,
+                "id": "THORNS_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "SETUP_STRIKE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 0,
+            "id": "ANGER",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 2,
+          "hp": 38,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "potions": [],
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 2,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 2,
+        "draw_pile_count": 9,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 2,
+            "id": "TOADPOLE",
+            "intent": "Attack",
+            "intent_damage": 4,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 26,
+            "powers": [
+              {
+                "amount": 2,
+                "id": "THORNS_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "SETUP_STRIKE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 0,
+            "id": "ANGER",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 1,
+          "hp": 36,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "potions": [],
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 6,
+        "options": [
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 0
+          },
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 1
+          },
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 2
+          },
+          {
+            "action": "proceed",
+            "enabled": true,
+            "index": 3
+          }
+        ],
+        "type": "reward_screen"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 2
+      },
+      "resulting_state": {
+        "can_skip": true,
+        "cards": [
+          {
+            "cost": 1,
+            "id": "TRUE_GRIT",
+            "index": 0,
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "ASHEN_STRIKE",
+            "index": 1,
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "TAUNT",
+            "index": 2,
+            "type": "Skill"
+          }
+        ],
+        "type": "card_reward"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 2
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 6,
+        "options": [
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 0
+          },
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 1
+          },
+          {
+            "action": "proceed",
+            "enabled": true,
+            "index": 2
+          }
+        ],
+        "type": "reward_screen"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 6,
+        "options": [
+          {
+            "action": "pick_reward",
+            "enabled": true,
+            "index": 0
+          },
+          {
+            "action": "proceed",
+            "enabled": true,
+            "index": 1
+          }
+        ],
+        "type": "reward_screen"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "act": 1,
+        "floor": 6,
+        "nodes": [
+          {
+            "col": 6,
+            "index": 0,
+            "row": 6,
+            "type": "Elite"
+          }
+        ],
+        "type": "map_select"
+      }
+    },
+    {
+      "action": {
+        "action": "choose",
+        "index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 0,
+        "draw_pile_count": 10,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 29,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 1,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 29,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 27,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 5,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 27,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 32,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 7,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 32,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 30,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Buff",
+            "is_alive": true,
+            "max_hp": 30,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 40,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "potions": [
+          {
+            "can_use": true,
+            "id": "BLOCK_POTION",
+            "requires_target": false,
+            "slot": 0,
+            "target": "AnyPlayer",
+            "target_type": "AnyPlayer",
+            "usage": "CombatOnly"
+          }
+        ],
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 0,
+        "target_index": 1
+      },
+      "resulting_state": {
+        "discard_pile_count": 1,
+        "draw_pile_count": 10,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 29,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 1,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 29,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 7,
+            "hp": 21,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 5,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 27,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 32,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 7,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 32,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 30,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Buff",
+            "is_alive": true,
+            "max_hp": 30,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 2,
+          "hp": 40,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "potions": [
+          {
+            "can_use": true,
+            "id": "BLOCK_POTION",
+            "requires_target": false,
+            "slot": 0,
+            "target": "AnyPlayer",
+            "target_type": "AnyPlayer",
+            "usage": "CombatOnly"
+          }
+        ],
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 2,
+        "draw_pile_count": 10,
+        "enemies": [
+          {
+            "block": 7,
+            "hp": 23,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 1,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 29,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 7,
+            "hp": 21,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 5,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 27,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 32,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 7,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 32,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 30,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Buff",
+            "is_alive": true,
+            "max_hp": 30,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 1,
+          "hp": 40,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "potions": [
+          {
+            "can_use": true,
+            "id": "BLOCK_POTION",
+            "requires_target": false,
+            "slot": 0,
+            "target": "AnyPlayer",
+            "target_type": "AnyPlayer",
+            "usage": "CombatOnly"
+          }
+        ],
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 2,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 3,
+        "draw_pile_count": 10,
+        "enemies": [
+          {
+            "block": 7,
+            "hp": 23,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 1,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 29,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 7,
+            "hp": 21,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 5,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 27,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 32,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 7,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 32,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 30,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Buff",
+            "is_alive": true,
+            "max_hp": 30,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 0,
+          "hp": 40,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "potions": [
+          {
+            "can_use": true,
+            "id": "BLOCK_POTION",
+            "requires_target": false,
+            "slot": 0,
+            "target": "AnyPlayer",
+            "target_type": "AnyPlayer",
+            "usage": "CombatOnly"
+          }
+        ],
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "potion",
+        "slot": 0,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 3,
+        "draw_pile_count": 10,
+        "enemies": [
+          {
+            "block": 7,
+            "hp": 23,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 1,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 29,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 7,
+            "hp": 21,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 5,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 27,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 32,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 7,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 32,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 30,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Buff",
+            "is_alive": true,
+            "max_hp": 30,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 0,
+        "hand": [
+          {
+            "cost": -1,
+            "id": "ASCENDERS_BANE",
+            "playable": false,
+            "target": "None",
+            "type": "Curse"
+          },
+          {
+            "cost": 2,
+            "id": "BASH",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 17,
+          "energy": 0,
+          "hp": 40,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "potions": [],
+        "round": 1,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 4,
+        "draw_pile_count": 5,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 23,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Buff",
+            "is_alive": true,
+            "max_hp": 29,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 21,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 7,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 27,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 32,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 1,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 32,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 30,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 8,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 30,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              },
+              {
+                "amount": 3,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "SWORD_BOOMERANG",
+            "playable": true,
+            "target": "RandomEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "SETUP_STRIKE",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 40,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "potions": [],
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 3,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 5,
+        "draw_pile_count": 5,
+        "enemies": [
+          {
+            "block": 7,
+            "hp": 16,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Buff",
+            "is_alive": true,
+            "max_hp": 29,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 21,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 7,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 27,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 32,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 1,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 32,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 30,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 8,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 30,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              },
+              {
+                "amount": 3,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "SWORD_BOOMERANG",
+            "playable": true,
+            "target": "RandomEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 2,
+          "hp": 40,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": 3,
+              "id": "SETUP_STRIKE_POWER"
+            },
+            {
+              "amount": 3,
+              "id": "STRENGTH_POWER"
+            }
+          ]
+        },
+        "potions": [],
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 0,
+        "target_index": 1
+      },
+      "resulting_state": {
+        "discard_pile_count": 6,
+        "draw_pile_count": 5,
+        "enemies": [
+          {
+            "block": 7,
+            "hp": 16,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Buff",
+            "is_alive": true,
+            "max_hp": 29,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 7,
+            "hp": 12,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 7,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 27,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 32,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 1,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 32,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 30,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 8,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 30,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              },
+              {
+                "amount": 3,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "SWORD_BOOMERANG",
+            "playable": true,
+            "target": "RandomEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 1,
+          "hp": 40,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": 3,
+              "id": "SETUP_STRIKE_POWER"
+            },
+            {
+              "amount": 3,
+              "id": "STRENGTH_POWER"
+            }
+          ]
+        },
+        "potions": [],
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 2,
+        "target_index": -1
+      },
+      "resulting_state": {
+        "discard_pile_count": 7,
+        "draw_pile_count": 5,
+        "enemies": [
+          {
+            "block": 7,
+            "hp": 16,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Buff",
+            "is_alive": true,
+            "max_hp": 29,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 7,
+            "hp": 12,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 7,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 27,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 32,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 1,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 32,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 30,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 8,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 30,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              },
+              {
+                "amount": 3,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "SWORD_BOOMERANG",
+            "playable": false,
+            "target": "RandomEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 5,
+          "energy": 0,
+          "hp": 40,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": [
+            {
+              "amount": 3,
+              "id": "SETUP_STRIKE_POWER"
+            },
+            {
+              "amount": 3,
+              "id": "STRENGTH_POWER"
+            }
+          ]
+        },
+        "potions": [],
+        "round": 2,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 9,
+        "draw_pile_count": 0,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 16,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 8,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 29,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              },
+              {
+                "amount": 3,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 12,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 1,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 27,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 32,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Buff",
+            "is_alive": true,
+            "max_hp": 32,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 30,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 10,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 30,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              },
+              {
+                "amount": 3,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "TAUNT",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 0,
+            "id": "ANGER",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 27,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "potions": [],
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 3,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 10,
+        "draw_pile_count": 0,
+        "enemies": [
+          {
+            "block": 7,
+            "hp": 10,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 8,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 29,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              },
+              {
+                "amount": 3,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 12,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 1,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 27,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 32,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Buff",
+            "is_alive": true,
+            "max_hp": 32,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 30,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 10,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 30,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              },
+              {
+                "amount": 3,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "TAUNT",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 0,
+            "id": "ANGER",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 2,
+          "hp": 27,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "potions": [],
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 2,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 11,
+        "draw_pile_count": 0,
+        "enemies": [
+          {
+            "block": 1,
+            "hp": 10,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 8,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 29,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              },
+              {
+                "amount": 3,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 12,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 1,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 27,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 32,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Buff",
+            "is_alive": true,
+            "max_hp": 32,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 30,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 10,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 30,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              },
+              {
+                "amount": 3,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "TAUNT",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 0,
+            "id": "ANGER",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 1,
+          "hp": 27,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "potions": [],
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 0,
+        "target_index": 1
+      },
+      "resulting_state": {
+        "discard_pile_count": 12,
+        "draw_pile_count": 0,
+        "enemies": [
+          {
+            "block": 1,
+            "hp": 10,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 8,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 29,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              },
+              {
+                "amount": 3,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 12,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 1,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 27,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              },
+              {
+                "amount": 1,
+                "id": "VULNERABLE_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 32,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Buff",
+            "is_alive": true,
+            "max_hp": 32,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 30,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 10,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 30,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              },
+              {
+                "amount": 3,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 0,
+            "id": "ANGER",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 6,
+          "energy": 0,
+          "hp": 27,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "potions": [],
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 14,
+        "draw_pile_count": 0,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 5,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 8,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 29,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              },
+              {
+                "amount": 3,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 12,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 1,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 27,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              },
+              {
+                "amount": 1,
+                "id": "VULNERABLE_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 32,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Buff",
+            "is_alive": true,
+            "max_hp": 32,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 30,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 10,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 30,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              },
+              {
+                "amount": 3,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 6,
+          "energy": 0,
+          "hp": 27,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "potions": [],
+        "round": 3,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "discard_pile_count": 0,
+        "draw_pile_count": 10,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 5,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 10,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 29,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              },
+              {
+                "amount": 3,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 12,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Buff",
+            "is_alive": true,
+            "max_hp": 27,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 32,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 8,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 32,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              },
+              {
+                "amount": 3,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 30,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 4,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 30,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              },
+              {
+                "amount": 3,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "TAUNT",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 3,
+          "hp": 12,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "potions": [],
+        "round": 4,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 0,
+        "target_index": 1
+      },
+      "resulting_state": {
+        "discard_pile_count": 1,
+        "draw_pile_count": 10,
+        "enemies": [
+          {
+            "block": 0,
+            "hp": 5,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 10,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 29,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              },
+              {
+                "amount": 3,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 7,
+            "hp": 6,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Buff",
+            "is_alive": true,
+            "max_hp": 27,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 32,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 8,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 32,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              },
+              {
+                "amount": 3,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 30,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 4,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 30,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              },
+              {
+                "amount": 3,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "TAUNT",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 2,
+          "hp": 12,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "potions": [],
+        "round": 4,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 3,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 2,
+        "draw_pile_count": 10,
+        "enemies": [
+          {
+            "block": 7,
+            "hp": 6,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Buff",
+            "is_alive": true,
+            "max_hp": 27,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 32,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 8,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 32,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              },
+              {
+                "amount": 3,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 30,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 4,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 30,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              },
+              {
+                "amount": 3,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "TAUNT",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "STRIKE_IRONCLAD",
+            "playable": true,
+            "target": "AnyEnemy",
+            "type": "Attack"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": true,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 1,
+          "hp": 12,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "potions": [],
+        "round": 4,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "play",
+        "card_index": 1,
+        "target_index": 0
+      },
+      "resulting_state": {
+        "discard_pile_count": 3,
+        "draw_pile_count": 10,
+        "enemies": [
+          {
+            "block": 1,
+            "hp": 6,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Buff",
+            "is_alive": true,
+            "max_hp": 27,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 32,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 8,
+            "intent_hits": 1,
+            "is_alive": true,
+            "max_hp": 32,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              },
+              {
+                "amount": 3,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          },
+          {
+            "block": 0,
+            "hp": 30,
+            "id": "PHANTASMAL_GARDENER",
+            "intent": "Attack",
+            "intent_damage": 4,
+            "intent_hits": 3,
+            "is_alive": true,
+            "max_hp": 30,
+            "powers": [
+              {
+                "amount": 7,
+                "id": "SKITTISH_POWER"
+              },
+              {
+                "amount": 3,
+                "id": "STRENGTH_POWER"
+              }
+            ]
+          }
+        ],
+        "exhaust_pile_count": 1,
+        "hand": [
+          {
+            "cost": 1,
+            "id": "TAUNT",
+            "playable": false,
+            "target": "AnyEnemy",
+            "type": "Skill"
+          },
+          {
+            "cost": 1,
+            "id": "DEFEND_IRONCLAD",
+            "playable": false,
+            "target": "Self",
+            "type": "Skill"
+          }
+        ],
+        "player": {
+          "block": 0,
+          "energy": 0,
+          "hp": 12,
+          "max_energy": 3,
+          "max_hp": 80,
+          "powers": []
+        },
+        "potions": [],
+        "round": 4,
+        "type": "combat_action"
+      }
+    },
+    {
+      "action": {
+        "action": "end_turn"
+      },
+      "resulting_state": {
+        "message": "Game over",
+        "type": "game_over"
+      }
+    }
+  ],
+  "version": 2
+}
