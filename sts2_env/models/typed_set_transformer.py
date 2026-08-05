@@ -20,6 +20,11 @@ from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 from stable_baselines3.common.type_aliases import Schedule
 from torch import nn
 
+from sts2_env.agent_v2.categorical_vocabulary import (
+    VOCABULARY_HASH,
+    VOCABULARY_SIZE,
+)
+
 
 @dataclass(frozen=True, slots=True)
 class TypedSetTransformerConfig:
@@ -32,6 +37,7 @@ class TypedSetTransformerConfig:
     num_isab_layers: int = 2
     feedforward_multiplier: int = 2
     dropout: float = 0.0
+    num_policy_experts: int = 4
 
     def validate(self) -> None:
         if self.d_model % self.num_heads != 0:
@@ -42,6 +48,7 @@ class TypedSetTransformerConfig:
             self.num_inducing_points,
             self.num_memory_tokens,
             self.num_isab_layers,
+            getattr(self, "num_policy_experts", 1),
         ) <= 0:
             raise ValueError("Typed Set Transformer sizes must be positive")
 
@@ -157,12 +164,12 @@ class _CategoricalNumericEmbedding(nn.Module):
         *,
         num_categorical_fields: int,
         num_numeric_fields: int,
-        categorical_buckets: int,
+        categorical_vocab_size: int = VOCABULARY_SIZE,
         d_model: int,
     ) -> None:
         super().__init__()
         self.categorical = nn.ModuleList([
-            nn.Embedding(categorical_buckets, d_model, padding_idx=0)
+            nn.Embedding(categorical_vocab_size, d_model, padding_idx=0)
             for _ in range(num_categorical_fields)
         ])
         self.numeric = nn.Sequential(
@@ -199,7 +206,7 @@ class TypedSetTransformerExtractor(BaseFeaturesExtractor):
         observation_space: spaces.Dict,
         *,
         config: TypedSetTransformerConfig | None = None,
-        categorical_buckets: int = 4096,
+        categorical_vocab_size: int,
     ) -> None:
         if not isinstance(observation_space, spaces.Dict):
             raise TypeError("TypedSetTransformerExtractor requires Dict observations")
@@ -221,27 +228,27 @@ class TypedSetTransformerExtractor(BaseFeaturesExtractor):
         self.entity_embedding = _CategoricalNumericEmbedding(
             num_categorical_fields=entity_cat,
             num_numeric_fields=entity_num,
-            categorical_buckets=categorical_buckets,
+            categorical_vocab_size=categorical_vocab_size,
             d_model=d_model,
         )
         self.candidate_embedding = _CategoricalNumericEmbedding(
             num_categorical_fields=candidate_cat,
             num_numeric_fields=candidate_num,
-            categorical_buckets=categorical_buckets,
+            categorical_vocab_size=categorical_vocab_size,
             d_model=d_model,
         )
         self.global_embedding = _CategoricalNumericEmbedding(
             num_categorical_fields=global_cat,
             num_numeric_fields=global_num,
-            categorical_buckets=categorical_buckets,
+            categorical_vocab_size=categorical_vocab_size,
             d_model=d_model,
         )
 
         # Entity type is categorical field zero. FiLM-like modulation gives
         # each type a distinct residual route without one expensive expert
         # network per token type.
-        self.type_scale = nn.Embedding(categorical_buckets, d_model)
-        self.type_shift = nn.Embedding(categorical_buckets, d_model)
+        self.type_scale = nn.Embedding(categorical_vocab_size, d_model)
+        self.type_shift = nn.Embedding(categorical_vocab_size, d_model)
         nn.init.zeros_(self.type_scale.weight)
         nn.init.zeros_(self.type_shift.weight)
         self.typed_feedforward = nn.Sequential(
@@ -326,22 +333,40 @@ class _TypedSetLatentExtractor(nn.Module):
 
 
 class CandidateScoringHead(nn.Module):
-    """Shared action head: score each candidate conditioned on global state."""
+    """Global-state-gated experts score each semantic action candidate."""
 
     def __init__(
         self,
         d_model: int,
         num_actions: int,
         hidden_dim: int | None = None,
+        num_experts: int = 1,
     ) -> None:
         super().__init__()
         self.d_model = d_model
         self.num_actions = num_actions
+        self.num_experts = num_experts
         hidden = hidden_dim or d_model
-        self.scorer = nn.Sequential(
-            nn.Linear(d_model * 2, hidden),
-            nn.GELU(),
-            nn.Linear(hidden, 1),
+        def make_expert() -> nn.Sequential:
+            return nn.Sequential(
+                nn.Linear(d_model * 2, hidden),
+                nn.GELU(),
+                nn.Linear(hidden, 1),
+            )
+        if num_experts == 1:
+            # Preserve the v2/v3 single-head state-dict key so existing
+            # checkpoints remain loadable for evaluation and Bridge use.
+            self.scorer: nn.Sequential | None = make_expert()
+            self.experts = nn.ModuleList()
+        else:
+            self.scorer = None
+            self.experts = nn.ModuleList([
+                make_expert() for _ in range(num_experts)
+            ])
+        self.gate = (
+            nn.Linear(d_model, num_experts)
+            if num_experts > 1
+            else None
         )
 
     def forward(self, features: torch.Tensor) -> torch.Tensor:
@@ -350,9 +375,17 @@ class CandidateScoringHead(nn.Module):
             -1, self.num_actions, self.d_model
         )
         expanded_global = global_state.unsqueeze(1).expand_as(candidates)
-        return self.scorer(
-            torch.cat((expanded_global, candidates), dim=-1)
-        ).squeeze(-1)
+        inputs = torch.cat((expanded_global, candidates), dim=-1)
+        if self.scorer is not None:
+            return self.scorer(inputs).squeeze(-1)
+        expert_logits = torch.stack(
+            [expert(inputs).squeeze(-1) for expert in self.experts],
+            dim=-1,
+        )
+        if self.gate is None:
+            return expert_logits[..., 0]
+        weights = torch.softmax(self.gate(global_state), dim=-1)
+        return torch.sum(expert_logits * weights.unsqueeze(1), dim=-1)
 
 
 class TypedSetMaskableActorCriticPolicy(MaskableActorCriticPolicy):
@@ -365,17 +398,28 @@ class TypedSetMaskableActorCriticPolicy(MaskableActorCriticPolicy):
         lr_schedule: Schedule,
         *,
         typed_set_config: TypedSetTransformerConfig | None = None,
-        categorical_buckets: int = 4096,
+        categorical_vocab_size: int = VOCABULARY_SIZE,
+        categorical_vocabulary_hash: str = VOCABULARY_HASH,
+        categorical_buckets: int | None = None,
         tensorizer_layout_hash: str | None = None,
+        action_semantics_version: str | None = None,
         **kwargs: Any,
     ) -> None:
         if not isinstance(action_space, spaces.Discrete):
             raise TypeError("Typed set policy currently requires Discrete actions")
+        if categorical_buckets is not None:
+            # Constructor-only compatibility lets SB3 deserialize an old v2
+            # checkpoint far enough for the runner to issue its explicit
+            # tensor-layout incompatibility error. It does not make hash
+            # observations compatible with the v3 vocabulary.
+            categorical_vocab_size = categorical_buckets
         self.typed_set_config = (
             typed_set_config or TypedSetTransformerConfig()
         )
-        self.categorical_buckets = categorical_buckets
+        self.categorical_vocab_size = categorical_vocab_size
+        self.categorical_vocabulary_hash = categorical_vocabulary_hash
         self.tensorizer_layout_hash = tensorizer_layout_hash
+        self.action_semantics_version = action_semantics_version
         kwargs.pop("features_extractor_class", None)
         kwargs.pop("features_extractor_kwargs", None)
         kwargs.pop("net_arch", None)
@@ -387,7 +431,7 @@ class TypedSetMaskableActorCriticPolicy(MaskableActorCriticPolicy):
             features_extractor_class=TypedSetTransformerExtractor,
             features_extractor_kwargs={
                 "config": self.typed_set_config,
-                "categorical_buckets": categorical_buckets,
+                "categorical_vocab_size": categorical_vocab_size,
             },
             **kwargs,
         )
@@ -402,7 +446,15 @@ class TypedSetMaskableActorCriticPolicy(MaskableActorCriticPolicy):
         self._build_mlp_extractor()
         d_model = self.typed_set_config.d_model
         num_actions = int(self.action_space.n)  # type: ignore[union-attr]
-        self.action_net = CandidateScoringHead(d_model, num_actions)
+        self.action_net = CandidateScoringHead(
+            d_model,
+            num_actions,
+            num_experts=getattr(
+                self.typed_set_config,
+                "num_policy_experts",
+                1,
+            ),
+        )
         self.value_net = nn.Sequential(
             nn.Linear(d_model, d_model),
             nn.GELU(),
@@ -426,7 +478,9 @@ class TypedSetMaskableActorCriticPolicy(MaskableActorCriticPolicy):
         data = super()._get_constructor_parameters()
         data.update({
             "typed_set_config": self.typed_set_config,
-            "categorical_buckets": self.categorical_buckets,
+            "categorical_vocab_size": self.categorical_vocab_size,
+            "categorical_vocabulary_hash": self.categorical_vocabulary_hash,
             "tensorizer_layout_hash": self.tensorizer_layout_hash,
+            "action_semantics_version": self.action_semantics_version,
         })
         return data

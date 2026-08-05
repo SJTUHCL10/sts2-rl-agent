@@ -21,6 +21,7 @@ from stable_baselines3.common.vec_env import SubprocVecEnv
 
 from sts2_env.agent_v2.tensorizer import TensorizerConfig
 from sts2_env.gym_env.entity_run_env import STS2EntityRunEnv
+from sts2_env.gym_env.entity_run_env import ENTITY_ACTION_SEMANTICS_VERSION
 from sts2_env.gym_env.run_env import STS2RunEnv
 from sts2_env.models.typed_set_transformer import (
     TypedSetMaskableActorCriticPolicy,
@@ -58,8 +59,12 @@ def _model(
         verbose=0,
         policy_kwargs={
             "typed_set_config": TypedSetTransformerConfig(),
-            "categorical_buckets": tensorizer.categorical_buckets,
+            "categorical_vocab_size": tensorizer.categorical_vocab_size,
+            "categorical_vocabulary_hash": (
+                tensorizer.categorical_vocabulary_hash
+            ),
             "tensorizer_layout_hash": tensorizer.feature_layout_hash(),
+            "action_semantics_version": ENTITY_ACTION_SEMANTICS_VERSION,
             "ortho_init": False,
         },
     )
@@ -264,6 +269,7 @@ def benchmark_ppo(
             109 + index,
             tensorizer_config=tensorizer,
             max_steps=2000,
+            max_combat_turns=50,
         )
         for index in range(n_envs)
     ])

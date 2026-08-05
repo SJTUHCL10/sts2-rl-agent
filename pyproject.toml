@@ -22,5 +22,8 @@ dev = [
 [tool.setuptools.packages.find]
 include = ["sts2_env*"]
 
+[tool.setuptools.package-data]
+"sts2_env.agent_v2" = ["categorical_vocabulary_v1.json"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]

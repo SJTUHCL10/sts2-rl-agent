@@ -174,6 +174,10 @@ def _choice_candidates(state: dict[str, Any]) -> list[ActionCandidate]:
             payload={"action": "choose", "index": external_index},
             features={
                 **selection_features,
+                "id": item.get("id") or item.get("type"),
+                "option_id": item.get("option_id"),
+                "model_source_content": item.get("id") or item.get("type"),
+                "model_source_zone": key.rstrip("s"),
                 key: item.get("id") or item.get("type"),
                 "price": item.get("price"),
                 "selected": item.get("selected", False),

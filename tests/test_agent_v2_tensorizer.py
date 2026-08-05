@@ -210,6 +210,17 @@ def test_card_selection_state_changes_candidate_features() -> None:
     assert selected["candidate_numeric"][1, 10] == 1.0
     assert selected["candidate_numeric"][0, 14] == 1.0
 
+    from sts2_env.agent_v2.categorical_vocabulary import categorical_id
+
+    # The candidate itself is linked to STRIKE, rather than relying on the
+    # arbitrary action-slot embedding to identify which card it selects.
+    assert selected["candidate_categorical"][1, 2] == categorical_id(
+        "STRIKE", strict=True
+    )
+    assert selected["candidate_categorical"][1, 5] == categorical_id(
+        "STRIKE", strict=True
+    )
+
 
 def test_run_snapshot_preserves_incremental_deck_selection() -> None:
     manager = RunManager(seed=803, character_id="Ironclad")
@@ -258,7 +269,7 @@ def test_typed_set_encoder_is_entity_permutation_invariant() -> None:
             num_memory_tokens=4,
             num_isab_layers=1,
         ),
-        categorical_buckets=config.categorical_buckets,
+        categorical_vocab_size=config.categorical_vocab_size,
     )
     extractor.eval()
 
@@ -301,7 +312,8 @@ def test_maskable_policy_forward_shapes() -> None:
             num_memory_tokens=4,
             num_isab_layers=1,
         ),
-        categorical_buckets=config.categorical_buckets,
+        categorical_vocab_size=config.categorical_vocab_size,
+        categorical_vocabulary_hash=config.categorical_vocabulary_hash,
         ortho_init=False,
     )
     batched = {
@@ -343,7 +355,8 @@ def test_maskable_ppo_learns_saves_and_loads(tmp_path) -> None:
                 num_memory_tokens=2,
                 num_isab_layers=1,
             ),
-            "categorical_buckets": config.categorical_buckets,
+            "categorical_vocab_size": config.categorical_vocab_size,
+            "categorical_vocabulary_hash": config.categorical_vocabulary_hash,
             "tensorizer_layout_hash": config.feature_layout_hash(),
             "ortho_init": False,
         },

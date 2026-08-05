@@ -146,19 +146,24 @@ Key flags:
 | `--n-steps` | 2048 | Steps per rollout per env |
 | `--output-dir` | output/combat_ppo | Where to save models and logs |
 
-### Train a Full-Run Agent
+### Train the Structured Full-Run Agent
 
-Train an agent that handles an entire run (combat + map + rewards + events):
+Train the entity-v2 Typed Set Transformer with the collision-free v4 tensor,
+candidate-aligned MoE actor, decomposed shaping, and capability-based best
+checkpoint selection:
 
 ```bash
-python scripts/train_full_run.py \
+python scripts/train_agent_v2.py \
     --total-timesteps 1000000 \
-    --act-count 1 \
-    --n-envs 4 \
-    --output-dir output/run_ppo
+    --n-envs 16 \
+    --device cuda \
+    --output-dir output/typed_set_v4
 ```
 
-The `--act-count` flag controls how many acts per episode (1 = Act 1 only, 3 = full game).
+Every completed episode is appended to `training_curve.jsonl`; model,
+vocabulary, reward, and evaluation metadata are written to
+`model_metadata.json`. See
+[docs/AGENT_MODEL_ITERATION.md](docs/AGENT_MODEL_ITERATION.md).
 
 ### Connect to Real Game
 
@@ -184,10 +189,13 @@ sts2-rl-agent/
 |-- scripts/
 |   |-- benchmark.py               # Throughput benchmark
 |   |-- benchmark_agent_v2.py      # Entity-v2 CPU/CUDA profiler
+|   |-- build_agent_vocabulary.py  # Collision-free categorical vocabulary
+|   |-- audit_agent_vocabulary.py  # Unknown/overflow run audit
+|   |-- analyze_training_curve.py  # Episode JSONL curve summary
 |   |-- train_combat.py            # Combat-only training
 |   |-- train_full_run.py          # Legacy v1 full-run training
-|   |-- train_agent_v2.py          # Typed Set Transformer v2 training
-|   +-- evaluate_agent_v2.py       # Saved v2 model evaluation
+|   |-- train_agent_v2.py          # Entity-v2 / tensor-v4 training
+|   +-- evaluate_agent_v2.py       # Saved structured model evaluation
 |
 |-- sts2_env/                      # Python package (headless simulator)
 |   |-- core/                      # Combat engine

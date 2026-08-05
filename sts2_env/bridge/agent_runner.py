@@ -152,7 +152,7 @@ def _tensorizer_config_for_model(model: Any) -> TensorizerConfig:
     config = TensorizerConfig(
         max_entities=entity_cat.shape[0],
         num_actions=candidate_cat.shape[0],
-        categorical_buckets=int(entity_cat.high.max()) + 1,
+        categorical_vocab_size=int(entity_cat.high.max()) + 1,
         entity_categorical_fields=entity_cat.shape[1],
         entity_numeric_fields=entity_num.shape[1],
         candidate_categorical_fields=candidate_cat.shape[1],
@@ -169,6 +169,20 @@ def _tensorizer_config_for_model(model: Any) -> TensorizerConfig:
         raise ValueError(
             "Entity-v2 tensorizer layout mismatch: checkpoint expects "
             f"{expected_hash}, runtime provides {config.feature_layout_hash()}"
+        )
+    expected_vocabulary_hash = getattr(
+        getattr(model, "policy", None),
+        "categorical_vocabulary_hash",
+        None,
+    )
+    if (
+        expected_vocabulary_hash
+        and expected_vocabulary_hash != config.categorical_vocabulary_hash
+    ):
+        raise ValueError(
+            "Entity-v2 categorical vocabulary mismatch: checkpoint expects "
+            f"{expected_vocabulary_hash}, runtime provides "
+            f"{config.categorical_vocabulary_hash}"
         )
     return config
 

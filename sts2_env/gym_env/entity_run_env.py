@@ -15,9 +15,11 @@ from sts2_env.agent_v2.tensorizer import (
 )
 from sts2_env.gym_env.run_env import STS2RunEnv
 
+ENTITY_ACTION_SEMANTICS_VERSION = "entity-actions-v2-monotonic-choice"
+
 
 class STS2EntityRunEnv(gymnasium.Wrapper):
-    """Expose typed padded sets while preserving v1 action semantics."""
+    """Expose typed padded sets with versioned entity action semantics."""
 
     def __init__(
         self,
@@ -30,6 +32,12 @@ class STS2EntityRunEnv(gymnasium.Wrapper):
             raise ValueError(
                 "Pass either env or STS2RunEnv keyword arguments, not both"
             )
+        if env is None:
+            # The entity-v4 policy uses monotonic multi-select actions. A
+            # chosen item cannot be toggled off, eliminating deterministic
+            # two-cycles while preserving every final subset and confirm
+            # choice. Frozen v1 STS2RunEnv behavior remains unchanged.
+            run_env_kwargs.setdefault("monotonic_choices", True)
         base = env or STS2RunEnv(**run_env_kwargs)
         super().__init__(base)
         self.tensorizer_config = tensorizer_config

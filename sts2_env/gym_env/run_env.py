@@ -259,6 +259,8 @@ class STS2RunEnv(gymnasium.Env):
         max_steps: int = DEFAULT_MAX_STEPS,
         max_combat_turns: int = DEFAULT_MAX_COMBAT_TURNS,
         render_mode: str | None = None,
+        reward_shaping: "RunRewardShapingConfig | None" = None,
+        monotonic_choices: bool = False,
     ):
         super().__init__()
 
@@ -275,10 +277,14 @@ class STS2RunEnv(gymnasium.Env):
         self.max_steps = max_steps
         self.max_combat_turns = max_combat_turns
         self.render_mode = render_mode
+        self.reward_shaping = reward_shaping
+        self.monotonic_choices = monotonic_choices
 
         # Mutable state -- set during reset()
         self._mgr: RunManager | None = None
         self._step_count: int = 0
+        self._episode_reward_components: dict[str, float] = {}
+        self._combat_turn_limit_reached: bool = False
 
     # ------------------------------------------------------------------
     # Gymnasium API
@@ -298,6 +304,8 @@ class STS2RunEnv(gymnasium.Env):
             ascension_level=self._ascension_level,
         )
         self._step_count = 0
+        self._episode_reward_components = {}
+        self._combat_turn_limit_reached = False
 
         obs = self._encode_obs()
         info = self._build_info()
@@ -308,6 +316,11 @@ class STS2RunEnv(gymnasium.Env):
     ) -> tuple[np.ndarray, float, bool, bool, dict[str, Any]]:
         assert self._mgr is not None, "Must call reset() before step()"
         self._step_count += 1
+
+        previous_floor = self._mgr.run_state.total_floor
+        previous_hp = self._mgr.run_state.player.current_hp
+        previous_max_hp = self._mgr.run_state.player.max_hp
+        previous_phase = self._mgr.phase
 
         reward = 0.0
         phase = self._mgr.phase
@@ -352,8 +365,36 @@ class STS2RunEnv(gymnasium.Env):
         elif truncated:
             reward = REWARD_DEATH
 
+        base_reward = float(reward)
+        reward_components = {"base": base_reward}
+        if self.reward_shaping is not None:
+            from sts2_env.gym_env.reward_shaping import shaped_run_reward
+
+            reward, reward_components = shaped_run_reward(
+                base_reward,
+                previous_floor=previous_floor,
+                current_floor=self._mgr.run_state.total_floor,
+                previous_hp=previous_hp,
+                current_hp=self._mgr.run_state.player.current_hp,
+                previous_max_hp=previous_max_hp,
+                previous_phase=previous_phase,
+                current_phase=self._mgr.phase,
+                run_over=terminated or truncated,
+                player_won=self._mgr.player_won,
+                config=self.reward_shaping,
+            )
+        for name, value in reward_components.items():
+            self._episode_reward_components[name] = (
+                self._episode_reward_components.get(name, 0.0) + float(value)
+            )
+
         obs = self._encode_obs()
         info = self._build_info()
+        info["base_reward"] = base_reward
+        info["reward_components"] = reward_components
+        info["episode_reward_components"] = dict(
+            self._episode_reward_components
+        )
         return obs, float(reward), terminated, truncated, info
 
     def action_masks(self) -> np.ndarray:
@@ -376,8 +417,22 @@ class STS2RunEnv(gymnasium.Env):
             if any(a.get("action") == "confirm_choice" for a in actions):
                 mask[layout.combat_start] = 1
             choose_actions = [a for a in actions if a.get("action") == "choose"]
+            pending_choice = self._mgr.run_state.pending_choice
+            if pending_choice is None:
+                event_model = getattr(self._mgr, "_event_model", None)
+                pending_choice = getattr(event_model, "pending_choice", None)
             for i in range(min(len(choose_actions), layout.combat_size - 1)):
-                mask[layout.combat_start + 1 + i] = 1
+                choice_index = int(choose_actions[i].get("index", i))
+                can_toggle = (
+                    pending_choice is None
+                    or not pending_choice.is_multi
+                    or pending_choice.can_toggle(choice_index)
+                )
+                if not (
+                    self.monotonic_choices
+                    and bool(choose_actions[i].get("selected", False))
+                ) and can_toggle:
+                    mask[layout.combat_start + 1 + i] = 1
         elif phase == RunManager.PHASE_COMBAT:
             combat = self._mgr.get_combat_state()
             if combat is not None:
@@ -395,6 +450,14 @@ class STS2RunEnv(gymnasium.Env):
                 available_combat_slots = max(0, len(mask) - layout.combat_start)
                 n = min(len(combat_mask), layout.combat_size, available_combat_slots)
                 mask[layout.combat_start: layout.combat_start + n] = combat_mask[:n]
+                if (
+                    self.monotonic_choices
+                    and combat.pending_choice is not None
+                ):
+                    for selected_index in combat.pending_choice.selected_indices:
+                        slot = layout.combat_start + 1 + selected_index
+                        if 0 <= slot < len(mask):
+                            mask[slot] = 0
                 select_actions = [
                     a for a in actions if a.get("action") == "select_player"
                 ]
@@ -525,6 +588,7 @@ class STS2RunEnv(gymnasium.Env):
                 and not combat_now.is_over
                 and combat_now.turn_count > self.max_combat_turns
             ):
+                self._combat_turn_limit_reached = True
                 mgr.run_state.player.current_hp = 0
                 mgr.run_state.lose_run()
 
@@ -753,6 +817,10 @@ class STS2RunEnv(gymnasium.Env):
                 "deck_size": len(rs.player.deck),
                 "relics": len(rs.relics),
                 "step": self._step_count,
+                "player_won": rs.player_won,
+                "combat_turn_limit_reached": (
+                    self._combat_turn_limit_reached
+                ),
             })
         return info
 

@@ -38,7 +38,7 @@ actor-critic，但不同时更换游戏逻辑、动作语义和 PPO 算法。设
 - 多进程 `SubprocVecEnv` 下，`action_masks()` 必须由环境本身实现；不能依赖
   父进程中的 `ActionMasker`；
 - 普通 `EvalCallback` 不理解 action mask，正式加入周期评估时必须使用
-  `MaskableEvalCallback` 或显式传 mask；
+  mask-aware 的自定义评估 callback 或显式传 mask；
 - SB3 的 rollout buffer 仍然保存 padded `Dict` observation。若以后实体上限、
   batch 或模型显著增大导致内存成为瓶颈，可以保留本模型接口并把算法后端换成
   CleanRL、RLlib 或自研 PPO，而不改模拟器状态协议。
@@ -58,15 +58,16 @@ actor-critic，但不同时更换游戏逻辑、动作语义和 PPO 算法。设
 | --- | ---: | --- |
 | `global_categorical` | `[4]` | phase、character、room、screen type |
 | `global_numeric` | `[16]` | act/floor、HP、gold、deck/relic/potion 数量、round、终局等 |
-| `entity_categorical` | `[N, 10]` | type、content ID、zone、subtype、rarity、owner、upgrade、affliction、enchantment、count bucket |
-| `entity_numeric` | `[N, 24]` | HP/block/energy/cost/damage/amount/count/map 坐标和布尔状态 |
+| `entity_categorical` | `[N, 13]` | type、content ID、zone、subtype、rarity、owner role、upgrade、两个 affliction、两个 enchantment、status、count bucket |
+| `entity_numeric` | `[N, 34]` | HP/block/energy/cost/damage/amount/count/map 坐标、modifier 数量及实体状态 |
 | `entity_mask` | `[N]` | padding mask |
 | `candidate_categorical` | `[157, 7]` | action type、slot、source/target content、phase、option ID、source zone |
 | `candidate_numeric` | `[157, 15]` | enabled、price/cost、坐标、索引、selected、selection bounds、can-confirm 等 |
 
-当前默认 `N=384`。类别 ID 使用稳定哈希桶，避免每次增加 card/relic ID 都改变
-embedding table 的形状；协议 vocab hash 和 tensorizer layout hash 仍写入模型
-metadata，用来阻止不兼容 checkpoint 被静默加载。
+当前默认 `N=384`。`typed-set-tensor-v4` 不再使用哈希桶：类别值由版本化词表
+显式枚举，`0=PAD`、`1=UNKNOWN`、其余 token 各有唯一 ID。词表 hash 和
+tensorizer layout hash 写入模型 metadata；新增词表或改变字段布局后旧 checkpoint
+会明确拒绝加载，而不会把新实体静默映射到已有实体的 embedding。
 
 ### 3.1 Entity embedding
 
@@ -180,10 +181,11 @@ cross-attention，因此 157 个动作的开销可控。
 ### 5.1 Candidate-aware actor
 
 actor 不使用一个 `Linear(d, 157)` 固定分类头。每个 action slot 都有自己的
-candidate token，使用共享 scorer：
+candidate token。v4 使用由 global state 门控的四个共享 scorer experts：
 
 ```text
-logit_i = MLP([global_state, candidate_state_i])
+gate = softmax(MLP(global_state))
+logit_i = sum_e gate_e * MLP_e([global_state, candidate_state_i])
 ```
 
 优点：
@@ -249,15 +251,17 @@ python -m pip install -e ".[train,dev]"
 ```powershell
 python scripts/train_agent_v2.py `
   --total-timesteps 1000000 `
-  --n-envs 4 `
+  --n-envs 16 `
+  --n-steps 256 `
   --checkpoint-freq 100000 `
-  --eval-freq 100000 `
-  --output-dir output/typed_set_v2
+  --eval-freq 25000 `
+  --output-dir output/typed_set_v4
 ```
 
-周期评估使用 mask-aware `MaskableEvalCallback`；`--eval-freq 0`（默认）关闭
-周期评估，只保留训练后的固定 seed evaluation。checkpoint 频率按总 environment
-steps 指定，脚本会根据 `n_envs` 换算 callback 的调用频率。
+周期评估使用 mask-aware `CapabilityEvalCallback`，按固定种子的胜率、平均层数
+和截断率选择 `best_model`；默认每 25,000 environment steps 评估一次。
+`--eval-freq 0` 可关闭周期评估。checkpoint 频率按总 environment steps 指定，
+脚本会根据 `n_envs` 换算 callback 的调用频率。
 
 本阶段工程 smoke run：
 
@@ -312,7 +316,7 @@ toggle/confirm 或增加 `choose_many` policy action 之前，不应声称 v2 �
 - 与 v1 MLP、random 和 heuristic baseline 使用相同 evaluation seeds；
 - 充分训练步数；
 - 报告 win rate、平均/最大楼层、每阶段 action entropy、invalid mask 数量；
-- 对 tensorizer overflow、哈希碰撞和 candidate alignment 做监控。
+- 对 tensorizer overflow、unknown vocabulary token 和 candidate alignment 做监控。
 
 2026-07-27 的冻结 `typed-set-tensor-v2` smoke checkpoint 位于
 `output/typed_set_v2_smoke_final_20260727_v2/`。CPU 训练 20,480 steps
@@ -330,15 +334,17 @@ observation/mask 卡死；保留该结果可避免把未收敛策略误报成接
 
 ## 9. 已知限制与下一步
 
-- 训练目标仍是稀疏 `+1/-1`；这有利于定义清晰，但样本效率低。可以单独实验
-  potential-based shaping 或 auxiliary prediction，不应把 shaping 写死在模型。
-- 牌、能力、遗物等 content ID 当前使用稳定哈希 embedding。未来可比较显式
-  vocabulary、文本预训练 embedding 或基于规则字段的 factorized embedding。
-- affliction/enchantment 的第一版是集合整体哈希。更强版本应把每个 modifier
-  作为子 token 或使用 DeepSets 聚合，以泛化到未见组合。
+- v3 训练默认启用可配置的 floor/combat-win/HP-loss/step shaping，并继续单独保留
+  原始终局 `+1/-1`。各分量写进每个 episode 的 JSONL，便于做消融而不把 shaping
+  写死在网络中。更严格的下一步是比较 potential-based shaping 和 auxiliary task。
+- v3 牌、能力、遗物及结构字段使用显式、版本化 vocabulary。未知值仍有专用
+  `UNKNOWN` ID 以保证运行安全，但训练前应通过覆盖审计使其计数为零。
+- v3 分别编码最多两个 affliction 和两个 enchantment，并提供 modifier 数量。
+  超过两个 modifier 的组合目前仍会截断；后续可改为 modifier 子 token/DeepSets。
 - 地图暂未编码 edges。
-- candidate alignment 仍建立在冻结的 157 action layout 上。协议已经有 semantic
-  `candidate_id`，未来可以实现动态候选分布并消除固定 slot。
+- v4 已将选择项的 content/option/zone 与 candidate token 对齐，但输出仍建立在
+  冻结的 157 action layout 上。协议已有 semantic `candidate_id`，未来可以实现
+  动态候选分布并消除固定 slot。
 - 不保证多人 ownership/targeting parity；多人游戏明确不在本阶段范围内。
 - 当前训练机器已安装 `torch 2.12.1+cu130`，并在 RTX 4070 SUPER 上验证
   CUDA 训练。CPU/GPU 分阶段性能数据、复现命令和优化建议见
