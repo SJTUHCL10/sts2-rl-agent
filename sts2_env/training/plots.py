@@ -116,4 +116,49 @@ def render_training_plots(
         figure.savefig(path, dpi=160)
         plt.close(figure)
         created.append(path)
+
+    optimization = read_jsonl(output_dir / "optimization_metrics.jsonl")
+    if optimization:
+        steps = [int(item.get("timesteps", 0)) for item in optimization]
+        figure, axes = plt.subplots(3, 3, figsize=(15, 12), sharex=True)
+        plots = (
+            (axes[0, 0], "learning_rate", "Learning rate"),
+            (axes[0, 1], "approx_kl", "Approximate KL"),
+            (axes[0, 2], "clip_fraction", "Clip fraction"),
+            (axes[1, 0], "entropy_loss", "Entropy loss"),
+            (axes[1, 1], "explained_variance", "Explained variance"),
+            (
+                axes[1, 2],
+                "policy_gradient_loss",
+                "Policy gradient loss",
+            ),
+            (axes[2, 0], "value_loss", "Value loss"),
+            (axes[2, 1], "loss", "Total loss"),
+            (axes[2, 2], "steps_per_second", "Cumulative steps/s"),
+        )
+        for axis, key, title in plots:
+            points = [
+                (step, float(item[key]))
+                for step, item in zip(steps, optimization, strict=True)
+                if key in item
+            ]
+            if points:
+                axis.plot(
+                    [point[0] for point in points],
+                    [point[1] for point in points],
+                    marker="o",
+                    markersize=3,
+                    linewidth=1.5,
+                    color="#B279A2",
+                )
+            axis.set_title(title)
+            axis.grid(alpha=0.25)
+        for axis in axes[2]:
+            axis.set_xlabel("Training timesteps")
+        figure.suptitle("PPO optimization diagnostics")
+        figure.tight_layout()
+        path = output_dir / "optimization_progress.png"
+        figure.savefig(path, dpi=160)
+        plt.close(figure)
+        created.append(path)
     return created

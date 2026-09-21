@@ -443,7 +443,10 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
         CapabilityEvalCallback,
         CapabilityScoreConfig,
     )
-    from sts2_env.training.metrics import EpisodeMetricsCallback
+    from sts2_env.training.metrics import (
+        EpisodeMetricsCallback,
+        OptimizationMetricsCallback,
+    )
     from sts2_env.training.plot_callback import TrainingPlotCallback
 
     output_dir = Path(args.output_dir)
@@ -537,7 +540,10 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
     metrics_callback = EpisodeMetricsCallback(
         output_dir / "training_curve.jsonl"
     )
-    callbacks = [metrics_callback]
+    optimization_callback = OptimizationMetricsCallback(
+        output_dir / "optimization_metrics.jsonl"
+    )
+    callbacks = [metrics_callback, optimization_callback]
     if args.checkpoint_freq > 0:
         callbacks.append(CheckpointCallback(
             save_freq=max(args.checkpoint_freq // args.n_envs, 1),

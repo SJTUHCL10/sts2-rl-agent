@@ -16,21 +16,25 @@ Typed Set Transformer 和 candidate-aware actor，不使用 LSTM/GRU，也不考
 当前推荐的本机 checkpoint 是：
 
 ```text
-output/typed_set_v4_retrain_100k_4env_20260921/
+output/typed_set_v4_retrain_500k_4env_20260922/
   best_model/best_model.zip
 ```
 
-这是设备迁移后在 `0.111.0` 词表上重新训练的 4-env / 102,400-step
-checkpoint。最新 100 个固定种子评估（seed `100109..100208`）：
+这是设备迁移后在 `0.111.0` 词表上重新训练的 4-env checkpoint；完整 run
+为 503,808 steps，固定种子能力评估在约 425k 选择了 best。最新 100 个固定
+种子评估（seed `100109..100208`）：
 
 | Policy | Wins | Mean floor | Median | Max | Truncated |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| v4 100k best | 0/100 | **7.12** | 6.0 | 18 | 0 |
+| v4 425k best | 0/100 | **8.64** | 7.0 | 16 | 0 |
+| v4 500k final | 0/100 | 8.51 | 7.0 | 31 | 0 |
 | Masked random | 0/100 | 3.39 | 3.0 | 10 | 0 |
 
 它已经稳定优于随机策略，但仍然没有采样到胜局，因此还不是通关 agent。
-同一设备和种子下的 16-env / 256-step 吞吐配置达到 158 step/s，但 100-seed
-mean floor 只有 6.08；4-env / 1024-step 配置为 96.4 step/s，但策略质量更高。
+同一设备和种子下的 100k 实验中，16-env / 256-step 吞吐配置达到 158
+step/s，但 100-seed mean floor 只有 6.08；4-env / 1024-step 配置为 96.4
+step/s、mean floor 7.12。500k 长训继续采用 4-env / 1024-step，包含周期评估
+的整体吞吐为 184.4 step/s。
 
 ## 2. 基础架构
 
@@ -194,10 +198,12 @@ batch 变大，使 GPU 利用率略有改善。加速不会线性增长，因为
 8。千级 seed 评估应改成动态任务调度，避免固定 VecEnv 的尾部等待。
 
 训练脚本默认把 TensorBoard event 写到本次输出目录的 `tb_logs/`，并每 25k
-timesteps 刷新 `training_progress.png` 和 `capability_progress.png`。前者展示
-episode floor、return、length 和 win rate 的 100-episode rolling curve，后者
-展示固定种子评估的 mean/max floor、capability score 和 win rate。已有 JSONL
-日志可以独立重绘：
+timesteps 刷新 `training_progress.png`、`capability_progress.png` 和
+`optimization_progress.png`。前两者展示 episode rolling curve 和固定种子
+能力评估；优化图展示 learning rate、approx KL、clip fraction、entropy、
+explained variance、policy/value/total loss 和累计吞吐。对应的耐久日志是
+`training_curve.jsonl`、`capability_evaluations.jsonl` 和
+`optimization_metrics.jsonl`。已有 JSONL 日志可以独立重绘：
 
 ```powershell
 python scripts/plot_agent_v2_training.py output/<run-name> --window 100

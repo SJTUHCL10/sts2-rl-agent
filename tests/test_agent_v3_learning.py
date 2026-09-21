@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 import numpy as np
 
 from sts2_env.agent_v2.categorical_vocabulary import (
@@ -24,7 +26,11 @@ from sts2_env.gym_env.entity_run_env import STS2EntityRunEnv
 from sts2_env.gym_env.run_env import STS2RunEnv
 from sts2_env.run.run_manager import RunManager
 from sts2_env.training.capability_eval import CapabilityScoreConfig
-from sts2_env.training.plots import _rolling_mean, read_jsonl
+from sts2_env.training.plots import (
+    _rolling_mean,
+    read_jsonl,
+    render_training_plots,
+)
 
 
 def test_known_content_ids_have_collision_free_vocabulary_entries() -> None:
@@ -147,6 +153,29 @@ def test_plot_input_tolerates_partial_jsonl_and_rolls_by_episode(
     rolling = _rolling_mean([2.0, 4.0, 8.0], window=2)
     assert np.isnan(rolling[0])
     assert rolling[1:].tolist() == [3.0, 6.0]
+
+
+def test_optimization_metrics_render_to_static_png(tmp_path) -> None:
+    (tmp_path / "optimization_metrics.jsonl").write_text(
+        json.dumps({
+            "timesteps": 4096,
+            "learning_rate": 3e-4,
+            "approx_kl": 0.01,
+            "clip_fraction": 0.1,
+            "entropy_loss": -1.2,
+            "explained_variance": 0.4,
+            "policy_gradient_loss": -0.02,
+            "value_loss": 0.1,
+            "loss": 0.03,
+            "steps_per_second": 100.0,
+        }) + "\n",
+        encoding="utf-8",
+    )
+
+    created = render_training_plots(tmp_path)
+
+    assert created == [tmp_path / "optimization_progress.png"]
+    assert created[0].stat().st_size > 0
 
 
 def _install_run_choice(env: STS2RunEnv) -> None:

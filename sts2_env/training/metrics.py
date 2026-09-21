@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import time
 from collections import deque
 from pathlib import Path
 from typing import Any
@@ -161,3 +162,60 @@ class EpisodeMetricsCallback(BaseCallback):
             "entity_overflow_observations": self._overflow_observations,
             "combat_turn_limit_episodes": self._combat_turn_limit_episodes,
         }
+
+
+class OptimizationMetricsCallback(BaseCallback):
+    """Persist per-update PPO diagnostics from the SB3 logger."""
+
+    LOGGER_KEYS = (
+        "train/learning_rate",
+        "train/approx_kl",
+        "train/clip_fraction",
+        "train/entropy_loss",
+        "train/explained_variance",
+        "train/policy_gradient_loss",
+        "train/value_loss",
+        "train/loss",
+    )
+
+    def __init__(self, output_path: Path) -> None:
+        super().__init__()
+        self.output_path = output_path
+        self.records: list[dict[str, float | int]] = []
+        self._started_at = 0.0
+        self._last_timestep = -1
+
+    def _on_training_start(self) -> None:
+        self.output_path.parent.mkdir(parents=True, exist_ok=True)
+        self.output_path.write_text("", encoding="utf-8")
+        self._started_at = time.perf_counter()
+
+    def _on_rollout_start(self) -> None:
+        self._capture()
+
+    def _on_step(self) -> bool:
+        return True
+
+    def _on_training_end(self) -> None:
+        self._capture()
+
+    def _capture(self) -> None:
+        values = self.logger.name_to_value
+        if not any(key in values for key in self.LOGGER_KEYS):
+            return
+        timestep = int(self.num_timesteps)
+        if timestep == self._last_timestep:
+            return
+        elapsed = max(time.perf_counter() - self._started_at, 1e-9)
+        record: dict[str, float | int] = {
+            "timesteps": timestep,
+            "elapsed_seconds": elapsed,
+            "steps_per_second": timestep / elapsed,
+        }
+        for key in self.LOGGER_KEYS:
+            if key in values:
+                record[key.removeprefix("train/")] = float(values[key])
+        with self.output_path.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(record, sort_keys=True) + "\n")
+        self.records.append(record)
+        self._last_timestep = timestep
