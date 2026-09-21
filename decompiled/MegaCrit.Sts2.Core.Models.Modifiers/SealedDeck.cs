@@ -29,12 +29,11 @@ public class SealedDeck : ModifierModel
 	{
 		CardCreationOptions options = new CardCreationOptions(new global::_003C_003Ez__ReadOnlySingleElementList<CardPoolModel>(player.Character.CardPool), CardCreationSource.Other, CardRarityOddsType.RegularEncounter).WithFlags(CardCreationFlags.NoUpgradeRoll | CardCreationFlags.ForceRarityOddsChange | CardCreationFlags.IsCardReward);
 		IEnumerable<CardCreationResult> source = CardFactory.CreateForReward(player, 30, options).ToList();
-		CardSelectorPrefs prefs = new CardSelectorPrefs(new LocString("modifiers", "SEALED_DECK.selectionPrompt"), 10)
-		{
-			Cancelable = false,
-			RequireManualConfirmation = true,
-			Comparison = CompareCards
-		};
+		CardSelectorPrefs cardSelectorPrefs = new CardSelectorPrefs(new LocString("modifiers", "SEALED_DECK.selectionPrompt"), 10);
+		cardSelectorPrefs.Cancelable = false;
+		cardSelectorPrefs.RequireManualConfirmation = true;
+		cardSelectorPrefs.Comparison = CompareCards;
+		CardSelectorPrefs prefs = cardSelectorPrefs;
 		List<CardModel> cards = (await CardSelectCmd.FromSimpleGridForRewards(new BlockingPlayerChoiceContext(), source.ToList(), player, prefs)).ToList();
 		CardCmd.PreviewCardPileAdd(await CardPileCmd.Add(cards, PileType.Deck), 1.2f, CardPreviewStyle.GridLayout);
 		foreach (Player player2 in player.RunState.Players)

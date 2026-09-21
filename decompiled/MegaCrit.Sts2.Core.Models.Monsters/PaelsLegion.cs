@@ -43,16 +43,14 @@ public sealed class PaelsLegion : MonsterModel
 		AnimState animState2 = new AnimState("block");
 		AnimState nextState = new AnimState("block_loop");
 		AnimState state = new AnimState("sleep");
-		AnimState state2 = new AnimState("wake_up")
-		{
-			NextState = animState
-		};
+		AnimState animState3 = new AnimState("wake_up");
+		animState3.NextState = animState;
 		animState2.NextState = nextState;
 		CreatureAnimator creatureAnimator = new CreatureAnimator(animState, controller);
 		creatureAnimator.AddAnyState("Idle", animState);
 		creatureAnimator.AddAnyState("BlockTrigger", animState2);
 		creatureAnimator.AddAnyState("SleepTrigger", state);
-		creatureAnimator.AddAnyState("WakeUpTrigger", state2);
+		creatureAnimator.AddAnyState("WakeUpTrigger", animState3);
 		return creatureAnimator;
 	}
 }

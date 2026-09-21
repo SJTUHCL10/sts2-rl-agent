@@ -6,9 +6,14 @@ namespace MegaCrit.Sts2.Core.Saves.Test;
 /// <summary>
 /// A minimalist mock implementation of ICloudSaveStore for testing.
 /// </summary>
-public class MockCloudGodotFileIo(string saveDir) : MockGodotFileIo(saveDir), ICloudSaveStore, ISaveStore
+public class MockCloudGodotFileIo : MockGodotFileIo, ICloudSaveStore, ISaveStore
 {
 	public bool hasUserEnabledCloudSync = true;
+
+	public MockCloudGodotFileIo(string saveDir)
+		: base(saveDir)
+	{
+	}
 
 	public bool HasCloudFiles()
 	{

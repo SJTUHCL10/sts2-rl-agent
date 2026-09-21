@@ -192,7 +192,7 @@ public class NMultiplayerHostSubmenu : NSubmenu
 		loadingOverlay.Visible = true;
 		try
 		{
-			NetHostGameService netService = new NetHostGameService();
+			NetHostGameService netService = new NetHostGameService(PeerVersionInfo.LocalDefault());
 			NetErrorInfo? netErrorInfo = null;
 			if (platformType == PlatformType.Steam)
 			{

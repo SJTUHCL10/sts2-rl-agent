@@ -5,6 +5,8 @@ using Godot.Bridge;
 using Godot.NativeInterop;
 using MegaCrit.Sts2.Core.Commands;
 
+namespace MegaCrit.Sts2.Core.Nodes.Orbs;
+
 [ScriptPath("res://src/Core/Nodes/Orbs/NFrostOrbVfx.cs")]
 public class NFrostOrbVfx : NOrbVfx
 {

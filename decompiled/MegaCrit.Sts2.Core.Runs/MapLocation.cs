@@ -10,18 +10,24 @@ namespace MegaCrit.Sts2.Core.Runs;
 /// Make sure you look at <see cref="T:MegaCrit.Sts2.Core.Runs.RunLocation" /> as well, which also includes a room identifier. This class is more
 /// suitable for situations where the room doesn't matter, e.g. map voting.
 /// </summary>
-public struct MapLocation(MapCoord? coord, int actIndex) : IEquatable<MapLocation>, IComparable<MapLocation>, IPacketSerializable
+public struct MapLocation : IEquatable<MapLocation>, IComparable<MapLocation>, IPacketSerializable
 {
 	/// <summary>
 	/// The act that this location is in.
 	/// </summary>
-	public int actIndex = actIndex;
+	public int actIndex;
 
 	/// <summary>
 	/// The coordinate that this location is at.
 	/// Will be null when we're in the map room (at the start of an act, before picking the ancient map point).
 	/// </summary>
-	public MapCoord? coord = coord;
+	public MapCoord? coord;
+
+	public MapLocation(MapCoord? coord, int actIndex)
+	{
+		this.coord = coord;
+		this.actIndex = actIndex;
+	}
 
 	public void Serialize(PacketWriter writer)
 	{

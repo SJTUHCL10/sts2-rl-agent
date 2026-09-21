@@ -41,10 +41,9 @@ public sealed class Byrdonis : MonsterModel
 	{
 		List<MonsterState> list = new List<MonsterState>();
 		MoveState moveState = new MoveState("PECK_MOVE", PeckMove, new MultiAttackIntent(PeckDamage, PeckRepeat));
-		MoveState moveState2 = (MoveState)(moveState.FollowUpState = new MoveState("SWOOP_MOVE", SwoopMove, new SingleAttackIntent(SwoopDamage))
-		{
-			FollowUpState = moveState
-		});
+		MoveState moveState2 = new MoveState("SWOOP_MOVE", SwoopMove, new SingleAttackIntent(SwoopDamage));
+		moveState2.FollowUpState = moveState;
+		moveState.FollowUpState = moveState2;
 		list.Add(moveState2);
 		list.Add(moveState);
 		return new MonsterMoveStateMachine(list, moveState2);

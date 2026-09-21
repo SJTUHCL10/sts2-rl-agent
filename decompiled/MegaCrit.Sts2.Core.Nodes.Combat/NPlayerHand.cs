@@ -971,8 +971,9 @@ public class NPlayerHand : Control
 		}
 		CurrentMode = mode;
 		_currentSelectionFilter = filter;
-		NCombatRoom.Instance.RestrictControllerNavigation(Array.Empty<Control>());
-		NCombatUi ui = NCombatRoom.Instance.Ui;
+		NCombatRoom instance = NCombatRoom.Instance;
+		instance.RestrictControllerNavigation(Array.Empty<Control>());
+		NCombatUi ui = instance.Ui;
 		ui.OnHandSelectModeEntered();
 		EnableControllerNavigation();
 		_prefs = prefs;

@@ -99,6 +99,7 @@ public class NRemoteLobbyPlayerContainer : Control
 		_nodes.Clear();
 		if (!lobby.NetService.Type.IsMultiplayer())
 		{
+			_inviteButton.Cleanup();
 			return;
 		}
 		_displayLocalPlayer = displayLocalPlayer;
@@ -165,6 +166,8 @@ public class NRemoteLobbyPlayerContainer : Control
 			node.QueueFreeSafely();
 		}
 		_nodes.Clear();
+		_lobby = null;
+		_inviteButton.Cleanup();
 	}
 
 	/// <summary>

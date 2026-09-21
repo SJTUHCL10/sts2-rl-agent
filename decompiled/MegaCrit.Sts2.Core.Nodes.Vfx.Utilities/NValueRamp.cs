@@ -4,6 +4,8 @@ using Godot;
 using Godot.Bridge;
 using Godot.NativeInterop;
 
+namespace MegaCrit.Sts2.Core.Nodes.Vfx.Utilities;
+
 [ScriptPath("res://src/Core/Nodes/Vfx/Utilities/NValueRamp.cs")]
 public class NValueRamp : Node
 {
@@ -39,11 +41,6 @@ public class NValueRamp : Node
 		public static readonly StringName _rampCurve = "_rampCurve";
 
 		/// <summary>
-		/// Cached name for the '_previousValue' field.
-		/// </summary>
-		public static readonly StringName _previousValue = "_previousValue";
-
-		/// <summary>
 		/// Cached name for the '_currentValue' field.
 		/// </summary>
 		public static readonly StringName _currentValue = "_currentValue";
@@ -72,25 +69,27 @@ public class NValueRamp : Node
 	[Export(PropertyHint.None, "")]
 	private Curve _rampCurve;
 
-	private float _previousValue = -1f;
-
 	private float _currentValue;
 
 	private bool _isIncreasing;
 
-	private bool _didForceValueThisFrame;
+	private bool _didForceValueThisFrame = true;
 
 	public bool TryProcess(double delta, out float returnValue)
 	{
-		_currentValue += (float)delta * _rampSpeed * (_isIncreasing ? 1f : (-1f));
-		_currentValue = Mathf.Clamp(_currentValue, 0f, 1f);
-		if (_currentValue != _previousValue || _didForceValueThisFrame)
+		bool didForceValueThisFrame = _didForceValueThisFrame;
+		_didForceValueThisFrame = false;
+		float num = (float)delta * _rampSpeed * (_isIncreasing ? 1f : (-1f));
+		bool flag = ((num > 0f) ? (_currentValue >= 1f) : (!(num < 0f) || _currentValue <= 0f));
+		bool flag2 = flag;
+		if (!didForceValueThisFrame && flag2)
 		{
-			returnValue = _rampCurve.Sample(_currentValue);
-			return true;
+			returnValue = 0f;
+			return false;
 		}
-		returnValue = 0f;
-		return false;
+		_currentValue = Mathf.Clamp(_currentValue + num, 0f, 1f);
+		returnValue = _rampCurve.Sample(_currentValue);
+		return true;
 	}
 
 	public void SetIncreasing(bool isIncreasing)
@@ -101,6 +100,7 @@ public class NValueRamp : Node
 	public void ForceValue(float forcedValue)
 	{
 		_currentValue = forcedValue;
+		_didForceValueThisFrame = true;
 	}
 
 	/// <summary>
@@ -171,11 +171,6 @@ public class NValueRamp : Node
 			_rampCurve = VariantUtils.ConvertTo<Curve>(in value);
 			return true;
 		}
-		if (name == PropertyName._previousValue)
-		{
-			_previousValue = VariantUtils.ConvertTo<float>(in value);
-			return true;
-		}
 		if (name == PropertyName._currentValue)
 		{
 			_currentValue = VariantUtils.ConvertTo<float>(in value);
@@ -208,11 +203,6 @@ public class NValueRamp : Node
 			value = VariantUtils.CreateFrom(in _rampCurve);
 			return true;
 		}
-		if (name == PropertyName._previousValue)
-		{
-			value = VariantUtils.CreateFrom(in _previousValue);
-			return true;
-		}
 		if (name == PropertyName._currentValue)
 		{
 			value = VariantUtils.CreateFrom(in _currentValue);
@@ -242,7 +232,6 @@ public class NValueRamp : Node
 		List<PropertyInfo> list = new List<PropertyInfo>();
 		list.Add(new PropertyInfo(Variant.Type.Float, PropertyName._rampSpeed, PropertyHint.None, "", PropertyUsageFlags.Default | PropertyUsageFlags.ScriptVariable, exported: true));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._rampCurve, PropertyHint.ResourceType, "Curve", PropertyUsageFlags.Default | PropertyUsageFlags.ScriptVariable, exported: true));
-		list.Add(new PropertyInfo(Variant.Type.Float, PropertyName._previousValue, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Float, PropertyName._currentValue, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Bool, PropertyName._isIncreasing, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Bool, PropertyName._didForceValueThisFrame, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
@@ -256,7 +245,6 @@ public class NValueRamp : Node
 		base.SaveGodotObjectData(info);
 		info.AddProperty(PropertyName._rampSpeed, Variant.From(in _rampSpeed));
 		info.AddProperty(PropertyName._rampCurve, Variant.From(in _rampCurve));
-		info.AddProperty(PropertyName._previousValue, Variant.From(in _previousValue));
 		info.AddProperty(PropertyName._currentValue, Variant.From(in _currentValue));
 		info.AddProperty(PropertyName._isIncreasing, Variant.From(in _isIncreasing));
 		info.AddProperty(PropertyName._didForceValueThisFrame, Variant.From(in _didForceValueThisFrame));
@@ -275,21 +263,17 @@ public class NValueRamp : Node
 		{
 			_rampCurve = value2.As<Curve>();
 		}
-		if (info.TryGetProperty(PropertyName._previousValue, out var value3))
+		if (info.TryGetProperty(PropertyName._currentValue, out var value3))
 		{
-			_previousValue = value3.As<float>();
+			_currentValue = value3.As<float>();
 		}
-		if (info.TryGetProperty(PropertyName._currentValue, out var value4))
+		if (info.TryGetProperty(PropertyName._isIncreasing, out var value4))
 		{
-			_currentValue = value4.As<float>();
+			_isIncreasing = value4.As<bool>();
 		}
-		if (info.TryGetProperty(PropertyName._isIncreasing, out var value5))
+		if (info.TryGetProperty(PropertyName._didForceValueThisFrame, out var value5))
 		{
-			_isIncreasing = value5.As<bool>();
-		}
-		if (info.TryGetProperty(PropertyName._didForceValueThisFrame, out var value6))
-		{
-			_didForceValueThisFrame = value6.As<bool>();
+			_didForceValueThisFrame = value5.As<bool>();
 		}
 	}
 }

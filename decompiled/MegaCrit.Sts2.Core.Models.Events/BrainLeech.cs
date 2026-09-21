@@ -64,10 +64,9 @@ public sealed class BrainLeech : EventModel
 	{
 		Player owner = base.Owner;
 		List<CardCreationResult> cards = CardFactory.CreateForReward(owner, base.DynamicVars["FromCardChoiceCount"].IntValue, CardCreationOptions.ForNonCombatWithDefaultOdds(new global::_003C_003Ez__ReadOnlySingleElementList<CardPoolModel>(owner.Character.CardPool))).ToList();
-		CardSelectorPrefs prefs = new CardSelectorPrefs(L10NLookup("BRAIN_LEECH.pages.SHARE_KNOWLEDGE.selectionScreenPrompt"), 1)
-		{
-			Cancelable = false
-		};
+		CardSelectorPrefs cardSelectorPrefs = new CardSelectorPrefs(L10NLookup("BRAIN_LEECH.pages.SHARE_KNOWLEDGE.selectionScreenPrompt"), 1);
+		cardSelectorPrefs.Cancelable = false;
+		CardSelectorPrefs prefs = cardSelectorPrefs;
 		await SelectCardsToAddToDeckFromGrid(cards, prefs);
 		SetEventFinished(L10NLookup("BRAIN_LEECH.pages.SHARE_KNOWLEDGE.description"));
 	}

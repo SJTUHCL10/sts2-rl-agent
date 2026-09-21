@@ -31,6 +31,16 @@ public class NCursorManager : Node
 		public new static readonly StringName _Ready = "_Ready";
 
 		/// <summary>
+		/// Cached name for the 'OnControllerDetected' method.
+		/// </summary>
+		public static readonly StringName OnControllerDetected = "OnControllerDetected";
+
+		/// <summary>
+		/// Cached name for the 'OnMouseDetected' method.
+		/// </summary>
+		public static readonly StringName OnMouseDetected = "OnMouseDetected";
+
+		/// <summary>
 		/// Cached name for the '_Input' method.
 		/// </summary>
 		public new static readonly StringName _Input = "_Input";
@@ -180,14 +190,18 @@ public class NCursorManager : Node
 
 	public override void _Ready()
 	{
-		NControllerManager.Instance.Connect(NControllerManager.SignalName.ControllerDetected, Callable.From(delegate
-		{
-			SetIsUsingController(isUsingController: true);
-		}));
-		NControllerManager.Instance.Connect(NControllerManager.SignalName.MouseDetected, Callable.From(delegate
-		{
-			SetIsUsingController(isUsingController: false);
-		}));
+		NControllerManager.Instance.Connect(NControllerManager.SignalName.ControllerDetected, Callable.From(OnControllerDetected));
+		NControllerManager.Instance.Connect(NControllerManager.SignalName.MouseDetected, Callable.From(OnMouseDetected));
+	}
+
+	private void OnControllerDetected()
+	{
+		SetIsUsingController(isUsingController: true);
+	}
+
+	private void OnMouseDetected()
+	{
+		SetIsUsingController(isUsingController: false);
 	}
 
 	public override void _Input(InputEvent inputEvent)
@@ -270,9 +284,11 @@ public class NCursorManager : Node
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	internal static List<MethodInfo> GetGodotMethodList()
 	{
-		List<MethodInfo> list = new List<MethodInfo>(9);
+		List<MethodInfo> list = new List<MethodInfo>(11);
 		list.Add(new MethodInfo(MethodName._EnterTree, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName._Ready, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
+		list.Add(new MethodInfo(MethodName.OnControllerDetected, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
+		list.Add(new MethodInfo(MethodName.OnMouseDetected, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName._Input, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
 		{
 			new PropertyInfo(Variant.Type.Object, "inputEvent", PropertyHint.None, "", PropertyUsageFlags.Default, new StringName("InputEvent"), exported: false)
@@ -310,6 +326,18 @@ public class NCursorManager : Node
 		if (method == MethodName._Ready && args.Count == 0)
 		{
 			_Ready();
+			ret = default(godot_variant);
+			return true;
+		}
+		if (method == MethodName.OnControllerDetected && args.Count == 0)
+		{
+			OnControllerDetected();
+			ret = default(godot_variant);
+			return true;
+		}
+		if (method == MethodName.OnMouseDetected && args.Count == 0)
+		{
+			OnMouseDetected();
 			ret = default(godot_variant);
 			return true;
 		}
@@ -367,6 +395,14 @@ public class NCursorManager : Node
 			return true;
 		}
 		if (method == MethodName._Ready)
+		{
+			return true;
+		}
+		if (method == MethodName.OnControllerDetected)
+		{
+			return true;
+		}
+		if (method == MethodName.OnMouseDetected)
 		{
 			return true;
 		}

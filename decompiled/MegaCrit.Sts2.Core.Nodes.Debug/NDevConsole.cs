@@ -510,27 +510,27 @@ public class NDevConsole : Panel
 			Key num = keycode - 65;
 			if ((ulong)num <= 4uL)
 			{
-				switch ((int)num)
+				switch (num)
 				{
-				case 0:
+				case Key.None:
 					GetViewport().SetInputAsHandled();
 					_inputBuffer.CaretColumn = 0;
 					_inputBuffer.CallDeferred(LineEdit.MethodName.Deselect);
 					return;
-				case 4:
+				case (Key)4L:
 					GetViewport().SetInputAsHandled();
 					MoveInputCursorToEndOfLine();
 					return;
-				case 2:
+				case (Key)2L:
 					GetViewport().SetInputAsHandled();
 					_inputBuffer.Text = string.Empty;
 					ExitSelectionMode();
 					return;
-				case 3:
+				case (Key)3L:
 					GetViewport().SetInputAsHandled();
 					HideConsole();
 					return;
-				case 1:
+				case (Key)1L:
 					return;
 				}
 			}
@@ -545,24 +545,24 @@ public class NDevConsole : Panel
 			Key num2 = keycode - 85;
 			if ((ulong)num2 <= 4uL)
 			{
-				switch ((int)num2)
+				switch (num2)
 				{
-				case 2:
+				case (Key)2L:
 					GetViewport().SetInputAsHandled();
 					DeleteWordBackward();
 					break;
-				case 0:
+				case Key.None:
 					GetViewport().SetInputAsHandled();
 					_yankBuffer = _inputBuffer.Text;
 					_inputBuffer.Text = string.Empty;
 					ExitSelectionMode();
 					break;
-				case 4:
+				case (Key)4L:
 					GetViewport().SetInputAsHandled();
 					Yank();
 					break;
-				case 1:
-				case 3:
+				case (Key)1L:
+				case (Key)3L:
 					break;
 				}
 			}

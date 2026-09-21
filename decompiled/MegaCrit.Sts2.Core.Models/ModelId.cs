@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using MegaCrit.Sts2.Core.Helpers;
 
@@ -64,5 +65,12 @@ public record ModelId : IComparable<ModelId>
 			text = text2.Substring(0, text2.Length - length);
 		}
 		return text;
+	}
+
+	[CompilerGenerated]
+	protected ModelId(ModelId original)
+	{
+		Category = original.Category;
+		Entry = original.Entry;
 	}
 }

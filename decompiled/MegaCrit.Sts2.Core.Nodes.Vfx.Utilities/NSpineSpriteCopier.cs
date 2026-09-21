@@ -16,9 +16,9 @@ public class NSpineSpriteCopier : Node2D
 	public new class MethodName : Node2D.MethodName
 	{
 		/// <summary>
-		/// Cached name for the '_Process' method.
+		/// Cached name for the 'OnAnimationStart' method.
 		/// </summary>
-		public new static readonly StringName _Process = "_Process";
+		public static readonly StringName OnAnimationStart = "OnAnimationStart";
 	}
 
 	/// <summary>
@@ -51,14 +51,26 @@ public class NSpineSpriteCopier : Node2D
 		if (_targetSpineSprite != null && _selfSpineSprite != null)
 		{
 			_selfSpineSprite.SetSkeletonDataRes(_targetSpineSprite.GetSkeleton().GetData());
+			_targetSpineSprite.ConnectAnimationStarted(Callable.From<GodotObject, GodotObject, GodotObject>(OnAnimationStart));
 		}
 	}
 
-	public override void _Process(double delta)
+	private void OnAnimationStart(GodotObject spineSprite, GodotObject animationState, GodotObject trackEntry)
 	{
-		if (_selfSpineSprite != null && _targetSpineSprite != null)
+		if (_selfSpineSprite == null || _targetSpineSprite == null)
 		{
-			_targetSpineSprite.GetAnimationState().Apply(_selfSpineSprite.GetSkeleton());
+			return;
+		}
+		string currentAnimationName = _targetSpineSprite.GetAnimationState().GetCurrentAnimationName();
+		if (currentAnimationName == null)
+		{
+			return;
+		}
+		using MegaTrackEntry megaTrackEntry = _targetSpineSprite.GetAnimationState().GetCurrent(0);
+		if (megaTrackEntry != null)
+		{
+			bool loop = megaTrackEntry.IsLoop();
+			_selfSpineSprite.GetAnimationState().SetAnimation(currentAnimationName, loop);
 		}
 	}
 
@@ -71,9 +83,11 @@ public class NSpineSpriteCopier : Node2D
 	internal static List<MethodInfo> GetGodotMethodList()
 	{
 		List<MethodInfo> list = new List<MethodInfo>(1);
-		list.Add(new MethodInfo(MethodName._Process, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
+		list.Add(new MethodInfo(MethodName.OnAnimationStart, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
 		{
-			new PropertyInfo(Variant.Type.Float, "delta", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false)
+			new PropertyInfo(Variant.Type.Object, "spineSprite", PropertyHint.None, "", PropertyUsageFlags.Default, new StringName("Object"), exported: false),
+			new PropertyInfo(Variant.Type.Object, "animationState", PropertyHint.None, "", PropertyUsageFlags.Default, new StringName("Object"), exported: false),
+			new PropertyInfo(Variant.Type.Object, "trackEntry", PropertyHint.None, "", PropertyUsageFlags.Default, new StringName("Object"), exported: false)
 		}, null));
 		return list;
 	}
@@ -82,9 +96,9 @@ public class NSpineSpriteCopier : Node2D
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool InvokeGodotClassMethod(in godot_string_name method, NativeVariantPtrArgs args, out godot_variant ret)
 	{
-		if (method == MethodName._Process && args.Count == 1)
+		if (method == MethodName.OnAnimationStart && args.Count == 3)
 		{
-			_Process(VariantUtils.ConvertTo<double>(in args[0]));
+			OnAnimationStart(VariantUtils.ConvertTo<GodotObject>(in args[0]), VariantUtils.ConvertTo<GodotObject>(in args[1]), VariantUtils.ConvertTo<GodotObject>(in args[2]));
 			ret = default(godot_variant);
 			return true;
 		}
@@ -95,7 +109,7 @@ public class NSpineSpriteCopier : Node2D
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool HasGodotClassMethod(in godot_string_name method)
 	{
-		if (method == MethodName._Process)
+		if (method == MethodName.OnAnimationStart)
 		{
 			return true;
 		}

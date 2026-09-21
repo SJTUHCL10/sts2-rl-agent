@@ -12,6 +12,8 @@ using MegaCrit.Sts2.Core.Nodes.Combat;
 using MegaCrit.Sts2.Core.Nodes.Rooms;
 using MegaCrit.Sts2.Core.Nodes.Vfx.Utilities;
 
+namespace MegaCrit.Sts2.Core.Nodes.Orbs;
+
 [ScriptPath("res://src/Core/Nodes/Orbs/NOrbVfx.cs")]
 public class NOrbVfx : Node2D
 {

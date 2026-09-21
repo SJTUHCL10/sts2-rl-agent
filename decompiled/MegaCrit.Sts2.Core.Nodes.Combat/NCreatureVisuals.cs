@@ -65,6 +65,11 @@ public class NCreatureVisuals : Node2D
 		public static readonly StringName IsPlayingHurtAnimation = "IsPlayingHurtAnimation";
 
 		/// <summary>
+		/// Cached name for the 'IsPlayingIdleAnimation' method.
+		/// </summary>
+		public static readonly StringName IsPlayingIdleAnimation = "IsPlayingIdleAnimation";
+
+		/// <summary>
 		/// Cached name for the 'TryApplyLiquidOverlay' method.
 		/// </summary>
 		public static readonly StringName TryApplyLiquidOverlay = "TryApplyLiquidOverlay";
@@ -111,6 +116,11 @@ public class NCreatureVisuals : Node2D
 		public static readonly StringName IsUsingPhobiaModeBody = "IsUsingPhobiaModeBody";
 
 		/// <summary>
+		/// Cached name for the 'FormVfxHolder' property.
+		/// </summary>
+		public static readonly StringName FormVfxHolder = "FormVfxHolder";
+
+		/// <summary>
 		/// Cached name for the 'VfxSpawnPosition' property.
 		/// </summary>
 		public static readonly StringName VfxSpawnPosition = "VfxSpawnPosition";
@@ -134,11 +144,6 @@ public class NCreatureVisuals : Node2D
 		/// Cached name for the '_phobiaModeBody' field.
 		/// </summary>
 		public static readonly StringName _phobiaModeBody = "_phobiaModeBody";
-
-		/// <summary>
-		/// Cached name for the '_formVfxHolder' field.
-		/// </summary>
-		public static readonly StringName _formVfxHolder = "_formVfxHolder";
 
 		/// <summary>
 		/// Cached name for the '_hue' field.
@@ -180,12 +185,6 @@ public class NCreatureVisuals : Node2D
 
 	private Node2D? _phobiaModeBody;
 
-	/// <summary>
-	/// Control to hold Form Card Vfx for characters (ie Demon Form, Void Form, Serpent Form)
-	/// We do this so we can easily track what form vfx we have and destroy old ones as we apply new ones
-	/// </summary>
-	public Control? _formVfxHolder;
-
 	private float _hue = 1f;
 
 	private double _liquidOverlayTimer;
@@ -220,6 +219,12 @@ public class NCreatureVisuals : Node2D
 
 	public bool IsUsingPhobiaModeBody => _phobiaModeBody == GetCurrentBody();
 
+	/// <summary>
+	/// Control to hold Form Card Vfx for characters (ie Demon Form, Void Form, Serpent Form)
+	/// We do this so we can easily track what form vfx we have and destroy old ones as we apply new ones
+	/// </summary>
+	public Control? FormVfxHolder { get; private set; }
+
 	public MegaSprite? SpineBody { get; private set; }
 
 	public SpineAnimationAccess SpineAnimation => new SpineAnimationAccess(SpineBody);
@@ -247,7 +252,7 @@ public class NCreatureVisuals : Node2D
 	{
 		_body = GetNode<Node2D>("%Visuals");
 		_phobiaModeBody = GetNodeOrNull<Node2D>("%PhobiaModeVisuals");
-		_formVfxHolder = GetNodeOrNull<Control>("%FormVfx");
+		FormVfxHolder = GetNodeOrNull<Control>("%FormVfx");
 		Bounds = GetNode<Control>("%Bounds");
 		IntentPosition = GetNode<Marker2D>("%IntentPos");
 		VfxSpawnPosition = GetNode<Marker2D>("%CenterPos");
@@ -268,22 +273,22 @@ public class NCreatureVisuals : Node2D
 
 	public void AddFormVfx(NFormVfx formVfx)
 	{
-		if (_formVfxHolder == null)
+		if (FormVfxHolder == null)
 		{
 			throw new InvalidOperationException("This creature has no form holder to put this form vfx");
 		}
-		_formVfxHolder.FreeChildren();
-		_formVfxHolder.AddChildSafely(formVfx);
+		FormVfxHolder.FreeChildren();
+		FormVfxHolder.AddChildSafely(formVfx);
 		formVfx.Position = Vector2.Zero;
 	}
 
 	public void RemoveFormVfx()
 	{
-		if (_formVfxHolder == null)
+		if (FormVfxHolder == null)
 		{
 			throw new InvalidOperationException("This creature has no form holder to put this form vfx");
 		}
-		_formVfxHolder.FreeChildren();
+		FormVfxHolder.FreeChildren();
 	}
 
 	public override void _EnterTree()
@@ -353,6 +358,15 @@ public class NCreatureVisuals : Node2D
 		return SpineAnimation.GetCurrentAnimationName() == "hurt";
 	}
 
+	public bool IsPlayingIdleAnimation()
+	{
+		if (!(SpineAnimation.GetCurrentAnimationName() == "idle_loop"))
+		{
+			return SpineAnimation.GetCurrentAnimationName() == "low_health_loop";
+		}
+		return true;
+	}
+
 	public void TryApplyLiquidOverlay(Color tint)
 	{
 		if (_currentLiquidOverlayMaterial != null)
@@ -398,7 +412,7 @@ public class NCreatureVisuals : Node2D
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	internal static List<MethodInfo> GetGodotMethodList()
 	{
-		List<MethodInfo> list = new List<MethodInfo>(9);
+		List<MethodInfo> list = new List<MethodInfo>(10);
 		list.Add(new MethodInfo(MethodName.GetCurrentBody, new PropertyInfo(Variant.Type.Object, "", PropertyHint.None, "", PropertyUsageFlags.Default, new StringName("Node2D"), exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName._Ready, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName.AddFormVfx, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
@@ -414,6 +428,7 @@ public class NCreatureVisuals : Node2D
 			new PropertyInfo(Variant.Type.Float, "hue", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false)
 		}, null));
 		list.Add(new MethodInfo(MethodName.IsPlayingHurtAnimation, new PropertyInfo(Variant.Type.Bool, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
+		list.Add(new MethodInfo(MethodName.IsPlayingIdleAnimation, new PropertyInfo(Variant.Type.Bool, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName.TryApplyLiquidOverlay, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
 		{
 			new PropertyInfo(Variant.Type.Color, "tint", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false)
@@ -471,6 +486,11 @@ public class NCreatureVisuals : Node2D
 			ret = VariantUtils.CreateFrom<bool>(IsPlayingHurtAnimation());
 			return true;
 		}
+		if (method == MethodName.IsPlayingIdleAnimation && args.Count == 0)
+		{
+			ret = VariantUtils.CreateFrom<bool>(IsPlayingIdleAnimation());
+			return true;
+		}
 		if (method == MethodName.TryApplyLiquidOverlay && args.Count == 1)
 		{
 			TryApplyLiquidOverlay(VariantUtils.ConvertTo<Color>(in args[0]));
@@ -516,6 +536,10 @@ public class NCreatureVisuals : Node2D
 		{
 			return true;
 		}
+		if (method == MethodName.IsPlayingIdleAnimation)
+		{
+			return true;
+		}
 		if (method == MethodName.TryApplyLiquidOverlay)
 		{
 			return true;
@@ -547,6 +571,11 @@ public class NCreatureVisuals : Node2D
 			TalkPosition = VariantUtils.ConvertTo<Marker2D>(in value);
 			return true;
 		}
+		if (name == PropertyName.FormVfxHolder)
+		{
+			FormVfxHolder = VariantUtils.ConvertTo<Control>(in value);
+			return true;
+		}
 		if (name == PropertyName.VfxSpawnPosition)
 		{
 			VfxSpawnPosition = VariantUtils.ConvertTo<Marker2D>(in value);
@@ -565,11 +594,6 @@ public class NCreatureVisuals : Node2D
 		if (name == PropertyName._phobiaModeBody)
 		{
 			_phobiaModeBody = VariantUtils.ConvertTo<Node2D>(in value);
-			return true;
-		}
-		if (name == PropertyName._formVfxHolder)
-		{
-			_formVfxHolder = VariantUtils.ConvertTo<Control>(in value);
 			return true;
 		}
 		if (name == PropertyName._hue)
@@ -599,53 +623,61 @@ public class NCreatureVisuals : Node2D
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool GetGodotClassPropertyValue(in godot_string_name name, out godot_variant value)
 	{
+		Control from;
 		if (name == PropertyName.Bounds)
 		{
-			value = VariantUtils.CreateFrom<Control>(Bounds);
+			from = Bounds;
+			value = VariantUtils.CreateFrom(in from);
 			return true;
 		}
-		Marker2D from;
+		Marker2D from2;
 		if (name == PropertyName.IntentPosition)
 		{
-			from = IntentPosition;
-			value = VariantUtils.CreateFrom(in from);
+			from2 = IntentPosition;
+			value = VariantUtils.CreateFrom(in from2);
 			return true;
 		}
 		if (name == PropertyName.OrbPosition)
 		{
-			from = OrbPosition;
-			value = VariantUtils.CreateFrom(in from);
+			from2 = OrbPosition;
+			value = VariantUtils.CreateFrom(in from2);
 			return true;
 		}
 		if (name == PropertyName.TalkPosition)
 		{
-			from = TalkPosition;
-			value = VariantUtils.CreateFrom(in from);
+			from2 = TalkPosition;
+			value = VariantUtils.CreateFrom(in from2);
 			return true;
 		}
-		bool from2;
+		bool from3;
 		if (name == PropertyName.IsSpineNode)
 		{
-			from2 = IsSpineNode;
-			value = VariantUtils.CreateFrom(in from2);
+			from3 = IsSpineNode;
+			value = VariantUtils.CreateFrom(in from3);
 			return true;
 		}
 		if (name == PropertyName.HasSpineAnimation)
 		{
-			from2 = HasSpineAnimation;
-			value = VariantUtils.CreateFrom(in from2);
+			from3 = HasSpineAnimation;
+			value = VariantUtils.CreateFrom(in from3);
 			return true;
 		}
 		if (name == PropertyName.IsUsingPhobiaModeBody)
 		{
-			from2 = IsUsingPhobiaModeBody;
-			value = VariantUtils.CreateFrom(in from2);
+			from3 = IsUsingPhobiaModeBody;
+			value = VariantUtils.CreateFrom(in from3);
+			return true;
+		}
+		if (name == PropertyName.FormVfxHolder)
+		{
+			from = FormVfxHolder;
+			value = VariantUtils.CreateFrom(in from);
 			return true;
 		}
 		if (name == PropertyName.VfxSpawnPosition)
 		{
-			from = VfxSpawnPosition;
-			value = VariantUtils.CreateFrom(in from);
+			from2 = VfxSpawnPosition;
+			value = VariantUtils.CreateFrom(in from2);
 			return true;
 		}
 		if (name == PropertyName.DefaultScale)
@@ -666,11 +698,6 @@ public class NCreatureVisuals : Node2D
 		if (name == PropertyName._phobiaModeBody)
 		{
 			value = VariantUtils.CreateFrom(in _phobiaModeBody);
-			return true;
-		}
-		if (name == PropertyName._formVfxHolder)
-		{
-			value = VariantUtils.CreateFrom(in _formVfxHolder);
 			return true;
 		}
 		if (name == PropertyName._hue)
@@ -714,7 +741,7 @@ public class NCreatureVisuals : Node2D
 		list.Add(new PropertyInfo(Variant.Type.Bool, PropertyName.IsSpineNode, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Bool, PropertyName.HasSpineAnimation, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Bool, PropertyName.IsUsingPhobiaModeBody, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
-		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._formVfxHolder, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName.FormVfxHolder, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName.VfxSpawnPosition, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Float, PropertyName.DefaultScale, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Float, PropertyName._hue, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
@@ -734,11 +761,11 @@ public class NCreatureVisuals : Node2D
 		info.AddProperty(PropertyName.IntentPosition, Variant.From<Marker2D>(IntentPosition));
 		info.AddProperty(PropertyName.OrbPosition, Variant.From<Marker2D>(OrbPosition));
 		info.AddProperty(PropertyName.TalkPosition, Variant.From<Marker2D>(TalkPosition));
+		info.AddProperty(PropertyName.FormVfxHolder, Variant.From<Control>(FormVfxHolder));
 		info.AddProperty(PropertyName.VfxSpawnPosition, Variant.From<Marker2D>(VfxSpawnPosition));
 		info.AddProperty(PropertyName.DefaultScale, Variant.From<float>(DefaultScale));
 		info.AddProperty(PropertyName._body, Variant.From(in _body));
 		info.AddProperty(PropertyName._phobiaModeBody, Variant.From(in _phobiaModeBody));
-		info.AddProperty(PropertyName._formVfxHolder, Variant.From(in _formVfxHolder));
 		info.AddProperty(PropertyName._hue, Variant.From(in _hue));
 		info.AddProperty(PropertyName._liquidOverlayTimer, Variant.From(in _liquidOverlayTimer));
 		info.AddProperty(PropertyName._savedNormalMaterial, Variant.From(in _savedNormalMaterial));
@@ -766,25 +793,25 @@ public class NCreatureVisuals : Node2D
 		{
 			TalkPosition = value4.As<Marker2D>();
 		}
-		if (info.TryGetProperty(PropertyName.VfxSpawnPosition, out var value5))
+		if (info.TryGetProperty(PropertyName.FormVfxHolder, out var value5))
 		{
-			VfxSpawnPosition = value5.As<Marker2D>();
+			FormVfxHolder = value5.As<Control>();
 		}
-		if (info.TryGetProperty(PropertyName.DefaultScale, out var value6))
+		if (info.TryGetProperty(PropertyName.VfxSpawnPosition, out var value6))
 		{
-			DefaultScale = value6.As<float>();
+			VfxSpawnPosition = value6.As<Marker2D>();
 		}
-		if (info.TryGetProperty(PropertyName._body, out var value7))
+		if (info.TryGetProperty(PropertyName.DefaultScale, out var value7))
 		{
-			_body = value7.As<Node2D>();
+			DefaultScale = value7.As<float>();
 		}
-		if (info.TryGetProperty(PropertyName._phobiaModeBody, out var value8))
+		if (info.TryGetProperty(PropertyName._body, out var value8))
 		{
-			_phobiaModeBody = value8.As<Node2D>();
+			_body = value8.As<Node2D>();
 		}
-		if (info.TryGetProperty(PropertyName._formVfxHolder, out var value9))
+		if (info.TryGetProperty(PropertyName._phobiaModeBody, out var value9))
 		{
-			_formVfxHolder = value9.As<Control>();
+			_phobiaModeBody = value9.As<Node2D>();
 		}
 		if (info.TryGetProperty(PropertyName._hue, out var value10))
 		{

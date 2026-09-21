@@ -7,11 +7,17 @@ namespace MegaCrit.Sts2.Core.MonsterMoves.MonsterMoveStateMachine;
 
 public class ConditionalBranchState : MonsterState
 {
-	private readonly struct ConditionalBranch(MonsterState state, Func<bool> condition)
+	private readonly struct ConditionalBranch
 	{
-		public readonly string id = state.Id;
+		public readonly string id;
 
-		private readonly Func<bool> _conditionalLambda = condition;
+		private readonly Func<bool> _conditionalLambda;
+
+		public ConditionalBranch(MonsterState state, Func<bool> condition)
+		{
+			id = state.Id;
+			_conditionalLambda = condition;
+		}
 
 		public float Evaluate()
 		{

@@ -306,7 +306,7 @@ public static class MapPathPruning
 				{
 					return false;
 				}
-				if (!mapPoint.Children.Where((MapPoint c) => !Enumerable.Contains(segment, c)).Any((MapPoint c) => c.parents.Count == 1))
+				if (!mapPoint.Children.Where((MapPoint c) => !segment.Contains(c)).Any((MapPoint c) => c.parents.Count == 1))
 				{
 					RemovePoint(grid, startMapPoints, mapPoint);
 					result = true;

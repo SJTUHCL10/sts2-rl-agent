@@ -4,11 +4,16 @@ namespace MegaCrit.Sts2.Core.Bindings.MegaSpine;
 /// Null-safe wrapper for spine animation operations. No-ops when the underlying MegaSprite is null
 /// (e.g. when skeleton data failed to load). This eliminates the need for null-guards at every call site.
 /// </summary>
-public readonly struct SpineAnimationAccess(MegaSprite? sprite)
+public readonly struct SpineAnimationAccess
 {
-	private readonly MegaSprite? _sprite = sprite;
+	private readonly MegaSprite? _sprite;
 
 	public bool IsValid => _sprite != null;
+
+	public SpineAnimationAccess(MegaSprite? sprite)
+	{
+		_sprite = sprite;
+	}
 
 	public void SetAnimation(string name, bool loop = true, int track = 0)
 	{

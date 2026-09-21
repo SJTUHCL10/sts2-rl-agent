@@ -56,93 +56,92 @@ public class Darv : AncientEventModel
 
 	protected override AncientDialogueSet DefineDialogues()
 	{
-		return new AncientDialogueSet
+		AncientDialogueSet ancientDialogueSet = new AncientDialogueSet();
+		ancientDialogueSet.FirstVisitEverDialogue = new AncientDialogue("event:/sfx/npcs/darv/darv_introduction");
+		ancientDialogueSet.CharacterDialogues = new Dictionary<string, IReadOnlyList<AncientDialogue>>
 		{
-			FirstVisitEverDialogue = new AncientDialogue("event:/sfx/npcs/darv/darv_introduction"),
-			CharacterDialogues = new Dictionary<string, IReadOnlyList<AncientDialogue>>
+			[AncientEventModel.CharKey<Ironclad>()] = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[3]
 			{
-				[AncientEventModel.CharKey<Ironclad>()] = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[3]
+				new AncientDialogue("event:/sfx/npcs/darv/darv_introduction")
 				{
-					new AncientDialogue("event:/sfx/npcs/darv/darv_introduction")
-					{
-						VisitIndex = 0
-					},
-					new AncientDialogue("event:/sfx/npcs/darv/darv_endeared")
-					{
-						VisitIndex = 1
-					},
-					new AncientDialogue("", "", "")
-					{
-						VisitIndex = 4
-					}
-				}),
-				[AncientEventModel.CharKey<Silent>()] = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[3]
+					VisitIndex = 0
+				},
+				new AncientDialogue("event:/sfx/npcs/darv/darv_endeared")
 				{
-					new AncientDialogue("event:/sfx/npcs/darv/darv_introduction")
-					{
-						VisitIndex = 0
-					},
-					new AncientDialogue("event:/sfx/npcs/darv/darv_excited")
-					{
-						VisitIndex = 1
-					},
-					new AncientDialogue("event:/sfx/npcs/darv/darv_pain", "", "event:/sfx/npcs/darv/darv_outta_the_way")
-					{
-						VisitIndex = 4
-					}
-				}),
-				[AncientEventModel.CharKey<Defect>()] = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[3]
+					VisitIndex = 1
+				},
+				new AncientDialogue("", "", "")
 				{
-					new AncientDialogue("event:/sfx/npcs/darv/darv_introduction", "")
-					{
-						VisitIndex = 0
-					},
-					new AncientDialogue("event:/sfx/npcs/darv/darv_endeared")
-					{
-						VisitIndex = 1
-					},
-					new AncientDialogue("event:/sfx/npcs/darv/darv_fear", "", "event:/sfx/npcs/darv/darv_fear")
-					{
-						VisitIndex = 4
-					}
-				}),
-				[AncientEventModel.CharKey<Necrobinder>()] = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[3]
-				{
-					new AncientDialogue("event:/sfx/npcs/darv/darv_introduction", "", "event:/sfx/npcs/darv/darv_excited")
-					{
-						VisitIndex = 0
-					},
-					new AncientDialogue("event:/sfx/npcs/darv/darv_endeared")
-					{
-						VisitIndex = 1
-					},
-					new AncientDialogue("event:/sfx/npcs/darv/darv_excited", "", "event:/sfx/npcs/darv/darv_fear")
-					{
-						VisitIndex = 4
-					}
-				}),
-				[AncientEventModel.CharKey<Regent>()] = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[3]
-				{
-					new AncientDialogue("event:/sfx/npcs/darv/darv_introduction", "", "event:/sfx/npcs/darv/darv_excited")
-					{
-						VisitIndex = 0
-					},
-					new AncientDialogue("event:/sfx/npcs/darv/darv_introduction")
-					{
-						VisitIndex = 1
-					},
-					new AncientDialogue("event:/sfx/npcs/darv/darv_excited", "", "event:/sfx/npcs/darv/darv_pain")
-					{
-						VisitIndex = 4
-					}
-				})
-			},
-			AgnosticDialogues = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[2]
+					VisitIndex = 4
+				}
+			}),
+			[AncientEventModel.CharKey<Silent>()] = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[3]
 			{
-				new AncientDialogue("event:/sfx/npcs/darv/darv_excited"),
-				new AncientDialogue("event:/sfx/npcs/darv/darv_outta_the_way")
+				new AncientDialogue("event:/sfx/npcs/darv/darv_introduction")
+				{
+					VisitIndex = 0
+				},
+				new AncientDialogue("event:/sfx/npcs/darv/darv_excited")
+				{
+					VisitIndex = 1
+				},
+				new AncientDialogue("event:/sfx/npcs/darv/darv_pain", "", "event:/sfx/npcs/darv/darv_outta_the_way")
+				{
+					VisitIndex = 4
+				}
+			}),
+			[AncientEventModel.CharKey<Defect>()] = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[3]
+			{
+				new AncientDialogue("event:/sfx/npcs/darv/darv_introduction", "")
+				{
+					VisitIndex = 0
+				},
+				new AncientDialogue("event:/sfx/npcs/darv/darv_endeared")
+				{
+					VisitIndex = 1
+				},
+				new AncientDialogue("event:/sfx/npcs/darv/darv_fear", "", "event:/sfx/npcs/darv/darv_fear")
+				{
+					VisitIndex = 4
+				}
+			}),
+			[AncientEventModel.CharKey<Necrobinder>()] = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[3]
+			{
+				new AncientDialogue("event:/sfx/npcs/darv/darv_introduction", "", "event:/sfx/npcs/darv/darv_excited")
+				{
+					VisitIndex = 0
+				},
+				new AncientDialogue("event:/sfx/npcs/darv/darv_endeared")
+				{
+					VisitIndex = 1
+				},
+				new AncientDialogue("event:/sfx/npcs/darv/darv_excited", "", "event:/sfx/npcs/darv/darv_fear")
+				{
+					VisitIndex = 4
+				}
+			}),
+			[AncientEventModel.CharKey<Regent>()] = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[3]
+			{
+				new AncientDialogue("event:/sfx/npcs/darv/darv_introduction", "", "event:/sfx/npcs/darv/darv_excited")
+				{
+					VisitIndex = 0
+				},
+				new AncientDialogue("event:/sfx/npcs/darv/darv_introduction")
+				{
+					VisitIndex = 1
+				},
+				new AncientDialogue("event:/sfx/npcs/darv/darv_excited", "", "event:/sfx/npcs/darv/darv_pain")
+				{
+					VisitIndex = 4
+				}
 			})
 		};
+		ancientDialogueSet.AgnosticDialogues = new global::_003C_003Ez__ReadOnlyArray<AncientDialogue>(new AncientDialogue[2]
+		{
+			new AncientDialogue("event:/sfx/npcs/darv/darv_excited"),
+			new AncientDialogue("event:/sfx/npcs/darv/darv_outta_the_way")
+		});
+		return ancientDialogueSet;
 	}
 
 	protected override IReadOnlyList<EventOption> GenerateInitialOptions()

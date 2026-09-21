@@ -24,19 +24,29 @@ namespace MegaCrit.Sts2.Core.Models.Events;
 
 public sealed class EndlessConveyor : EventModel
 {
-	private record struct Dish(string id, Func<Task> action, IEnumerable<IHoverTip> hoverTips, float weight)
+	private record struct Dish
 	{
-		public readonly string id = id;
+		public readonly string id;
 
-		public readonly LocString title = new LocString("events", "ENDLESS_CONVEYOR.DISHES." + id + ".title");
+		public readonly LocString title;
 
-		public readonly string optionKey = "ENDLESS_CONVEYOR.pages.ALL.options." + id;
+		public readonly string optionKey;
 
-		public readonly IEnumerable<IHoverTip> hoverTips = hoverTips;
+		public readonly IEnumerable<IHoverTip> hoverTips;
 
-		public readonly float weight = weight;
+		public readonly float weight;
 
-		public readonly Func<Task> action = action;
+		public readonly Func<Task> action;
+
+		public Dish(string id, Func<Task> action, IEnumerable<IHoverTip> hoverTips, float weight)
+		{
+			this.id = id;
+			title = new LocString("events", "ENDLESS_CONVEYOR.DISHES." + id + ".title");
+			optionKey = "ENDLESS_CONVEYOR.pages.ALL.options." + id;
+			this.action = action;
+			this.hoverTips = hoverTips;
+			this.weight = weight;
+		}
 	}
 
 	private const string _currentDishTitleKey = "CurrentDishTitle";

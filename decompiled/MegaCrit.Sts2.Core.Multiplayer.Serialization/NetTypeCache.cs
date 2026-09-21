@@ -24,7 +24,7 @@ public class NetTypeCache<[DynamicallyAccessedMembers(DynamicallyAccessedMemberT
 		for (int num = 0; num < _idToType.Count; num++)
 		{
 			Type type = _idToType[num];
-			if (!Enumerable.Contains<Type>(type.GetInterfaces(), typeof(TBase)))
+			if (!type.GetInterfaces().Contains<Type>(typeof(TBase)))
 			{
 				throw new InvalidOperationException($"Type {_idToType[num]} does not implement interface {typeof(TBase)}!");
 			}

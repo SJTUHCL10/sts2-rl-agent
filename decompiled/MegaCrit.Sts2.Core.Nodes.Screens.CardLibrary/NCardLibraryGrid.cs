@@ -23,9 +23,14 @@ namespace MegaCrit.Sts2.Core.Nodes.Screens.CardLibrary;
 [ScriptPath("res://src/Core/Nodes/Screens/CardLibrary/NCardLibraryGrid.cs")]
 public class NCardLibraryGrid : NCardGrid
 {
-	private struct InitialSorter(List<CardPoolModel> cardPoolModels) : IComparer<CardModel>
+	private struct InitialSorter : IComparer<CardModel>
 	{
-		private List<CardPoolModel> _cardPoolModels = cardPoolModels;
+		private List<CardPoolModel> _cardPoolModels;
+
+		public InitialSorter(List<CardPoolModel> cardPoolModels)
+		{
+			_cardPoolModels = cardPoolModels;
+		}
 
 		public int Compare(CardModel? x, CardModel? y)
 		{

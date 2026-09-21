@@ -5,6 +5,8 @@ using Godot.Bridge;
 using Godot.NativeInterop;
 using MegaCrit.Sts2.Core.Nodes.Vfx.Forms;
 
+namespace MegaCrit.Sts2.Core.Nodes.Debug;
+
 [ScriptPath("res://src/Core/Nodes/Debug/NFormVfxTester.cs")]
 public class NFormVfxTester : Node2D
 {
@@ -87,7 +89,7 @@ public class NFormVfxTester : Node2D
 			}
 			if (inputEvent is InputEventKey inputEventKey2 && inputEventKey2.Keycode == Key.S && inputEventKey2.Pressed)
 			{
-				_formVfx?.OnEffectTriggered();
+				_formVfx.OnEffectTriggered();
 			}
 		}
 	}

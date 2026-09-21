@@ -14,11 +14,17 @@ namespace MegaCrit.Sts2.Core.Saves.Runs;
 [Serializable]
 public class SavedProperties : IPacketSerializable
 {
-	public struct SavedProperty<T>(string name, T value)
+	public struct SavedProperty<T>
 	{
-		public string name = name;
+		public string name;
 
-		public T value = value;
+		public T value;
+
+		public SavedProperty(string name, T value)
+		{
+			this.name = name;
+			this.value = value;
+		}
 	}
 
 	[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]

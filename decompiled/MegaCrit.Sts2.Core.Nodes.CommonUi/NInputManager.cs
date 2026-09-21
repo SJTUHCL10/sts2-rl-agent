@@ -92,6 +92,11 @@ public class NInputManager : Node
 		public static readonly StringName ModifyMKbKey = "ModifyMKbKey";
 
 		/// <summary>
+		/// Cached name for the 'EnsureEndTurnAndConfirmMkbKeyAreTheSame' method.
+		/// </summary>
+		public static readonly StringName EnsureEndTurnAndConfirmMkbKeyAreTheSame = "EnsureEndTurnAndConfirmMkbKeyAreTheSame";
+
+		/// <summary>
 		/// Cached name for the 'ModifyKbOnlyKey' method.
 		/// </summary>
 		public static readonly StringName ModifyKbOnlyKey = "ModifyKbOnlyKey";
@@ -100,6 +105,11 @@ public class NInputManager : Node
 		/// Cached name for the 'ModifyControllerButton' method.
 		/// </summary>
 		public static readonly StringName ModifyControllerButton = "ModifyControllerButton";
+
+		/// <summary>
+		/// Cached name for the 'EnsureEndTurnAndConfirmControllerInputAreTheSame' method.
+		/// </summary>
+		public static readonly StringName EnsureEndTurnAndConfirmControllerInputAreTheSame = "EnsureEndTurnAndConfirmControllerInputAreTheSame";
 
 		/// <summary>
 		/// Cached name for the 'ResetToDefaults' method.
@@ -241,7 +251,6 @@ public class NInputManager : Node
 	{
 		MegaInput.cancel,
 		MegaInput.viewMap,
-		MegaInput.topPanel,
 		MegaInput.viewDeckAndTabLeft,
 		MegaInput.viewDrawPile,
 		MegaInput.viewDiscardPile,
@@ -341,7 +350,7 @@ public class NInputManager : Node
 		},
 		{
 			MegaInput.confirm,
-			Key.Enter
+			Key.E
 		},
 		{
 			MegaInput.viewDiscardPile,
@@ -777,12 +786,29 @@ public class NInputManager : Node
 		KeyValuePair<StringName, Key> keyValuePair = _mKbInputMap.FirstOrDefault<KeyValuePair<StringName, Key>>((KeyValuePair<StringName, Key> kvp) => kvp.Value == shortcutKey && remappableMKbInputs.Contains(kvp.Key));
 		if (keyValuePair.Key != null)
 		{
-			Key value = _mKbInputMap[input];
-			_mKbInputMap[keyValuePair.Key] = value;
+			Key key = _mKbInputMap[input];
+			_mKbInputMap[keyValuePair.Key] = key;
+			EnsureEndTurnAndConfirmMkbKeyAreTheSame(keyValuePair.Key, key);
 		}
 		_mKbInputMap[input] = shortcutKey;
+		EnsureEndTurnAndConfirmMkbKeyAreTheSame(input, shortcutKey);
 		SaveMKbInputMapping();
 		EmitSignalInputRebound();
+	}
+
+	/// <summary>
+	/// Ensures that in Mkb mapping, the input for confirm is the same as the input for end turn
+	/// </summary>
+	private void EnsureEndTurnAndConfirmMkbKeyAreTheSame(StringName input, Key shortcutKey)
+	{
+		if (input == MegaInput.confirm)
+		{
+			_mKbInputMap[MegaInput.endTurn] = shortcutKey;
+		}
+		else if (input == MegaInput.endTurn)
+		{
+			_mKbInputMap[MegaInput.confirm] = shortcutKey;
+		}
 	}
 
 	public void ModifyKbOnlyKey(StringName input, Key shortcutKey)
@@ -803,10 +829,21 @@ public class NInputManager : Node
 		KeyValuePair<StringName, StringName> keyValuePair = _controllerInputMap.FirstOrDefault<KeyValuePair<StringName, StringName>>((KeyValuePair<StringName, StringName> kvp) => kvp.Value == controllerInput && remappableControllerInputs.Contains(kvp.Key));
 		if (keyValuePair.Key != null)
 		{
-			StringName value = _controllerInputMap[input];
-			_controllerInputMap[keyValuePair.Key] = value;
+			StringName stringName = _controllerInputMap[input];
+			_controllerInputMap[keyValuePair.Key] = stringName;
+			EnsureEndTurnAndConfirmControllerInputAreTheSame(keyValuePair.Key, stringName);
 		}
 		_controllerInputMap[input] = controllerInput;
+		EnsureEndTurnAndConfirmControllerInputAreTheSame(input, controllerInput);
+		SaveControllerInputMapping();
+		EmitSignalInputRebound();
+	}
+
+	/// <summary>
+	/// Ensures that in Controller Input mapping, the input for confirm is the same as the input for end turn
+	/// </summary>
+	private void EnsureEndTurnAndConfirmControllerInputAreTheSame(StringName input, StringName controllerInput)
+	{
 		if (input == MegaInput.confirm)
 		{
 			_controllerInputMap[MegaInput.endTurn] = controllerInput;
@@ -815,8 +852,6 @@ public class NInputManager : Node
 		{
 			_controllerInputMap[MegaInput.confirm] = controllerInput;
 		}
-		SaveControllerInputMapping();
-		EmitSignalInputRebound();
 	}
 
 	public void ResetToDefaults()
@@ -882,7 +917,7 @@ public class NInputManager : Node
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	internal static List<MethodInfo> GetGodotMethodList()
 	{
-		List<MethodInfo> list = new List<MethodInfo>(19);
+		List<MethodInfo> list = new List<MethodInfo>(21);
 		list.Add(new MethodInfo(MethodName._EnterTree, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName._Ready, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName._UnhandledKeyInput, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
@@ -926,12 +961,22 @@ public class NInputManager : Node
 			new PropertyInfo(Variant.Type.StringName, "input", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false),
 			new PropertyInfo(Variant.Type.Int, "shortcutKey", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false)
 		}, null));
+		list.Add(new MethodInfo(MethodName.EnsureEndTurnAndConfirmMkbKeyAreTheSame, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
+		{
+			new PropertyInfo(Variant.Type.StringName, "input", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false),
+			new PropertyInfo(Variant.Type.Int, "shortcutKey", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false)
+		}, null));
 		list.Add(new MethodInfo(MethodName.ModifyKbOnlyKey, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
 		{
 			new PropertyInfo(Variant.Type.StringName, "input", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false),
 			new PropertyInfo(Variant.Type.Int, "shortcutKey", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false)
 		}, null));
 		list.Add(new MethodInfo(MethodName.ModifyControllerButton, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
+		{
+			new PropertyInfo(Variant.Type.StringName, "input", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false),
+			new PropertyInfo(Variant.Type.StringName, "controllerInput", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false)
+		}, null));
+		list.Add(new MethodInfo(MethodName.EnsureEndTurnAndConfirmControllerInputAreTheSame, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
 		{
 			new PropertyInfo(Variant.Type.StringName, "input", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false),
 			new PropertyInfo(Variant.Type.StringName, "controllerInput", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false)
@@ -1016,6 +1061,12 @@ public class NInputManager : Node
 			ret = default(godot_variant);
 			return true;
 		}
+		if (method == MethodName.EnsureEndTurnAndConfirmMkbKeyAreTheSame && args.Count == 2)
+		{
+			EnsureEndTurnAndConfirmMkbKeyAreTheSame(VariantUtils.ConvertTo<StringName>(in args[0]), VariantUtils.ConvertTo<Key>(in args[1]));
+			ret = default(godot_variant);
+			return true;
+		}
 		if (method == MethodName.ModifyKbOnlyKey && args.Count == 2)
 		{
 			ModifyKbOnlyKey(VariantUtils.ConvertTo<StringName>(in args[0]), VariantUtils.ConvertTo<Key>(in args[1]));
@@ -1025,6 +1076,12 @@ public class NInputManager : Node
 		if (method == MethodName.ModifyControllerButton && args.Count == 2)
 		{
 			ModifyControllerButton(VariantUtils.ConvertTo<StringName>(in args[0]), VariantUtils.ConvertTo<StringName>(in args[1]));
+			ret = default(godot_variant);
+			return true;
+		}
+		if (method == MethodName.EnsureEndTurnAndConfirmControllerInputAreTheSame && args.Count == 2)
+		{
+			EnsureEndTurnAndConfirmControllerInputAreTheSame(VariantUtils.ConvertTo<StringName>(in args[0]), VariantUtils.ConvertTo<StringName>(in args[1]));
 			ret = default(godot_variant);
 			return true;
 		}
@@ -1113,11 +1170,19 @@ public class NInputManager : Node
 		{
 			return true;
 		}
+		if (method == MethodName.EnsureEndTurnAndConfirmMkbKeyAreTheSame)
+		{
+			return true;
+		}
 		if (method == MethodName.ModifyKbOnlyKey)
 		{
 			return true;
 		}
 		if (method == MethodName.ModifyControllerButton)
+		{
+			return true;
+		}
+		if (method == MethodName.EnsureEndTurnAndConfirmControllerInputAreTheSame)
 		{
 			return true;
 		}

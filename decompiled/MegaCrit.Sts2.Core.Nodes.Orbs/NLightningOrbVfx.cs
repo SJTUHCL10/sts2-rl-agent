@@ -2,6 +2,8 @@ using System.ComponentModel;
 using Godot;
 using Godot.Bridge;
 
+namespace MegaCrit.Sts2.Core.Nodes.Orbs;
+
 [ScriptPath("res://src/Core/Nodes/Orbs/NLightningOrbVfx.cs")]
 public class NLightningOrbVfx : NOrbVfx
 {

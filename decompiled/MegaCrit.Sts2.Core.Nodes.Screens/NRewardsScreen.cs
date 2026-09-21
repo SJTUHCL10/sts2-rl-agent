@@ -333,6 +333,10 @@ public class NRewardsScreen : Control, IOverlayScreen, IScreenContext
 		{
 			if (_rewardButtons.Count == 0)
 			{
+				if (_isTerminal && IsComplete)
+				{
+					return this;
+				}
 				return _rewardsContainer;
 			}
 			return _lastRewardFocused ?? _rewardButtons[0];

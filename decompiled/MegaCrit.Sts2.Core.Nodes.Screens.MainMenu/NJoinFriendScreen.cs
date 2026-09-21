@@ -7,6 +7,7 @@ using Godot.Bridge;
 using Godot.NativeInterop;
 using MegaCrit.Sts2.Core.Assets;
 using MegaCrit.Sts2.Core.Commands;
+using MegaCrit.Sts2.Core.Debug;
 using MegaCrit.Sts2.Core.Entities.Multiplayer;
 using MegaCrit.Sts2.Core.Helpers;
 using MegaCrit.Sts2.Core.Localization;
@@ -279,7 +280,7 @@ public class NJoinFriendScreen : NSubmenu
 			return;
 		}
 		_loadingOverlay.Visible = true;
-		_currentJoinFlow = new JoinFlow(new NetClientGameService());
+		_currentJoinFlow = new JoinFlow(new NetClientGameService(PeerVersionInfo.LocalDefault()));
 		try
 		{
 			Log.Info($"Attempting to join game with connection initializer {connInitializer}");
@@ -361,7 +362,10 @@ public class NJoinFriendScreen : NSubmenu
 			{
 				NModalContainer.Instance.Add(nErrorPopup2);
 			}
-			throw;
+			if (info.GetReason() == NetError.InternalError)
+			{
+				SentryService.CaptureException(ex2);
+			}
 		}
 		finally
 		{

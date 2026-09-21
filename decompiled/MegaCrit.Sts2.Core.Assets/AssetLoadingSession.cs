@@ -216,13 +216,13 @@ public class AssetLoadingSession
 			ResourceLoader.ThreadLoadStatus threadLoadStatus = ResourceLoader.LoadThreadedGetStatus(result);
 			if ((ulong)threadLoadStatus <= 3uL)
 			{
-				switch ((int)threadLoadStatus)
+				switch (threadLoadStatus)
 				{
-				case 3:
+				case ResourceLoader.ThreadLoadStatus.Loaded:
 					_finalizing.Enqueue(result);
 					continue;
-				case 0:
-				case 2:
+				case ResourceLoader.ThreadLoadStatus.InvalidResource:
+				case ResourceLoader.ThreadLoadStatus.Failed:
 				{
 					Log.Warn($"Threaded load status {threadLoadStatus} for {result}, falling back to sync load");
 					Resource resource = ResourceLoader.Load<Resource>(result, null, ResourceLoader.CacheMode.Reuse);
@@ -235,7 +235,7 @@ public class AssetLoadingSession
 					_assetCache?.MarkAssetFailed(result);
 					continue;
 				}
-				case 1:
+				case ResourceLoader.ThreadLoadStatus.InProgress:
 					_loading.Enqueue(result);
 					continue;
 				}

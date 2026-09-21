@@ -8,12 +8,6 @@ internal sealed class _003C_003Ez__ReadOnlySingleElementList<T> : IEnumerable, I
 {
 	private sealed class Enumerator : IDisposable, IEnumerator, IEnumerator<T>
 	{
-		[CompilerGenerated]
-		private readonly T _item;
-
-		[CompilerGenerated]
-		private bool _moveNextCalled;
-
 		object IEnumerator.Current => _item;
 
 		T IEnumerator<T>.Current => _item;
@@ -41,9 +35,6 @@ internal sealed class _003C_003Ez__ReadOnlySingleElementList<T> : IEnumerable, I
 		{
 		}
 	}
-
-	[CompilerGenerated]
-	private readonly T _item;
 
 	int ICollection.Count => 1;
 

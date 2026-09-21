@@ -136,89 +136,85 @@ internal class SerializableDynamicVarDictionarySerializerContext : JsonSerialize
 	private static JsonPropertyInfo[] SerializableDynamicVarPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[4];
-		JsonPropertyInfoValues<DynamicVarType> propertyInfo = new JsonPropertyInfoValues<DynamicVarType>
+		JsonPropertyInfoValues<DynamicVarType> jsonPropertyInfoValues = new JsonPropertyInfoValues<DynamicVarType>();
+		jsonPropertyInfoValues.IsProperty = false;
+		jsonPropertyInfoValues.IsPublic = true;
+		jsonPropertyInfoValues.IsVirtual = false;
+		jsonPropertyInfoValues.DeclaringType = typeof(SerializableDynamicVar);
+		jsonPropertyInfoValues.Converter = null;
+		jsonPropertyInfoValues.Getter = (object obj) => ((SerializableDynamicVar)obj).type;
+		jsonPropertyInfoValues.Setter = delegate(object obj, DynamicVarType value)
 		{
-			IsProperty = false,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(SerializableDynamicVar),
-			Converter = null,
-			Getter = (object obj) => ((SerializableDynamicVar)obj).type,
-			Setter = delegate(object obj, DynamicVarType value)
-			{
-				Unsafe.Unbox<SerializableDynamicVar>(obj).type = value;
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "type",
-			JsonPropertyName = "type",
-			AttributeProviderFactory = () => typeof(SerializableDynamicVar).GetField("type", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+			Unsafe.Unbox<SerializableDynamicVar>(obj).type = value;
 		};
+		jsonPropertyInfoValues.IgnoreCondition = null;
+		jsonPropertyInfoValues.HasJsonInclude = false;
+		jsonPropertyInfoValues.IsExtensionData = false;
+		jsonPropertyInfoValues.NumberHandling = null;
+		jsonPropertyInfoValues.PropertyName = "type";
+		jsonPropertyInfoValues.JsonPropertyName = "type";
+		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SerializableDynamicVar).GetField("type", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+		JsonPropertyInfoValues<DynamicVarType> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
-		JsonPropertyInfoValues<decimal> propertyInfo2 = new JsonPropertyInfoValues<decimal>
+		JsonPropertyInfoValues<decimal> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<decimal>();
+		jsonPropertyInfoValues2.IsProperty = false;
+		jsonPropertyInfoValues2.IsPublic = true;
+		jsonPropertyInfoValues2.IsVirtual = false;
+		jsonPropertyInfoValues2.DeclaringType = typeof(SerializableDynamicVar);
+		jsonPropertyInfoValues2.Converter = null;
+		jsonPropertyInfoValues2.Getter = (object obj) => ((SerializableDynamicVar)obj).decimalValue;
+		jsonPropertyInfoValues2.Setter = delegate(object obj, decimal value)
 		{
-			IsProperty = false,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(SerializableDynamicVar),
-			Converter = null,
-			Getter = (object obj) => ((SerializableDynamicVar)obj).decimalValue,
-			Setter = delegate(object obj, decimal value)
-			{
-				Unsafe.Unbox<SerializableDynamicVar>(obj).decimalValue = value;
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "decimalValue",
-			JsonPropertyName = "decimal_value",
-			AttributeProviderFactory = () => typeof(SerializableDynamicVar).GetField("decimalValue", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+			Unsafe.Unbox<SerializableDynamicVar>(obj).decimalValue = value;
 		};
+		jsonPropertyInfoValues2.IgnoreCondition = null;
+		jsonPropertyInfoValues2.HasJsonInclude = false;
+		jsonPropertyInfoValues2.IsExtensionData = false;
+		jsonPropertyInfoValues2.NumberHandling = null;
+		jsonPropertyInfoValues2.PropertyName = "decimalValue";
+		jsonPropertyInfoValues2.JsonPropertyName = "decimal_value";
+		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SerializableDynamicVar).GetField("decimalValue", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+		JsonPropertyInfoValues<decimal> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
-		JsonPropertyInfoValues<bool> propertyInfo3 = new JsonPropertyInfoValues<bool>
+		JsonPropertyInfoValues<bool> jsonPropertyInfoValues3 = new JsonPropertyInfoValues<bool>();
+		jsonPropertyInfoValues3.IsProperty = false;
+		jsonPropertyInfoValues3.IsPublic = true;
+		jsonPropertyInfoValues3.IsVirtual = false;
+		jsonPropertyInfoValues3.DeclaringType = typeof(SerializableDynamicVar);
+		jsonPropertyInfoValues3.Converter = null;
+		jsonPropertyInfoValues3.Getter = (object obj) => ((SerializableDynamicVar)obj).boolValue;
+		jsonPropertyInfoValues3.Setter = delegate(object obj, bool value)
 		{
-			IsProperty = false,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(SerializableDynamicVar),
-			Converter = null,
-			Getter = (object obj) => ((SerializableDynamicVar)obj).boolValue,
-			Setter = delegate(object obj, bool value)
-			{
-				Unsafe.Unbox<SerializableDynamicVar>(obj).boolValue = value;
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "boolValue",
-			JsonPropertyName = "bool_value",
-			AttributeProviderFactory = () => typeof(SerializableDynamicVar).GetField("boolValue", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+			Unsafe.Unbox<SerializableDynamicVar>(obj).boolValue = value;
 		};
+		jsonPropertyInfoValues3.IgnoreCondition = null;
+		jsonPropertyInfoValues3.HasJsonInclude = false;
+		jsonPropertyInfoValues3.IsExtensionData = false;
+		jsonPropertyInfoValues3.NumberHandling = null;
+		jsonPropertyInfoValues3.PropertyName = "boolValue";
+		jsonPropertyInfoValues3.JsonPropertyName = "bool_value";
+		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(SerializableDynamicVar).GetField("boolValue", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+		JsonPropertyInfoValues<bool> propertyInfo3 = jsonPropertyInfoValues3;
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
-		JsonPropertyInfoValues<string> propertyInfo4 = new JsonPropertyInfoValues<string>
+		JsonPropertyInfoValues<string> jsonPropertyInfoValues4 = new JsonPropertyInfoValues<string>();
+		jsonPropertyInfoValues4.IsProperty = false;
+		jsonPropertyInfoValues4.IsPublic = true;
+		jsonPropertyInfoValues4.IsVirtual = false;
+		jsonPropertyInfoValues4.DeclaringType = typeof(SerializableDynamicVar);
+		jsonPropertyInfoValues4.Converter = null;
+		jsonPropertyInfoValues4.Getter = (object obj) => ((SerializableDynamicVar)obj).stringValue;
+		jsonPropertyInfoValues4.Setter = delegate(object obj, string? value)
 		{
-			IsProperty = false,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(SerializableDynamicVar),
-			Converter = null,
-			Getter = (object obj) => ((SerializableDynamicVar)obj).stringValue,
-			Setter = delegate(object obj, string? value)
-			{
-				Unsafe.Unbox<SerializableDynamicVar>(obj).stringValue = value;
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "stringValue",
-			JsonPropertyName = "string_value",
-			AttributeProviderFactory = () => typeof(SerializableDynamicVar).GetField("stringValue", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+			Unsafe.Unbox<SerializableDynamicVar>(obj).stringValue = value;
 		};
+		jsonPropertyInfoValues4.IgnoreCondition = null;
+		jsonPropertyInfoValues4.HasJsonInclude = false;
+		jsonPropertyInfoValues4.IsExtensionData = false;
+		jsonPropertyInfoValues4.NumberHandling = null;
+		jsonPropertyInfoValues4.PropertyName = "stringValue";
+		jsonPropertyInfoValues4.JsonPropertyName = "string_value";
+		jsonPropertyInfoValues4.AttributeProviderFactory = () => typeof(SerializableDynamicVar).GetField("stringValue", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+		JsonPropertyInfoValues<string> propertyInfo4 = jsonPropertyInfoValues4;
 		array[3] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo4);
 		return array;
 	}

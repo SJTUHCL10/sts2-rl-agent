@@ -69,7 +69,8 @@ public class ApplyPowerConsoleCmd : AbstractConsoleCmd
 		PowerModel powerModel = creature.Powers.FirstOrDefault((PowerModel p) => p.GetType() == power.GetType());
 		PlayerChoiceContext choiceContext = new BlockingPlayerChoiceContext();
 		Task task = ((power.InstanceType == PowerInstanceType.None && powerModel != null) ? PowerCmd.ModifyAmount(choiceContext, powerModel, result, null, null) : PowerCmd.Apply(choiceContext, power.ToMutable(), creature, result, null, null));
-		return new CmdResult(task, success: true, "AppliedPower: [" + string.Join(",", creature.IsPlayer ? "PLAYER" : creature.Monster.Id.Entry) + "]");
+		string reference = (creature.IsPlayer ? "PLAYER" : creature.Monster.Id.Entry);
+		return new CmdResult(task, success: true, "AppliedPower: [" + string.Join(",", new ReadOnlySpan<string>(in reference)) + "]");
 	}
 
 	public override CompletionResult GetArgumentCompletions(Player? player, string[] args)

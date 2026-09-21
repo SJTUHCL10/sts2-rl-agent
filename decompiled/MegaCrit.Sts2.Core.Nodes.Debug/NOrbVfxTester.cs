@@ -4,6 +4,9 @@ using System.ComponentModel;
 using Godot;
 using Godot.Bridge;
 using Godot.NativeInterop;
+using MegaCrit.Sts2.Core.Nodes.Orbs;
+
+namespace MegaCrit.Sts2.Core.Nodes.Debug;
 
 [ScriptPath("res://src/Core/Nodes/Debug/NOrbVfxTester.cs")]
 public class NOrbVfxTester : Control

@@ -4,6 +4,8 @@ using Godot;
 using Godot.Bridge;
 using Godot.NativeInterop;
 
+namespace MegaCrit.Sts2.Core.Nodes.Vfx.Utilities;
+
 [ScriptPath("res://src/Core/Nodes/Vfx/Utilities/NVfxProjectile.cs")]
 public class NVfxProjectile : Node2D
 {

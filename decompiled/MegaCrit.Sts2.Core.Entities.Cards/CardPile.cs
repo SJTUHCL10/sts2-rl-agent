@@ -11,7 +11,7 @@ using MegaCrit.Sts2.Core.TestSupport;
 
 namespace MegaCrit.Sts2.Core.Entities.Cards;
 
-public class CardPile(PileType type)
+public class CardPile
 {
 	private readonly List<CardModel> _cards = new List<CardModel>();
 
@@ -20,7 +20,7 @@ public class CardPile(PileType type)
 	/// </summary>
 	public static int MaxCardsInHand => 10;
 
-	public PileType Type { get; } = type;
+	public PileType Type { get; }
 
 	public IReadOnlyList<CardModel> Cards => _cards;
 
@@ -39,6 +39,12 @@ public class CardPile(PileType type)
 	public event Action? CardAddFinished;
 
 	public event Action? CardRemoveFinished;
+
+	public CardPile(PileType type)
+	{
+		Type = type;
+		base._002Ector();
+	}
 
 	public static CardPile? Get(PileType type, Player player)
 	{
@@ -125,7 +131,7 @@ public class CardPile(PileType type)
 		}
 		if (!silent)
 		{
-			this.CardRemoved?.Invoke(card);
+			InvokeCardRemoved(card);
 			InvokeContentsChanged();
 			InvokeCardRemoveFinished();
 		}
@@ -174,6 +180,11 @@ public class CardPile(PileType type)
 			RemoveInternal(item, silent);
 		}
 		_cards.Clear();
+	}
+
+	public void InvokeCardRemoved(CardModel card)
+	{
+		this.CardRemoved?.Invoke(card);
 	}
 
 	public void InvokeCardAddFinished()

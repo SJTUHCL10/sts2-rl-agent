@@ -7,7 +7,7 @@ namespace MegaCrit.Sts2.Core.Saves;
 public class SnakeCaseJsonStringEnumConverter<TEnum> : JsonStringEnumConverter<TEnum> where TEnum : struct, Enum
 {
 	public SnakeCaseJsonStringEnumConverter()
-		: base(JsonNamingPolicy.SnakeCaseLower, true)
+		: base(JsonNamingPolicy.SnakeCaseLower, allowIntegerValues: true)
 	{
 	}
 }

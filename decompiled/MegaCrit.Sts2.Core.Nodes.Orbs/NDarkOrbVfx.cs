@@ -4,8 +4,9 @@ using Godot;
 using Godot.Bridge;
 using Godot.NativeInterop;
 using MegaCrit.Sts2.Core.Helpers;
-using MegaCrit.Sts2.Core.Nodes.Vfx;
 using MegaCrit.Sts2.Core.Nodes.Vfx.Utilities;
+
+namespace MegaCrit.Sts2.Core.Nodes.Orbs;
 
 [ScriptPath("res://src/Core/Nodes/Orbs/NDarkOrbVfx.cs")]
 public class NDarkOrbVfx : NOrbVfx

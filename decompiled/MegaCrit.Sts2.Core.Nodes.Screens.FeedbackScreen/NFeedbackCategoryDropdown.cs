@@ -162,7 +162,7 @@ public class NFeedbackCategoryDropdown : NDropdown
 			_categories = _baseCategories;
 			_categoryLoc = _baseCategoryLoc;
 		}
-		_currentCategoryIndex = ListExtensions.IndexOf(_categories, "feedback");
+		_currentCategoryIndex = _categories.IndexOf("feedback");
 		Control node = GetNode<Control>("DropdownContainer/VBoxContainer");
 		foreach (Node child in node.GetChildren())
 		{

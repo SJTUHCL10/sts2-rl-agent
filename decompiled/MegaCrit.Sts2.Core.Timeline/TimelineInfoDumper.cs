@@ -44,7 +44,7 @@ public class TimelineInfoDumper : Node
 		Console.Out.WriteLine("START TIMELINE INFO DUMPER");
 		foreach (EpochModel item in allEpochs)
 		{
-			Console.Out.WriteLine($"\"{item.Id}\", \"{item.Era}\", \"{(int)item.Era}.{item.EraPosition}\", \"{item.Title}\", \"{item.Description.Replace("\r", "").Replace("\n", "")}\", \"{item.UnlockText}\", \"{item.ResolvedPortraitPath}\"");
+			Console.Out.WriteLine($"\"{item.Id}\", \"{item.Era}\", \"{item.Era}.{item.EraPosition}\", \"{item.Title}\", \"{item.Description.Replace("\r", "").Replace("\n", "")}\", \"{item.UnlockText}\", \"{item.ResolvedPortraitPath}\"");
 		}
 		Console.Out.WriteLine("END TIMELINE INFO DUMPER");
 		Console.Out.WriteLine("END TIMELINE INFO DUMPER");

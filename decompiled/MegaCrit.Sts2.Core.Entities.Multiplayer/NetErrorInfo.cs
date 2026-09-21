@@ -194,6 +194,9 @@ public struct NetErrorInfo
 			case ConnectionFailureReason.ModMismatch:
 				result = NetError.ModMismatch;
 				break;
+			case ConnectionFailureReason.HandshakeTimeout:
+				result = NetError.HandshakeTimeout;
+				break;
 			default:
 				global::_003CPrivateImplementationDetails_003E.ThrowSwitchExpressionException(value);
 				break;

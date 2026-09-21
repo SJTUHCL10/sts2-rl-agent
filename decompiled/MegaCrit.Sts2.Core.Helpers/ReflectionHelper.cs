@@ -86,7 +86,7 @@ public static class ReflectionHelper
 	{
 		if (!derived.IsSubclassOf(baseType))
 		{
-			return Enumerable.Contains(derived.GetInterfaces(), baseType);
+			return derived.GetInterfaces().Contains(baseType);
 		}
 		return true;
 	}

@@ -25,6 +25,11 @@ public class NHotkeyManager : Node
 	public new class MethodName : Node.MethodName
 	{
 		/// <summary>
+		/// Cached name for the 'ClearHotkeys' method.
+		/// </summary>
+		public static readonly StringName ClearHotkeys = "ClearHotkeys";
+
+		/// <summary>
 		/// Cached name for the 'AddBlockingScreen' method.
 		/// </summary>
 		public static readonly StringName AddBlockingScreen = "AddBlockingScreen";
@@ -70,6 +75,13 @@ public class NHotkeyManager : Node
 			}
 			return NGame.Instance.HotkeyManager;
 		}
+	}
+
+	public void ClearHotkeys()
+	{
+		_hotkeyPressedBindings.Clear();
+		_hotkeyReleasedBindings.Clear();
+		_blockingScreens.Clear();
 	}
 
 	public void PushHotkeyPressedBinding(string hotkey, Action action)
@@ -212,7 +224,8 @@ public class NHotkeyManager : Node
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	internal static List<MethodInfo> GetGodotMethodList()
 	{
-		List<MethodInfo> list = new List<MethodInfo>(3);
+		List<MethodInfo> list = new List<MethodInfo>(4);
+		list.Add(new MethodInfo(MethodName.ClearHotkeys, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName.AddBlockingScreen, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
 		{
 			new PropertyInfo(Variant.Type.Object, "screen", PropertyHint.None, "", PropertyUsageFlags.Default, new StringName("Node"), exported: false)
@@ -232,6 +245,12 @@ public class NHotkeyManager : Node
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool InvokeGodotClassMethod(in godot_string_name method, NativeVariantPtrArgs args, out godot_variant ret)
 	{
+		if (method == MethodName.ClearHotkeys && args.Count == 0)
+		{
+			ClearHotkeys();
+			ret = default(godot_variant);
+			return true;
+		}
 		if (method == MethodName.AddBlockingScreen && args.Count == 1)
 		{
 			AddBlockingScreen(VariantUtils.ConvertTo<Node>(in args[0]));
@@ -257,6 +276,10 @@ public class NHotkeyManager : Node
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool HasGodotClassMethod(in godot_string_name method)
 	{
+		if (method == MethodName.ClearHotkeys)
+		{
+			return true;
+		}
 		if (method == MethodName.AddBlockingScreen)
 		{
 			return true;

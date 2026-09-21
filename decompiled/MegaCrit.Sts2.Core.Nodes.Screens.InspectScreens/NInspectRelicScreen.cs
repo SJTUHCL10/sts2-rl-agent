@@ -241,7 +241,7 @@ public class NInspectRelicScreen : Control, IScreenContext
 
 	public static string[] AssetPaths => new string[1] { _scenePath };
 
-	public Control? DefaultFocusedControl => this;
+	public Control DefaultFocusedControl => this;
 
 	public static NInspectRelicScreen? Create()
 	{

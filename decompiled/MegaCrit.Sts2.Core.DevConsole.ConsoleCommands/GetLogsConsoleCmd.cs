@@ -362,7 +362,7 @@ public class GetLogsConsoleCmd : AbstractConsoleCmd
 				long length = new FileInfo(text).Length;
 				if (length > 209715200)
 				{
-					Log.Warn($"Core dump is {length / 1048576} MB which exceeds the {200L} MB limit, skipping");
+					Log.Warn($"Core dump is {length / 1048576} MB which exceeds the {200} MB limit, skipping");
 				}
 				else if (length > 0)
 				{

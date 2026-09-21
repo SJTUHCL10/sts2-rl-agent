@@ -27,11 +27,10 @@ public sealed class GnarledHammer : RelicModel
 
 	public override async Task AfterObtained()
 	{
-		CardSelectorPrefs prefs = new CardSelectorPrefs(CardSelectorPrefs.EnchantSelectionPrompt, 0, base.DynamicVars.Cards.IntValue)
-		{
-			Cancelable = false,
-			RequireManualConfirmation = true
-		};
+		CardSelectorPrefs cardSelectorPrefs = new CardSelectorPrefs(CardSelectorPrefs.EnchantSelectionPrompt, 0, base.DynamicVars.Cards.IntValue);
+		cardSelectorPrefs.Cancelable = false;
+		cardSelectorPrefs.RequireManualConfirmation = true;
+		CardSelectorPrefs prefs = cardSelectorPrefs;
 		Sharp canonicalEnchantment = ModelDb.Enchantment<Sharp>();
 		foreach (CardModel item in await CardSelectCmd.FromDeckForEnchantment(base.Owner, canonicalEnchantment, base.DynamicVars["SharpAmount"].IntValue, prefs))
 		{

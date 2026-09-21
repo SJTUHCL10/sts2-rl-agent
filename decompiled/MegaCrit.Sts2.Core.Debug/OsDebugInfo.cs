@@ -224,11 +224,11 @@ public static class OsDebugInfo
 				handler.AppendFormatted(adapterOut.Description.Description);
 				stringBuilder31.AppendLine(ref handler);
 				global::_003C_003Ey__InlineArray4<object> buffer = default(global::_003C_003Ey__InlineArray4<object>);
-				buffer[0] = userModeDriverVersion >> 48;
-				buffer[1] = (userModeDriverVersion >> 32) & 0xFFFF;
-				buffer[2] = (userModeDriverVersion >> 16) & 0xFFFF;
-				buffer[3] = (userModeDriverVersion >> 32) & 0xFFFF;
-				stringBuilder.AppendLine(string.Format("  version: {0}.{1}.{2}.{3}", (ReadOnlySpan<object?>)buffer));
+				global::_003CPrivateImplementationDetails_003E.InlineArrayElementRef<global::_003C_003Ey__InlineArray4<object>, object>(ref buffer, 0) = userModeDriverVersion >> 48;
+				global::_003CPrivateImplementationDetails_003E.InlineArrayElementRef<global::_003C_003Ey__InlineArray4<object>, object>(ref buffer, 1) = (userModeDriverVersion >> 32) & 0xFFFF;
+				global::_003CPrivateImplementationDetails_003E.InlineArrayElementRef<global::_003C_003Ey__InlineArray4<object>, object>(ref buffer, 2) = (userModeDriverVersion >> 16) & 0xFFFF;
+				global::_003CPrivateImplementationDetails_003E.InlineArrayElementRef<global::_003C_003Ey__InlineArray4<object>, object>(ref buffer, 3) = (userModeDriverVersion >> 32) & 0xFFFF;
+				stringBuilder.AppendLine(string.Format("  version: {0}.{1}.{2}.{3}", global::_003CPrivateImplementationDetails_003E.InlineArrayAsReadOnlySpan<global::_003C_003Ey__InlineArray4<object>, object>(in buffer, 4)));
 			}
 		}
 		stringBuilder2 = stringBuilder;

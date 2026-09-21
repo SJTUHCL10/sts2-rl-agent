@@ -673,7 +673,7 @@ public class NTimelineScreen : NSubmenu
 	{
 		if (era >= EpochEra.Seeds0)
 		{
-			return $"res://images/atlases/era_atlas.sprites/era_{(int)era}.tres";
+			return $"res://images/atlases/era_atlas.sprites/era_{era}.tres";
 		}
 		return $"res://images/atlases/era_atlas.sprites/era_minus_{Math.Abs((int)era)}.tres";
 	}
@@ -829,11 +829,6 @@ public class NTimelineScreen : NSubmenu
 	private bool IsInspectScreenQueued()
 	{
 		return _queuedInspectScreen != null;
-	}
-
-	private async Task SpawnEraLabel(EpochEra era)
-	{
-		await _uniqueEpochEras[era].SpawnNameAndYear();
 	}
 
 	/// <summary>

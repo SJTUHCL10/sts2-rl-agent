@@ -345,7 +345,6 @@ public class NMapDrawings : Control
 	public void ClearDrawnLinesLocal()
 	{
 		ClearAllLinesForPlayer(GetDrawingStateForPlayer(_netService.NetId));
-		UpdateLocalCursor();
 		_netService.SendMessage(default(ClearMapDrawingsMessage));
 	}
 
@@ -558,10 +557,7 @@ public class NMapDrawings : Control
 	{
 		foreach (DrawingState drawingState in _drawingStates)
 		{
-			foreach (Line2D item in drawingState.drawViewport.GetChildren().OfType<Line2D>())
-			{
-				item.QueueFreeSafely();
-			}
+			ClearAllLinesForPlayer(drawingState);
 		}
 	}
 
@@ -618,11 +614,14 @@ public class NMapDrawings : Control
 
 	private void ClearAllLinesForPlayer(DrawingState state)
 	{
+		if (state.IsDrawing)
+		{
+			StopDrawingLine(state);
+		}
 		foreach (Line2D item in state.drawViewport.GetChildren().OfType<Line2D>())
 		{
 			item.QueueFreeSafely();
 		}
-		SetDrawingMode(state, DrawingMode.None);
 	}
 
 	/// <summary>

@@ -679,7 +679,8 @@ public class NetFullCombatState : IPacketSerializable
 						StringBuilder stringBuilder18 = stringBuilder2;
 						handler = new StringBuilder.AppendInterpolatedStringHandler(16, 1, stringBuilder2);
 						handler.AppendLiteral("\t\t\tEnergy Cost: ");
-						handler.AppendFormatted(string.Join(",", (object)card.energyCost));
+						object reference = card.energyCost;
+						handler.AppendFormatted(string.Join(",", new ReadOnlySpan<object>(in reference)));
 						stringBuilder18.AppendLine(ref handler);
 					}
 				}

@@ -30,6 +30,11 @@ public class NControllerMapDrawingInput : NMapDrawingInput
 		public new static readonly StringName _Ready = "_Ready";
 
 		/// <summary>
+		/// Cached name for the 'OnGuiFocusChanged' method.
+		/// </summary>
+		public static readonly StringName OnGuiFocusChanged = "OnGuiFocusChanged";
+
+		/// <summary>
 		/// Cached name for the '_Process' method.
 		/// </summary>
 		public new static readonly StringName _Process = "_Process";
@@ -114,10 +119,7 @@ public class NControllerMapDrawingInput : NMapDrawingInput
 		base._Ready();
 		_cursor = GetNode<Control>("%Cursor");
 		this.TryGrabFocus();
-		GetViewport().Connect(Viewport.SignalName.GuiFocusChanged, Callable.From<Control>(delegate
-		{
-			StopDrawing();
-		}));
+		GetViewport().Connect(Viewport.SignalName.GuiFocusChanged, Callable.From<Control>(OnGuiFocusChanged));
 		if (base.DrawingMode == DrawingMode.Drawing)
 		{
 			_cursorTex = ImageTexture.CreateFromImage(PreloadManager.Cache.GetAsset<Image>("res://images/packed/common_ui/cursor_quill.png"));
@@ -130,6 +132,11 @@ public class NControllerMapDrawingInput : NMapDrawingInput
 		}
 		_cursor.GetNode<TextureRect>("TextureRect").Texture = _cursorTex;
 		_cursor.GetNode<TextureRect>("TextureRect").Position = ((base.DrawingMode == DrawingMode.Drawing) ? _drawingIconPos : _eraserIconPos);
+	}
+
+	private void OnGuiFocusChanged(Control _)
+	{
+		StopDrawing();
 	}
 
 	public override void _Process(double delta)
@@ -189,9 +196,13 @@ public class NControllerMapDrawingInput : NMapDrawingInput
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	internal new static List<MethodInfo> GetGodotMethodList()
 	{
-		List<MethodInfo> list = new List<MethodInfo>(4);
+		List<MethodInfo> list = new List<MethodInfo>(5);
 		list.Add(new MethodInfo(MethodName.Create, new PropertyInfo(Variant.Type.Object, "", PropertyHint.None, "", PropertyUsageFlags.Default, new StringName("Control"), exported: false), MethodFlags.Normal | MethodFlags.Static, null, null));
 		list.Add(new MethodInfo(MethodName._Ready, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
+		list.Add(new MethodInfo(MethodName.OnGuiFocusChanged, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
+		{
+			new PropertyInfo(Variant.Type.Object, "_", PropertyHint.None, "", PropertyUsageFlags.Default, new StringName("Control"), exported: false)
+		}, null));
 		list.Add(new MethodInfo(MethodName._Process, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
 		{
 			new PropertyInfo(Variant.Type.Float, "delta", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false)
@@ -215,6 +226,12 @@ public class NControllerMapDrawingInput : NMapDrawingInput
 		if (method == MethodName._Ready && args.Count == 0)
 		{
 			_Ready();
+			ret = default(godot_variant);
+			return true;
+		}
+		if (method == MethodName.OnGuiFocusChanged && args.Count == 1)
+		{
+			OnGuiFocusChanged(VariantUtils.ConvertTo<Control>(in args[0]));
 			ret = default(godot_variant);
 			return true;
 		}
@@ -254,6 +271,10 @@ public class NControllerMapDrawingInput : NMapDrawingInput
 			return true;
 		}
 		if (method == MethodName._Ready)
+		{
+			return true;
+		}
+		if (method == MethodName.OnGuiFocusChanged)
 		{
 			return true;
 		}

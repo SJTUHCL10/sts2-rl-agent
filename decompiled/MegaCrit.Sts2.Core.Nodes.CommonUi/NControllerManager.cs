@@ -148,11 +148,6 @@ public class NControllerManager : Node
 		public static readonly StringName _lastMousePosition = "_lastMousePosition";
 
 		/// <summary>
-		/// Cached name for the '_skipMouseCheckFrames' field.
-		/// </summary>
-		public static readonly StringName _skipMouseCheckFrames = "_skipMouseCheckFrames";
-
-		/// <summary>
 		/// Cached name for the '_label' field.
 		/// </summary>
 		public static readonly StringName _label = "_label";
@@ -201,13 +196,6 @@ public class NControllerManager : Node
 	/// Used to reset the mouse position to the last place it was before we swapped to controller mode
 	/// </summary>
 	private Vector2 _lastMousePosition;
-
-	/// <summary>
-	/// Number of frames to ignore mouse motion events after warping the cursor offscreen.
-	/// WarpMouse generates a synthetic InputEventMouseMotion (via OS event queue, arriving next
-	/// frame) that would otherwise immediately flip us back to mouse mode.
-	/// </summary>
-	private int _skipMouseCheckFrames;
 
 	/// <summary>
 	/// Minimum relative displacement (squared) to consider a mouse motion event as a warp artifact
@@ -389,7 +377,7 @@ public class NControllerManager : Node
 	private void CheckForMouseInput(InputEvent inputEvent)
 	{
 		bool flag = inputEvent is InputEventMouseButton;
-		bool flag2 = inputEvent is InputEventMouseMotion { Velocity: var velocity } inputEventMouseMotion && velocity.LengthSquared() > 100f && _skipMouseCheckFrames <= 0 && inputEventMouseMotion.Relative.LengthSquared() <= 250000f;
+		bool flag2 = inputEvent is InputEventMouseMotion { Velocity: var velocity } inputEventMouseMotion && velocity.LengthSquared() > 100f && inputEventMouseMotion.Relative.LengthSquared() <= 250000f;
 		if (flag || flag2)
 		{
 			SwitchToMouseMode();
@@ -736,11 +724,6 @@ public class NControllerManager : Node
 			_lastMousePosition = VariantUtils.ConvertTo<Vector2>(in value);
 			return true;
 		}
-		if (name == PropertyName._skipMouseCheckFrames)
-		{
-			_skipMouseCheckFrames = VariantUtils.ConvertTo<int>(in value);
-			return true;
-		}
 		if (name == PropertyName._label)
 		{
 			_label = VariantUtils.ConvertTo<MegaLabel>(in value);
@@ -797,11 +780,6 @@ public class NControllerManager : Node
 			value = VariantUtils.CreateFrom(in _lastMousePosition);
 			return true;
 		}
-		if (name == PropertyName._skipMouseCheckFrames)
-		{
-			value = VariantUtils.CreateFrom(in _skipMouseCheckFrames);
-			return true;
-		}
 		if (name == PropertyName._label)
 		{
 			value = VariantUtils.CreateFrom(in _label);
@@ -832,7 +810,6 @@ public class NControllerManager : Node
 		list.Add(new PropertyInfo(Variant.Type.Bool, PropertyName.ShouldAllowControllerRebinding, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Bool, PropertyName.ShouldShowInputGlyphs, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Vector2, PropertyName._lastMousePosition, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
-		list.Add(new PropertyInfo(Variant.Type.Int, PropertyName._skipMouseCheckFrames, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._label, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._notifyTween, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Bool, PropertyName._inputTypeCheckingDisabled, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
@@ -849,7 +826,6 @@ public class NControllerManager : Node
 		base.SaveGodotObjectData(info);
 		info.AddProperty(PropertyName.InputType, Variant.From<InputType>(InputType));
 		info.AddProperty(PropertyName._lastMousePosition, Variant.From(in _lastMousePosition));
-		info.AddProperty(PropertyName._skipMouseCheckFrames, Variant.From(in _skipMouseCheckFrames));
 		info.AddProperty(PropertyName._label, Variant.From(in _label));
 		info.AddProperty(PropertyName._notifyTween, Variant.From(in _notifyTween));
 		info.AddProperty(PropertyName._inputTypeCheckingDisabled, Variant.From(in _inputTypeCheckingDisabled));
@@ -871,33 +847,29 @@ public class NControllerManager : Node
 		{
 			_lastMousePosition = value2.As<Vector2>();
 		}
-		if (info.TryGetProperty(PropertyName._skipMouseCheckFrames, out var value3))
+		if (info.TryGetProperty(PropertyName._label, out var value3))
 		{
-			_skipMouseCheckFrames = value3.As<int>();
+			_label = value3.As<MegaLabel>();
 		}
-		if (info.TryGetProperty(PropertyName._label, out var value4))
+		if (info.TryGetProperty(PropertyName._notifyTween, out var value4))
 		{
-			_label = value4.As<MegaLabel>();
+			_notifyTween = value4.As<Tween>();
 		}
-		if (info.TryGetProperty(PropertyName._notifyTween, out var value5))
+		if (info.TryGetProperty(PropertyName._inputTypeCheckingDisabled, out var value5))
 		{
-			_notifyTween = value5.As<Tween>();
+			_inputTypeCheckingDisabled = value5.As<bool>();
 		}
-		if (info.TryGetProperty(PropertyName._inputTypeCheckingDisabled, out var value6))
+		if (info.TryGetSignalEventDelegate<ControllerDetectedEventHandler>(SignalName.ControllerDetected, out var value6))
 		{
-			_inputTypeCheckingDisabled = value6.As<bool>();
+			backing_ControllerDetected = value6;
 		}
-		if (info.TryGetSignalEventDelegate<ControllerDetectedEventHandler>(SignalName.ControllerDetected, out var value7))
+		if (info.TryGetSignalEventDelegate<MouseDetectedEventHandler>(SignalName.MouseDetected, out var value7))
 		{
-			backing_ControllerDetected = value7;
+			backing_MouseDetected = value7;
 		}
-		if (info.TryGetSignalEventDelegate<MouseDetectedEventHandler>(SignalName.MouseDetected, out var value8))
+		if (info.TryGetSignalEventDelegate<ControllerTypeChangedEventHandler>(SignalName.ControllerTypeChanged, out var value8))
 		{
-			backing_MouseDetected = value8;
-		}
-		if (info.TryGetSignalEventDelegate<ControllerTypeChangedEventHandler>(SignalName.ControllerTypeChanged, out var value9))
-		{
-			backing_ControllerTypeChanged = value9;
+			backing_ControllerTypeChanged = value8;
 		}
 	}
 

@@ -174,9 +174,9 @@ public sealed class DoomPower : PowerModel
 		if (shouldDie)
 		{
 			global::_003C_003Ey__InlineArray2<Task> buffer = default(global::_003C_003Ey__InlineArray2<Task>);
-			buffer[0] = task;
-			buffer[1] = nDoomVfx.VfxTask;
-			creature.DeathAnimationTask = Task.WhenAll(buffer);
+			global::_003CPrivateImplementationDetails_003E.InlineArrayElementRef<global::_003C_003Ey__InlineArray2<Task>, Task>(ref buffer, 0) = task;
+			global::_003CPrivateImplementationDetails_003E.InlineArrayElementRef<global::_003C_003Ey__InlineArray2<Task>, Task>(ref buffer, 1) = nDoomVfx.VfxTask;
+			creature.DeathAnimationTask = Task.WhenAll(global::_003CPrivateImplementationDetails_003E.InlineArrayAsReadOnlySpan<global::_003C_003Ey__InlineArray2<Task>, Task>(in buffer, 2));
 		}
 	}
 

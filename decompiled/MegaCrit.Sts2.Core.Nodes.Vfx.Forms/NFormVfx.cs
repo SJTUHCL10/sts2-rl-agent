@@ -19,11 +19,6 @@ public class NFormVfx : Node2D
 	public new class MethodName : Node2D.MethodName
 	{
 		/// <summary>
-		/// Cached name for the '_ExitTree' method.
-		/// </summary>
-		public new static readonly StringName _ExitTree = "_ExitTree";
-
-		/// <summary>
 		/// Cached name for the 'OnEffectTriggered' method.
 		/// </summary>
 		public static readonly StringName OnEffectTriggered = "OnEffectTriggered";
@@ -86,11 +81,6 @@ public class NFormVfx : Node2D
 		}
 	}
 
-	public override void _ExitTree()
-	{
-		base._ExitTree();
-	}
-
 	public virtual void OnEffectTriggered()
 	{
 	}
@@ -122,8 +112,7 @@ public class NFormVfx : Node2D
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	internal static List<MethodInfo> GetGodotMethodList()
 	{
-		List<MethodInfo> list = new List<MethodInfo>(5);
-		list.Add(new MethodInfo(MethodName._ExitTree, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
+		List<MethodInfo> list = new List<MethodInfo>(4);
 		list.Add(new MethodInfo(MethodName.OnEffectTriggered, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName.SetActive, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
 		{
@@ -144,12 +133,6 @@ public class NFormVfx : Node2D
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool InvokeGodotClassMethod(in godot_string_name method, NativeVariantPtrArgs args, out godot_variant ret)
 	{
-		if (method == MethodName._ExitTree && args.Count == 0)
-		{
-			_ExitTree();
-			ret = default(godot_variant);
-			return true;
-		}
 		if (method == MethodName.OnEffectTriggered && args.Count == 0)
 		{
 			OnEffectTriggered();
@@ -181,10 +164,6 @@ public class NFormVfx : Node2D
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	protected override bool HasGodotClassMethod(in godot_string_name method)
 	{
-		if (method == MethodName._ExitTree)
-		{
-			return true;
-		}
 		if (method == MethodName.OnEffectTriggered)
 		{
 			return true;

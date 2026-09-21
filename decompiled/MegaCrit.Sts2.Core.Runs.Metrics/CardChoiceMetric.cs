@@ -5,12 +5,14 @@ namespace MegaCrit.Sts2.Core.Runs.Metrics;
 
 public struct CardChoiceMetric
 {
-	public readonly List<string> picked = new List<string>();
+	public readonly List<string> picked;
 
-	public readonly List<string> skipped = new List<string>();
+	public readonly List<string> skipped;
 
 	public CardChoiceMetric(List<CardChoiceHistoryEntry> choices)
 	{
+		picked = new List<string>();
+		skipped = new List<string>();
 		foreach (CardChoiceHistoryEntry choice in choices)
 		{
 			if (choice.wasPicked)

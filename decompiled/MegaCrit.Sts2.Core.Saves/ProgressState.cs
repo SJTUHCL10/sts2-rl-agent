@@ -728,7 +728,7 @@ public class ProgressState
 			}
 			else if (!Enum.IsDefined(serializableEpoch.State))
 			{
-				ctx.Warn($"Invalid epoch state {(int)serializableEpoch.State} for {serializableEpoch.Id}, skipping");
+				ctx.Warn($"Invalid epoch state {serializableEpoch.State} for {serializableEpoch.Id}, skipping");
 				ctx.PopPath();
 			}
 			else if (serializableEpoch.State < EpochState.NotObtained)

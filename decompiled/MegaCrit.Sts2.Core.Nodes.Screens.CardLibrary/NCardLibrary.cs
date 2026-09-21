@@ -999,9 +999,9 @@ public sealed class NCardLibrary : NSubmenu
 				text = card.GetDescriptionForPile(PileType.None).StripBbCode();
 			}
 			global::_003C_003Ey__InlineArray2<string> buffer = default(global::_003C_003Ey__InlineArray2<string>);
-			buffer[0] = title;
-			buffer[1] = NSearchBar.RemoveHtmlTags(text);
-			string text2 = string.Join(" ", (ReadOnlySpan<string?>)buffer);
+			global::_003CPrivateImplementationDetails_003E.InlineArrayElementRef<global::_003C_003Ey__InlineArray2<string>, string>(ref buffer, 0) = title;
+			global::_003CPrivateImplementationDetails_003E.InlineArrayElementRef<global::_003C_003Ey__InlineArray2<string>, string>(ref buffer, 1) = NSearchBar.RemoveHtmlTags(text);
+			string text2 = string.Join(" ", global::_003CPrivateImplementationDetails_003E.InlineArrayAsReadOnlySpan<global::_003C_003Ey__InlineArray2<string>, string>(in buffer, 2));
 			string text3 = NSearchBar.Normalize(text2);
 			string text4 = _searchBar.Text.ToLowerInvariant();
 			if (_specialSearchbarKeywords.TryGetValue(text4, out Func<CardModel, bool> value2))

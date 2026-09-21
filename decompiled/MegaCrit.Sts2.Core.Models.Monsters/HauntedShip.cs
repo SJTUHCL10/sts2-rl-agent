@@ -41,10 +41,8 @@ public sealed class HauntedShip : MonsterModel
 		List<MonsterState> list = new List<MonsterState>();
 		MoveState moveState = new MoveState("SWIPE_MOVE", SwipeMove, new SingleAttackIntent(SwipeDamage));
 		MoveState moveState2 = new MoveState("STOMP_MOVE", StompMove, new MultiAttackIntent(StompDamage, StompRepeat));
-		MoveState moveState3 = new MoveState("HAUNT_MOVE", HauntMove, new DebuffIntent(), new StatusIntent(HauntDazed))
-		{
-			FollowUpState = moveState
-		};
+		MoveState moveState3 = new MoveState("HAUNT_MOVE", HauntMove, new DebuffIntent(), new StatusIntent(HauntDazed));
+		moveState3.FollowUpState = moveState;
 		moveState.FollowUpState = moveState2;
 		moveState2.FollowUpState = moveState;
 		list.Add(moveState);

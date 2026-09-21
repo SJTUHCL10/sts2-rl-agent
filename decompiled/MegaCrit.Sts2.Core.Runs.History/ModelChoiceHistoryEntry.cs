@@ -6,13 +6,19 @@ using MegaCrit.Sts2.Core.Multiplayer.Serialization;
 namespace MegaCrit.Sts2.Core.Runs.History;
 
 [Serializable]
-public struct ModelChoiceHistoryEntry(ModelId choice, bool wasPicked)
+public struct ModelChoiceHistoryEntry
 {
 	[JsonPropertyName("choice")]
-	public ModelId choice = choice;
+	public ModelId choice;
 
 	[JsonPropertyName("was_picked")]
-	public bool wasPicked = wasPicked;
+	public bool wasPicked;
+
+	public ModelChoiceHistoryEntry(ModelId choice, bool wasPicked)
+	{
+		this.choice = choice;
+		this.wasPicked = wasPicked;
+	}
 
 	public void Serialize<T>(PacketWriter writer) where T : AbstractModel
 	{

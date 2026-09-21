@@ -127,6 +127,11 @@ public class NInputSettingsPanel : NSettingsPanel
 		/// Cached name for the '_listeningLabel' field.
 		/// </summary>
 		public static readonly StringName _listeningLabel = "_listeningLabel";
+
+		/// <summary>
+		/// Cached name for the '_settingsScreen' field.
+		/// </summary>
+		public static readonly StringName _settingsScreen = "_settingsScreen";
 	}
 
 	/// <summary>
@@ -162,12 +167,23 @@ public class NInputSettingsPanel : NSettingsPanel
 
 	private MegaRichTextLabel _listeningLabel;
 
+	private NSettingsScreen _settingsScreen;
+
+	private LocString CannotRemapLoc => new LocString("settings_ui", "TOAST_CANNOT_REMAP_INPUT");
+
+	private LocString KeyboardOnlyHeaderLoc => new LocString("settings_ui", "INPUT_SETTINGS.KEYBOARD_ONLY_MODE_HEADER");
+
+	private LocString MKbHeaderLoc => new LocString("settings_ui", "INPUT_SETTINGS.MOUSE_KEYBOARD_HEADER");
+
+	private LocString ControllerHeaderLoc => new LocString("settings_ui", "INPUT_SETTINGS.CONTROLLER_HEADER");
+
 	/// <summary>
 	/// Nodes are initialized top down based on what you see on the screen.
 	/// </summary>
 	public override void _Ready()
 	{
 		base._Ready();
+		_settingsScreen = this.GetAncestorOfType<NSettingsScreen>();
 		GetViewport().Connect(Viewport.SignalName.SizeChanged, Callable.From(OnViewportSizeChange));
 		_kbModeHeader = GetNode<MegaRichTextLabel>("%KeyboardOnlyModeHeader");
 		_kbModeHeader.SetTextAutoSize(new LocString("settings_ui", "KEYBOARD_ONLY_MODE_HEADER").GetFormattedText());
@@ -186,21 +202,18 @@ public class NInputSettingsPanel : NSettingsPanel
 		_keyboardHeader = GetNode<MegaLabel>("%KbModeHeader");
 		_controllerHeader = GetNode<MegaLabel>("%ControllerHeader");
 		_commandHeader.SetTextAutoSize(new LocString("settings_ui", "INPUT_SETTINGS.COMMAND_HEADER").GetFormattedText());
-		_keyboardHeader.SetTextAutoSize(new LocString("settings_ui", "INPUT_SETTINGS.KEYBOARD_ONLY_MODE_HEADER").GetFormattedText());
-		_mkbHeader.SetTextAutoSize(new LocString("settings_ui", "INPUT_SETTINGS.MOUSE_KEYBOARD_HEADER").GetFormattedText());
-		_controllerHeader.SetTextAutoSize(new LocString("settings_ui", "INPUT_SETTINGS.CONTROLLER_HEADER").GetFormattedText());
+		_keyboardHeader.SetTextAutoSize(KeyboardOnlyHeaderLoc.GetFormattedText());
+		_mkbHeader.SetTextAutoSize(MKbHeaderLoc.GetFormattedText());
+		_controllerHeader.SetTextAutoSize(ControllerHeaderLoc.GetFormattedText());
 		_listeningPrompt = GetNode<Control>("%ListeningPrompt");
 		_listeningLabel = GetNode<MegaRichTextLabel>("%ListeningLabel");
 		_listeningLabel.SetTextAutoSize("[sine]" + new LocString("settings_ui", "LISTENING_INPUT").GetRawText() + "[/sine]");
 		IReadOnlyList<StringName> readOnlyList = NInputManager.remappableControllerInputs.Concat(NInputManager.remappableMKbInputs).Distinct().ToList();
 		foreach (StringName item in readOnlyList)
 		{
-			NInputSettingsEntry entry = NInputSettingsEntry.Create(item);
-			entry.Connect(NClickableControl.SignalName.Released, Callable.From<NClickableControl>(delegate
-			{
-				SetAsListeningEntry(entry);
-			}));
-			base.Content.AddChildSafely(entry);
+			NInputSettingsEntry nInputSettingsEntry = NInputSettingsEntry.Create(item);
+			nInputSettingsEntry.Connect(NClickableControl.SignalName.Released, Callable.From<NInputSettingsEntry>(SetAsListeningEntry));
+			base.Content.AddChildSafely(nInputSettingsEntry);
 		}
 		UpdateNavigation();
 	}
@@ -238,10 +251,39 @@ public class NInputSettingsPanel : NSettingsPanel
 
 	private void SetAsListeningEntry(NInputSettingsEntry entry)
 	{
+		if (NControllerManager.Instance.InputType == InputType.MouseAndKeyboard)
+		{
+			if (!NInputManager.remappableMKbInputs.Contains(entry.InputName))
+			{
+				ShowCannotRemapToast(NInputSettingsEntry.commandToLocTitle[entry.InputName], MKbHeaderLoc);
+				return;
+			}
+		}
+		else if (NControllerManager.Instance.InputType == InputType.Controller)
+		{
+			if (!NInputManager.remappableControllerInputs.Contains(entry.InputName))
+			{
+				ShowCannotRemapToast(NInputSettingsEntry.commandToLocTitle[entry.InputName], ControllerHeaderLoc);
+				return;
+			}
+		}
+		else if (!NInputManager.remappableKbOnlyInputs.Contains(entry.InputName))
+		{
+			ShowCannotRemapToast(NInputSettingsEntry.commandToLocTitle[entry.InputName], KeyboardOnlyHeaderLoc);
+			return;
+		}
 		_listeningEntry = entry;
 		_listeningPrompt.Visible = true;
-		_listeningPrompt.SetGlobalPosition(new Vector2(960f, 540f) - _listeningPrompt.Size * 0.5f);
 		NControllerManager.Instance.StartListeningForRebind();
+	}
+
+	private void ShowCannotRemapToast(string hotkey, LocString controlType)
+	{
+		LocString locString = new LocString("settings_ui", "INPUT_SETTINGS.INPUT_TITLE." + hotkey);
+		LocString cannotRemapLoc = CannotRemapLoc;
+		cannotRemapLoc.AddObj("Hotkey", locString.GetFormattedText());
+		cannotRemapLoc.AddObj("ControlType", controlType.GetFormattedText());
+		_settingsScreen.ShowToast(cannotRemapLoc);
 	}
 
 	public override void _UnhandledKeyInput(InputEvent inputEvent)
@@ -474,6 +516,11 @@ public class NInputSettingsPanel : NSettingsPanel
 			_listeningLabel = VariantUtils.ConvertTo<MegaRichTextLabel>(in value);
 			return true;
 		}
+		if (name == PropertyName._settingsScreen)
+		{
+			_settingsScreen = VariantUtils.ConvertTo<NSettingsScreen>(in value);
+			return true;
+		}
 		return base.SetGodotClassPropertyValue(in name, in value);
 	}
 
@@ -546,6 +593,11 @@ public class NInputSettingsPanel : NSettingsPanel
 			value = VariantUtils.CreateFrom(in _listeningLabel);
 			return true;
 		}
+		if (name == PropertyName._settingsScreen)
+		{
+			value = VariantUtils.CreateFrom(in _settingsScreen);
+			return true;
+		}
 		return base.GetGodotClassPropertyValue(in name, out value);
 	}
 
@@ -571,6 +623,7 @@ public class NInputSettingsPanel : NSettingsPanel
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._controllerHeader, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._listeningPrompt, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._listeningLabel, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
+		list.Add(new PropertyInfo(Variant.Type.Object, PropertyName._settingsScreen, PropertyHint.None, "", PropertyUsageFlags.ScriptVariable, exported: false));
 		return list;
 	}
 
@@ -592,6 +645,7 @@ public class NInputSettingsPanel : NSettingsPanel
 		info.AddProperty(PropertyName._controllerHeader, Variant.From(in _controllerHeader));
 		info.AddProperty(PropertyName._listeningPrompt, Variant.From(in _listeningPrompt));
 		info.AddProperty(PropertyName._listeningLabel, Variant.From(in _listeningLabel));
+		info.AddProperty(PropertyName._settingsScreen, Variant.From(in _settingsScreen));
 	}
 
 	/// <inheritdoc />
@@ -650,6 +704,10 @@ public class NInputSettingsPanel : NSettingsPanel
 		if (info.TryGetProperty(PropertyName._listeningLabel, out var value13))
 		{
 			_listeningLabel = value13.As<MegaRichTextLabel>();
+		}
+		if (info.TryGetProperty(PropertyName._settingsScreen, out var value14))
+		{
+			_settingsScreen = value14.As<NSettingsScreen>();
 		}
 	}
 }

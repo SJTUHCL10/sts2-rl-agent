@@ -78,6 +78,11 @@ public class NGame : Control
 		public new static readonly StringName _EnterTree = "_EnterTree";
 
 		/// <summary>
+		/// Cached name for the 'OnFilesDropped' method.
+		/// </summary>
+		public static readonly StringName OnFilesDropped = "OnFilesDropped";
+
+		/// <summary>
 		/// Cached name for the '_Ready' method.
 		/// </summary>
 		public new static readonly StringName _Ready = "_Ready";
@@ -547,8 +552,13 @@ public class NGame : Control
 		HitStop = GetNode<NHitStop>("HitStop");
 		Transition = GetNode<NTransition>("%GameTransitionRect");
 		_mainThreadId = System.Environment.CurrentManagedThreadId;
-		GetWindow().Connect(Window.SignalName.FilesDropped, Callable.From<string[]>(FileDropHandler.OnFilesDropped));
+		GetWindow().Connect(Window.SignalName.FilesDropped, Callable.From<string[]>(OnFilesDropped));
 		TaskHelper.RunSafely(GameStartupWrapper());
+	}
+
+	private void OnFilesDropped(string[] files)
+	{
+		FileDropHandler.OnFilesDropped(files);
 	}
 
 	public override void _Ready()
@@ -779,14 +789,14 @@ public class NGame : Control
 			Log.Info("First time setup for display settings...");
 			settingsSave.TargetDisplay = DisplayServer.GetPrimaryScreen();
 		}
-		bool flag2 = settingsSave.Fullscreen;
-		if (PlatformUtil.GetSupportedWindowMode().ShouldForceFullscreen())
+		bool flag2 = PlatformUtil.GetSupportedWindowMode().ResolveFullscreen(settingsSave.Fullscreen, DebugSettings.DevWindowed);
+		if (flag2 && !settingsSave.Fullscreen)
 		{
-			if (!flag2)
-			{
-				Log.Warn($"Settings has fullscreen set to false, but we're forcing fullscreen because the platform reports our supported window mode as {PlatformUtil.GetSupportedWindowMode()}");
-			}
-			flag2 = true;
+			Log.Warn($"Settings has fullscreen set to false, but we're forcing fullscreen because the platform reports our supported window mode as {PlatformUtil.GetSupportedWindowMode()}");
+		}
+		else if (!flag2 && settingsSave.Fullscreen)
+		{
+			Log.Info("[Display] STS2_DEV_WINDOWED is set. Forcing windowed mode for this launch.");
 		}
 		Log.Info($"Applying display settings...\n  FULLSCREEN: {flag2}\n  ASPECT_RATIO: ({settingsSave.AspectRatioSetting})\n  TARGET_DISPLAY: ({settingsSave.TargetDisplay})\n  WINDOW_SIZE: {settingsSave.WindowSize}\n  POSITION: {settingsSave.WindowPosition}");
 		Log.Info($"[Display] Min size: {DisplayServer.WindowGetMinSize()} Max size: {DisplayServer.WindowGetMaxSize()}");
@@ -814,7 +824,7 @@ public class NGame : Control
 		default:
 			throw new ArgumentOutOfRangeException($"Invalid Aspect Ratio: {settingsSave.AspectRatioSetting}");
 		}
-		int num = ListExtensions.IndexOf(System.Environment.GetCommandLineArgs(), "-wpos");
+		int num = System.Environment.GetCommandLineArgs().IndexOf("-wpos");
 		if (flag2 && num < 0)
 		{
 			if (_window.Unresizable)
@@ -1109,6 +1119,7 @@ public class NGame : Control
 			}
 		}
 		NMainMenu currentScene = NMainMenu.Create(openTimeline);
+		NHotkeyManager.Instance?.ClearHotkeys();
 		RootSceneContainer.SetCurrentScene(currentScene);
 	}
 
@@ -1473,8 +1484,12 @@ public class NGame : Control
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	internal static List<MethodInfo> GetGodotMethodList()
 	{
-		List<MethodInfo> list = new List<MethodInfo>(38);
+		List<MethodInfo> list = new List<MethodInfo>(39);
 		list.Add(new MethodInfo(MethodName._EnterTree, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
+		list.Add(new MethodInfo(MethodName.OnFilesDropped, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, new List<PropertyInfo>
+		{
+			new PropertyInfo(Variant.Type.PackedStringArray, "files", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false)
+		}, null));
 		list.Add(new MethodInfo(MethodName._Ready, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName.OnWindowChange, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
 		list.Add(new MethodInfo(MethodName.IsMainThread, new PropertyInfo(Variant.Type.Bool, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal | MethodFlags.Static, null, null));
@@ -1560,6 +1575,12 @@ public class NGame : Control
 		if (method == MethodName._EnterTree && args.Count == 0)
 		{
 			_EnterTree();
+			ret = default(godot_variant);
+			return true;
+		}
+		if (method == MethodName.OnFilesDropped && args.Count == 1)
+		{
+			OnFilesDropped(VariantUtils.ConvertTo<string[]>(in args[0]));
 			ret = default(godot_variant);
 			return true;
 		}
@@ -1840,6 +1861,10 @@ public class NGame : Control
 	protected override bool HasGodotClassMethod(in godot_string_name method)
 	{
 		if (method == MethodName._EnterTree)
+		{
+			return true;
+		}
+		if (method == MethodName.OnFilesDropped)
 		{
 			return true;
 		}

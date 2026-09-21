@@ -325,11 +325,10 @@ public class RewardSynchronizer : IDisposable
 	/// </summary>
 	public async Task<bool> DoUnsyncedCardRemoval(Player player)
 	{
-		CardSelectorPrefs prefs = new CardSelectorPrefs(new LocString("gameplay_ui", "COMBAT_REWARD_CARD_REMOVAL.selectionScreenPrompt"), 1)
-		{
-			Cancelable = true,
-			RequireManualConfirmation = true
-		};
+		CardSelectorPrefs cardSelectorPrefs = new CardSelectorPrefs(new LocString("gameplay_ui", "COMBAT_REWARD_CARD_REMOVAL.selectionScreenPrompt"), 1);
+		cardSelectorPrefs.Cancelable = true;
+		cardSelectorPrefs.RequireManualConfirmation = true;
+		CardSelectorPrefs prefs = cardSelectorPrefs;
 		CardModel card = (await CardSelectCmd.FromDeckForRemoval(player, prefs)).FirstOrDefault();
 		if (card != null)
 		{

@@ -83,9 +83,10 @@ using RiderTestRunner;
 [assembly: AssemblyCopyright("© 2023 Mega Crit Games")]
 [assembly: AssemblyDescription("sts2")]
 [assembly: AssemblyFileVersion("0.1.0.0")]
-[assembly: AssemblyInformationalVersion("0.1.0+eecc8c4d0350bb5457209a0e4797bb8bc1343f89")]
+[assembly: AssemblyInformationalVersion("0.1.0+41cef1ea4657c524aa50e870df009e56337e8c32")]
 [assembly: AssemblyProduct("sts2")]
 [assembly: AssemblyTitle("sts2")]
+[assembly: InternalsVisibleTo("test")]
 [assembly: AssemblyHasScripts(new Type[]
 {
 	typeof(MegaLabel),
@@ -643,6 +644,7 @@ using RiderTestRunner;
 	typeof(NDamageNumVfx),
 	typeof(NDecimillipedeRocksVfx),
 	typeof(NDecimillipedeSegmentVfx),
+	typeof(NDefectVfx),
 	typeof(NDesaturateTransitionVfx),
 	typeof(NDevotedSculptorVfx),
 	typeof(NDoomOverlayVfx),
@@ -798,3 +800,4 @@ using RiderTestRunner;
 	typeof(NGameInfoUploader)
 })]
 [assembly: AssemblyVersion("0.1.0.0")]
+[module: RefSafetyRules(11)]

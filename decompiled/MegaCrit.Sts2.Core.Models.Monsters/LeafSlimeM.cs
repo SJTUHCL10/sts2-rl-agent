@@ -31,10 +31,9 @@ public sealed class LeafSlimeM : MonsterModel
 	{
 		List<MonsterState> list = new List<MonsterState>();
 		MoveState moveState = new MoveState("CLUMP_SHOT", ClumpShotMove, new SingleAttackIntent(ClumpDamage));
-		MoveState moveState2 = (MoveState)(moveState.FollowUpState = new MoveState("STICKY_SHOT", StickyShotMove, new StatusIntent(2))
-		{
-			FollowUpState = moveState
-		});
+		MoveState moveState2 = new MoveState("STICKY_SHOT", StickyShotMove, new StatusIntent(2));
+		moveState2.FollowUpState = moveState;
+		moveState.FollowUpState = moveState2;
 		list.Add(moveState);
 		list.Add(moveState2);
 		return new MonsterMoveStateMachine(list, moveState2);

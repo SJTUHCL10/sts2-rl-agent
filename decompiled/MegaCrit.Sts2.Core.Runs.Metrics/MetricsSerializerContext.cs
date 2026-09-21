@@ -391,47 +391,45 @@ internal class MetricsSerializerContext : JsonSerializerContext, IJsonTypeInfoRe
 	private static JsonPropertyInfo[] Vector2IPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[2];
-		JsonPropertyInfoValues<int> propertyInfo = new JsonPropertyInfoValues<int>
+		JsonPropertyInfoValues<int> jsonPropertyInfoValues = new JsonPropertyInfoValues<int>();
+		jsonPropertyInfoValues.IsProperty = false;
+		jsonPropertyInfoValues.IsPublic = true;
+		jsonPropertyInfoValues.IsVirtual = false;
+		jsonPropertyInfoValues.DeclaringType = typeof(Vector2I);
+		jsonPropertyInfoValues.Converter = null;
+		jsonPropertyInfoValues.Getter = (object obj) => ((Vector2I)obj).X;
+		jsonPropertyInfoValues.Setter = delegate(object obj, int value)
 		{
-			IsProperty = false,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(Vector2I),
-			Converter = null,
-			Getter = (object obj) => ((Vector2I)obj).X,
-			Setter = delegate(object obj, int value)
-			{
-				Unsafe.Unbox<Vector2I>(obj).X = value;
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "X",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(Vector2I).GetField("X", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+			Unsafe.Unbox<Vector2I>(obj).X = value;
 		};
+		jsonPropertyInfoValues.IgnoreCondition = null;
+		jsonPropertyInfoValues.HasJsonInclude = false;
+		jsonPropertyInfoValues.IsExtensionData = false;
+		jsonPropertyInfoValues.NumberHandling = null;
+		jsonPropertyInfoValues.PropertyName = "X";
+		jsonPropertyInfoValues.JsonPropertyName = null;
+		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(Vector2I).GetField("X", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+		JsonPropertyInfoValues<int> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
-		JsonPropertyInfoValues<int> propertyInfo2 = new JsonPropertyInfoValues<int>
+		jsonPropertyInfoValues = new JsonPropertyInfoValues<int>();
+		jsonPropertyInfoValues.IsProperty = false;
+		jsonPropertyInfoValues.IsPublic = true;
+		jsonPropertyInfoValues.IsVirtual = false;
+		jsonPropertyInfoValues.DeclaringType = typeof(Vector2I);
+		jsonPropertyInfoValues.Converter = null;
+		jsonPropertyInfoValues.Getter = (object obj) => ((Vector2I)obj).Y;
+		jsonPropertyInfoValues.Setter = delegate(object obj, int value)
 		{
-			IsProperty = false,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(Vector2I),
-			Converter = null,
-			Getter = (object obj) => ((Vector2I)obj).Y,
-			Setter = delegate(object obj, int value)
-			{
-				Unsafe.Unbox<Vector2I>(obj).Y = value;
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "Y",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(Vector2I).GetField("Y", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+			Unsafe.Unbox<Vector2I>(obj).Y = value;
 		};
+		jsonPropertyInfoValues.IgnoreCondition = null;
+		jsonPropertyInfoValues.HasJsonInclude = false;
+		jsonPropertyInfoValues.IsExtensionData = false;
+		jsonPropertyInfoValues.NumberHandling = null;
+		jsonPropertyInfoValues.PropertyName = "Y";
+		jsonPropertyInfoValues.JsonPropertyName = null;
+		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(Vector2I).GetField("Y", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+		JsonPropertyInfoValues<int> propertyInfo2 = jsonPropertyInfoValues;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		return array;
 	}
@@ -448,19 +446,18 @@ internal class MetricsSerializerContext : JsonSerializerContext, IJsonTypeInfoRe
 	{
 		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<AchievementMetric> jsonTypeInfo))
 		{
-			JsonObjectInfoValues<AchievementMetric> objectInfo = new JsonObjectInfoValues<AchievementMetric>
+			JsonObjectInfoValues<AchievementMetric> jsonObjectInfoValues = new JsonObjectInfoValues<AchievementMetric>();
+			jsonObjectInfoValues.ObjectCreator = null;
+			jsonObjectInfoValues.ObjectWithParameterizedConstructorCreator = (object[] args) => new AchievementMetric
 			{
-				ObjectCreator = null,
-				ObjectWithParameterizedConstructorCreator = (object[] args) => new AchievementMetric
-				{
-					BuildId = (string)args[0],
-					Achievement = (string)args[1]
-				},
-				PropertyMetadataInitializer = (JsonSerializerContext _) => AchievementMetricPropInit(options),
-				ConstructorParameterMetadataInitializer = AchievementMetricCtorParamInit,
-				ConstructorAttributeProviderFactory = () => typeof(AchievementMetric).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null),
-				SerializeHandler = AchievementMetricSerializeHandler
+				BuildId = (string)args[0],
+				Achievement = (string)args[1]
 			};
+			jsonObjectInfoValues.PropertyMetadataInitializer = (JsonSerializerContext _) => AchievementMetricPropInit(options);
+			jsonObjectInfoValues.ConstructorParameterMetadataInitializer = AchievementMetricCtorParamInit;
+			jsonObjectInfoValues.ConstructorAttributeProviderFactory = () => typeof(AchievementMetric).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null);
+			jsonObjectInfoValues.SerializeHandler = AchievementMetricSerializeHandler;
+			JsonObjectInfoValues<AchievementMetric> objectInfo = jsonObjectInfoValues;
 			jsonTypeInfo = JsonMetadataServices.CreateObjectInfo(options, objectInfo);
 			jsonTypeInfo.NumberHandling = null;
 		}
@@ -471,116 +468,111 @@ internal class MetricsSerializerContext : JsonSerializerContext, IJsonTypeInfoRe
 	private static JsonPropertyInfo[] AchievementMetricPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[5];
-		JsonPropertyInfoValues<string> propertyInfo = new JsonPropertyInfoValues<string>
+		JsonPropertyInfoValues<string> jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
+		jsonPropertyInfoValues.IsProperty = true;
+		jsonPropertyInfoValues.IsPublic = true;
+		jsonPropertyInfoValues.IsVirtual = false;
+		jsonPropertyInfoValues.DeclaringType = typeof(AchievementMetric);
+		jsonPropertyInfoValues.Converter = null;
+		jsonPropertyInfoValues.Getter = (object obj) => ((AchievementMetric)obj).BuildId;
+		jsonPropertyInfoValues.Setter = delegate(object obj, string? value)
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(AchievementMetric),
-			Converter = null,
-			Getter = (object obj) => ((AchievementMetric)obj).BuildId,
-			Setter = delegate(object obj, string? value)
-			{
-				((AchievementMetric)obj).BuildId = value;
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "BuildId",
-			JsonPropertyName = "buildId",
-			AttributeProviderFactory = () => typeof(AchievementMetric).GetProperty("BuildId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null)
+			((AchievementMetric)obj).BuildId = value;
 		};
+		jsonPropertyInfoValues.IgnoreCondition = null;
+		jsonPropertyInfoValues.HasJsonInclude = false;
+		jsonPropertyInfoValues.IsExtensionData = false;
+		jsonPropertyInfoValues.NumberHandling = null;
+		jsonPropertyInfoValues.PropertyName = "BuildId";
+		jsonPropertyInfoValues.JsonPropertyName = "buildId";
+		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(AchievementMetric).GetProperty("BuildId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<string> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsRequired = true;
 		array[0].IsGetNullable = false;
 		array[0].IsSetNullable = false;
-		JsonPropertyInfoValues<string> propertyInfo2 = new JsonPropertyInfoValues<string>
+		jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
+		jsonPropertyInfoValues.IsProperty = true;
+		jsonPropertyInfoValues.IsPublic = true;
+		jsonPropertyInfoValues.IsVirtual = false;
+		jsonPropertyInfoValues.DeclaringType = typeof(AchievementMetric);
+		jsonPropertyInfoValues.Converter = null;
+		jsonPropertyInfoValues.Getter = (object obj) => ((AchievementMetric)obj).Achievement;
+		jsonPropertyInfoValues.Setter = delegate(object obj, string? value)
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(AchievementMetric),
-			Converter = null,
-			Getter = (object obj) => ((AchievementMetric)obj).Achievement,
-			Setter = delegate(object obj, string? value)
-			{
-				((AchievementMetric)obj).Achievement = value;
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "Achievement",
-			JsonPropertyName = "achievement",
-			AttributeProviderFactory = () => typeof(AchievementMetric).GetProperty("Achievement", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null)
+			((AchievementMetric)obj).Achievement = value;
 		};
+		jsonPropertyInfoValues.IgnoreCondition = null;
+		jsonPropertyInfoValues.HasJsonInclude = false;
+		jsonPropertyInfoValues.IsExtensionData = false;
+		jsonPropertyInfoValues.NumberHandling = null;
+		jsonPropertyInfoValues.PropertyName = "Achievement";
+		jsonPropertyInfoValues.JsonPropertyName = "achievement";
+		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(AchievementMetric).GetProperty("Achievement", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<string> propertyInfo2 = jsonPropertyInfoValues;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		array[1].IsRequired = true;
 		array[1].IsGetNullable = false;
 		array[1].IsSetNullable = false;
-		JsonPropertyInfoValues<int> propertyInfo3 = new JsonPropertyInfoValues<int>
+		JsonPropertyInfoValues<int> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
+		jsonPropertyInfoValues2.IsProperty = true;
+		jsonPropertyInfoValues2.IsPublic = true;
+		jsonPropertyInfoValues2.IsVirtual = false;
+		jsonPropertyInfoValues2.DeclaringType = typeof(AchievementMetric);
+		jsonPropertyInfoValues2.Converter = null;
+		jsonPropertyInfoValues2.Getter = (object obj) => ((AchievementMetric)obj).TotalAchievements;
+		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(AchievementMetric),
-			Converter = null,
-			Getter = (object obj) => ((AchievementMetric)obj).TotalAchievements,
-			Setter = delegate(object obj, int value)
-			{
-				((AchievementMetric)obj).TotalAchievements = value;
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "TotalAchievements",
-			JsonPropertyName = "totalAchievements",
-			AttributeProviderFactory = () => typeof(AchievementMetric).GetProperty("TotalAchievements", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
+			((AchievementMetric)obj).TotalAchievements = value;
 		};
+		jsonPropertyInfoValues2.IgnoreCondition = null;
+		jsonPropertyInfoValues2.HasJsonInclude = false;
+		jsonPropertyInfoValues2.IsExtensionData = false;
+		jsonPropertyInfoValues2.NumberHandling = null;
+		jsonPropertyInfoValues2.PropertyName = "TotalAchievements";
+		jsonPropertyInfoValues2.JsonPropertyName = "totalAchievements";
+		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(AchievementMetric).GetProperty("TotalAchievements", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<int> propertyInfo3 = jsonPropertyInfoValues2;
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
-		JsonPropertyInfoValues<long> propertyInfo4 = new JsonPropertyInfoValues<long>
+		JsonPropertyInfoValues<long> jsonPropertyInfoValues3 = new JsonPropertyInfoValues<long>();
+		jsonPropertyInfoValues3.IsProperty = true;
+		jsonPropertyInfoValues3.IsPublic = true;
+		jsonPropertyInfoValues3.IsVirtual = false;
+		jsonPropertyInfoValues3.DeclaringType = typeof(AchievementMetric);
+		jsonPropertyInfoValues3.Converter = null;
+		jsonPropertyInfoValues3.Getter = (object obj) => ((AchievementMetric)obj).TotalPlaytime;
+		jsonPropertyInfoValues3.Setter = delegate(object obj, long value)
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(AchievementMetric),
-			Converter = null,
-			Getter = (object obj) => ((AchievementMetric)obj).TotalPlaytime,
-			Setter = delegate(object obj, long value)
-			{
-				((AchievementMetric)obj).TotalPlaytime = value;
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "TotalPlaytime",
-			JsonPropertyName = "totalPlaytime",
-			AttributeProviderFactory = () => typeof(AchievementMetric).GetProperty("TotalPlaytime", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null)
+			((AchievementMetric)obj).TotalPlaytime = value;
 		};
+		jsonPropertyInfoValues3.IgnoreCondition = null;
+		jsonPropertyInfoValues3.HasJsonInclude = false;
+		jsonPropertyInfoValues3.IsExtensionData = false;
+		jsonPropertyInfoValues3.NumberHandling = null;
+		jsonPropertyInfoValues3.PropertyName = "TotalPlaytime";
+		jsonPropertyInfoValues3.JsonPropertyName = "totalPlaytime";
+		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(AchievementMetric).GetProperty("TotalPlaytime", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<long> propertyInfo4 = jsonPropertyInfoValues3;
 		array[3] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo4);
-		JsonPropertyInfoValues<int> propertyInfo5 = new JsonPropertyInfoValues<int>
+		jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
+		jsonPropertyInfoValues2.IsProperty = true;
+		jsonPropertyInfoValues2.IsPublic = true;
+		jsonPropertyInfoValues2.IsVirtual = false;
+		jsonPropertyInfoValues2.DeclaringType = typeof(AchievementMetric);
+		jsonPropertyInfoValues2.Converter = null;
+		jsonPropertyInfoValues2.Getter = (object obj) => ((AchievementMetric)obj).TotalRuns;
+		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(AchievementMetric),
-			Converter = null,
-			Getter = (object obj) => ((AchievementMetric)obj).TotalRuns,
-			Setter = delegate(object obj, int value)
-			{
-				((AchievementMetric)obj).TotalRuns = value;
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "TotalRuns",
-			JsonPropertyName = "totalRuns",
-			AttributeProviderFactory = () => typeof(AchievementMetric).GetProperty("TotalRuns", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
+			((AchievementMetric)obj).TotalRuns = value;
 		};
+		jsonPropertyInfoValues2.IgnoreCondition = null;
+		jsonPropertyInfoValues2.HasJsonInclude = false;
+		jsonPropertyInfoValues2.IsExtensionData = false;
+		jsonPropertyInfoValues2.NumberHandling = null;
+		jsonPropertyInfoValues2.PropertyName = "TotalRuns";
+		jsonPropertyInfoValues2.JsonPropertyName = "totalRuns";
+		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(AchievementMetric).GetProperty("TotalRuns", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<int> propertyInfo5 = jsonPropertyInfoValues2;
 		array[4] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo5);
 		return array;
 	}
@@ -628,19 +620,18 @@ internal class MetricsSerializerContext : JsonSerializerContext, IJsonTypeInfoRe
 	{
 		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<ModelId> jsonTypeInfo))
 		{
-			JsonObjectInfoValues<ModelId> objectInfo = new JsonObjectInfoValues<ModelId>
+			JsonObjectInfoValues<ModelId> jsonObjectInfoValues = new JsonObjectInfoValues<ModelId>();
+			jsonObjectInfoValues.ObjectCreator = null;
+			jsonObjectInfoValues.ObjectWithParameterizedConstructorCreator = (object[] args) => new ModelId((string)args[0], (string)args[1]);
+			jsonObjectInfoValues.PropertyMetadataInitializer = (JsonSerializerContext _) => ModelIdPropInit(options);
+			jsonObjectInfoValues.ConstructorParameterMetadataInitializer = ModelIdCtorParamInit;
+			jsonObjectInfoValues.ConstructorAttributeProviderFactory = () => typeof(ModelId).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new Type[2]
 			{
-				ObjectCreator = null,
-				ObjectWithParameterizedConstructorCreator = (object[] args) => new ModelId((string)args[0], (string)args[1]),
-				PropertyMetadataInitializer = (JsonSerializerContext _) => ModelIdPropInit(options),
-				ConstructorParameterMetadataInitializer = ModelIdCtorParamInit,
-				ConstructorAttributeProviderFactory = () => typeof(ModelId).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new Type[2]
-				{
-					typeof(string),
-					typeof(string)
-				}, null),
-				SerializeHandler = ModelIdSerializeHandler
-			};
+				typeof(string),
+				typeof(string)
+			}, null);
+			jsonObjectInfoValues.SerializeHandler = ModelIdSerializeHandler;
+			JsonObjectInfoValues<ModelId> objectInfo = jsonObjectInfoValues;
 			jsonTypeInfo = JsonMetadataServices.CreateObjectInfo(options, objectInfo);
 			jsonTypeInfo.NumberHandling = null;
 		}
@@ -651,42 +642,40 @@ internal class MetricsSerializerContext : JsonSerializerContext, IJsonTypeInfoRe
 	private static JsonPropertyInfo[] ModelIdPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[2];
-		JsonPropertyInfoValues<string> propertyInfo = new JsonPropertyInfoValues<string>
-		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(ModelId),
-			Converter = null,
-			Getter = (object obj) => ((ModelId)obj).Category,
-			Setter = null,
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "Category",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(ModelId).GetProperty("Category", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null)
-		};
+		JsonPropertyInfoValues<string> jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
+		jsonPropertyInfoValues.IsProperty = true;
+		jsonPropertyInfoValues.IsPublic = true;
+		jsonPropertyInfoValues.IsVirtual = false;
+		jsonPropertyInfoValues.DeclaringType = typeof(ModelId);
+		jsonPropertyInfoValues.Converter = null;
+		jsonPropertyInfoValues.Getter = (object obj) => ((ModelId)obj).Category;
+		jsonPropertyInfoValues.Setter = null;
+		jsonPropertyInfoValues.IgnoreCondition = null;
+		jsonPropertyInfoValues.HasJsonInclude = false;
+		jsonPropertyInfoValues.IsExtensionData = false;
+		jsonPropertyInfoValues.NumberHandling = null;
+		jsonPropertyInfoValues.PropertyName = "Category";
+		jsonPropertyInfoValues.JsonPropertyName = null;
+		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(ModelId).GetProperty("Category", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<string> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsGetNullable = false;
-		JsonPropertyInfoValues<string> propertyInfo2 = new JsonPropertyInfoValues<string>
-		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(ModelId),
-			Converter = null,
-			Getter = (object obj) => ((ModelId)obj).Entry,
-			Setter = null,
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "Entry",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(ModelId).GetProperty("Entry", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null)
-		};
+		jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
+		jsonPropertyInfoValues.IsProperty = true;
+		jsonPropertyInfoValues.IsPublic = true;
+		jsonPropertyInfoValues.IsVirtual = false;
+		jsonPropertyInfoValues.DeclaringType = typeof(ModelId);
+		jsonPropertyInfoValues.Converter = null;
+		jsonPropertyInfoValues.Getter = (object obj) => ((ModelId)obj).Entry;
+		jsonPropertyInfoValues.Setter = null;
+		jsonPropertyInfoValues.IgnoreCondition = null;
+		jsonPropertyInfoValues.HasJsonInclude = false;
+		jsonPropertyInfoValues.IsExtensionData = false;
+		jsonPropertyInfoValues.NumberHandling = null;
+		jsonPropertyInfoValues.PropertyName = "Entry";
+		jsonPropertyInfoValues.JsonPropertyName = null;
+		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(ModelId).GetProperty("Entry", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<string> propertyInfo2 = jsonPropertyInfoValues;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		array[1].IsGetNullable = false;
 		return array;
@@ -753,43 +742,41 @@ internal class MetricsSerializerContext : JsonSerializerContext, IJsonTypeInfoRe
 	private static JsonPropertyInfo[] ActWinMetricPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[2];
-		JsonPropertyInfoValues<string> propertyInfo = new JsonPropertyInfoValues<string>
-		{
-			IsProperty = false,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(ActWinMetric),
-			Converter = null,
-			Getter = (object obj) => ((ActWinMetric)obj).act,
-			Setter = null,
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "act",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(ActWinMetric).GetField("act", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-		};
+		JsonPropertyInfoValues<string> jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
+		jsonPropertyInfoValues.IsProperty = false;
+		jsonPropertyInfoValues.IsPublic = true;
+		jsonPropertyInfoValues.IsVirtual = false;
+		jsonPropertyInfoValues.DeclaringType = typeof(ActWinMetric);
+		jsonPropertyInfoValues.Converter = null;
+		jsonPropertyInfoValues.Getter = (object obj) => ((ActWinMetric)obj).act;
+		jsonPropertyInfoValues.Setter = null;
+		jsonPropertyInfoValues.IgnoreCondition = null;
+		jsonPropertyInfoValues.HasJsonInclude = false;
+		jsonPropertyInfoValues.IsExtensionData = false;
+		jsonPropertyInfoValues.NumberHandling = null;
+		jsonPropertyInfoValues.PropertyName = "act";
+		jsonPropertyInfoValues.JsonPropertyName = null;
+		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(ActWinMetric).GetField("act", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+		JsonPropertyInfoValues<string> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsGetNullable = false;
 		array[0].IsSetNullable = false;
-		JsonPropertyInfoValues<bool> propertyInfo2 = new JsonPropertyInfoValues<bool>
-		{
-			IsProperty = false,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(ActWinMetric),
-			Converter = null,
-			Getter = (object obj) => ((ActWinMetric)obj).win,
-			Setter = null,
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "win",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(ActWinMetric).GetField("win", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-		};
+		JsonPropertyInfoValues<bool> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<bool>();
+		jsonPropertyInfoValues2.IsProperty = false;
+		jsonPropertyInfoValues2.IsPublic = true;
+		jsonPropertyInfoValues2.IsVirtual = false;
+		jsonPropertyInfoValues2.DeclaringType = typeof(ActWinMetric);
+		jsonPropertyInfoValues2.Converter = null;
+		jsonPropertyInfoValues2.Getter = (object obj) => ((ActWinMetric)obj).win;
+		jsonPropertyInfoValues2.Setter = null;
+		jsonPropertyInfoValues2.IgnoreCondition = null;
+		jsonPropertyInfoValues2.HasJsonInclude = false;
+		jsonPropertyInfoValues2.IsExtensionData = false;
+		jsonPropertyInfoValues2.NumberHandling = null;
+		jsonPropertyInfoValues2.PropertyName = "win";
+		jsonPropertyInfoValues2.JsonPropertyName = null;
+		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(ActWinMetric).GetField("win", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+		JsonPropertyInfoValues<bool> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		return array;
 	}
@@ -825,43 +812,41 @@ internal class MetricsSerializerContext : JsonSerializerContext, IJsonTypeInfoRe
 	private static JsonPropertyInfo[] AncientMetricPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[2];
-		JsonPropertyInfoValues<string> propertyInfo = new JsonPropertyInfoValues<string>
-		{
-			IsProperty = false,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(AncientMetric),
-			Converter = null,
-			Getter = (object obj) => ((AncientMetric)obj).picked,
-			Setter = null,
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "picked",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(AncientMetric).GetField("picked", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-		};
+		JsonPropertyInfoValues<string> jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
+		jsonPropertyInfoValues.IsProperty = false;
+		jsonPropertyInfoValues.IsPublic = true;
+		jsonPropertyInfoValues.IsVirtual = false;
+		jsonPropertyInfoValues.DeclaringType = typeof(AncientMetric);
+		jsonPropertyInfoValues.Converter = null;
+		jsonPropertyInfoValues.Getter = (object obj) => ((AncientMetric)obj).picked;
+		jsonPropertyInfoValues.Setter = null;
+		jsonPropertyInfoValues.IgnoreCondition = null;
+		jsonPropertyInfoValues.HasJsonInclude = false;
+		jsonPropertyInfoValues.IsExtensionData = false;
+		jsonPropertyInfoValues.NumberHandling = null;
+		jsonPropertyInfoValues.PropertyName = "picked";
+		jsonPropertyInfoValues.JsonPropertyName = null;
+		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(AncientMetric).GetField("picked", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+		JsonPropertyInfoValues<string> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsGetNullable = false;
 		array[0].IsSetNullable = false;
-		JsonPropertyInfoValues<List<string>> propertyInfo2 = new JsonPropertyInfoValues<List<string>>
-		{
-			IsProperty = false,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(AncientMetric),
-			Converter = null,
-			Getter = (object obj) => ((AncientMetric)obj).skipped,
-			Setter = null,
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "skipped",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(AncientMetric).GetField("skipped", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-		};
+		JsonPropertyInfoValues<List<string>> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<List<string>>();
+		jsonPropertyInfoValues2.IsProperty = false;
+		jsonPropertyInfoValues2.IsPublic = true;
+		jsonPropertyInfoValues2.IsVirtual = false;
+		jsonPropertyInfoValues2.DeclaringType = typeof(AncientMetric);
+		jsonPropertyInfoValues2.Converter = null;
+		jsonPropertyInfoValues2.Getter = (object obj) => ((AncientMetric)obj).skipped;
+		jsonPropertyInfoValues2.Setter = null;
+		jsonPropertyInfoValues2.IgnoreCondition = null;
+		jsonPropertyInfoValues2.HasJsonInclude = false;
+		jsonPropertyInfoValues2.IsExtensionData = false;
+		jsonPropertyInfoValues2.NumberHandling = null;
+		jsonPropertyInfoValues2.PropertyName = "skipped";
+		jsonPropertyInfoValues2.JsonPropertyName = null;
+		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(AncientMetric).GetField("skipped", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+		JsonPropertyInfoValues<List<string>> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		array[1].IsGetNullable = false;
 		array[1].IsSetNullable = false;
@@ -900,43 +885,41 @@ internal class MetricsSerializerContext : JsonSerializerContext, IJsonTypeInfoRe
 	private static JsonPropertyInfo[] CardChoiceMetricPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[2];
-		JsonPropertyInfoValues<List<string>> propertyInfo = new JsonPropertyInfoValues<List<string>>
-		{
-			IsProperty = false,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(CardChoiceMetric),
-			Converter = null,
-			Getter = (object obj) => ((CardChoiceMetric)obj).picked,
-			Setter = null,
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "picked",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(CardChoiceMetric).GetField("picked", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-		};
+		JsonPropertyInfoValues<List<string>> jsonPropertyInfoValues = new JsonPropertyInfoValues<List<string>>();
+		jsonPropertyInfoValues.IsProperty = false;
+		jsonPropertyInfoValues.IsPublic = true;
+		jsonPropertyInfoValues.IsVirtual = false;
+		jsonPropertyInfoValues.DeclaringType = typeof(CardChoiceMetric);
+		jsonPropertyInfoValues.Converter = null;
+		jsonPropertyInfoValues.Getter = (object obj) => ((CardChoiceMetric)obj).picked;
+		jsonPropertyInfoValues.Setter = null;
+		jsonPropertyInfoValues.IgnoreCondition = null;
+		jsonPropertyInfoValues.HasJsonInclude = false;
+		jsonPropertyInfoValues.IsExtensionData = false;
+		jsonPropertyInfoValues.NumberHandling = null;
+		jsonPropertyInfoValues.PropertyName = "picked";
+		jsonPropertyInfoValues.JsonPropertyName = null;
+		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(CardChoiceMetric).GetField("picked", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+		JsonPropertyInfoValues<List<string>> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsGetNullable = false;
 		array[0].IsSetNullable = false;
-		JsonPropertyInfoValues<List<string>> propertyInfo2 = new JsonPropertyInfoValues<List<string>>
-		{
-			IsProperty = false,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(CardChoiceMetric),
-			Converter = null,
-			Getter = (object obj) => ((CardChoiceMetric)obj).skipped,
-			Setter = null,
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "skipped",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(CardChoiceMetric).GetField("skipped", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-		};
+		jsonPropertyInfoValues = new JsonPropertyInfoValues<List<string>>();
+		jsonPropertyInfoValues.IsProperty = false;
+		jsonPropertyInfoValues.IsPublic = true;
+		jsonPropertyInfoValues.IsVirtual = false;
+		jsonPropertyInfoValues.DeclaringType = typeof(CardChoiceMetric);
+		jsonPropertyInfoValues.Converter = null;
+		jsonPropertyInfoValues.Getter = (object obj) => ((CardChoiceMetric)obj).skipped;
+		jsonPropertyInfoValues.Setter = null;
+		jsonPropertyInfoValues.IgnoreCondition = null;
+		jsonPropertyInfoValues.HasJsonInclude = false;
+		jsonPropertyInfoValues.IsExtensionData = false;
+		jsonPropertyInfoValues.NumberHandling = null;
+		jsonPropertyInfoValues.PropertyName = "skipped";
+		jsonPropertyInfoValues.JsonPropertyName = null;
+		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(CardChoiceMetric).GetField("skipped", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+		JsonPropertyInfoValues<List<string>> propertyInfo2 = jsonPropertyInfoValues;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		array[1].IsGetNullable = false;
 		array[1].IsSetNullable = false;
@@ -976,61 +959,58 @@ internal class MetricsSerializerContext : JsonSerializerContext, IJsonTypeInfoRe
 	private static JsonPropertyInfo[] EncounterMetricPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[3];
-		JsonPropertyInfoValues<string> propertyInfo = new JsonPropertyInfoValues<string>
-		{
-			IsProperty = false,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(EncounterMetric),
-			Converter = null,
-			Getter = (object obj) => ((EncounterMetric)obj).id,
-			Setter = null,
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "id",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(EncounterMetric).GetField("id", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-		};
+		JsonPropertyInfoValues<string> jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
+		jsonPropertyInfoValues.IsProperty = false;
+		jsonPropertyInfoValues.IsPublic = true;
+		jsonPropertyInfoValues.IsVirtual = false;
+		jsonPropertyInfoValues.DeclaringType = typeof(EncounterMetric);
+		jsonPropertyInfoValues.Converter = null;
+		jsonPropertyInfoValues.Getter = (object obj) => ((EncounterMetric)obj).id;
+		jsonPropertyInfoValues.Setter = null;
+		jsonPropertyInfoValues.IgnoreCondition = null;
+		jsonPropertyInfoValues.HasJsonInclude = false;
+		jsonPropertyInfoValues.IsExtensionData = false;
+		jsonPropertyInfoValues.NumberHandling = null;
+		jsonPropertyInfoValues.PropertyName = "id";
+		jsonPropertyInfoValues.JsonPropertyName = null;
+		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(EncounterMetric).GetField("id", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+		JsonPropertyInfoValues<string> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsGetNullable = false;
 		array[0].IsSetNullable = false;
-		JsonPropertyInfoValues<int> propertyInfo2 = new JsonPropertyInfoValues<int>
-		{
-			IsProperty = false,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(EncounterMetric),
-			Converter = null,
-			Getter = (object obj) => ((EncounterMetric)obj).damage,
-			Setter = null,
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "damage",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(EncounterMetric).GetField("damage", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-		};
+		JsonPropertyInfoValues<int> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
+		jsonPropertyInfoValues2.IsProperty = false;
+		jsonPropertyInfoValues2.IsPublic = true;
+		jsonPropertyInfoValues2.IsVirtual = false;
+		jsonPropertyInfoValues2.DeclaringType = typeof(EncounterMetric);
+		jsonPropertyInfoValues2.Converter = null;
+		jsonPropertyInfoValues2.Getter = (object obj) => ((EncounterMetric)obj).damage;
+		jsonPropertyInfoValues2.Setter = null;
+		jsonPropertyInfoValues2.IgnoreCondition = null;
+		jsonPropertyInfoValues2.HasJsonInclude = false;
+		jsonPropertyInfoValues2.IsExtensionData = false;
+		jsonPropertyInfoValues2.NumberHandling = null;
+		jsonPropertyInfoValues2.PropertyName = "damage";
+		jsonPropertyInfoValues2.JsonPropertyName = null;
+		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(EncounterMetric).GetField("damage", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+		JsonPropertyInfoValues<int> propertyInfo2 = jsonPropertyInfoValues2;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
-		JsonPropertyInfoValues<int> propertyInfo3 = new JsonPropertyInfoValues<int>
-		{
-			IsProperty = false,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(EncounterMetric),
-			Converter = null,
-			Getter = (object obj) => ((EncounterMetric)obj).turns,
-			Setter = null,
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "turns",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(EncounterMetric).GetField("turns", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-		};
+		jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
+		jsonPropertyInfoValues2.IsProperty = false;
+		jsonPropertyInfoValues2.IsPublic = true;
+		jsonPropertyInfoValues2.IsVirtual = false;
+		jsonPropertyInfoValues2.DeclaringType = typeof(EncounterMetric);
+		jsonPropertyInfoValues2.Converter = null;
+		jsonPropertyInfoValues2.Getter = (object obj) => ((EncounterMetric)obj).turns;
+		jsonPropertyInfoValues2.Setter = null;
+		jsonPropertyInfoValues2.IgnoreCondition = null;
+		jsonPropertyInfoValues2.HasJsonInclude = false;
+		jsonPropertyInfoValues2.IsExtensionData = false;
+		jsonPropertyInfoValues2.NumberHandling = null;
+		jsonPropertyInfoValues2.PropertyName = "turns";
+		jsonPropertyInfoValues2.JsonPropertyName = null;
+		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(EncounterMetric).GetField("turns", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+		JsonPropertyInfoValues<int> propertyInfo3 = jsonPropertyInfoValues2;
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
 		return array;
 	}
@@ -1067,63 +1047,60 @@ internal class MetricsSerializerContext : JsonSerializerContext, IJsonTypeInfoRe
 	private static JsonPropertyInfo[] EventChoiceMetricPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[3];
-		JsonPropertyInfoValues<string> propertyInfo = new JsonPropertyInfoValues<string>
-		{
-			IsProperty = false,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(EventChoiceMetric),
-			Converter = null,
-			Getter = (object obj) => ((EventChoiceMetric)obj).id,
-			Setter = null,
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "id",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(EventChoiceMetric).GetField("id", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-		};
+		JsonPropertyInfoValues<string> jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
+		jsonPropertyInfoValues.IsProperty = false;
+		jsonPropertyInfoValues.IsPublic = true;
+		jsonPropertyInfoValues.IsVirtual = false;
+		jsonPropertyInfoValues.DeclaringType = typeof(EventChoiceMetric);
+		jsonPropertyInfoValues.Converter = null;
+		jsonPropertyInfoValues.Getter = (object obj) => ((EventChoiceMetric)obj).id;
+		jsonPropertyInfoValues.Setter = null;
+		jsonPropertyInfoValues.IgnoreCondition = null;
+		jsonPropertyInfoValues.HasJsonInclude = false;
+		jsonPropertyInfoValues.IsExtensionData = false;
+		jsonPropertyInfoValues.NumberHandling = null;
+		jsonPropertyInfoValues.PropertyName = "id";
+		jsonPropertyInfoValues.JsonPropertyName = null;
+		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(EventChoiceMetric).GetField("id", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+		JsonPropertyInfoValues<string> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsGetNullable = false;
 		array[0].IsSetNullable = false;
-		JsonPropertyInfoValues<string> propertyInfo2 = new JsonPropertyInfoValues<string>
-		{
-			IsProperty = false,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(EventChoiceMetric),
-			Converter = null,
-			Getter = (object obj) => ((EventChoiceMetric)obj).act,
-			Setter = null,
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "act",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(EventChoiceMetric).GetField("act", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-		};
+		jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
+		jsonPropertyInfoValues.IsProperty = false;
+		jsonPropertyInfoValues.IsPublic = true;
+		jsonPropertyInfoValues.IsVirtual = false;
+		jsonPropertyInfoValues.DeclaringType = typeof(EventChoiceMetric);
+		jsonPropertyInfoValues.Converter = null;
+		jsonPropertyInfoValues.Getter = (object obj) => ((EventChoiceMetric)obj).act;
+		jsonPropertyInfoValues.Setter = null;
+		jsonPropertyInfoValues.IgnoreCondition = null;
+		jsonPropertyInfoValues.HasJsonInclude = false;
+		jsonPropertyInfoValues.IsExtensionData = false;
+		jsonPropertyInfoValues.NumberHandling = null;
+		jsonPropertyInfoValues.PropertyName = "act";
+		jsonPropertyInfoValues.JsonPropertyName = null;
+		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(EventChoiceMetric).GetField("act", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+		JsonPropertyInfoValues<string> propertyInfo2 = jsonPropertyInfoValues;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		array[1].IsGetNullable = false;
 		array[1].IsSetNullable = false;
-		JsonPropertyInfoValues<string> propertyInfo3 = new JsonPropertyInfoValues<string>
-		{
-			IsProperty = false,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(EventChoiceMetric),
-			Converter = null,
-			Getter = (object obj) => ((EventChoiceMetric)obj).picked,
-			Setter = null,
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "picked",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(EventChoiceMetric).GetField("picked", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-		};
+		jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
+		jsonPropertyInfoValues.IsProperty = false;
+		jsonPropertyInfoValues.IsPublic = true;
+		jsonPropertyInfoValues.IsVirtual = false;
+		jsonPropertyInfoValues.DeclaringType = typeof(EventChoiceMetric);
+		jsonPropertyInfoValues.Converter = null;
+		jsonPropertyInfoValues.Getter = (object obj) => ((EventChoiceMetric)obj).picked;
+		jsonPropertyInfoValues.Setter = null;
+		jsonPropertyInfoValues.IgnoreCondition = null;
+		jsonPropertyInfoValues.HasJsonInclude = false;
+		jsonPropertyInfoValues.IsExtensionData = false;
+		jsonPropertyInfoValues.NumberHandling = null;
+		jsonPropertyInfoValues.PropertyName = "picked";
+		jsonPropertyInfoValues.JsonPropertyName = null;
+		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(EventChoiceMetric).GetField("picked", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+		JsonPropertyInfoValues<string> propertyInfo3 = jsonPropertyInfoValues;
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
 		array[2].IsGetNullable = false;
 		array[2].IsSetNullable = false;
@@ -1143,43 +1120,42 @@ internal class MetricsSerializerContext : JsonSerializerContext, IJsonTypeInfoRe
 	{
 		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<RunMetrics> jsonTypeInfo))
 		{
-			JsonObjectInfoValues<RunMetrics> objectInfo = new JsonObjectInfoValues<RunMetrics>
+			JsonObjectInfoValues<RunMetrics> jsonObjectInfoValues = new JsonObjectInfoValues<RunMetrics>();
+			jsonObjectInfoValues.ObjectCreator = null;
+			jsonObjectInfoValues.ObjectWithParameterizedConstructorCreator = (object[] args) => new RunMetrics
 			{
-				ObjectCreator = null,
-				ObjectWithParameterizedConstructorCreator = (object[] args) => new RunMetrics
-				{
-					BuildId = (string)args[0],
-					PlayerId = (string)args[1],
-					Character = (ModelId)args[2],
-					Win = (bool)args[3],
-					NumPlayers = (int)args[4],
-					Team = (List<ModelId>)args[5],
-					BuildType = (string)args[6],
-					Ascension = (int)args[7],
-					TotalPlaytime = (float)args[8],
-					TotalWinRate = (float)args[9],
-					NumReloads = (int)args[10],
-					RunPlaytime = (float)args[11],
-					FloorReached = (int)args[12],
-					KilledByEncounter = (ModelId)args[13],
-					CardChoices = (List<CardChoiceMetric>)args[14],
-					CampfireUpgrades = (List<string>)args[15],
-					EventChoices = (List<EventChoiceMetric>)args[16],
-					AncientChoices = (List<AncientMetric>)args[17],
-					RelicBuys = (List<string>)args[18],
-					PotionBuys = (List<string>)args[19],
-					ColorlessBuys = (List<string>)args[20],
-					PotionDiscards = (List<string>)args[21],
-					Encounters = (List<EncounterMetric>)args[22],
-					ActWins = (List<ActWinMetric>)args[23],
-					Deck = (IEnumerable<ModelId>)args[24],
-					Relics = (IEnumerable<ModelId>)args[25]
-				},
-				PropertyMetadataInitializer = (JsonSerializerContext _) => RunMetricsPropInit(options),
-				ConstructorParameterMetadataInitializer = RunMetricsCtorParamInit,
-				ConstructorAttributeProviderFactory = () => typeof(RunMetrics).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null),
-				SerializeHandler = RunMetricsSerializeHandler
+				BuildId = (string)args[0],
+				PlayerId = (string)args[1],
+				Character = (ModelId)args[2],
+				Win = (bool)args[3],
+				NumPlayers = (int)args[4],
+				Team = (List<ModelId>)args[5],
+				BuildType = (string)args[6],
+				Ascension = (int)args[7],
+				TotalPlaytime = (float)args[8],
+				TotalWinRate = (float)args[9],
+				NumReloads = (int)args[10],
+				RunPlaytime = (float)args[11],
+				FloorReached = (int)args[12],
+				KilledByEncounter = (ModelId)args[13],
+				CardChoices = (List<CardChoiceMetric>)args[14],
+				CampfireUpgrades = (List<string>)args[15],
+				EventChoices = (List<EventChoiceMetric>)args[16],
+				AncientChoices = (List<AncientMetric>)args[17],
+				RelicBuys = (List<string>)args[18],
+				PotionBuys = (List<string>)args[19],
+				ColorlessBuys = (List<string>)args[20],
+				PotionDiscards = (List<string>)args[21],
+				Encounters = (List<EncounterMetric>)args[22],
+				ActWins = (List<ActWinMetric>)args[23],
+				Deck = (IEnumerable<ModelId>)args[24],
+				Relics = (IEnumerable<ModelId>)args[25]
 			};
+			jsonObjectInfoValues.PropertyMetadataInitializer = (JsonSerializerContext _) => RunMetricsPropInit(options);
+			jsonObjectInfoValues.ConstructorParameterMetadataInitializer = RunMetricsCtorParamInit;
+			jsonObjectInfoValues.ConstructorAttributeProviderFactory = () => typeof(RunMetrics).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null);
+			jsonObjectInfoValues.SerializeHandler = RunMetricsSerializeHandler;
+			JsonObjectInfoValues<RunMetrics> objectInfo = jsonObjectInfoValues;
 			jsonTypeInfo = JsonMetadataServices.CreateObjectInfo(options, objectInfo);
 			jsonTypeInfo.NumberHandling = null;
 		}
@@ -1190,609 +1166,583 @@ internal class MetricsSerializerContext : JsonSerializerContext, IJsonTypeInfoRe
 	private static JsonPropertyInfo[] RunMetricsPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[26];
-		JsonPropertyInfoValues<string> propertyInfo = new JsonPropertyInfoValues<string>
+		JsonPropertyInfoValues<string> jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
+		jsonPropertyInfoValues.IsProperty = true;
+		jsonPropertyInfoValues.IsPublic = true;
+		jsonPropertyInfoValues.IsVirtual = false;
+		jsonPropertyInfoValues.DeclaringType = typeof(RunMetrics);
+		jsonPropertyInfoValues.Converter = null;
+		jsonPropertyInfoValues.Getter = (object obj) => ((RunMetrics)obj).BuildId;
+		jsonPropertyInfoValues.Setter = delegate
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(RunMetrics),
-			Converter = null,
-			Getter = (object obj) => ((RunMetrics)obj).BuildId,
-			Setter = delegate
-			{
-				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "BuildId",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("BuildId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null)
+			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
 		};
+		jsonPropertyInfoValues.IgnoreCondition = null;
+		jsonPropertyInfoValues.HasJsonInclude = false;
+		jsonPropertyInfoValues.IsExtensionData = false;
+		jsonPropertyInfoValues.NumberHandling = null;
+		jsonPropertyInfoValues.PropertyName = "BuildId";
+		jsonPropertyInfoValues.JsonPropertyName = null;
+		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("BuildId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<string> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsRequired = true;
 		array[0].IsGetNullable = false;
 		array[0].IsSetNullable = false;
-		JsonPropertyInfoValues<string> propertyInfo2 = new JsonPropertyInfoValues<string>
+		jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
+		jsonPropertyInfoValues.IsProperty = true;
+		jsonPropertyInfoValues.IsPublic = true;
+		jsonPropertyInfoValues.IsVirtual = false;
+		jsonPropertyInfoValues.DeclaringType = typeof(RunMetrics);
+		jsonPropertyInfoValues.Converter = null;
+		jsonPropertyInfoValues.Getter = (object obj) => ((RunMetrics)obj).PlayerId;
+		jsonPropertyInfoValues.Setter = delegate
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(RunMetrics),
-			Converter = null,
-			Getter = (object obj) => ((RunMetrics)obj).PlayerId,
-			Setter = delegate
-			{
-				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "PlayerId",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("PlayerId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null)
+			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
 		};
+		jsonPropertyInfoValues.IgnoreCondition = null;
+		jsonPropertyInfoValues.HasJsonInclude = false;
+		jsonPropertyInfoValues.IsExtensionData = false;
+		jsonPropertyInfoValues.NumberHandling = null;
+		jsonPropertyInfoValues.PropertyName = "PlayerId";
+		jsonPropertyInfoValues.JsonPropertyName = null;
+		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("PlayerId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<string> propertyInfo2 = jsonPropertyInfoValues;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		array[1].IsRequired = true;
 		array[1].IsGetNullable = false;
 		array[1].IsSetNullable = false;
-		JsonPropertyInfoValues<ModelId> propertyInfo3 = new JsonPropertyInfoValues<ModelId>
+		JsonPropertyInfoValues<ModelId> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<ModelId>();
+		jsonPropertyInfoValues2.IsProperty = true;
+		jsonPropertyInfoValues2.IsPublic = true;
+		jsonPropertyInfoValues2.IsVirtual = false;
+		jsonPropertyInfoValues2.DeclaringType = typeof(RunMetrics);
+		jsonPropertyInfoValues2.Converter = null;
+		jsonPropertyInfoValues2.Getter = (object obj) => ((RunMetrics)obj).Character;
+		jsonPropertyInfoValues2.Setter = delegate
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(RunMetrics),
-			Converter = null,
-			Getter = (object obj) => ((RunMetrics)obj).Character,
-			Setter = delegate
-			{
-				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "Character",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("Character", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null)
+			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
 		};
+		jsonPropertyInfoValues2.IgnoreCondition = null;
+		jsonPropertyInfoValues2.HasJsonInclude = false;
+		jsonPropertyInfoValues2.IsExtensionData = false;
+		jsonPropertyInfoValues2.NumberHandling = null;
+		jsonPropertyInfoValues2.PropertyName = "Character";
+		jsonPropertyInfoValues2.JsonPropertyName = null;
+		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("Character", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<ModelId> propertyInfo3 = jsonPropertyInfoValues2;
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
 		array[2].IsRequired = true;
 		array[2].IsGetNullable = false;
 		array[2].IsSetNullable = false;
-		JsonPropertyInfoValues<bool> propertyInfo4 = new JsonPropertyInfoValues<bool>
+		JsonPropertyInfoValues<bool> jsonPropertyInfoValues3 = new JsonPropertyInfoValues<bool>();
+		jsonPropertyInfoValues3.IsProperty = true;
+		jsonPropertyInfoValues3.IsPublic = true;
+		jsonPropertyInfoValues3.IsVirtual = false;
+		jsonPropertyInfoValues3.DeclaringType = typeof(RunMetrics);
+		jsonPropertyInfoValues3.Converter = null;
+		jsonPropertyInfoValues3.Getter = (object obj) => ((RunMetrics)obj).Win;
+		jsonPropertyInfoValues3.Setter = delegate
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(RunMetrics),
-			Converter = null,
-			Getter = (object obj) => ((RunMetrics)obj).Win,
-			Setter = delegate
-			{
-				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "Win",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("Win", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
+			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
 		};
+		jsonPropertyInfoValues3.IgnoreCondition = null;
+		jsonPropertyInfoValues3.HasJsonInclude = false;
+		jsonPropertyInfoValues3.IsExtensionData = false;
+		jsonPropertyInfoValues3.NumberHandling = null;
+		jsonPropertyInfoValues3.PropertyName = "Win";
+		jsonPropertyInfoValues3.JsonPropertyName = null;
+		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("Win", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<bool> propertyInfo4 = jsonPropertyInfoValues3;
 		array[3] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo4);
 		array[3].IsRequired = true;
-		JsonPropertyInfoValues<int> propertyInfo5 = new JsonPropertyInfoValues<int>
+		JsonPropertyInfoValues<int> jsonPropertyInfoValues4 = new JsonPropertyInfoValues<int>();
+		jsonPropertyInfoValues4.IsProperty = true;
+		jsonPropertyInfoValues4.IsPublic = true;
+		jsonPropertyInfoValues4.IsVirtual = false;
+		jsonPropertyInfoValues4.DeclaringType = typeof(RunMetrics);
+		jsonPropertyInfoValues4.Converter = null;
+		jsonPropertyInfoValues4.Getter = (object obj) => ((RunMetrics)obj).NumPlayers;
+		jsonPropertyInfoValues4.Setter = delegate
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(RunMetrics),
-			Converter = null,
-			Getter = (object obj) => ((RunMetrics)obj).NumPlayers,
-			Setter = delegate
-			{
-				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "NumPlayers",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("NumPlayers", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
+			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
 		};
+		jsonPropertyInfoValues4.IgnoreCondition = null;
+		jsonPropertyInfoValues4.HasJsonInclude = false;
+		jsonPropertyInfoValues4.IsExtensionData = false;
+		jsonPropertyInfoValues4.NumberHandling = null;
+		jsonPropertyInfoValues4.PropertyName = "NumPlayers";
+		jsonPropertyInfoValues4.JsonPropertyName = null;
+		jsonPropertyInfoValues4.AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("NumPlayers", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<int> propertyInfo5 = jsonPropertyInfoValues4;
 		array[4] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo5);
 		array[4].IsRequired = true;
-		JsonPropertyInfoValues<List<ModelId>> propertyInfo6 = new JsonPropertyInfoValues<List<ModelId>>
+		JsonPropertyInfoValues<List<ModelId>> jsonPropertyInfoValues5 = new JsonPropertyInfoValues<List<ModelId>>();
+		jsonPropertyInfoValues5.IsProperty = true;
+		jsonPropertyInfoValues5.IsPublic = true;
+		jsonPropertyInfoValues5.IsVirtual = false;
+		jsonPropertyInfoValues5.DeclaringType = typeof(RunMetrics);
+		jsonPropertyInfoValues5.Converter = null;
+		jsonPropertyInfoValues5.Getter = (object obj) => ((RunMetrics)obj).Team;
+		jsonPropertyInfoValues5.Setter = delegate
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(RunMetrics),
-			Converter = null,
-			Getter = (object obj) => ((RunMetrics)obj).Team,
-			Setter = delegate
-			{
-				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "Team",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("Team", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null)
+			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
 		};
+		jsonPropertyInfoValues5.IgnoreCondition = null;
+		jsonPropertyInfoValues5.HasJsonInclude = false;
+		jsonPropertyInfoValues5.IsExtensionData = false;
+		jsonPropertyInfoValues5.NumberHandling = null;
+		jsonPropertyInfoValues5.PropertyName = "Team";
+		jsonPropertyInfoValues5.JsonPropertyName = null;
+		jsonPropertyInfoValues5.AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("Team", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ModelId>), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<List<ModelId>> propertyInfo6 = jsonPropertyInfoValues5;
 		array[5] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo6);
 		array[5].IsRequired = true;
 		array[5].IsGetNullable = false;
 		array[5].IsSetNullable = false;
-		JsonPropertyInfoValues<string> propertyInfo7 = new JsonPropertyInfoValues<string>
+		jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
+		jsonPropertyInfoValues.IsProperty = true;
+		jsonPropertyInfoValues.IsPublic = true;
+		jsonPropertyInfoValues.IsVirtual = false;
+		jsonPropertyInfoValues.DeclaringType = typeof(RunMetrics);
+		jsonPropertyInfoValues.Converter = null;
+		jsonPropertyInfoValues.Getter = (object obj) => ((RunMetrics)obj).BuildType;
+		jsonPropertyInfoValues.Setter = delegate
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(RunMetrics),
-			Converter = null,
-			Getter = (object obj) => ((RunMetrics)obj).BuildType,
-			Setter = delegate
-			{
-				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "BuildType",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("BuildType", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null)
+			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
 		};
+		jsonPropertyInfoValues.IgnoreCondition = null;
+		jsonPropertyInfoValues.HasJsonInclude = false;
+		jsonPropertyInfoValues.IsExtensionData = false;
+		jsonPropertyInfoValues.NumberHandling = null;
+		jsonPropertyInfoValues.PropertyName = "BuildType";
+		jsonPropertyInfoValues.JsonPropertyName = null;
+		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("BuildType", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<string> propertyInfo7 = jsonPropertyInfoValues;
 		array[6] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo7);
 		array[6].IsRequired = true;
 		array[6].IsGetNullable = false;
 		array[6].IsSetNullable = false;
-		JsonPropertyInfoValues<int> propertyInfo8 = new JsonPropertyInfoValues<int>
+		jsonPropertyInfoValues4 = new JsonPropertyInfoValues<int>();
+		jsonPropertyInfoValues4.IsProperty = true;
+		jsonPropertyInfoValues4.IsPublic = true;
+		jsonPropertyInfoValues4.IsVirtual = false;
+		jsonPropertyInfoValues4.DeclaringType = typeof(RunMetrics);
+		jsonPropertyInfoValues4.Converter = null;
+		jsonPropertyInfoValues4.Getter = (object obj) => ((RunMetrics)obj).Ascension;
+		jsonPropertyInfoValues4.Setter = delegate
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(RunMetrics),
-			Converter = null,
-			Getter = (object obj) => ((RunMetrics)obj).Ascension,
-			Setter = delegate
-			{
-				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "Ascension",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("Ascension", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
+			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
 		};
+		jsonPropertyInfoValues4.IgnoreCondition = null;
+		jsonPropertyInfoValues4.HasJsonInclude = false;
+		jsonPropertyInfoValues4.IsExtensionData = false;
+		jsonPropertyInfoValues4.NumberHandling = null;
+		jsonPropertyInfoValues4.PropertyName = "Ascension";
+		jsonPropertyInfoValues4.JsonPropertyName = null;
+		jsonPropertyInfoValues4.AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("Ascension", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<int> propertyInfo8 = jsonPropertyInfoValues4;
 		array[7] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo8);
-		JsonPropertyInfoValues<float> propertyInfo9 = new JsonPropertyInfoValues<float>
+		JsonPropertyInfoValues<float> jsonPropertyInfoValues6 = new JsonPropertyInfoValues<float>();
+		jsonPropertyInfoValues6.IsProperty = true;
+		jsonPropertyInfoValues6.IsPublic = true;
+		jsonPropertyInfoValues6.IsVirtual = false;
+		jsonPropertyInfoValues6.DeclaringType = typeof(RunMetrics);
+		jsonPropertyInfoValues6.Converter = null;
+		jsonPropertyInfoValues6.Getter = (object obj) => ((RunMetrics)obj).TotalPlaytime;
+		jsonPropertyInfoValues6.Setter = delegate
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(RunMetrics),
-			Converter = null,
-			Getter = (object obj) => ((RunMetrics)obj).TotalPlaytime,
-			Setter = delegate
-			{
-				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "TotalPlaytime",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("TotalPlaytime", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(float), Array.Empty<Type>(), null)
+			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
 		};
+		jsonPropertyInfoValues6.IgnoreCondition = null;
+		jsonPropertyInfoValues6.HasJsonInclude = false;
+		jsonPropertyInfoValues6.IsExtensionData = false;
+		jsonPropertyInfoValues6.NumberHandling = null;
+		jsonPropertyInfoValues6.PropertyName = "TotalPlaytime";
+		jsonPropertyInfoValues6.JsonPropertyName = null;
+		jsonPropertyInfoValues6.AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("TotalPlaytime", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(float), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<float> propertyInfo9 = jsonPropertyInfoValues6;
 		array[8] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo9);
 		array[8].IsRequired = true;
-		JsonPropertyInfoValues<float> propertyInfo10 = new JsonPropertyInfoValues<float>
+		jsonPropertyInfoValues6 = new JsonPropertyInfoValues<float>();
+		jsonPropertyInfoValues6.IsProperty = true;
+		jsonPropertyInfoValues6.IsPublic = true;
+		jsonPropertyInfoValues6.IsVirtual = false;
+		jsonPropertyInfoValues6.DeclaringType = typeof(RunMetrics);
+		jsonPropertyInfoValues6.Converter = null;
+		jsonPropertyInfoValues6.Getter = (object obj) => ((RunMetrics)obj).TotalWinRate;
+		jsonPropertyInfoValues6.Setter = delegate
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(RunMetrics),
-			Converter = null,
-			Getter = (object obj) => ((RunMetrics)obj).TotalWinRate,
-			Setter = delegate
-			{
-				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "TotalWinRate",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("TotalWinRate", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(float), Array.Empty<Type>(), null)
+			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
 		};
+		jsonPropertyInfoValues6.IgnoreCondition = null;
+		jsonPropertyInfoValues6.HasJsonInclude = false;
+		jsonPropertyInfoValues6.IsExtensionData = false;
+		jsonPropertyInfoValues6.NumberHandling = null;
+		jsonPropertyInfoValues6.PropertyName = "TotalWinRate";
+		jsonPropertyInfoValues6.JsonPropertyName = null;
+		jsonPropertyInfoValues6.AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("TotalWinRate", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(float), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<float> propertyInfo10 = jsonPropertyInfoValues6;
 		array[9] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo10);
 		array[9].IsRequired = true;
-		JsonPropertyInfoValues<int> propertyInfo11 = new JsonPropertyInfoValues<int>
+		jsonPropertyInfoValues4 = new JsonPropertyInfoValues<int>();
+		jsonPropertyInfoValues4.IsProperty = true;
+		jsonPropertyInfoValues4.IsPublic = true;
+		jsonPropertyInfoValues4.IsVirtual = false;
+		jsonPropertyInfoValues4.DeclaringType = typeof(RunMetrics);
+		jsonPropertyInfoValues4.Converter = null;
+		jsonPropertyInfoValues4.Getter = (object obj) => ((RunMetrics)obj).NumReloads;
+		jsonPropertyInfoValues4.Setter = delegate
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(RunMetrics),
-			Converter = null,
-			Getter = (object obj) => ((RunMetrics)obj).NumReloads,
-			Setter = delegate
-			{
-				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "NumReloads",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("NumReloads", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
+			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
 		};
+		jsonPropertyInfoValues4.IgnoreCondition = null;
+		jsonPropertyInfoValues4.HasJsonInclude = false;
+		jsonPropertyInfoValues4.IsExtensionData = false;
+		jsonPropertyInfoValues4.NumberHandling = null;
+		jsonPropertyInfoValues4.PropertyName = "NumReloads";
+		jsonPropertyInfoValues4.JsonPropertyName = null;
+		jsonPropertyInfoValues4.AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("NumReloads", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<int> propertyInfo11 = jsonPropertyInfoValues4;
 		array[10] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo11);
 		array[10].IsRequired = true;
-		JsonPropertyInfoValues<float> propertyInfo12 = new JsonPropertyInfoValues<float>
+		jsonPropertyInfoValues6 = new JsonPropertyInfoValues<float>();
+		jsonPropertyInfoValues6.IsProperty = true;
+		jsonPropertyInfoValues6.IsPublic = true;
+		jsonPropertyInfoValues6.IsVirtual = false;
+		jsonPropertyInfoValues6.DeclaringType = typeof(RunMetrics);
+		jsonPropertyInfoValues6.Converter = null;
+		jsonPropertyInfoValues6.Getter = (object obj) => ((RunMetrics)obj).RunPlaytime;
+		jsonPropertyInfoValues6.Setter = delegate
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(RunMetrics),
-			Converter = null,
-			Getter = (object obj) => ((RunMetrics)obj).RunPlaytime,
-			Setter = delegate
-			{
-				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "RunPlaytime",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("RunPlaytime", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(float), Array.Empty<Type>(), null)
+			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
 		};
+		jsonPropertyInfoValues6.IgnoreCondition = null;
+		jsonPropertyInfoValues6.HasJsonInclude = false;
+		jsonPropertyInfoValues6.IsExtensionData = false;
+		jsonPropertyInfoValues6.NumberHandling = null;
+		jsonPropertyInfoValues6.PropertyName = "RunPlaytime";
+		jsonPropertyInfoValues6.JsonPropertyName = null;
+		jsonPropertyInfoValues6.AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("RunPlaytime", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(float), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<float> propertyInfo12 = jsonPropertyInfoValues6;
 		array[11] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo12);
 		array[11].IsRequired = true;
-		JsonPropertyInfoValues<int> propertyInfo13 = new JsonPropertyInfoValues<int>
+		jsonPropertyInfoValues4 = new JsonPropertyInfoValues<int>();
+		jsonPropertyInfoValues4.IsProperty = true;
+		jsonPropertyInfoValues4.IsPublic = true;
+		jsonPropertyInfoValues4.IsVirtual = false;
+		jsonPropertyInfoValues4.DeclaringType = typeof(RunMetrics);
+		jsonPropertyInfoValues4.Converter = null;
+		jsonPropertyInfoValues4.Getter = (object obj) => ((RunMetrics)obj).FloorReached;
+		jsonPropertyInfoValues4.Setter = delegate
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(RunMetrics),
-			Converter = null,
-			Getter = (object obj) => ((RunMetrics)obj).FloorReached,
-			Setter = delegate
-			{
-				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "FloorReached",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("FloorReached", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
+			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
 		};
+		jsonPropertyInfoValues4.IgnoreCondition = null;
+		jsonPropertyInfoValues4.HasJsonInclude = false;
+		jsonPropertyInfoValues4.IsExtensionData = false;
+		jsonPropertyInfoValues4.NumberHandling = null;
+		jsonPropertyInfoValues4.PropertyName = "FloorReached";
+		jsonPropertyInfoValues4.JsonPropertyName = null;
+		jsonPropertyInfoValues4.AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("FloorReached", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<int> propertyInfo13 = jsonPropertyInfoValues4;
 		array[12] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo13);
 		array[12].IsRequired = true;
-		JsonPropertyInfoValues<ModelId> propertyInfo14 = new JsonPropertyInfoValues<ModelId>
+		jsonPropertyInfoValues2 = new JsonPropertyInfoValues<ModelId>();
+		jsonPropertyInfoValues2.IsProperty = true;
+		jsonPropertyInfoValues2.IsPublic = true;
+		jsonPropertyInfoValues2.IsVirtual = false;
+		jsonPropertyInfoValues2.DeclaringType = typeof(RunMetrics);
+		jsonPropertyInfoValues2.Converter = null;
+		jsonPropertyInfoValues2.Getter = (object obj) => ((RunMetrics)obj).KilledByEncounter;
+		jsonPropertyInfoValues2.Setter = delegate
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(RunMetrics),
-			Converter = null,
-			Getter = (object obj) => ((RunMetrics)obj).KilledByEncounter,
-			Setter = delegate
-			{
-				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "KilledByEncounter",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("KilledByEncounter", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null)
+			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
 		};
+		jsonPropertyInfoValues2.IgnoreCondition = null;
+		jsonPropertyInfoValues2.HasJsonInclude = false;
+		jsonPropertyInfoValues2.IsExtensionData = false;
+		jsonPropertyInfoValues2.NumberHandling = null;
+		jsonPropertyInfoValues2.PropertyName = "KilledByEncounter";
+		jsonPropertyInfoValues2.JsonPropertyName = null;
+		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("KilledByEncounter", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(ModelId), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<ModelId> propertyInfo14 = jsonPropertyInfoValues2;
 		array[13] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo14);
 		array[13].IsRequired = true;
 		array[13].IsGetNullable = false;
 		array[13].IsSetNullable = false;
-		JsonPropertyInfoValues<List<CardChoiceMetric>> propertyInfo15 = new JsonPropertyInfoValues<List<CardChoiceMetric>>
+		JsonPropertyInfoValues<List<CardChoiceMetric>> jsonPropertyInfoValues7 = new JsonPropertyInfoValues<List<CardChoiceMetric>>();
+		jsonPropertyInfoValues7.IsProperty = true;
+		jsonPropertyInfoValues7.IsPublic = true;
+		jsonPropertyInfoValues7.IsVirtual = false;
+		jsonPropertyInfoValues7.DeclaringType = typeof(RunMetrics);
+		jsonPropertyInfoValues7.Converter = null;
+		jsonPropertyInfoValues7.Getter = (object obj) => ((RunMetrics)obj).CardChoices;
+		jsonPropertyInfoValues7.Setter = delegate
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(RunMetrics),
-			Converter = null,
-			Getter = (object obj) => ((RunMetrics)obj).CardChoices,
-			Setter = delegate
-			{
-				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "CardChoices",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("CardChoices", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<CardChoiceMetric>), Array.Empty<Type>(), null)
+			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
 		};
+		jsonPropertyInfoValues7.IgnoreCondition = null;
+		jsonPropertyInfoValues7.HasJsonInclude = false;
+		jsonPropertyInfoValues7.IsExtensionData = false;
+		jsonPropertyInfoValues7.NumberHandling = null;
+		jsonPropertyInfoValues7.PropertyName = "CardChoices";
+		jsonPropertyInfoValues7.JsonPropertyName = null;
+		jsonPropertyInfoValues7.AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("CardChoices", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<CardChoiceMetric>), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<List<CardChoiceMetric>> propertyInfo15 = jsonPropertyInfoValues7;
 		array[14] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo15);
 		array[14].IsRequired = true;
 		array[14].IsGetNullable = false;
 		array[14].IsSetNullable = false;
-		JsonPropertyInfoValues<List<string>> propertyInfo16 = new JsonPropertyInfoValues<List<string>>
+		JsonPropertyInfoValues<List<string>> jsonPropertyInfoValues8 = new JsonPropertyInfoValues<List<string>>();
+		jsonPropertyInfoValues8.IsProperty = true;
+		jsonPropertyInfoValues8.IsPublic = true;
+		jsonPropertyInfoValues8.IsVirtual = false;
+		jsonPropertyInfoValues8.DeclaringType = typeof(RunMetrics);
+		jsonPropertyInfoValues8.Converter = null;
+		jsonPropertyInfoValues8.Getter = (object obj) => ((RunMetrics)obj).CampfireUpgrades;
+		jsonPropertyInfoValues8.Setter = delegate
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(RunMetrics),
-			Converter = null,
-			Getter = (object obj) => ((RunMetrics)obj).CampfireUpgrades,
-			Setter = delegate
-			{
-				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "CampfireUpgrades",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("CampfireUpgrades", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<string>), Array.Empty<Type>(), null)
+			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
 		};
+		jsonPropertyInfoValues8.IgnoreCondition = null;
+		jsonPropertyInfoValues8.HasJsonInclude = false;
+		jsonPropertyInfoValues8.IsExtensionData = false;
+		jsonPropertyInfoValues8.NumberHandling = null;
+		jsonPropertyInfoValues8.PropertyName = "CampfireUpgrades";
+		jsonPropertyInfoValues8.JsonPropertyName = null;
+		jsonPropertyInfoValues8.AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("CampfireUpgrades", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<string>), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<List<string>> propertyInfo16 = jsonPropertyInfoValues8;
 		array[15] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo16);
 		array[15].IsRequired = true;
 		array[15].IsGetNullable = false;
 		array[15].IsSetNullable = false;
-		JsonPropertyInfoValues<List<EventChoiceMetric>> propertyInfo17 = new JsonPropertyInfoValues<List<EventChoiceMetric>>
+		JsonPropertyInfoValues<List<EventChoiceMetric>> jsonPropertyInfoValues9 = new JsonPropertyInfoValues<List<EventChoiceMetric>>();
+		jsonPropertyInfoValues9.IsProperty = true;
+		jsonPropertyInfoValues9.IsPublic = true;
+		jsonPropertyInfoValues9.IsVirtual = false;
+		jsonPropertyInfoValues9.DeclaringType = typeof(RunMetrics);
+		jsonPropertyInfoValues9.Converter = null;
+		jsonPropertyInfoValues9.Getter = (object obj) => ((RunMetrics)obj).EventChoices;
+		jsonPropertyInfoValues9.Setter = delegate
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(RunMetrics),
-			Converter = null,
-			Getter = (object obj) => ((RunMetrics)obj).EventChoices,
-			Setter = delegate
-			{
-				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "EventChoices",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("EventChoices", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<EventChoiceMetric>), Array.Empty<Type>(), null)
+			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
 		};
+		jsonPropertyInfoValues9.IgnoreCondition = null;
+		jsonPropertyInfoValues9.HasJsonInclude = false;
+		jsonPropertyInfoValues9.IsExtensionData = false;
+		jsonPropertyInfoValues9.NumberHandling = null;
+		jsonPropertyInfoValues9.PropertyName = "EventChoices";
+		jsonPropertyInfoValues9.JsonPropertyName = null;
+		jsonPropertyInfoValues9.AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("EventChoices", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<EventChoiceMetric>), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<List<EventChoiceMetric>> propertyInfo17 = jsonPropertyInfoValues9;
 		array[16] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo17);
 		array[16].IsRequired = true;
 		array[16].IsGetNullable = false;
 		array[16].IsSetNullable = false;
-		JsonPropertyInfoValues<List<AncientMetric>> propertyInfo18 = new JsonPropertyInfoValues<List<AncientMetric>>
+		JsonPropertyInfoValues<List<AncientMetric>> jsonPropertyInfoValues10 = new JsonPropertyInfoValues<List<AncientMetric>>();
+		jsonPropertyInfoValues10.IsProperty = true;
+		jsonPropertyInfoValues10.IsPublic = true;
+		jsonPropertyInfoValues10.IsVirtual = false;
+		jsonPropertyInfoValues10.DeclaringType = typeof(RunMetrics);
+		jsonPropertyInfoValues10.Converter = null;
+		jsonPropertyInfoValues10.Getter = (object obj) => ((RunMetrics)obj).AncientChoices;
+		jsonPropertyInfoValues10.Setter = delegate
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(RunMetrics),
-			Converter = null,
-			Getter = (object obj) => ((RunMetrics)obj).AncientChoices,
-			Setter = delegate
-			{
-				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "AncientChoices",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("AncientChoices", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<AncientMetric>), Array.Empty<Type>(), null)
+			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
 		};
+		jsonPropertyInfoValues10.IgnoreCondition = null;
+		jsonPropertyInfoValues10.HasJsonInclude = false;
+		jsonPropertyInfoValues10.IsExtensionData = false;
+		jsonPropertyInfoValues10.NumberHandling = null;
+		jsonPropertyInfoValues10.PropertyName = "AncientChoices";
+		jsonPropertyInfoValues10.JsonPropertyName = null;
+		jsonPropertyInfoValues10.AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("AncientChoices", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<AncientMetric>), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<List<AncientMetric>> propertyInfo18 = jsonPropertyInfoValues10;
 		array[17] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo18);
 		array[17].IsRequired = true;
 		array[17].IsGetNullable = false;
 		array[17].IsSetNullable = false;
-		JsonPropertyInfoValues<List<string>> propertyInfo19 = new JsonPropertyInfoValues<List<string>>
+		jsonPropertyInfoValues8 = new JsonPropertyInfoValues<List<string>>();
+		jsonPropertyInfoValues8.IsProperty = true;
+		jsonPropertyInfoValues8.IsPublic = true;
+		jsonPropertyInfoValues8.IsVirtual = false;
+		jsonPropertyInfoValues8.DeclaringType = typeof(RunMetrics);
+		jsonPropertyInfoValues8.Converter = null;
+		jsonPropertyInfoValues8.Getter = (object obj) => ((RunMetrics)obj).RelicBuys;
+		jsonPropertyInfoValues8.Setter = delegate
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(RunMetrics),
-			Converter = null,
-			Getter = (object obj) => ((RunMetrics)obj).RelicBuys,
-			Setter = delegate
-			{
-				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "RelicBuys",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("RelicBuys", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<string>), Array.Empty<Type>(), null)
+			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
 		};
+		jsonPropertyInfoValues8.IgnoreCondition = null;
+		jsonPropertyInfoValues8.HasJsonInclude = false;
+		jsonPropertyInfoValues8.IsExtensionData = false;
+		jsonPropertyInfoValues8.NumberHandling = null;
+		jsonPropertyInfoValues8.PropertyName = "RelicBuys";
+		jsonPropertyInfoValues8.JsonPropertyName = null;
+		jsonPropertyInfoValues8.AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("RelicBuys", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<string>), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<List<string>> propertyInfo19 = jsonPropertyInfoValues8;
 		array[18] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo19);
 		array[18].IsRequired = true;
 		array[18].IsGetNullable = false;
 		array[18].IsSetNullable = false;
-		JsonPropertyInfoValues<List<string>> propertyInfo20 = new JsonPropertyInfoValues<List<string>>
+		jsonPropertyInfoValues8 = new JsonPropertyInfoValues<List<string>>();
+		jsonPropertyInfoValues8.IsProperty = true;
+		jsonPropertyInfoValues8.IsPublic = true;
+		jsonPropertyInfoValues8.IsVirtual = false;
+		jsonPropertyInfoValues8.DeclaringType = typeof(RunMetrics);
+		jsonPropertyInfoValues8.Converter = null;
+		jsonPropertyInfoValues8.Getter = (object obj) => ((RunMetrics)obj).PotionBuys;
+		jsonPropertyInfoValues8.Setter = delegate
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(RunMetrics),
-			Converter = null,
-			Getter = (object obj) => ((RunMetrics)obj).PotionBuys,
-			Setter = delegate
-			{
-				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "PotionBuys",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("PotionBuys", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<string>), Array.Empty<Type>(), null)
+			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
 		};
+		jsonPropertyInfoValues8.IgnoreCondition = null;
+		jsonPropertyInfoValues8.HasJsonInclude = false;
+		jsonPropertyInfoValues8.IsExtensionData = false;
+		jsonPropertyInfoValues8.NumberHandling = null;
+		jsonPropertyInfoValues8.PropertyName = "PotionBuys";
+		jsonPropertyInfoValues8.JsonPropertyName = null;
+		jsonPropertyInfoValues8.AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("PotionBuys", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<string>), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<List<string>> propertyInfo20 = jsonPropertyInfoValues8;
 		array[19] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo20);
 		array[19].IsRequired = true;
 		array[19].IsGetNullable = false;
 		array[19].IsSetNullable = false;
-		JsonPropertyInfoValues<List<string>> propertyInfo21 = new JsonPropertyInfoValues<List<string>>
+		jsonPropertyInfoValues8 = new JsonPropertyInfoValues<List<string>>();
+		jsonPropertyInfoValues8.IsProperty = true;
+		jsonPropertyInfoValues8.IsPublic = true;
+		jsonPropertyInfoValues8.IsVirtual = false;
+		jsonPropertyInfoValues8.DeclaringType = typeof(RunMetrics);
+		jsonPropertyInfoValues8.Converter = null;
+		jsonPropertyInfoValues8.Getter = (object obj) => ((RunMetrics)obj).ColorlessBuys;
+		jsonPropertyInfoValues8.Setter = delegate
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(RunMetrics),
-			Converter = null,
-			Getter = (object obj) => ((RunMetrics)obj).ColorlessBuys,
-			Setter = delegate
-			{
-				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "ColorlessBuys",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("ColorlessBuys", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<string>), Array.Empty<Type>(), null)
+			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
 		};
+		jsonPropertyInfoValues8.IgnoreCondition = null;
+		jsonPropertyInfoValues8.HasJsonInclude = false;
+		jsonPropertyInfoValues8.IsExtensionData = false;
+		jsonPropertyInfoValues8.NumberHandling = null;
+		jsonPropertyInfoValues8.PropertyName = "ColorlessBuys";
+		jsonPropertyInfoValues8.JsonPropertyName = null;
+		jsonPropertyInfoValues8.AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("ColorlessBuys", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<string>), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<List<string>> propertyInfo21 = jsonPropertyInfoValues8;
 		array[20] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo21);
 		array[20].IsRequired = true;
 		array[20].IsGetNullable = false;
 		array[20].IsSetNullable = false;
-		JsonPropertyInfoValues<List<string>> propertyInfo22 = new JsonPropertyInfoValues<List<string>>
+		jsonPropertyInfoValues8 = new JsonPropertyInfoValues<List<string>>();
+		jsonPropertyInfoValues8.IsProperty = true;
+		jsonPropertyInfoValues8.IsPublic = true;
+		jsonPropertyInfoValues8.IsVirtual = false;
+		jsonPropertyInfoValues8.DeclaringType = typeof(RunMetrics);
+		jsonPropertyInfoValues8.Converter = null;
+		jsonPropertyInfoValues8.Getter = (object obj) => ((RunMetrics)obj).PotionDiscards;
+		jsonPropertyInfoValues8.Setter = delegate
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(RunMetrics),
-			Converter = null,
-			Getter = (object obj) => ((RunMetrics)obj).PotionDiscards,
-			Setter = delegate
-			{
-				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "PotionDiscards",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("PotionDiscards", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<string>), Array.Empty<Type>(), null)
+			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
 		};
+		jsonPropertyInfoValues8.IgnoreCondition = null;
+		jsonPropertyInfoValues8.HasJsonInclude = false;
+		jsonPropertyInfoValues8.IsExtensionData = false;
+		jsonPropertyInfoValues8.NumberHandling = null;
+		jsonPropertyInfoValues8.PropertyName = "PotionDiscards";
+		jsonPropertyInfoValues8.JsonPropertyName = null;
+		jsonPropertyInfoValues8.AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("PotionDiscards", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<string>), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<List<string>> propertyInfo22 = jsonPropertyInfoValues8;
 		array[21] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo22);
 		array[21].IsRequired = true;
 		array[21].IsGetNullable = false;
 		array[21].IsSetNullable = false;
-		JsonPropertyInfoValues<List<EncounterMetric>> propertyInfo23 = new JsonPropertyInfoValues<List<EncounterMetric>>
+		JsonPropertyInfoValues<List<EncounterMetric>> jsonPropertyInfoValues11 = new JsonPropertyInfoValues<List<EncounterMetric>>();
+		jsonPropertyInfoValues11.IsProperty = true;
+		jsonPropertyInfoValues11.IsPublic = true;
+		jsonPropertyInfoValues11.IsVirtual = false;
+		jsonPropertyInfoValues11.DeclaringType = typeof(RunMetrics);
+		jsonPropertyInfoValues11.Converter = null;
+		jsonPropertyInfoValues11.Getter = (object obj) => ((RunMetrics)obj).Encounters;
+		jsonPropertyInfoValues11.Setter = delegate
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(RunMetrics),
-			Converter = null,
-			Getter = (object obj) => ((RunMetrics)obj).Encounters,
-			Setter = delegate
-			{
-				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "Encounters",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("Encounters", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<EncounterMetric>), Array.Empty<Type>(), null)
+			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
 		};
+		jsonPropertyInfoValues11.IgnoreCondition = null;
+		jsonPropertyInfoValues11.HasJsonInclude = false;
+		jsonPropertyInfoValues11.IsExtensionData = false;
+		jsonPropertyInfoValues11.NumberHandling = null;
+		jsonPropertyInfoValues11.PropertyName = "Encounters";
+		jsonPropertyInfoValues11.JsonPropertyName = null;
+		jsonPropertyInfoValues11.AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("Encounters", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<EncounterMetric>), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<List<EncounterMetric>> propertyInfo23 = jsonPropertyInfoValues11;
 		array[22] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo23);
 		array[22].IsRequired = true;
 		array[22].IsGetNullable = false;
 		array[22].IsSetNullable = false;
-		JsonPropertyInfoValues<List<ActWinMetric>> propertyInfo24 = new JsonPropertyInfoValues<List<ActWinMetric>>
+		JsonPropertyInfoValues<List<ActWinMetric>> jsonPropertyInfoValues12 = new JsonPropertyInfoValues<List<ActWinMetric>>();
+		jsonPropertyInfoValues12.IsProperty = true;
+		jsonPropertyInfoValues12.IsPublic = true;
+		jsonPropertyInfoValues12.IsVirtual = false;
+		jsonPropertyInfoValues12.DeclaringType = typeof(RunMetrics);
+		jsonPropertyInfoValues12.Converter = null;
+		jsonPropertyInfoValues12.Getter = (object obj) => ((RunMetrics)obj).ActWins;
+		jsonPropertyInfoValues12.Setter = delegate
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(RunMetrics),
-			Converter = null,
-			Getter = (object obj) => ((RunMetrics)obj).ActWins,
-			Setter = delegate
-			{
-				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "ActWins",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("ActWins", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ActWinMetric>), Array.Empty<Type>(), null)
+			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
 		};
+		jsonPropertyInfoValues12.IgnoreCondition = null;
+		jsonPropertyInfoValues12.HasJsonInclude = false;
+		jsonPropertyInfoValues12.IsExtensionData = false;
+		jsonPropertyInfoValues12.NumberHandling = null;
+		jsonPropertyInfoValues12.PropertyName = "ActWins";
+		jsonPropertyInfoValues12.JsonPropertyName = null;
+		jsonPropertyInfoValues12.AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("ActWins", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(List<ActWinMetric>), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<List<ActWinMetric>> propertyInfo24 = jsonPropertyInfoValues12;
 		array[23] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo24);
 		array[23].IsRequired = true;
 		array[23].IsGetNullable = false;
 		array[23].IsSetNullable = false;
-		JsonPropertyInfoValues<IEnumerable<ModelId>> propertyInfo25 = new JsonPropertyInfoValues<IEnumerable<ModelId>>
+		JsonPropertyInfoValues<IEnumerable<ModelId>> jsonPropertyInfoValues13 = new JsonPropertyInfoValues<IEnumerable<ModelId>>();
+		jsonPropertyInfoValues13.IsProperty = true;
+		jsonPropertyInfoValues13.IsPublic = true;
+		jsonPropertyInfoValues13.IsVirtual = false;
+		jsonPropertyInfoValues13.DeclaringType = typeof(RunMetrics);
+		jsonPropertyInfoValues13.Converter = null;
+		jsonPropertyInfoValues13.Getter = (object obj) => ((RunMetrics)obj).Deck;
+		jsonPropertyInfoValues13.Setter = delegate
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(RunMetrics),
-			Converter = null,
-			Getter = (object obj) => ((RunMetrics)obj).Deck,
-			Setter = delegate
-			{
-				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "Deck",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("Deck", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(IEnumerable<ModelId>), Array.Empty<Type>(), null)
+			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
 		};
+		jsonPropertyInfoValues13.IgnoreCondition = null;
+		jsonPropertyInfoValues13.HasJsonInclude = false;
+		jsonPropertyInfoValues13.IsExtensionData = false;
+		jsonPropertyInfoValues13.NumberHandling = null;
+		jsonPropertyInfoValues13.PropertyName = "Deck";
+		jsonPropertyInfoValues13.JsonPropertyName = null;
+		jsonPropertyInfoValues13.AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("Deck", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(IEnumerable<ModelId>), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<IEnumerable<ModelId>> propertyInfo25 = jsonPropertyInfoValues13;
 		array[24] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo25);
 		array[24].IsRequired = true;
 		array[24].IsGetNullable = false;
 		array[24].IsSetNullable = false;
-		JsonPropertyInfoValues<IEnumerable<ModelId>> propertyInfo26 = new JsonPropertyInfoValues<IEnumerable<ModelId>>
+		jsonPropertyInfoValues13 = new JsonPropertyInfoValues<IEnumerable<ModelId>>();
+		jsonPropertyInfoValues13.IsProperty = true;
+		jsonPropertyInfoValues13.IsPublic = true;
+		jsonPropertyInfoValues13.IsVirtual = false;
+		jsonPropertyInfoValues13.DeclaringType = typeof(RunMetrics);
+		jsonPropertyInfoValues13.Converter = null;
+		jsonPropertyInfoValues13.Getter = (object obj) => ((RunMetrics)obj).Relics;
+		jsonPropertyInfoValues13.Setter = delegate
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(RunMetrics),
-			Converter = null,
-			Getter = (object obj) => ((RunMetrics)obj).Relics,
-			Setter = delegate
-			{
-				throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "Relics",
-			JsonPropertyName = null,
-			AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("Relics", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(IEnumerable<ModelId>), Array.Empty<Type>(), null)
+			throw new InvalidOperationException("Setting init-only properties is not supported in source generation mode.");
 		};
+		jsonPropertyInfoValues13.IgnoreCondition = null;
+		jsonPropertyInfoValues13.HasJsonInclude = false;
+		jsonPropertyInfoValues13.IsExtensionData = false;
+		jsonPropertyInfoValues13.NumberHandling = null;
+		jsonPropertyInfoValues13.PropertyName = "Relics";
+		jsonPropertyInfoValues13.JsonPropertyName = null;
+		jsonPropertyInfoValues13.AttributeProviderFactory = () => typeof(RunMetrics).GetProperty("Relics", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(IEnumerable<ModelId>), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<IEnumerable<ModelId>> propertyInfo26 = jsonPropertyInfoValues13;
 		array[25] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo26);
 		array[25].IsRequired = true;
 		array[25].IsGetNullable = false;
@@ -2071,19 +2021,18 @@ internal class MetricsSerializerContext : JsonSerializerContext, IJsonTypeInfoRe
 	{
 		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<SettingsDataMetric> jsonTypeInfo))
 		{
-			JsonObjectInfoValues<SettingsDataMetric> objectInfo = new JsonObjectInfoValues<SettingsDataMetric>
+			JsonObjectInfoValues<SettingsDataMetric> jsonObjectInfoValues = new JsonObjectInfoValues<SettingsDataMetric>();
+			jsonObjectInfoValues.ObjectCreator = null;
+			jsonObjectInfoValues.ObjectWithParameterizedConstructorCreator = (object[] args) => new SettingsDataMetric
 			{
-				ObjectCreator = null,
-				ObjectWithParameterizedConstructorCreator = (object[] args) => new SettingsDataMetric
-				{
-					BuildId = (string)args[0],
-					FastModeType = (FastModeType)args[1]
-				},
-				PropertyMetadataInitializer = (JsonSerializerContext _) => SettingsDataMetricPropInit(options),
-				ConstructorParameterMetadataInitializer = SettingsDataMetricCtorParamInit,
-				ConstructorAttributeProviderFactory = () => typeof(SettingsDataMetric).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null),
-				SerializeHandler = SettingsDataMetricSerializeHandler
+				BuildId = (string)args[0],
+				FastModeType = (FastModeType)args[1]
 			};
+			jsonObjectInfoValues.PropertyMetadataInitializer = (JsonSerializerContext _) => SettingsDataMetricPropInit(options);
+			jsonObjectInfoValues.ConstructorParameterMetadataInitializer = SettingsDataMetricCtorParamInit;
+			jsonObjectInfoValues.ConstructorAttributeProviderFactory = () => typeof(SettingsDataMetric).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null);
+			jsonObjectInfoValues.SerializeHandler = SettingsDataMetricSerializeHandler;
+			JsonObjectInfoValues<SettingsDataMetric> objectInfo = jsonObjectInfoValues;
 			jsonTypeInfo = JsonMetadataServices.CreateObjectInfo(options, objectInfo);
 			jsonTypeInfo.NumberHandling = null;
 		}
@@ -2094,393 +2043,375 @@ internal class MetricsSerializerContext : JsonSerializerContext, IJsonTypeInfoRe
 	private static JsonPropertyInfo[] SettingsDataMetricPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[18];
-		JsonPropertyInfoValues<string> propertyInfo = new JsonPropertyInfoValues<string>
+		JsonPropertyInfoValues<string> jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
+		jsonPropertyInfoValues.IsProperty = true;
+		jsonPropertyInfoValues.IsPublic = true;
+		jsonPropertyInfoValues.IsVirtual = false;
+		jsonPropertyInfoValues.DeclaringType = typeof(SettingsDataMetric);
+		jsonPropertyInfoValues.Converter = null;
+		jsonPropertyInfoValues.Getter = (object obj) => ((SettingsDataMetric)obj).BuildId;
+		jsonPropertyInfoValues.Setter = delegate(object obj, string? value)
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(SettingsDataMetric),
-			Converter = null,
-			Getter = (object obj) => ((SettingsDataMetric)obj).BuildId,
-			Setter = delegate(object obj, string? value)
-			{
-				Unsafe.Unbox<SettingsDataMetric>(obj).BuildId = value;
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "BuildId",
-			JsonPropertyName = "buildId",
-			AttributeProviderFactory = () => typeof(SettingsDataMetric).GetProperty("BuildId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null)
+			Unsafe.Unbox<SettingsDataMetric>(obj).BuildId = value;
 		};
+		jsonPropertyInfoValues.IgnoreCondition = null;
+		jsonPropertyInfoValues.HasJsonInclude = false;
+		jsonPropertyInfoValues.IsExtensionData = false;
+		jsonPropertyInfoValues.NumberHandling = null;
+		jsonPropertyInfoValues.PropertyName = "BuildId";
+		jsonPropertyInfoValues.JsonPropertyName = "buildId";
+		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SettingsDataMetric).GetProperty("BuildId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<string> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsRequired = true;
 		array[0].IsGetNullable = false;
 		array[0].IsSetNullable = false;
-		JsonPropertyInfoValues<string> propertyInfo2 = new JsonPropertyInfoValues<string>
+		jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
+		jsonPropertyInfoValues.IsProperty = true;
+		jsonPropertyInfoValues.IsPublic = true;
+		jsonPropertyInfoValues.IsVirtual = false;
+		jsonPropertyInfoValues.DeclaringType = typeof(SettingsDataMetric);
+		jsonPropertyInfoValues.Converter = null;
+		jsonPropertyInfoValues.Getter = (object obj) => ((SettingsDataMetric)obj).Os;
+		jsonPropertyInfoValues.Setter = delegate(object obj, string? value)
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(SettingsDataMetric),
-			Converter = null,
-			Getter = (object obj) => ((SettingsDataMetric)obj).Os,
-			Setter = delegate(object obj, string? value)
-			{
-				Unsafe.Unbox<SettingsDataMetric>(obj).Os = value;
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "Os",
-			JsonPropertyName = "os",
-			AttributeProviderFactory = () => typeof(SettingsDataMetric).GetProperty("Os", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null)
+			Unsafe.Unbox<SettingsDataMetric>(obj).Os = value;
 		};
+		jsonPropertyInfoValues.IgnoreCondition = null;
+		jsonPropertyInfoValues.HasJsonInclude = false;
+		jsonPropertyInfoValues.IsExtensionData = false;
+		jsonPropertyInfoValues.NumberHandling = null;
+		jsonPropertyInfoValues.PropertyName = "Os";
+		jsonPropertyInfoValues.JsonPropertyName = "os";
+		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SettingsDataMetric).GetProperty("Os", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<string> propertyInfo2 = jsonPropertyInfoValues;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		array[1].IsGetNullable = false;
 		array[1].IsSetNullable = false;
-		JsonPropertyInfoValues<string> propertyInfo3 = new JsonPropertyInfoValues<string>
+		jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
+		jsonPropertyInfoValues.IsProperty = true;
+		jsonPropertyInfoValues.IsPublic = true;
+		jsonPropertyInfoValues.IsVirtual = false;
+		jsonPropertyInfoValues.DeclaringType = typeof(SettingsDataMetric);
+		jsonPropertyInfoValues.Converter = null;
+		jsonPropertyInfoValues.Getter = (object obj) => ((SettingsDataMetric)obj).Platform;
+		jsonPropertyInfoValues.Setter = delegate(object obj, string? value)
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(SettingsDataMetric),
-			Converter = null,
-			Getter = (object obj) => ((SettingsDataMetric)obj).Platform,
-			Setter = delegate(object obj, string? value)
-			{
-				Unsafe.Unbox<SettingsDataMetric>(obj).Platform = value;
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "Platform",
-			JsonPropertyName = "platform",
-			AttributeProviderFactory = () => typeof(SettingsDataMetric).GetProperty("Platform", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null)
+			Unsafe.Unbox<SettingsDataMetric>(obj).Platform = value;
 		};
+		jsonPropertyInfoValues.IgnoreCondition = null;
+		jsonPropertyInfoValues.HasJsonInclude = false;
+		jsonPropertyInfoValues.IsExtensionData = false;
+		jsonPropertyInfoValues.NumberHandling = null;
+		jsonPropertyInfoValues.PropertyName = "Platform";
+		jsonPropertyInfoValues.JsonPropertyName = "platform";
+		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SettingsDataMetric).GetProperty("Platform", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<string> propertyInfo3 = jsonPropertyInfoValues;
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
 		array[2].IsGetNullable = false;
 		array[2].IsSetNullable = false;
-		JsonPropertyInfoValues<int> propertyInfo4 = new JsonPropertyInfoValues<int>
+		JsonPropertyInfoValues<int> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
+		jsonPropertyInfoValues2.IsProperty = true;
+		jsonPropertyInfoValues2.IsPublic = true;
+		jsonPropertyInfoValues2.IsVirtual = false;
+		jsonPropertyInfoValues2.DeclaringType = typeof(SettingsDataMetric);
+		jsonPropertyInfoValues2.Converter = null;
+		jsonPropertyInfoValues2.Getter = (object obj) => ((SettingsDataMetric)obj).SystemRam;
+		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(SettingsDataMetric),
-			Converter = null,
-			Getter = (object obj) => ((SettingsDataMetric)obj).SystemRam,
-			Setter = delegate(object obj, int value)
-			{
-				Unsafe.Unbox<SettingsDataMetric>(obj).SystemRam = value;
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "SystemRam",
-			JsonPropertyName = "systemRam",
-			AttributeProviderFactory = () => typeof(SettingsDataMetric).GetProperty("SystemRam", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
+			Unsafe.Unbox<SettingsDataMetric>(obj).SystemRam = value;
 		};
+		jsonPropertyInfoValues2.IgnoreCondition = null;
+		jsonPropertyInfoValues2.HasJsonInclude = false;
+		jsonPropertyInfoValues2.IsExtensionData = false;
+		jsonPropertyInfoValues2.NumberHandling = null;
+		jsonPropertyInfoValues2.PropertyName = "SystemRam";
+		jsonPropertyInfoValues2.JsonPropertyName = "systemRam";
+		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SettingsDataMetric).GetProperty("SystemRam", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<int> propertyInfo4 = jsonPropertyInfoValues2;
 		array[3] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo4);
-		JsonPropertyInfoValues<string> propertyInfo5 = new JsonPropertyInfoValues<string>
+		jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
+		jsonPropertyInfoValues.IsProperty = true;
+		jsonPropertyInfoValues.IsPublic = true;
+		jsonPropertyInfoValues.IsVirtual = false;
+		jsonPropertyInfoValues.DeclaringType = typeof(SettingsDataMetric);
+		jsonPropertyInfoValues.Converter = null;
+		jsonPropertyInfoValues.Getter = (object obj) => ((SettingsDataMetric)obj).LanguageCode;
+		jsonPropertyInfoValues.Setter = delegate(object obj, string? value)
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(SettingsDataMetric),
-			Converter = null,
-			Getter = (object obj) => ((SettingsDataMetric)obj).LanguageCode,
-			Setter = delegate(object obj, string? value)
-			{
-				Unsafe.Unbox<SettingsDataMetric>(obj).LanguageCode = value;
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "LanguageCode",
-			JsonPropertyName = "language",
-			AttributeProviderFactory = () => typeof(SettingsDataMetric).GetProperty("LanguageCode", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null)
+			Unsafe.Unbox<SettingsDataMetric>(obj).LanguageCode = value;
 		};
+		jsonPropertyInfoValues.IgnoreCondition = null;
+		jsonPropertyInfoValues.HasJsonInclude = false;
+		jsonPropertyInfoValues.IsExtensionData = false;
+		jsonPropertyInfoValues.NumberHandling = null;
+		jsonPropertyInfoValues.PropertyName = "LanguageCode";
+		jsonPropertyInfoValues.JsonPropertyName = "language";
+		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(SettingsDataMetric).GetProperty("LanguageCode", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<string> propertyInfo5 = jsonPropertyInfoValues;
 		array[4] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo5);
 		array[4].IsGetNullable = false;
 		array[4].IsSetNullable = false;
-		JsonPropertyInfoValues<FastModeType> propertyInfo6 = new JsonPropertyInfoValues<FastModeType>
+		JsonPropertyInfoValues<FastModeType> jsonPropertyInfoValues3 = new JsonPropertyInfoValues<FastModeType>();
+		jsonPropertyInfoValues3.IsProperty = true;
+		jsonPropertyInfoValues3.IsPublic = true;
+		jsonPropertyInfoValues3.IsVirtual = false;
+		jsonPropertyInfoValues3.DeclaringType = typeof(SettingsDataMetric);
+		jsonPropertyInfoValues3.Converter = null;
+		jsonPropertyInfoValues3.Getter = (object obj) => ((SettingsDataMetric)obj).FastModeType;
+		jsonPropertyInfoValues3.Setter = delegate(object obj, FastModeType value)
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(SettingsDataMetric),
-			Converter = null,
-			Getter = (object obj) => ((SettingsDataMetric)obj).FastModeType,
-			Setter = delegate(object obj, FastModeType value)
-			{
-				Unsafe.Unbox<SettingsDataMetric>(obj).FastModeType = value;
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "FastModeType",
-			JsonPropertyName = "combatSpeed",
-			AttributeProviderFactory = () => typeof(SettingsDataMetric).GetProperty("FastModeType", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(FastModeType), Array.Empty<Type>(), null)
+			Unsafe.Unbox<SettingsDataMetric>(obj).FastModeType = value;
 		};
+		jsonPropertyInfoValues3.IgnoreCondition = null;
+		jsonPropertyInfoValues3.HasJsonInclude = false;
+		jsonPropertyInfoValues3.IsExtensionData = false;
+		jsonPropertyInfoValues3.NumberHandling = null;
+		jsonPropertyInfoValues3.PropertyName = "FastModeType";
+		jsonPropertyInfoValues3.JsonPropertyName = "combatSpeed";
+		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(SettingsDataMetric).GetProperty("FastModeType", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(FastModeType), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<FastModeType> propertyInfo6 = jsonPropertyInfoValues3;
 		array[5] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo6);
 		array[5].IsRequired = true;
-		JsonPropertyInfoValues<int> propertyInfo7 = new JsonPropertyInfoValues<int>
+		jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
+		jsonPropertyInfoValues2.IsProperty = true;
+		jsonPropertyInfoValues2.IsPublic = true;
+		jsonPropertyInfoValues2.IsVirtual = false;
+		jsonPropertyInfoValues2.DeclaringType = typeof(SettingsDataMetric);
+		jsonPropertyInfoValues2.Converter = null;
+		jsonPropertyInfoValues2.Getter = (object obj) => ((SettingsDataMetric)obj).Screenshake;
+		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(SettingsDataMetric),
-			Converter = null,
-			Getter = (object obj) => ((SettingsDataMetric)obj).Screenshake,
-			Setter = delegate(object obj, int value)
-			{
-				Unsafe.Unbox<SettingsDataMetric>(obj).Screenshake = value;
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "Screenshake",
-			JsonPropertyName = "screenshake",
-			AttributeProviderFactory = () => typeof(SettingsDataMetric).GetProperty("Screenshake", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
+			Unsafe.Unbox<SettingsDataMetric>(obj).Screenshake = value;
 		};
+		jsonPropertyInfoValues2.IgnoreCondition = null;
+		jsonPropertyInfoValues2.HasJsonInclude = false;
+		jsonPropertyInfoValues2.IsExtensionData = false;
+		jsonPropertyInfoValues2.NumberHandling = null;
+		jsonPropertyInfoValues2.PropertyName = "Screenshake";
+		jsonPropertyInfoValues2.JsonPropertyName = "screenshake";
+		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SettingsDataMetric).GetProperty("Screenshake", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<int> propertyInfo7 = jsonPropertyInfoValues2;
 		array[6] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo7);
-		JsonPropertyInfoValues<bool> propertyInfo8 = new JsonPropertyInfoValues<bool>
+		JsonPropertyInfoValues<bool> jsonPropertyInfoValues4 = new JsonPropertyInfoValues<bool>();
+		jsonPropertyInfoValues4.IsProperty = true;
+		jsonPropertyInfoValues4.IsPublic = true;
+		jsonPropertyInfoValues4.IsVirtual = false;
+		jsonPropertyInfoValues4.DeclaringType = typeof(SettingsDataMetric);
+		jsonPropertyInfoValues4.Converter = null;
+		jsonPropertyInfoValues4.Getter = (object obj) => ((SettingsDataMetric)obj).ShowRunTimer;
+		jsonPropertyInfoValues4.Setter = delegate(object obj, bool value)
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(SettingsDataMetric),
-			Converter = null,
-			Getter = (object obj) => ((SettingsDataMetric)obj).ShowRunTimer,
-			Setter = delegate(object obj, bool value)
-			{
-				Unsafe.Unbox<SettingsDataMetric>(obj).ShowRunTimer = value;
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "ShowRunTimer",
-			JsonPropertyName = "runTimer",
-			AttributeProviderFactory = () => typeof(SettingsDataMetric).GetProperty("ShowRunTimer", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
+			Unsafe.Unbox<SettingsDataMetric>(obj).ShowRunTimer = value;
 		};
+		jsonPropertyInfoValues4.IgnoreCondition = null;
+		jsonPropertyInfoValues4.HasJsonInclude = false;
+		jsonPropertyInfoValues4.IsExtensionData = false;
+		jsonPropertyInfoValues4.NumberHandling = null;
+		jsonPropertyInfoValues4.PropertyName = "ShowRunTimer";
+		jsonPropertyInfoValues4.JsonPropertyName = "runTimer";
+		jsonPropertyInfoValues4.AttributeProviderFactory = () => typeof(SettingsDataMetric).GetProperty("ShowRunTimer", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<bool> propertyInfo8 = jsonPropertyInfoValues4;
 		array[7] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo8);
-		JsonPropertyInfoValues<bool> propertyInfo9 = new JsonPropertyInfoValues<bool>
+		jsonPropertyInfoValues4 = new JsonPropertyInfoValues<bool>();
+		jsonPropertyInfoValues4.IsProperty = true;
+		jsonPropertyInfoValues4.IsPublic = true;
+		jsonPropertyInfoValues4.IsVirtual = false;
+		jsonPropertyInfoValues4.DeclaringType = typeof(SettingsDataMetric);
+		jsonPropertyInfoValues4.Converter = null;
+		jsonPropertyInfoValues4.Getter = (object obj) => ((SettingsDataMetric)obj).PhobiaMode;
+		jsonPropertyInfoValues4.Setter = delegate(object obj, bool value)
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(SettingsDataMetric),
-			Converter = null,
-			Getter = (object obj) => ((SettingsDataMetric)obj).PhobiaMode,
-			Setter = delegate(object obj, bool value)
-			{
-				Unsafe.Unbox<SettingsDataMetric>(obj).PhobiaMode = value;
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "PhobiaMode",
-			JsonPropertyName = "phobiaMode",
-			AttributeProviderFactory = () => typeof(SettingsDataMetric).GetProperty("PhobiaMode", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
+			Unsafe.Unbox<SettingsDataMetric>(obj).PhobiaMode = value;
 		};
+		jsonPropertyInfoValues4.IgnoreCondition = null;
+		jsonPropertyInfoValues4.HasJsonInclude = false;
+		jsonPropertyInfoValues4.IsExtensionData = false;
+		jsonPropertyInfoValues4.NumberHandling = null;
+		jsonPropertyInfoValues4.PropertyName = "PhobiaMode";
+		jsonPropertyInfoValues4.JsonPropertyName = "phobiaMode";
+		jsonPropertyInfoValues4.AttributeProviderFactory = () => typeof(SettingsDataMetric).GetProperty("PhobiaMode", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<bool> propertyInfo9 = jsonPropertyInfoValues4;
 		array[8] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo9);
-		JsonPropertyInfoValues<bool> propertyInfo10 = new JsonPropertyInfoValues<bool>
+		jsonPropertyInfoValues4 = new JsonPropertyInfoValues<bool>();
+		jsonPropertyInfoValues4.IsProperty = true;
+		jsonPropertyInfoValues4.IsPublic = true;
+		jsonPropertyInfoValues4.IsVirtual = false;
+		jsonPropertyInfoValues4.DeclaringType = typeof(SettingsDataMetric);
+		jsonPropertyInfoValues4.Converter = null;
+		jsonPropertyInfoValues4.Getter = (object obj) => ((SettingsDataMetric)obj).ShowCardIndices;
+		jsonPropertyInfoValues4.Setter = delegate(object obj, bool value)
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(SettingsDataMetric),
-			Converter = null,
-			Getter = (object obj) => ((SettingsDataMetric)obj).ShowCardIndices,
-			Setter = delegate(object obj, bool value)
-			{
-				Unsafe.Unbox<SettingsDataMetric>(obj).ShowCardIndices = value;
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "ShowCardIndices",
-			JsonPropertyName = "cardIndices",
-			AttributeProviderFactory = () => typeof(SettingsDataMetric).GetProperty("ShowCardIndices", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
+			Unsafe.Unbox<SettingsDataMetric>(obj).ShowCardIndices = value;
 		};
+		jsonPropertyInfoValues4.IgnoreCondition = null;
+		jsonPropertyInfoValues4.HasJsonInclude = false;
+		jsonPropertyInfoValues4.IsExtensionData = false;
+		jsonPropertyInfoValues4.NumberHandling = null;
+		jsonPropertyInfoValues4.PropertyName = "ShowCardIndices";
+		jsonPropertyInfoValues4.JsonPropertyName = "cardIndices";
+		jsonPropertyInfoValues4.AttributeProviderFactory = () => typeof(SettingsDataMetric).GetProperty("ShowCardIndices", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<bool> propertyInfo10 = jsonPropertyInfoValues4;
 		array[9] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo10);
-		JsonPropertyInfoValues<int> propertyInfo11 = new JsonPropertyInfoValues<int>
+		jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
+		jsonPropertyInfoValues2.IsProperty = true;
+		jsonPropertyInfoValues2.IsPublic = true;
+		jsonPropertyInfoValues2.IsVirtual = false;
+		jsonPropertyInfoValues2.DeclaringType = typeof(SettingsDataMetric);
+		jsonPropertyInfoValues2.Converter = null;
+		jsonPropertyInfoValues2.Getter = (object obj) => ((SettingsDataMetric)obj).DisplayCount;
+		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(SettingsDataMetric),
-			Converter = null,
-			Getter = (object obj) => ((SettingsDataMetric)obj).DisplayCount,
-			Setter = delegate(object obj, int value)
-			{
-				Unsafe.Unbox<SettingsDataMetric>(obj).DisplayCount = value;
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "DisplayCount",
-			JsonPropertyName = "displayCount",
-			AttributeProviderFactory = () => typeof(SettingsDataMetric).GetProperty("DisplayCount", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
+			Unsafe.Unbox<SettingsDataMetric>(obj).DisplayCount = value;
 		};
+		jsonPropertyInfoValues2.IgnoreCondition = null;
+		jsonPropertyInfoValues2.HasJsonInclude = false;
+		jsonPropertyInfoValues2.IsExtensionData = false;
+		jsonPropertyInfoValues2.NumberHandling = null;
+		jsonPropertyInfoValues2.PropertyName = "DisplayCount";
+		jsonPropertyInfoValues2.JsonPropertyName = "displayCount";
+		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SettingsDataMetric).GetProperty("DisplayCount", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<int> propertyInfo11 = jsonPropertyInfoValues2;
 		array[10] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo11);
-		JsonPropertyInfoValues<Vector2I> propertyInfo12 = new JsonPropertyInfoValues<Vector2I>
+		JsonPropertyInfoValues<Vector2I> jsonPropertyInfoValues5 = new JsonPropertyInfoValues<Vector2I>();
+		jsonPropertyInfoValues5.IsProperty = true;
+		jsonPropertyInfoValues5.IsPublic = true;
+		jsonPropertyInfoValues5.IsVirtual = false;
+		jsonPropertyInfoValues5.DeclaringType = typeof(SettingsDataMetric);
+		jsonPropertyInfoValues5.Converter = null;
+		jsonPropertyInfoValues5.Getter = (object obj) => ((SettingsDataMetric)obj).DisplayResolution;
+		jsonPropertyInfoValues5.Setter = delegate(object obj, Vector2I value)
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(SettingsDataMetric),
-			Converter = null,
-			Getter = (object obj) => ((SettingsDataMetric)obj).DisplayResolution,
-			Setter = delegate(object obj, Vector2I value)
-			{
-				Unsafe.Unbox<SettingsDataMetric>(obj).DisplayResolution = value;
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "DisplayResolution",
-			JsonPropertyName = "displayResolution",
-			AttributeProviderFactory = () => typeof(SettingsDataMetric).GetProperty("DisplayResolution", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(Vector2I), Array.Empty<Type>(), null)
+			Unsafe.Unbox<SettingsDataMetric>(obj).DisplayResolution = value;
 		};
+		jsonPropertyInfoValues5.IgnoreCondition = null;
+		jsonPropertyInfoValues5.HasJsonInclude = false;
+		jsonPropertyInfoValues5.IsExtensionData = false;
+		jsonPropertyInfoValues5.NumberHandling = null;
+		jsonPropertyInfoValues5.PropertyName = "DisplayResolution";
+		jsonPropertyInfoValues5.JsonPropertyName = "displayResolution";
+		jsonPropertyInfoValues5.AttributeProviderFactory = () => typeof(SettingsDataMetric).GetProperty("DisplayResolution", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(Vector2I), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<Vector2I> propertyInfo12 = jsonPropertyInfoValues5;
 		array[11] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo12);
-		JsonPropertyInfoValues<bool> propertyInfo13 = new JsonPropertyInfoValues<bool>
+		jsonPropertyInfoValues4 = new JsonPropertyInfoValues<bool>();
+		jsonPropertyInfoValues4.IsProperty = true;
+		jsonPropertyInfoValues4.IsPublic = true;
+		jsonPropertyInfoValues4.IsVirtual = false;
+		jsonPropertyInfoValues4.DeclaringType = typeof(SettingsDataMetric);
+		jsonPropertyInfoValues4.Converter = null;
+		jsonPropertyInfoValues4.Getter = (object obj) => ((SettingsDataMetric)obj).Fullscreen;
+		jsonPropertyInfoValues4.Setter = delegate(object obj, bool value)
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(SettingsDataMetric),
-			Converter = null,
-			Getter = (object obj) => ((SettingsDataMetric)obj).Fullscreen,
-			Setter = delegate(object obj, bool value)
-			{
-				Unsafe.Unbox<SettingsDataMetric>(obj).Fullscreen = value;
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "Fullscreen",
-			JsonPropertyName = "fullscreen",
-			AttributeProviderFactory = () => typeof(SettingsDataMetric).GetProperty("Fullscreen", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
+			Unsafe.Unbox<SettingsDataMetric>(obj).Fullscreen = value;
 		};
+		jsonPropertyInfoValues4.IgnoreCondition = null;
+		jsonPropertyInfoValues4.HasJsonInclude = false;
+		jsonPropertyInfoValues4.IsExtensionData = false;
+		jsonPropertyInfoValues4.NumberHandling = null;
+		jsonPropertyInfoValues4.PropertyName = "Fullscreen";
+		jsonPropertyInfoValues4.JsonPropertyName = "fullscreen";
+		jsonPropertyInfoValues4.AttributeProviderFactory = () => typeof(SettingsDataMetric).GetProperty("Fullscreen", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<bool> propertyInfo13 = jsonPropertyInfoValues4;
 		array[12] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo13);
-		JsonPropertyInfoValues<AspectRatioSetting> propertyInfo14 = new JsonPropertyInfoValues<AspectRatioSetting>
+		JsonPropertyInfoValues<AspectRatioSetting> jsonPropertyInfoValues6 = new JsonPropertyInfoValues<AspectRatioSetting>();
+		jsonPropertyInfoValues6.IsProperty = true;
+		jsonPropertyInfoValues6.IsPublic = true;
+		jsonPropertyInfoValues6.IsVirtual = false;
+		jsonPropertyInfoValues6.DeclaringType = typeof(SettingsDataMetric);
+		jsonPropertyInfoValues6.Converter = null;
+		jsonPropertyInfoValues6.Getter = (object obj) => ((SettingsDataMetric)obj).AspectRatio;
+		jsonPropertyInfoValues6.Setter = delegate(object obj, AspectRatioSetting value)
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(SettingsDataMetric),
-			Converter = null,
-			Getter = (object obj) => ((SettingsDataMetric)obj).AspectRatio,
-			Setter = delegate(object obj, AspectRatioSetting value)
-			{
-				Unsafe.Unbox<SettingsDataMetric>(obj).AspectRatio = value;
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "AspectRatio",
-			JsonPropertyName = "aspectRatio",
-			AttributeProviderFactory = () => typeof(SettingsDataMetric).GetProperty("AspectRatio", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(AspectRatioSetting), Array.Empty<Type>(), null)
+			Unsafe.Unbox<SettingsDataMetric>(obj).AspectRatio = value;
 		};
+		jsonPropertyInfoValues6.IgnoreCondition = null;
+		jsonPropertyInfoValues6.HasJsonInclude = false;
+		jsonPropertyInfoValues6.IsExtensionData = false;
+		jsonPropertyInfoValues6.NumberHandling = null;
+		jsonPropertyInfoValues6.PropertyName = "AspectRatio";
+		jsonPropertyInfoValues6.JsonPropertyName = "aspectRatio";
+		jsonPropertyInfoValues6.AttributeProviderFactory = () => typeof(SettingsDataMetric).GetProperty("AspectRatio", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(AspectRatioSetting), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<AspectRatioSetting> propertyInfo14 = jsonPropertyInfoValues6;
 		array[13] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo14);
-		JsonPropertyInfoValues<bool> propertyInfo15 = new JsonPropertyInfoValues<bool>
+		jsonPropertyInfoValues4 = new JsonPropertyInfoValues<bool>();
+		jsonPropertyInfoValues4.IsProperty = true;
+		jsonPropertyInfoValues4.IsPublic = true;
+		jsonPropertyInfoValues4.IsVirtual = false;
+		jsonPropertyInfoValues4.DeclaringType = typeof(SettingsDataMetric);
+		jsonPropertyInfoValues4.Converter = null;
+		jsonPropertyInfoValues4.Getter = (object obj) => ((SettingsDataMetric)obj).ResizeWindows;
+		jsonPropertyInfoValues4.Setter = delegate(object obj, bool value)
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(SettingsDataMetric),
-			Converter = null,
-			Getter = (object obj) => ((SettingsDataMetric)obj).ResizeWindows,
-			Setter = delegate(object obj, bool value)
-			{
-				Unsafe.Unbox<SettingsDataMetric>(obj).ResizeWindows = value;
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "ResizeWindows",
-			JsonPropertyName = "resizeWindows",
-			AttributeProviderFactory = () => typeof(SettingsDataMetric).GetProperty("ResizeWindows", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null)
+			Unsafe.Unbox<SettingsDataMetric>(obj).ResizeWindows = value;
 		};
+		jsonPropertyInfoValues4.IgnoreCondition = null;
+		jsonPropertyInfoValues4.HasJsonInclude = false;
+		jsonPropertyInfoValues4.IsExtensionData = false;
+		jsonPropertyInfoValues4.NumberHandling = null;
+		jsonPropertyInfoValues4.PropertyName = "ResizeWindows";
+		jsonPropertyInfoValues4.JsonPropertyName = "resizeWindows";
+		jsonPropertyInfoValues4.AttributeProviderFactory = () => typeof(SettingsDataMetric).GetProperty("ResizeWindows", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(bool), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<bool> propertyInfo15 = jsonPropertyInfoValues4;
 		array[14] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo15);
-		JsonPropertyInfoValues<VSyncType> propertyInfo16 = new JsonPropertyInfoValues<VSyncType>
+		JsonPropertyInfoValues<VSyncType> jsonPropertyInfoValues7 = new JsonPropertyInfoValues<VSyncType>();
+		jsonPropertyInfoValues7.IsProperty = true;
+		jsonPropertyInfoValues7.IsPublic = true;
+		jsonPropertyInfoValues7.IsVirtual = false;
+		jsonPropertyInfoValues7.DeclaringType = typeof(SettingsDataMetric);
+		jsonPropertyInfoValues7.Converter = null;
+		jsonPropertyInfoValues7.Getter = (object obj) => ((SettingsDataMetric)obj).VSync;
+		jsonPropertyInfoValues7.Setter = delegate(object obj, VSyncType value)
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(SettingsDataMetric),
-			Converter = null,
-			Getter = (object obj) => ((SettingsDataMetric)obj).VSync,
-			Setter = delegate(object obj, VSyncType value)
-			{
-				Unsafe.Unbox<SettingsDataMetric>(obj).VSync = value;
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "VSync",
-			JsonPropertyName = "vSync",
-			AttributeProviderFactory = () => typeof(SettingsDataMetric).GetProperty("VSync", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(VSyncType), Array.Empty<Type>(), null)
+			Unsafe.Unbox<SettingsDataMetric>(obj).VSync = value;
 		};
+		jsonPropertyInfoValues7.IgnoreCondition = null;
+		jsonPropertyInfoValues7.HasJsonInclude = false;
+		jsonPropertyInfoValues7.IsExtensionData = false;
+		jsonPropertyInfoValues7.NumberHandling = null;
+		jsonPropertyInfoValues7.PropertyName = "VSync";
+		jsonPropertyInfoValues7.JsonPropertyName = "vSync";
+		jsonPropertyInfoValues7.AttributeProviderFactory = () => typeof(SettingsDataMetric).GetProperty("VSync", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(VSyncType), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<VSyncType> propertyInfo16 = jsonPropertyInfoValues7;
 		array[15] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo16);
-		JsonPropertyInfoValues<int> propertyInfo17 = new JsonPropertyInfoValues<int>
+		jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
+		jsonPropertyInfoValues2.IsProperty = true;
+		jsonPropertyInfoValues2.IsPublic = true;
+		jsonPropertyInfoValues2.IsVirtual = false;
+		jsonPropertyInfoValues2.DeclaringType = typeof(SettingsDataMetric);
+		jsonPropertyInfoValues2.Converter = null;
+		jsonPropertyInfoValues2.Getter = (object obj) => ((SettingsDataMetric)obj).FpsLimit;
+		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(SettingsDataMetric),
-			Converter = null,
-			Getter = (object obj) => ((SettingsDataMetric)obj).FpsLimit,
-			Setter = delegate(object obj, int value)
-			{
-				Unsafe.Unbox<SettingsDataMetric>(obj).FpsLimit = value;
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "FpsLimit",
-			JsonPropertyName = "fpsLimit",
-			AttributeProviderFactory = () => typeof(SettingsDataMetric).GetProperty("FpsLimit", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
+			Unsafe.Unbox<SettingsDataMetric>(obj).FpsLimit = value;
 		};
+		jsonPropertyInfoValues2.IgnoreCondition = null;
+		jsonPropertyInfoValues2.HasJsonInclude = false;
+		jsonPropertyInfoValues2.IsExtensionData = false;
+		jsonPropertyInfoValues2.NumberHandling = null;
+		jsonPropertyInfoValues2.PropertyName = "FpsLimit";
+		jsonPropertyInfoValues2.JsonPropertyName = "fpsLimit";
+		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SettingsDataMetric).GetProperty("FpsLimit", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<int> propertyInfo17 = jsonPropertyInfoValues2;
 		array[16] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo17);
-		JsonPropertyInfoValues<int> propertyInfo18 = new JsonPropertyInfoValues<int>
+		jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
+		jsonPropertyInfoValues2.IsProperty = true;
+		jsonPropertyInfoValues2.IsPublic = true;
+		jsonPropertyInfoValues2.IsVirtual = false;
+		jsonPropertyInfoValues2.DeclaringType = typeof(SettingsDataMetric);
+		jsonPropertyInfoValues2.Converter = null;
+		jsonPropertyInfoValues2.Getter = (object obj) => ((SettingsDataMetric)obj).Msaa;
+		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(SettingsDataMetric),
-			Converter = null,
-			Getter = (object obj) => ((SettingsDataMetric)obj).Msaa,
-			Setter = delegate(object obj, int value)
-			{
-				Unsafe.Unbox<SettingsDataMetric>(obj).Msaa = value;
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "Msaa",
-			JsonPropertyName = "msaa",
-			AttributeProviderFactory = () => typeof(SettingsDataMetric).GetProperty("Msaa", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
+			Unsafe.Unbox<SettingsDataMetric>(obj).Msaa = value;
 		};
+		jsonPropertyInfoValues2.IgnoreCondition = null;
+		jsonPropertyInfoValues2.HasJsonInclude = false;
+		jsonPropertyInfoValues2.IsExtensionData = false;
+		jsonPropertyInfoValues2.NumberHandling = null;
+		jsonPropertyInfoValues2.PropertyName = "Msaa";
+		jsonPropertyInfoValues2.JsonPropertyName = "msaa";
+		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(SettingsDataMetric).GetProperty("Msaa", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<int> propertyInfo18 = jsonPropertyInfoValues2;
 		array[17] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo18);
 		return array;
 	}
@@ -2605,19 +2536,18 @@ internal class MetricsSerializerContext : JsonSerializerContext, IJsonTypeInfoRe
 	{
 		if (!TryGetTypeInfoForRuntimeCustomConverter(options, out JsonTypeInfo<EpochMetric> jsonTypeInfo))
 		{
-			JsonObjectInfoValues<EpochMetric> objectInfo = new JsonObjectInfoValues<EpochMetric>
+			JsonObjectInfoValues<EpochMetric> jsonObjectInfoValues = new JsonObjectInfoValues<EpochMetric>();
+			jsonObjectInfoValues.ObjectCreator = null;
+			jsonObjectInfoValues.ObjectWithParameterizedConstructorCreator = (object[] args) => new EpochMetric
 			{
-				ObjectCreator = null,
-				ObjectWithParameterizedConstructorCreator = (object[] args) => new EpochMetric
-				{
-					BuildId = (string)args[0],
-					Epoch = (string)args[1]
-				},
-				PropertyMetadataInitializer = (JsonSerializerContext _) => EpochMetricPropInit(options),
-				ConstructorParameterMetadataInitializer = EpochMetricCtorParamInit,
-				ConstructorAttributeProviderFactory = () => typeof(EpochMetric).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null),
-				SerializeHandler = EpochMetricSerializeHandler
+				BuildId = (string)args[0],
+				Epoch = (string)args[1]
 			};
+			jsonObjectInfoValues.PropertyMetadataInitializer = (JsonSerializerContext _) => EpochMetricPropInit(options);
+			jsonObjectInfoValues.ConstructorParameterMetadataInitializer = EpochMetricCtorParamInit;
+			jsonObjectInfoValues.ConstructorAttributeProviderFactory = () => typeof(EpochMetric).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null);
+			jsonObjectInfoValues.SerializeHandler = EpochMetricSerializeHandler;
+			JsonObjectInfoValues<EpochMetric> objectInfo = jsonObjectInfoValues;
 			jsonTypeInfo = JsonMetadataServices.CreateObjectInfo(options, objectInfo);
 			jsonTypeInfo.NumberHandling = null;
 		}
@@ -2628,116 +2558,111 @@ internal class MetricsSerializerContext : JsonSerializerContext, IJsonTypeInfoRe
 	private static JsonPropertyInfo[] EpochMetricPropInit(JsonSerializerOptions options)
 	{
 		JsonPropertyInfo[] array = new JsonPropertyInfo[5];
-		JsonPropertyInfoValues<string> propertyInfo = new JsonPropertyInfoValues<string>
+		JsonPropertyInfoValues<string> jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
+		jsonPropertyInfoValues.IsProperty = true;
+		jsonPropertyInfoValues.IsPublic = true;
+		jsonPropertyInfoValues.IsVirtual = false;
+		jsonPropertyInfoValues.DeclaringType = typeof(EpochMetric);
+		jsonPropertyInfoValues.Converter = null;
+		jsonPropertyInfoValues.Getter = (object obj) => ((EpochMetric)obj).BuildId;
+		jsonPropertyInfoValues.Setter = delegate(object obj, string? value)
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(EpochMetric),
-			Converter = null,
-			Getter = (object obj) => ((EpochMetric)obj).BuildId,
-			Setter = delegate(object obj, string? value)
-			{
-				((EpochMetric)obj).BuildId = value;
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "BuildId",
-			JsonPropertyName = "buildId",
-			AttributeProviderFactory = () => typeof(EpochMetric).GetProperty("BuildId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null)
+			((EpochMetric)obj).BuildId = value;
 		};
+		jsonPropertyInfoValues.IgnoreCondition = null;
+		jsonPropertyInfoValues.HasJsonInclude = false;
+		jsonPropertyInfoValues.IsExtensionData = false;
+		jsonPropertyInfoValues.NumberHandling = null;
+		jsonPropertyInfoValues.PropertyName = "BuildId";
+		jsonPropertyInfoValues.JsonPropertyName = "buildId";
+		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(EpochMetric).GetProperty("BuildId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<string> propertyInfo = jsonPropertyInfoValues;
 		array[0] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo);
 		array[0].IsRequired = true;
 		array[0].IsGetNullable = false;
 		array[0].IsSetNullable = false;
-		JsonPropertyInfoValues<string> propertyInfo2 = new JsonPropertyInfoValues<string>
+		jsonPropertyInfoValues = new JsonPropertyInfoValues<string>();
+		jsonPropertyInfoValues.IsProperty = true;
+		jsonPropertyInfoValues.IsPublic = true;
+		jsonPropertyInfoValues.IsVirtual = false;
+		jsonPropertyInfoValues.DeclaringType = typeof(EpochMetric);
+		jsonPropertyInfoValues.Converter = null;
+		jsonPropertyInfoValues.Getter = (object obj) => ((EpochMetric)obj).Epoch;
+		jsonPropertyInfoValues.Setter = delegate(object obj, string? value)
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(EpochMetric),
-			Converter = null,
-			Getter = (object obj) => ((EpochMetric)obj).Epoch,
-			Setter = delegate(object obj, string? value)
-			{
-				((EpochMetric)obj).Epoch = value;
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "Epoch",
-			JsonPropertyName = "epoch",
-			AttributeProviderFactory = () => typeof(EpochMetric).GetProperty("Epoch", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null)
+			((EpochMetric)obj).Epoch = value;
 		};
+		jsonPropertyInfoValues.IgnoreCondition = null;
+		jsonPropertyInfoValues.HasJsonInclude = false;
+		jsonPropertyInfoValues.IsExtensionData = false;
+		jsonPropertyInfoValues.NumberHandling = null;
+		jsonPropertyInfoValues.PropertyName = "Epoch";
+		jsonPropertyInfoValues.JsonPropertyName = "epoch";
+		jsonPropertyInfoValues.AttributeProviderFactory = () => typeof(EpochMetric).GetProperty("Epoch", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(string), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<string> propertyInfo2 = jsonPropertyInfoValues;
 		array[1] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo2);
 		array[1].IsRequired = true;
 		array[1].IsGetNullable = false;
 		array[1].IsSetNullable = false;
-		JsonPropertyInfoValues<int> propertyInfo3 = new JsonPropertyInfoValues<int>
+		JsonPropertyInfoValues<int> jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
+		jsonPropertyInfoValues2.IsProperty = true;
+		jsonPropertyInfoValues2.IsPublic = true;
+		jsonPropertyInfoValues2.IsVirtual = false;
+		jsonPropertyInfoValues2.DeclaringType = typeof(EpochMetric);
+		jsonPropertyInfoValues2.Converter = null;
+		jsonPropertyInfoValues2.Getter = (object obj) => ((EpochMetric)obj).TotalEpochs;
+		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(EpochMetric),
-			Converter = null,
-			Getter = (object obj) => ((EpochMetric)obj).TotalEpochs,
-			Setter = delegate(object obj, int value)
-			{
-				((EpochMetric)obj).TotalEpochs = value;
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "TotalEpochs",
-			JsonPropertyName = "totalEpochs",
-			AttributeProviderFactory = () => typeof(EpochMetric).GetProperty("TotalEpochs", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
+			((EpochMetric)obj).TotalEpochs = value;
 		};
+		jsonPropertyInfoValues2.IgnoreCondition = null;
+		jsonPropertyInfoValues2.HasJsonInclude = false;
+		jsonPropertyInfoValues2.IsExtensionData = false;
+		jsonPropertyInfoValues2.NumberHandling = null;
+		jsonPropertyInfoValues2.PropertyName = "TotalEpochs";
+		jsonPropertyInfoValues2.JsonPropertyName = "totalEpochs";
+		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(EpochMetric).GetProperty("TotalEpochs", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<int> propertyInfo3 = jsonPropertyInfoValues2;
 		array[2] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo3);
-		JsonPropertyInfoValues<long> propertyInfo4 = new JsonPropertyInfoValues<long>
+		JsonPropertyInfoValues<long> jsonPropertyInfoValues3 = new JsonPropertyInfoValues<long>();
+		jsonPropertyInfoValues3.IsProperty = true;
+		jsonPropertyInfoValues3.IsPublic = true;
+		jsonPropertyInfoValues3.IsVirtual = false;
+		jsonPropertyInfoValues3.DeclaringType = typeof(EpochMetric);
+		jsonPropertyInfoValues3.Converter = null;
+		jsonPropertyInfoValues3.Getter = (object obj) => ((EpochMetric)obj).TotalPlaytime;
+		jsonPropertyInfoValues3.Setter = delegate(object obj, long value)
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(EpochMetric),
-			Converter = null,
-			Getter = (object obj) => ((EpochMetric)obj).TotalPlaytime,
-			Setter = delegate(object obj, long value)
-			{
-				((EpochMetric)obj).TotalPlaytime = value;
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "TotalPlaytime",
-			JsonPropertyName = "totalPlaytime",
-			AttributeProviderFactory = () => typeof(EpochMetric).GetProperty("TotalPlaytime", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null)
+			((EpochMetric)obj).TotalPlaytime = value;
 		};
+		jsonPropertyInfoValues3.IgnoreCondition = null;
+		jsonPropertyInfoValues3.HasJsonInclude = false;
+		jsonPropertyInfoValues3.IsExtensionData = false;
+		jsonPropertyInfoValues3.NumberHandling = null;
+		jsonPropertyInfoValues3.PropertyName = "TotalPlaytime";
+		jsonPropertyInfoValues3.JsonPropertyName = "totalPlaytime";
+		jsonPropertyInfoValues3.AttributeProviderFactory = () => typeof(EpochMetric).GetProperty("TotalPlaytime", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(long), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<long> propertyInfo4 = jsonPropertyInfoValues3;
 		array[3] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo4);
-		JsonPropertyInfoValues<int> propertyInfo5 = new JsonPropertyInfoValues<int>
+		jsonPropertyInfoValues2 = new JsonPropertyInfoValues<int>();
+		jsonPropertyInfoValues2.IsProperty = true;
+		jsonPropertyInfoValues2.IsPublic = true;
+		jsonPropertyInfoValues2.IsVirtual = false;
+		jsonPropertyInfoValues2.DeclaringType = typeof(EpochMetric);
+		jsonPropertyInfoValues2.Converter = null;
+		jsonPropertyInfoValues2.Getter = (object obj) => ((EpochMetric)obj).TotalRuns;
+		jsonPropertyInfoValues2.Setter = delegate(object obj, int value)
 		{
-			IsProperty = true,
-			IsPublic = true,
-			IsVirtual = false,
-			DeclaringType = typeof(EpochMetric),
-			Converter = null,
-			Getter = (object obj) => ((EpochMetric)obj).TotalRuns,
-			Setter = delegate(object obj, int value)
-			{
-				((EpochMetric)obj).TotalRuns = value;
-			},
-			IgnoreCondition = null,
-			HasJsonInclude = false,
-			IsExtensionData = false,
-			NumberHandling = null,
-			PropertyName = "TotalRuns",
-			JsonPropertyName = "totalRuns",
-			AttributeProviderFactory = () => typeof(EpochMetric).GetProperty("TotalRuns", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null)
+			((EpochMetric)obj).TotalRuns = value;
 		};
+		jsonPropertyInfoValues2.IgnoreCondition = null;
+		jsonPropertyInfoValues2.HasJsonInclude = false;
+		jsonPropertyInfoValues2.IsExtensionData = false;
+		jsonPropertyInfoValues2.NumberHandling = null;
+		jsonPropertyInfoValues2.PropertyName = "TotalRuns";
+		jsonPropertyInfoValues2.JsonPropertyName = "totalRuns";
+		jsonPropertyInfoValues2.AttributeProviderFactory = () => typeof(EpochMetric).GetProperty("TotalRuns", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, typeof(int), Array.Empty<Type>(), null);
+		JsonPropertyInfoValues<int> propertyInfo5 = jsonPropertyInfoValues2;
 		array[4] = JsonMetadataServices.CreatePropertyInfo(options, propertyInfo5);
 		return array;
 	}
