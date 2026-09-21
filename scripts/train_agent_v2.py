@@ -444,9 +444,17 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
         CapabilityScoreConfig,
     )
     from sts2_env.training.metrics import EpisodeMetricsCallback
+    from sts2_env.training.plot_callback import TrainingPlotCallback
 
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
+    if args.tensorboard_log == "auto":
+        args.tensorboard_log = str(output_dir / "tb_logs")
+    elif (
+        args.tensorboard_log is not None
+        and str(args.tensorboard_log).lower() in {"none", "off"}
+    ):
+        args.tensorboard_log = None
 
     tensorizer_config = TensorizerConfig(max_entities=args.max_entities)
     reward_shaping = (
@@ -557,6 +565,12 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             ),
         )
         callbacks.append(capability_eval_callback)
+    if args.plot_freq > 0:
+        callbacks.append(TrainingPlotCallback(
+            output_dir,
+            plot_freq=max(args.plot_freq // args.n_envs, 1),
+            window=args.plot_window,
+        ))
     callback = CallbackList(callbacks) if callbacks else None
 
     started = time.perf_counter()
@@ -622,6 +636,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
                 "checkpoint_freq", "eval_freq", "periodic_eval_episodes",
                 "eval_seed", "eval_envs", "eval_win_weight",
                 "eval_truncation_penalty",
+                "plot_freq", "plot_window", "tensorboard_log",
             )
         },
         "reward_shaping": (
@@ -732,7 +747,19 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--seed", type=int, default=109)
     parser.add_argument("--resume-from", default=None)
     parser.add_argument("--device", default="auto")
-    parser.add_argument("--tensorboard-log", default=None)
+    parser.add_argument(
+        "--tensorboard-log",
+        default="auto",
+        help="TensorBoard directory; 'auto' uses OUTPUT_DIR/tb_logs, "
+        "and 'off' disables it.",
+    )
+    parser.add_argument(
+        "--plot-freq",
+        type=int,
+        default=25_000,
+        help="Refresh static PNG plots every N timesteps; 0 disables it.",
+    )
+    parser.add_argument("--plot-window", type=int, default=100)
     parser.add_argument(
         "--output-dir",
         default="output/typed_set_v4",

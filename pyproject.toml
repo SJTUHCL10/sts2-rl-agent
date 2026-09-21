@@ -10,8 +10,10 @@ dependencies = [
 
 [project.optional-dependencies]
 train = [
+    "matplotlib>=3.8",
     "stable-baselines3>=2.3.0",
     "sb3-contrib>=2.3.0",
+    "tensorboard>=2.16",
     "torch>=2.0",
 ]
 dev = [

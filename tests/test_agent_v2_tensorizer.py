@@ -5,6 +5,7 @@ import copy
 import numpy as np
 import pytest
 
+import sts2_env.agent_v2.tensorizer as tensorizer_module
 from sts2_env.agent_v2.tensorizer import (
     ENTITY_TYPE_TO_ID,
     TensorizerConfig,
@@ -78,7 +79,7 @@ def test_identical_deck_cards_are_count_compressed() -> None:
     mask = np.zeros(157, dtype=np.int8)
     mask[115] = 1
 
-    observation = tensorize_snapshot(snapshot, mask, config)
+    observation = tensorize_snapshot(snapshot, mask, config, validate=True)
     card_rows = (
         observation["entity_categorical"][:, 0]
         == ENTITY_TYPE_TO_ID["CARD"]
@@ -88,6 +89,31 @@ def test_identical_deck_cards_are_count_compressed() -> None:
     count_feature = observation["entity_numeric"][card_rows, 12]
     assert count_feature.item() > 1.0
     assert observation_space(config).contains(observation)
+
+
+def test_full_observation_validation_is_opt_in(monkeypatch) -> None:
+    config = TensorizerConfig(max_entities=8)
+    mask = np.zeros(157, dtype=np.int8)
+    mask[0] = 1
+    snapshot = {
+        "type": "run_complete",
+        "phase": "RUN_OVER",
+        "candidates": [],
+    }
+
+    class RejectingSpace:
+        def contains(self, _value) -> bool:
+            return False
+
+    monkeypatch.setattr(
+        tensorizer_module,
+        "observation_space",
+        lambda _config: RejectingSpace(),
+    )
+
+    tensorize_snapshot(snapshot, mask, config)
+    with pytest.raises(ValueError, match="violates its Gymnasium space"):
+        tensorize_snapshot(snapshot, mask, config, validate=True)
 
 
 def test_combat_piles_compress_but_hand_instances_do_not() -> None:

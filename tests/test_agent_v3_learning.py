@@ -24,6 +24,7 @@ from sts2_env.gym_env.entity_run_env import STS2EntityRunEnv
 from sts2_env.gym_env.run_env import STS2RunEnv
 from sts2_env.run.run_manager import RunManager
 from sts2_env.training.capability_eval import CapabilityScoreConfig
+from sts2_env.training.plots import _rolling_mean, read_jsonl
 
 
 def test_known_content_ids_have_collision_free_vocabulary_entries() -> None:
@@ -134,6 +135,18 @@ def test_training_curve_summary_uses_timestep_buckets() -> None:
     assert summary["episodes"] == 2
     assert [bucket["mean_floor"] for bucket in summary["buckets"]] == [3, 7]
     assert summary["buckets"][1]["wins"] == 1
+
+
+def test_plot_input_tolerates_partial_jsonl_and_rolls_by_episode(
+    tmp_path,
+) -> None:
+    path = tmp_path / "curve.jsonl"
+    path.write_text('{"floor": 2}\n{"floor": 4}\n{"floor":', encoding="utf-8")
+
+    assert read_jsonl(path) == [{"floor": 2}, {"floor": 4}]
+    rolling = _rolling_mean([2.0, 4.0, 8.0], window=2)
+    assert np.isnan(rolling[0])
+    assert rolling[1:].tolist() == [3.0, 6.0]
 
 
 def _install_run_choice(env: STS2RunEnv) -> None:

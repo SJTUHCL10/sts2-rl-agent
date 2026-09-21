@@ -20,7 +20,7 @@ from gymnasium import spaces
 from sts2_env.agent_v2.categorical_vocabulary import (
     VOCABULARY_HASH,
     VOCABULARY_SIZE,
-    categorical_id,
+    categorical_id as _uncached_categorical_id,
     canonical_token,
 )
 
@@ -105,7 +105,10 @@ ENTITY_TYPES = (
     "CHOICE",
     "OVERFLOW",
 )
-ENTITY_TYPE_TO_ID = {name: categorical_id(name) for name in ENTITY_TYPES}
+ENTITY_TYPE_TO_ID = {
+    name: _uncached_categorical_id(name)
+    for name in ENTITY_TYPES
+}
 
 
 def _finite(value: Any, default: float = 0.0) -> float:
@@ -117,14 +120,27 @@ def _finite(value: Any, default: float = 0.0) -> float:
 
 
 def _ratio(value: Any, scale: float) -> float:
-    return float(np.clip(_finite(value) / scale, -10.0, 10.0))
+    return max(-10.0, min(10.0, _finite(value) / scale))
 
 
 def _signed_log(value: Any, scale: float = 5.0) -> float:
     number = _finite(value)
-    return float(np.clip(
-        math.copysign(math.log1p(abs(number)) / scale, number), -10.0, 10.0
-    ))
+    transformed = math.copysign(math.log1p(abs(number)) / scale, number)
+    return max(-10.0, min(10.0, transformed))
+
+
+@lru_cache(maxsize=8192)
+def _cached_categorical_id(value: Any, strict: bool) -> int:
+    """Cache the highly repetitive scalar vocabulary lookups."""
+    return _uncached_categorical_id(value, strict=strict)
+
+
+def categorical_id(value: Any, *, strict: bool = False) -> int:
+    """Encode a scalar category, falling back for an unhashable value."""
+    try:
+        return _cached_categorical_id(value, strict)
+    except TypeError:
+        return _uncached_categorical_id(value, strict=strict)
 
 
 def _content_id(entity: dict[str, Any]) -> Any:
@@ -619,8 +635,14 @@ def tensorize_snapshot(
     snapshot: dict[str, Any],
     action_mask: np.ndarray,
     config: TensorizerConfig = DEFAULT_TENSORIZER_CONFIG,
+    *,
+    validate: bool = False,
 ) -> dict[str, np.ndarray]:
-    """Convert a v2 snapshot and fixed action mask to padded numpy tensors."""
+    """Convert a v2 snapshot and fixed action mask to padded numpy tensors.
+
+    Full Gymnasium-space validation scans every padded array, so it is opt-in
+    for tests and diagnostics rather than part of the production hot path.
+    """
     if action_mask.shape != (config.num_actions,):
         raise ValueError(
             f"Expected action mask {(config.num_actions,)}, got {action_mask.shape}"
@@ -723,7 +745,7 @@ def tensorize_snapshot(
         "candidate_categorical": candidate_categorical,
         "candidate_numeric": candidate_numeric,
     }
-    if not observation_space(config).contains(result):
+    if validate and not observation_space(config).contains(result):
         raise ValueError(
             "Tensorized v2 observation violates its Gymnasium space"
         )

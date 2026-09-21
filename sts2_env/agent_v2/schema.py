@@ -9,6 +9,7 @@ from __future__ import annotations
 import hashlib
 import json
 from enum import Enum
+from functools import lru_cache
 from typing import Any, Iterable
 
 from sts2_env.core.enums import CardId, PowerId
@@ -103,8 +104,9 @@ def enum_vocabulary(enum_type: type[Enum]) -> tuple[str, ...]:
     return tuple(member.name for member in enum_type)
 
 
-def schema_manifest() -> dict[str, Any]:
-    """Return checkpoint/replay compatibility metadata."""
+@lru_cache(maxsize=1)
+def _schema_manifest_template() -> dict[str, Any]:
+    """Compute immutable-in-practice schema metadata once per process."""
     vocabularies = {
         "cards": enum_vocabulary(CardId),
         "powers": enum_vocabulary(PowerId),
@@ -129,6 +131,19 @@ def schema_manifest() -> dict[str, Any]:
             name: len(values)
             for name, values in vocabularies.items()
         },
+    }
+
+
+def schema_manifest() -> dict[str, Any]:
+    """Return independent checkpoint/replay compatibility metadata."""
+    template = _schema_manifest_template()
+    return {
+        "protocol_version": template["protocol_version"],
+        "observation_schema": template["observation_schema"],
+        "action_schema": template["action_schema"],
+        "feature_layout_hash": template["feature_layout_hash"],
+        "vocabulary_hashes": dict(template["vocabulary_hashes"]),
+        "vocabulary_sizes": dict(template["vocabulary_sizes"]),
     }
 
 

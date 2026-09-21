@@ -16,18 +16,21 @@ Typed Set Transformer 和 candidate-aware actor，不使用 LSTM/GRU，也不考
 当前推荐的本机 checkpoint 是：
 
 ```text
-output/typed_set_v4_moe_monotonic_100k_20260805/
+output/typed_set_v4_retrain_100k_4env_20260921/
   best_model/best_model.zip
 ```
 
-最新 100 个固定种子评估（seed `100109..100208`）：
+这是设备迁移后在 `0.111.0` 词表上重新训练的 4-env / 102,400-step
+checkpoint。最新 100 个固定种子评估（seed `100109..100208`）：
 
 | Policy | Wins | Mean floor | Median | Max | Truncated |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| v4 75k best | 0/100 | **8.78** | 7.0 | 20 | 0 |
-| Masked random | 0/100 | 3.41 | - | 10 | 0 |
+| v4 100k best | 0/100 | **7.12** | 6.0 | 18 | 0 |
+| Masked random | 0/100 | 3.39 | 3.0 | 10 | 0 |
 
 它已经稳定优于随机策略，但仍然没有采样到胜局，因此还不是通关 agent。
+同一设备和种子下的 16-env / 256-step 吞吐配置达到 158 step/s，但 100-seed
+mean floor 只有 6.08；4-env / 1024-step 配置为 96.4 step/s，但策略质量更高。
 
 ## 2. 基础架构
 
@@ -190,6 +193,17 @@ batch 变大，使 GPU 利用率略有改善。加速不会线性增长，因为
 新的默认设置是：训练中周期评估 20 seeds，最终评估 100 seeds，评估并行度
 8。千级 seed 评估应改成动态任务调度，避免固定 VecEnv 的尾部等待。
 
+训练脚本默认把 TensorBoard event 写到本次输出目录的 `tb_logs/`，并每 25k
+timesteps 刷新 `training_progress.png` 和 `capability_progress.png`。前者展示
+episode floor、return、length 和 win rate 的 100-episode rolling curve，后者
+展示固定种子评估的 mean/max floor、capability score 和 win rate。已有 JSONL
+日志可以独立重绘：
+
+```powershell
+python scripts/plot_agent_v2_training.py output/<run-name> --window 100
+tensorboard --logdir output/<run-name>/tb_logs
+```
+
 ## 6. 训练环境并行
 
 训练也可以增加并行环境，并且当前瓶颈下确实有效。不过 SB3 的每次 rollout
@@ -213,6 +227,29 @@ CUDA 实测为：
 `4 × 1024` 一样保持 4096-transition rollout；显存和 RAM 仍应在长训时监控。
 若机器同时运行游戏或其他重负载，可显式退回 8 envs。
 
+### 6.1 Tensorizer 热路径优化
+
+2026-09-21 的本机 profile 显示，entity-v2 的主要 CPU 开销不是 snapshot 本身，
+而是 tensorizer 对每个标量调用 NumPy、重复编码相同 categorical token、重复计算
+schema manifest，以及每步扫描完整 padded observation 做 Gym space 校验。训练热
+路径现已改为标量 Python clamp、有界 categorical ID cache、进程级 manifest
+template，并将完整 space 校验改为显式 `validate=True` 的测试/诊断选项。
+
+同一 RTX 4070 SUPER 上的结果：
+
+| Benchmark | Before | After | Change |
+| --- | ---: | ---: | ---: |
+| entity-v2 environment, 5000 steps | 83.5 step/s | 276.7 step/s | 3.31x |
+| entity observation overhead | 11.58 ms/step | 3.06 ms/step | -73.6% |
+| 4-env CUDA PPO, 4096 steps | 142.3 step/s | 177.3 step/s | +24.6% |
+| PPO rollout time | 22.81 s | 16.33 s | -28.4% |
+| PPO total time | 28.78 s | 23.10 s | -19.7% |
+
+优化没有修改 tensor shape、vocabulary 或 feature-layout hash，已有 v4 checkpoint
+保持兼容。下一步性能工作应先消除 entity wrapper 中被丢弃的 v1 observation、
+重复 action mask 和不变 run snapshot 的重复序列化；只有这些同步 CPU 工作继续
+下降后，才值得承担自定义异步 rollout collector 的复杂度。
+
 ## 7. 当前限制与后续方向
 
 - 100-seed 仍为 0 胜，完整 run 胜率仍是最终指标。
@@ -223,5 +260,6 @@ CUDA 实测为：
   floor/act progress；其次是轻量地图 graph encoder。
 - 在没有胜局样本时，scripted/heuristic policy 的 behavior cloning warm start 或
   curriculum 很可能比继续堆大 actor 更有样本效率。
-- GPU update 已不是主要瓶颈；性能工程应继续优化 snapshot/tensorizer 的重复
-  构造和异步 rollout。
+- GPU update 仍不是主要瓶颈；tensorizer 标量热路径已优化，后续应消除 legacy
+  observation、action mask 和 persistent run snapshot 的重复构造，再评估异步
+  rollout。
