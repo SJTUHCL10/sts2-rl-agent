@@ -83,8 +83,8 @@ ITERATION_UPGRADED_POWER_AMOUNT = 3
 SPINNER_POWER_AMOUNT = 1
 NULL_DAMAGE = 10
 NULL_UPGRADED_DAMAGE = 13
-NULL_WEAK = 2
-NULL_UPGRADED_WEAK = 3
+NULL_WEAK = 1
+NULL_UPGRADED_WEAK = 2
 RAINBOW_ORBS = (OrbType.LIGHTNING, OrbType.FROST, OrbType.DARK)
 TEST_ENEMY_HP = 100
 EXHAUST_KEYWORD = "exhaust"
@@ -412,7 +412,7 @@ class TestDefectCardEffectsReferenceParity:
         assert combat.play_card(0)
 
         assert blocked.current_hp == 100
-        assert hittable.current_hp == 70
+        assert hittable.current_hp == 76
         assert combat.player.get_power_amount(PowerId.FOCUS) == 1
 
     def test_shatter_hits_only_hittable_enemies(self):
@@ -962,7 +962,7 @@ class TestDefectCardEffectsReferenceParity:
         combat.energy = 1
 
         assert combat.play_card(0)
-        assert combat.player.get_power_amount(PowerId.THUNDER) == 6
+        assert combat.player.get_power_amount(PowerId.THUNDER) == 8
 
     def test_thunder_adds_damage_to_lightning_orb_evoke_targets(self):
         """Matches ThunderPower.cs: after Lightning evoke, damage the living evoke targets."""

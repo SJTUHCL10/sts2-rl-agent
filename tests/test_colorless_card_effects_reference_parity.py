@@ -438,7 +438,7 @@ class TestColorlessCardEffectsReferenceParity:
         combat.energy = 2
 
         assert combat.play_card(0, 0)
-        assert enemy.current_hp == 175
+        assert enemy.current_hp == 180
 
     def test_rend_counts_negative_strength_but_ignores_temporary_debuffs(self):
         combat = _make_combat()
@@ -451,7 +451,7 @@ class TestColorlessCardEffectsReferenceParity:
         combat.energy = 2
 
         assert combat.play_card(0, 0)
-        assert enemy.current_hp == 180
+        assert enemy.current_hp == 185
 
     def test_rend_uses_normal_attack_damage_modifiers(self):
         combat = _make_combat()
@@ -463,7 +463,7 @@ class TestColorlessCardEffectsReferenceParity:
         combat.energy = 2
 
         assert combat.play_card(0, 0)
-        assert enemy.current_hp == 182
+        assert enemy.current_hp == 187
 
     def test_gold_axe_scales_with_finished_owner_card_plays_only(self):
         combat = _make_combat()

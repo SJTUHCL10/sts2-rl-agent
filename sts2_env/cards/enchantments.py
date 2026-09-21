@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sts2_env.core.enums import CardRarity, CardTag, CardType, ValueProp
+from sts2_env.core.enums import CardRarity, CardTag, CardType, PowerId, TargetType, ValueProp
 from sts2_env.core.damage import calculate_block
 
 if TYPE_CHECKING:
@@ -173,7 +173,11 @@ def modify_shuffle_order(cards: list[CardInstance], *, is_initial_shuffle: bool)
         cards[:] = perfect_fit + remaining
 
 
-def on_card_played(card: CardInstance, combat: CombatState) -> None:
+def on_card_played(
+    card: CardInstance,
+    combat: CombatState,
+    target: Creature | None = None,
+) -> None:
     owner = (
         getattr(card, "owner", None)
         or getattr(getattr(combat, "active_card_source", None), "owner", None)
@@ -197,6 +201,11 @@ def on_card_played(card: CardInstance, combat: CombatState) -> None:
         card.combat_vars["_enchant_momentum_bonus"] = (
             card.combat_vars.get("_enchant_momentum_bonus", 0) + card.enchantments["Momentum"]
         )
+    if card.has_enchantment("Inky"):
+        targets = list(combat.hittable_enemies) if card.target_type == TargetType.ALL_ENEMIES else [target]
+        for enemy in targets:
+            if enemy is not None and enemy.is_alive:
+                combat.apply_power_to(enemy, PowerId.WEAK, 1, applier=owner, source=card)
 
 
 def after_card_played(card: CardInstance) -> None:

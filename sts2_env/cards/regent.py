@@ -288,7 +288,9 @@ def solar_strike(card: CardInstance, combat: CombatState, target: Creature | Non
 
 @register_effect(CardId.SPOILS_OF_BATTLE)
 def spoils_of_battle(card: CardInstance, combat: CombatState, target: Creature | None) -> None:
-    combat.forge(_owner(card, combat), card.effect_vars.get("forge", 10), source=card)
+    owner = _owner(card, combat)
+    combat.forge(owner, card.effect_vars.get("forge", 6), source=card)
+    combat.draw_cards(owner, card.effect_vars.get("cards", 2))
 
 
 @register_effect(CardId.WROUGHT_IN_WAR)
@@ -993,7 +995,7 @@ def make_falling_star(upgraded: bool = False) -> CardInstance:
         target_type=TargetType.ANY_ENEMY, rarity=CardRarity.BASIC,
         base_damage=11 if upgraded else 7, upgraded=upgraded,
         effect_vars={"weak": 1, "vulnerable": 1},
-        star_cost=2,
+        star_cost=1,
         instance_id=_get_next_id(),
     )
 
@@ -1141,7 +1143,7 @@ def make_refine_blade(upgraded: bool = False) -> CardInstance:
         card_id=CardId.REFINE_BLADE, cost=1, card_type=CardType.SKILL,
         target_type=TargetType.SELF, rarity=CardRarity.COMMON,
         upgraded=upgraded,
-        effect_vars={"forge": 10 if upgraded else 6, "energy": 1},
+        effect_vars={"forge": 12 if upgraded else 8, "energy": 1},
         instance_id=_get_next_id(),
     )
 
@@ -1161,7 +1163,7 @@ def make_spoils_of_battle(upgraded: bool = False) -> CardInstance:
         card_id=CardId.SPOILS_OF_BATTLE, cost=1, card_type=CardType.SKILL,
         target_type=TargetType.SELF, rarity=CardRarity.COMMON,
         upgraded=upgraded,
-        effect_vars={"forge": 15 if upgraded else 10},
+        effect_vars={"forge": 9 if upgraded else 6, "cards": 2},
         instance_id=_get_next_id(),
     )
 

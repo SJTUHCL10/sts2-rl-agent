@@ -1428,7 +1428,7 @@ class CombatState:
                 with self.acting_player_view(owner):
                     fire_after_card_played(card, self)
                     self._apply_card_after_card_played(card, owner)
-                    apply_enchantment_on_card_played(card, self)
+                    apply_enchantment_on_card_played(card, self, target)
                     apply_enchantment_after_card_played(card)
                     self._fire_after_card_played_late(card)
                 ctx["awaiting_after_hook"] = False
@@ -1482,7 +1482,7 @@ class CombatState:
             with self.acting_player_view(owner):
                 fire_after_card_played(card, self)
                 self._apply_card_after_card_played(card, owner)
-                apply_enchantment_on_card_played(card, self)
+                apply_enchantment_on_card_played(card, self, target)
                 apply_enchantment_after_card_played(card)
                 self._fire_after_card_played_late(card)
             if self.is_over:

@@ -395,14 +395,14 @@ Generated from spire-codex JSON. This file is also consumed by the Python card f
 ### Expect a Fight
 - **ID:** EXPECT_A_FIGHT
 - **Color:** ironclad
-- **Cost:** 2
+- **Cost:** 3
 - **Type:** Skill
 - **Rarity:** Uncommon
 - **Target:** Self
 - **Keywords:** None
 - **Tags:** None
-- **Vars:** {Energy: 0, CalcBase: 0, CalcExtra: 1}
-- **Upgrade:** Cost-1
+- **Vars:** {CalcBase: 15, CalcExtra: 5}
+- **Upgrade:** CalcBase+1; CalcExtra+3
 
 ### Feed
 - **ID:** FEED
@@ -797,8 +797,8 @@ Generated from spire-codex JSON. This file is also consumed by the Python card f
 - **Target:** AnyEnemy
 - **Keywords:** None
 - **Tags:** None
-- **Vars:** {Damage: 9, Increase: 5}
-- **Upgrade:** Increase+4
+- **Vars:** {Damage: 10, Increase: 5}
+- **Upgrade:** Increase+5
 
 ### Rupture
 - **ID:** RUPTURE
@@ -1723,10 +1723,10 @@ Generated from spire-codex JSON. This file is also consumed by the Python card f
 - **Type:** Skill
 - **Rarity:** Uncommon
 - **Target:** Self
-- **Keywords:** None
+- **Keywords:** Exhaust
 - **Tags:** None
 - **Vars:** {CalcBase: 0, CalcExtra: 1}
-- **Upgrade:** Cost-1
+- **Upgrade:** Remove Exhaust
 
 ### Murder
 - **ID:** MURDER
@@ -2737,8 +2737,8 @@ Generated from spire-codex JSON. This file is also consumed by the Python card f
 - **Target:** AllEnemies
 - **Keywords:** None
 - **Tags:** None
-- **Vars:** {Damage: 30, FocusPower: 3}
-- **Upgrade:** Damage+8
+- **Vars:** {Damage: 24, FocusPower: 3}
+- **Upgrade:** Damage+6
 
 ### Ice Lance
 - **ID:** ICE_LANCE
@@ -2893,7 +2893,7 @@ Generated from spire-codex JSON. This file is also consumed by the Python card f
 - **Target:** AnyEnemy
 - **Keywords:** None
 - **Tags:** None
-- **Vars:** {Damage: 10, Weak: 2}
+- **Vars:** {Damage: 10, Weak: 1}
 - **Upgrade:** Damage+3; Weak+1
 
 ### One for All
@@ -3157,7 +3157,7 @@ Generated from spire-codex JSON. This file is also consumed by the Python card f
 - **Target:** Self
 - **Keywords:** None
 - **Tags:** None
-- **Vars:** {CalcBase: 0, CalcExtra: 2}
+- **Vars:** {CalcBase: 0, CalcExtra: 1}
 - **Upgrade:** CalcExtra+1
 
 ### Synthesis
@@ -3205,8 +3205,8 @@ Generated from spire-codex JSON. This file is also consumed by the Python card f
 - **Target:** Self
 - **Keywords:** None
 - **Tags:** None
-- **Vars:** {ThunderPower: 6}
-- **Upgrade:** ThunderPower+2
+- **Vars:** {ThunderPower: 8}
+- **Upgrade:** ThunderPower+3
 
 ### Trash to Treasure
 - **ID:** TRASH_TO_TREASURE
@@ -4157,7 +4157,7 @@ Generated from spire-codex JSON. This file is also consumed by the Python card f
 - **Target:** Self
 - **Keywords:** None
 - **Tags:** None
-- **Vars:** {Block: 2}
+- **Vars:** {Block: 3}
 - **Upgrade:** Block+1
 
 ### Sic 'Em
@@ -4299,7 +4299,7 @@ Generated from spire-codex JSON. This file is also consumed by the Python card f
 - **Type:** Attack
 - **Rarity:** Rare
 - **Target:** AnyEnemy
-- **Keywords:** Exhaust
+- **Keywords:** None
 - **Tags:** None
 - **Vars:** {CalcBase: 0, ExtraDamage: 1}
 - **Upgrade:** Add Retain
@@ -4383,7 +4383,7 @@ Generated from spire-codex JSON. This file is also consumed by the Python card f
 ### Alignment
 - **ID:** ALIGNMENT
 - **Color:** regent
-- **Cost:** 0 | StarCost: 3
+- **Cost:** 0 | StarCost: 2
 - **Type:** Skill
 - **Rarity:** Uncommon
 - **Target:** Self
@@ -4827,7 +4827,7 @@ Generated from spire-codex JSON. This file is also consumed by the Python card f
 ### Guiding Star
 - **ID:** GUIDING_STAR
 - **Color:** regent
-- **Cost:** 1 | StarCost: 2
+- **Cost:** 1 | StarCost: 1
 - **Type:** Attack
 - **Rarity:** Common
 - **Target:** AnyEnemy
@@ -5193,7 +5193,7 @@ Generated from spire-codex JSON. This file is also consumed by the Python card f
 - **Target:** Self
 - **Keywords:** None
 - **Tags:** None
-- **Vars:** {Forge: 9, Energy: 1}
+- **Vars:** {Forge: 8, Energy: 1}
 - **Upgrade:** Forge+4
 
 ### Reflect
@@ -5313,7 +5313,7 @@ Generated from spire-codex JSON. This file is also consumed by the Python card f
 - **Target:** Self
 - **Keywords:** None
 - **Tags:** None
-- **Vars:** {Forge: 5, Cards: 2}
+- **Vars:** {Forge: 6, Cards: 2}
 - **Upgrade:** Forge+3
 
 ### Stardust
@@ -6019,14 +6019,14 @@ Generated from spire-codex JSON. This file is also consumed by the Python card f
 ### Rend
 - **ID:** REND
 - **Color:** colorless
-- **Cost:** 2
+- **Cost:** 1
 - **Type:** Attack
 - **Rarity:** Rare
 - **Target:** AnyEnemy
 - **Keywords:** None
 - **Tags:** None
-- **Vars:** {CalcBase: 15, ExtraDamage: 5}
-- **Upgrade:** ExtraDamage+3; CalcBase+3
+- **Vars:** {CalcBase: 10, ExtraDamage: 5}
+- **Upgrade:** ExtraDamage+3; CalcBase+2
 
 ### Restlessness
 - **ID:** RESTLESSNESS
@@ -6057,7 +6057,7 @@ Generated from spire-codex JSON. This file is also consumed by the Python card f
 - **Color:** colorless
 - **Cost:** 1
 - **Type:** Attack
-- **Rarity:** Rare
+- **Rarity:** Uncommon
 - **Target:** AnyEnemy
 - **Keywords:** None
 - **Tags:** None
@@ -6129,7 +6129,7 @@ Generated from spire-codex JSON. This file is also consumed by the Python card f
 - **Color:** colorless
 - **Cost:** 1
 - **Type:** Skill
-- **Rarity:** Uncommon
+- **Rarity:** Rare
 - **Target:** Self
 - **Keywords:** None
 - **Tags:** None
@@ -6305,7 +6305,7 @@ Generated from spire-codex JSON. This file is also consumed by the Python card f
 - **Target:** Self
 - **Keywords:** None
 - **Tags:** None
-- **Vars:** {MaxHp: 1, Energy: 2, Cards: 2}
+- **Vars:** {MaxHp: 2, Energy: 2, Cards: 2}
 - **Upgrade:** Energy+1; Cards+1
 
 ### Byrd Swoop

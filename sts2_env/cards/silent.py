@@ -1387,8 +1387,9 @@ def make_memento_mori(upgraded: bool = False) -> CardInstance:
 
 def make_mirage(upgraded: bool = False) -> CardInstance:
     return CardInstance(
-        card_id=CardId.MIRAGE, cost=0 if upgraded else 1, card_type=CardType.SKILL,
+        card_id=CardId.MIRAGE, cost=1, card_type=CardType.SKILL,
         target_type=TargetType.SELF, rarity=CardRarity.UNCOMMON,
+        keywords=frozenset() if upgraded else frozenset({"exhaust"}),
         upgraded=upgraded, instance_id=_get_next_id(),
     )
 

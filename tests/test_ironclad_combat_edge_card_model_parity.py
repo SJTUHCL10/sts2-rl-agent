@@ -936,18 +936,15 @@ class TestIroncladCombatEdgeCardModelParity:
         assert damaged_combat.play_card(0, 0)
         assert damaged_combat.hand == [drawn]
 
-    def test_expect_a_fight_gains_energy_for_attacks_in_hand_not_skills(self):
+    def test_expect_a_fight_scales_block_with_nonnegative_strength(self):
         combat = _make_combat()
-        combat.hand = [
-            make_expect_a_fight(),
-            make_strike_ironclad(),
-            make_strike_ironclad(),
-            make_defend_ironclad(),
-        ]
-        combat.energy = 2
+        combat.player.apply_power(PowerId.STRENGTH, 2)
+        combat.hand = [make_expect_a_fight()]
+        combat.energy = 3
 
         assert combat.play_card(0)
-        assert combat.energy == 2
+        assert combat.energy == 0
+        assert combat.player.block == 25
 
     def test_brand_still_gains_strength_when_selection_returns_none(self):
         combat = _make_combat()
@@ -995,13 +992,13 @@ class TestIroncladCombatEdgeCardModelParity:
         combat.exhaust_pile.append(make_anger())
         assert combat.can_play_card(card) is True
 
-    def test_forgotten_ritual_only_gains_energy_after_owner_exhausted_card_this_turn(self):
+    def test_forgotten_ritual_always_gains_three_energy(self):
         combat = _make_combat()
         combat.hand = [make_forgotten_ritual()]
         combat.energy = 1
 
         assert combat.play_card(0)
-        assert combat.energy == 0
+        assert combat.energy == 3
 
         exhausted_combat = _make_combat()
         fodder = make_defend_ironclad()

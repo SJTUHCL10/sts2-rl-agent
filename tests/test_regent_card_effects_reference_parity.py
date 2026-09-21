@@ -507,8 +507,8 @@ class TestRegentCardEffectsReferenceParity:
         owner_blade = next(card for card in combat.hand if card.card_id == CardId.SOVEREIGN_BLADE)
         ally_hand = combat._ally_player_zones[ally]["hand"]  # noqa: SLF001
         ally_blade = next(card for card in ally_hand if card.card_id == CardId.SOVEREIGN_BLADE)
-        assert owner_blade.base_damage == 20
-        assert ally_blade.base_damage == 20
+        assert owner_blade.base_damage == 16
+        assert ally_blade.base_damage == 16
 
     def test_monologue_gains_strength_per_card_played_then_resets_end_of_turn(self):
         combat = _make_combat()

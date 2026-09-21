@@ -673,11 +673,11 @@ class RedMask(RelicInstance):
 
 @register_relic
 class Regalite(RelicInstance):
-    """The first time the owner creates a card each turn, gain 6 block."""
+    """The first time the owner creates a card each turn, gain 4 block."""
     relic_id = RelicId.REGALITE
     rarity = RelicRarity.UNCOMMON
     pool = RelicPool.REGENT
-    BLOCK = 6
+    BLOCK = 4
 
     def __init__(self, relic_id: RelicId) -> None:
         super().__init__(relic_id)

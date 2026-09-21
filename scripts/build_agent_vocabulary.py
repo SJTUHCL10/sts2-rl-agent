@@ -89,7 +89,7 @@ def main() -> None:
     parser.add_argument(
         "--codex-data",
         type=Path,
-        default=Path("../spire-codex/data-beta/v0.110.0/eng"),
+        default=Path("../spire-codex/data-beta/v0.111.0/eng"),
     )
     parser.add_argument(
         "--output",

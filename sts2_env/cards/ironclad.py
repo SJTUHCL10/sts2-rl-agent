@@ -957,19 +957,25 @@ def make_evil_eye(upgraded: bool = False) -> CardInstance:
 @register_effect(CardId.EXPECT_A_FIGHT)
 def expect_a_fight(card: CardInstance, combat: CombatState, target: Creature | None) -> None:
     owner = _owner(card, combat)
-    state = combat.combat_player_state_for(owner)
-    attack_count = sum(1 for c in state.hand if c.is_attack) if state is not None else 0
-    combat.gain_energy(owner, attack_count)
+    strength = max(0, owner.get_power_amount(PowerId.STRENGTH))
+    base = card.effect_vars.get("calc_base", 15)
+    extra = card.effect_vars.get("calc_extra", 5)
+    card.base_block = base + extra * strength
+    _gain_block(card, combat)
 
 
 def make_expect_a_fight(upgraded: bool = False) -> CardInstance:
     return CardInstance(
         card_id=CardId.EXPECT_A_FIGHT,
-        cost=1 if upgraded else 2,
+        cost=3,
         card_type=CardType.SKILL,
         target_type=TargetType.SELF,
         rarity=CardRarity.UNCOMMON,
-        effect_vars={"energy": 0, "calc_base": 0, "calc_extra": 1},
+        base_block=16 if upgraded else 15,
+        effect_vars={
+            "calc_base": 16 if upgraded else 15,
+            "calc_extra": 8 if upgraded else 5,
+        },
         upgraded=upgraded,
         instance_id=_get_next_id(),
     )
@@ -1059,8 +1065,6 @@ def make_flame_barrier(upgraded: bool = False) -> CardInstance:
 @register_effect(CardId.FORGOTTEN_RITUAL)
 def forgotten_ritual(card: CardInstance, combat: CombatState, target: Creature | None) -> None:
     owner = _owner(card, combat)
-    if not combat.was_card_exhausted_this_turn(owner):
-        return
     energy = card.effect_vars.get("energy", 3)
     combat.gain_energy(owner, energy)
 
@@ -1315,8 +1319,8 @@ def make_rampage(upgraded: bool = False) -> CardInstance:
         card_type=CardType.ATTACK,
         target_type=TargetType.ANY_ENEMY,
         rarity=CardRarity.UNCOMMON,
-        base_damage=9,
-        effect_vars={"increase": 9 if upgraded else 5},
+        base_damage=10,
+        effect_vars={"increase": 10 if upgraded else 5},
         upgraded=upgraded,
         instance_id=_get_next_id(),
     )

@@ -1161,10 +1161,12 @@ class BeautifulBracelet(RelicInstance):
 
     def after_obtained(self, owner: Creature) -> None:
         candidates = [card for card in owner.deck if can_enchant_card(card, "Swift")]
-        if getattr(owner.run_state, "defer_followup_rewards", False):
-            owner.offer_enchant_cards_reward("Swift", self.SWIFT, self.CARDS, cards=candidates)
-            return
-        owner.enchant_selected_cards("Swift", self.SWIFT, self.CARDS, cards=candidates)
+        chosen = owner.run_state.rng.niche.sample(
+            candidates,
+            min(self.CARDS, len(candidates)),
+        )
+        for card in chosen:
+            card.add_enchantment("Swift", self.SWIFT)
 
 
 @register_relic

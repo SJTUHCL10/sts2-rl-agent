@@ -224,12 +224,12 @@ def test_card_selection_state_changes_candidate_features() -> None:
 
 def test_run_snapshot_preserves_incremental_deck_selection() -> None:
     manager = RunManager(seed=803, character_id="Ironclad")
-    assert manager.run_state.player.obtain_relic("BEAUTIFUL_BRACELET")
+    assert manager.run_state.player.obtain_relic("KIFUDA")
 
     before = build_run_decision_snapshot(manager)
     assert before["type"] == "card_select"
     assert before["selected_count"] == 0
-    assert before["can_confirm"] is False
+    assert before["can_confirm"] is True
     assert not any(card["selected"] for card in before["cards"])
 
     manager.take_action({"action": "choose", "index": 0})

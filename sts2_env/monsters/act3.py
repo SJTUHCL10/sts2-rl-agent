@@ -340,48 +340,87 @@ def create_turret_operator(rng: Rng, ascension_level: int = 0) -> tuple[Creature
 # NORMAL ENCOUNTERS
 # ========================================================================
 
-# ---- Axebot (HP 40-44 / 42-46 asc) ----
+# ---- Axebot ----
+
+AXEBOT_BASE_MIN_HP = 70
+AXEBOT_BASE_MAX_HP = 78
+AXEBOT_TOUGH_MIN_HP = 76
+AXEBOT_TOUGH_MAX_HP = 86
+AXEBOT_RESPAWN_HP_BONUS = 10
+AXEBOT_BASE_ONE_TWO_DAMAGE = 10
+AXEBOT_DEADLY_ONE_TWO_DAMAGE = 11
+AXEBOT_BASE_UPPERCUT_DAMAGE = 14
+AXEBOT_DEADLY_UPPERCUT_DAMAGE = 18
+AXEBOT_UPPERCUT_DEBUFF = 2
+AXEBOT_BASE_BOOT_UP_BLOCK = 10
+AXEBOT_DEADLY_BOOT_UP_BLOCK = 15
+AXEBOT_BASE_BOOT_UP_STRENGTH = 3
+AXEBOT_DEADLY_BOOT_UP_STRENGTH = 4
 
 def create_axebot(
     rng: Rng,
     start_with_boot_up: bool = False,
     stock_amount: int | None = None,
+    ascension_level: int = 0,
 ) -> tuple[Creature, MonsterAI]:
-    hp = rng.next_int(40, 44)
+    respawn_count = 0 if stock_amount is None else 2 - stock_amount
+    min_hp = _ascension_value(
+        ascension_level,
+        TOUGH_ENEMIES_ASCENSION_LEVEL,
+        AXEBOT_TOUGH_MIN_HP,
+        AXEBOT_BASE_MIN_HP,
+    ) + respawn_count * AXEBOT_RESPAWN_HP_BONUS
+    max_hp = _ascension_value(
+        ascension_level,
+        TOUGH_ENEMIES_ASCENSION_LEVEL,
+        AXEBOT_TOUGH_MAX_HP,
+        AXEBOT_BASE_MAX_HP,
+    ) + respawn_count * AXEBOT_RESPAWN_HP_BONUS
+    hp = rng.next_int(min_hp, max_hp)
     creature = Creature(max_hp=hp, monster_id="AXEBOT")
-    one_two_dmg = 5
-    hammer_uppercut_dmg = 8
-    hammer_uppercut_debuff = 1
-    boot_up_block = 10
-    boot_up_strength = 1
-    sharpen_strength = 4
+
+    one_two_dmg = _ascension_value(
+        ascension_level,
+        DEADLY_ENEMIES_ASCENSION_LEVEL,
+        AXEBOT_DEADLY_ONE_TWO_DAMAGE,
+        AXEBOT_BASE_ONE_TWO_DAMAGE,
+    )
+    hammer_uppercut_dmg = _ascension_value(
+        ascension_level,
+        DEADLY_ENEMIES_ASCENSION_LEVEL,
+        AXEBOT_DEADLY_UPPERCUT_DAMAGE,
+        AXEBOT_BASE_UPPERCUT_DAMAGE,
+    )
+    boot_up_block = _ascension_value(
+        ascension_level,
+        DEADLY_ENEMIES_ASCENSION_LEVEL,
+        AXEBOT_DEADLY_BOOT_UP_BLOCK,
+        AXEBOT_BASE_BOOT_UP_BLOCK,
+    )
+    boot_up_strength = _ascension_value(
+        ascension_level,
+        DEADLY_ENEMIES_ASCENSION_LEVEL,
+        AXEBOT_DEADLY_BOOT_UP_STRENGTH,
+        AXEBOT_BASE_BOOT_UP_STRENGTH,
+    )
 
     def boot_up(combat: CombatState) -> None:
         _gain_block(creature, boot_up_block, combat)
-        creature.apply_power(PowerId.STRENGTH, boot_up_strength)
+        if respawn_count > 0:
+            creature.apply_power(PowerId.STRENGTH, boot_up_strength * respawn_count)
 
     def one_two(combat: CombatState) -> None:
         _deal_damage_to_player(combat, creature, one_two_dmg, hits=2)
 
-    def sharpen(combat: CombatState) -> None:
-        creature.apply_power(PowerId.STRENGTH, sharpen_strength)
-
     def hammer_uppercut(combat: CombatState) -> None:
         _deal_damage_to_player(combat, creature, hammer_uppercut_dmg)
-        apply_power_to_living_player_targets(combat, PowerId.WEAK, hammer_uppercut_debuff, applier=creature)
-        apply_power_to_living_player_targets(combat, PowerId.FRAIL, hammer_uppercut_debuff, applier=creature)
-
-    rand = RandomBranchState("RAND_MOVE")
-    rand.add_branch("ONE_TWO_MOVE", MoveRepeatType.CAN_REPEAT_FOREVER, weight=2.0)
-    rand.add_branch("SHARPEN_MOVE", MoveRepeatType.CANNOT_REPEAT)
-    rand.add_branch("HAMMER_UPPERCUT_MOVE", MoveRepeatType.CAN_REPEAT_FOREVER, weight=2.0)
+        apply_power_to_living_player_targets(combat, PowerId.WEAK, AXEBOT_UPPERCUT_DEBUFF, applier=creature)
+        apply_power_to_living_player_targets(combat, PowerId.FRAIL, AXEBOT_UPPERCUT_DEBUFF, applier=creature)
 
     states: dict[str, MonsterState] = {
-        "RAND_MOVE": rand,
-        "BOOT_UP_MOVE": MoveState("BOOT_UP_MOVE", boot_up, [defend_intent(), buff_intent()], follow_up_id="RAND_MOVE"),
-        "ONE_TWO_MOVE": MoveState("ONE_TWO_MOVE", one_two, [multi_attack_intent(one_two_dmg, 2)], follow_up_id="RAND_MOVE"),
-        "SHARPEN_MOVE": MoveState("SHARPEN_MOVE", sharpen, [buff_intent()], follow_up_id="RAND_MOVE"),
-        "HAMMER_UPPERCUT_MOVE": MoveState("HAMMER_UPPERCUT_MOVE", hammer_uppercut, [attack_intent(hammer_uppercut_dmg), debuff_intent()], follow_up_id="RAND_MOVE"),
+        "BOOT_UP_MOVE": MoveState("BOOT_UP_MOVE", boot_up, [defend_intent(), buff_intent()], follow_up_id="HAMMER_UPPERCUT_MOVE"),
+        "ONE_TWO_MOVE": MoveState("ONE_TWO_MOVE", one_two, [multi_attack_intent(one_two_dmg, 2)], follow_up_id="HAMMER_UPPERCUT_MOVE"),
+        "HAMMER_UPPERCUT_MOVE": MoveState("HAMMER_UPPERCUT_MOVE", hammer_uppercut, [attack_intent(hammer_uppercut_dmg), debuff_intent()], follow_up_id="ONE_TWO_MOVE"),
     }
 
     if stock_amount is None:
@@ -389,8 +428,8 @@ def create_axebot(
     elif stock_amount > 0:
         creature.apply_power(PowerId.STOCK, stock_amount)
 
-    initial = "BOOT_UP_MOVE" if start_with_boot_up or stock_amount is not None else "RAND_MOVE"
-    return creature, MonsterAI(states, initial, rng)
+    initial = "BOOT_UP_MOVE" if start_with_boot_up or stock_amount is not None else "HAMMER_UPPERCUT_MOVE"
+    return creature, MonsterAI(states, initial)
 
 
 # ---- Fabricator (HP 150 / 155 asc) + bots ----
@@ -870,7 +909,10 @@ GLOBE_HEAD_THUNDER_STRIKE_REPEAT = 3
 GLOBE_HEAD_BASE_GALVANIC_BURST_DAMAGE = 16
 GLOBE_HEAD_DEADLY_GALVANIC_BURST_DAMAGE = 17
 GLOBE_HEAD_GALVANIC_BURST_STRENGTH = 2
-GLOBE_HEAD_GALVANIC_AMOUNT = 6
+GLOBE_HEAD_BASE_GALVANIC_AMOUNT = 6
+GLOBE_HEAD_DEADLY_GALVANIC_AMOUNT = 8
+# Backward-compatible name for callers that mean the non-ascension value.
+GLOBE_HEAD_GALVANIC_AMOUNT = GLOBE_HEAD_BASE_GALVANIC_AMOUNT
 GLOBE_HEAD_SHOCKING_SLAP_MOVE = "SHOCKING_SLAP"
 GLOBE_HEAD_THUNDER_STRIKE_MOVE = "THUNDER_STRIKE"
 GLOBE_HEAD_GALVANIC_BURST_MOVE = "GALVANIC_BURST"
@@ -954,7 +996,13 @@ def create_globe_head(rng: Rng, ascension_level: int = 0) -> tuple[Creature, Mon
         ),
     }
 
-    creature.apply_power(PowerId.GALVANIC, GLOBE_HEAD_GALVANIC_AMOUNT)
+    galvanic_amount = _ascension_value(
+        ascension_level,
+        DEADLY_ENEMIES_ASCENSION_LEVEL,
+        GLOBE_HEAD_DEADLY_GALVANIC_AMOUNT,
+        GLOBE_HEAD_BASE_GALVANIC_AMOUNT,
+    )
+    creature.apply_power(PowerId.GALVANIC, galvanic_amount)
     return creature, MonsterAI(states, GLOBE_HEAD_SHOCKING_SLAP_MOVE)
 
 
@@ -1362,6 +1410,8 @@ MECHA_KNIGHT_BASE_HP = 300
 MECHA_KNIGHT_TOUGH_HP = 320
 MECHA_KNIGHT_BASE_CHARGE_DAMAGE = 25
 MECHA_KNIGHT_DEADLY_CHARGE_DAMAGE = 30
+MECHA_KNIGHT_BASE_FLAMETHROWER_DAMAGE = 8
+MECHA_KNIGHT_DEADLY_FLAMETHROWER_DAMAGE = 12
 MECHA_KNIGHT_BASE_HEAVY_CLEAVE_DAMAGE = 35
 MECHA_KNIGHT_DEADLY_HEAVY_CLEAVE_DAMAGE = 40
 MECHA_KNIGHT_WINDUP_BLOCK = 15
@@ -1738,6 +1788,13 @@ def create_mecha_knight(rng: Rng, ascension_level: int = 0) -> tuple[Creature, M
         _deal_damage_to_player(combat, creature, charge_dmg)
 
     def flamethrower(combat: CombatState) -> None:
+        flamethrower_dmg = _ascension_value(
+            _combat_ascension_level(combat),
+            DEADLY_ENEMIES_ASCENSION_LEVEL,
+            MECHA_KNIGHT_DEADLY_FLAMETHROWER_DAMAGE,
+            MECHA_KNIGHT_BASE_FLAMETHROWER_DAMAGE,
+        )
+        _deal_damage_to_player(combat, creature, flamethrower_dmg)
         for target in living_player_targets(combat):
             for _ in range(MECHA_KNIGHT_FLAMETHROWER_BURNS):
                 combat.add_generated_card_to_creature_hand(
@@ -1771,6 +1828,12 @@ def create_mecha_knight(rng: Rng, ascension_level: int = 0) -> tuple[Creature, M
         MECHA_KNIGHT_DEADLY_HEAVY_CLEAVE_DAMAGE,
         MECHA_KNIGHT_BASE_HEAVY_CLEAVE_DAMAGE,
     )
+    flamethrower_intent_damage = _ascension_value(
+        ascension_level,
+        DEADLY_ENEMIES_ASCENSION_LEVEL,
+        MECHA_KNIGHT_DEADLY_FLAMETHROWER_DAMAGE,
+        MECHA_KNIGHT_BASE_FLAMETHROWER_DAMAGE,
+    )
 
     states: dict[str, MonsterState] = {
         MECHA_KNIGHT_CHARGE_MOVE: MoveState(
@@ -1782,7 +1845,7 @@ def create_mecha_knight(rng: Rng, ascension_level: int = 0) -> tuple[Creature, M
         MECHA_KNIGHT_FLAMETHROWER_MOVE: MoveState(
             MECHA_KNIGHT_FLAMETHROWER_MOVE,
             flamethrower,
-            [status_intent()],
+            [attack_intent(flamethrower_intent_damage), status_intent()],
             follow_up_id=MECHA_KNIGHT_WINDUP_MOVE,
         ),
         MECHA_KNIGHT_WINDUP_MOVE: MoveState(

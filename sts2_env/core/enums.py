@@ -428,6 +428,7 @@ class PowerId(Enum):
     FEEDING_FRENZY = auto()
     FLEX_POTION = auto()
     FOCUS = auto()
+    HYPERBEAM_FOCUS_DOWN = auto()
     FOCUSED_STRIKE = auto()
     FORBIDDEN_GRIMOIRE = auto()
     FOREGONE_CONCLUSION = auto()

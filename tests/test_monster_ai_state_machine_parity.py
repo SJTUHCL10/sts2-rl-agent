@@ -391,6 +391,7 @@ from sts2_env.monsters.act3 import (
     FROG_KNIGHT_STRIKE_DOWN_EVIL_MOVE,
     FROG_KNIGHT_TONGUE_LASH_MOVE,
     GLOBE_HEAD_GALVANIC_AMOUNT,
+    GLOBE_HEAD_DEADLY_GALVANIC_AMOUNT,
     GLOBE_HEAD_GALVANIC_BURST_MOVE,
     GLOBE_HEAD_MONSTER_ID,
     GLOBE_HEAD_SHOCKING_SLAP_MOVE,
@@ -638,7 +639,7 @@ THE_OBSCURA_HARDENING_STRIKE_DAMAGE_A9 = 7
 THE_OBSCURA_HARDENING_STRIKE_BLOCK_A9 = 7
 THE_OBSCURA_SAIL_STRENGTH = 3
 ENTOMANCER_BASE_HP = 145
-ENTOMANCER_A8_HP = 155
+ENTOMANCER_A8_HP = 165
 ENTOMANCER_BEES_DAMAGE = 3
 ENTOMANCER_BEES_HITS_A9 = 8
 ENTOMANCER_SPEAR_DAMAGE_A9 = 20
@@ -4746,7 +4747,7 @@ class TestFixedRotation:
         globe, globe_ai = create_globe_head(Rng(rng_seed), ascension_level=9)
         globe_combat.add_enemy(globe, globe_ai)
         assert globe.max_hp == GLOBE_HEAD_A8_HP
-        assert globe.get_power_amount(PowerId.GALVANIC) == GLOBE_HEAD_GALVANIC_AMOUNT
+        assert globe.get_power_amount(PowerId.GALVANIC) == GLOBE_HEAD_DEADLY_GALVANIC_AMOUNT
 
         slap = globe_ai.states[GLOBE_HEAD_SHOCKING_SLAP_MOVE]
         assert slap.intents[0].damage == GLOBE_HEAD_SHOCKING_SLAP_DAMAGE_A9
@@ -5339,10 +5340,10 @@ class TestFixedRotation:
         combat.kill_creature(second_replacement)
         assert not [enemy for enemy in combat.enemies if enemy.monster_id == "AXEBOT" and enemy.is_alive]
 
-    def test_initial_random_branch_uses_monster_rng(self):
+    def test_initial_move_is_fixed_hammer_uppercut(self):
         moves = [create_axebot(Rng(seed))[1].current_move.state_id for seed in range(10)]
 
-        assert set(moves) == {"ONE_TWO_MOVE", "SHARPEN_MOVE", "HAMMER_UPPERCUT_MOVE"}
+        assert set(moves) == {"HAMMER_UPPERCUT_MOVE"}
 
     def test_axebot_moves_use_original_player_targets_with_osty_redirect(self):
         rng_seed = 136
@@ -5350,10 +5351,10 @@ class TestFixedRotation:
         ally_character_id = "Silent"
         ally_hp = 70
         osty_hp = 40
-        one_two_damage = 5
+        one_two_damage = 10
         one_two_hits = 2
-        hammer_uppercut_damage = 8
-        hammer_uppercut_debuff = 1
+        hammer_uppercut_damage = 14
+        hammer_uppercut_debuff = 2
         no_debuff = 0
         combat = _make_combat(rng_seed)
         ally = combat.add_ally_player(

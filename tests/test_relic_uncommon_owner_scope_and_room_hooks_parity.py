@@ -113,26 +113,26 @@ class TestRelicUncommonOwnerScopeAndRoomHooksParity:
         assert run_state.player.current_hp == 0
 
     def test_regalite_gains_six_block_for_first_owner_generated_card_each_turn(self):
-        """Matches Regalite.cs: first owner-created card each turn grants 6 block."""
+        """Matches v0.111 Regalite.cs: first owner-created card each turn grants 4 block."""
         combat = _make_ironclad_combat(["Regalite"], seed=1204)
         player = combat.player
         player.block = 0
 
         combat.add_generated_card_to_creature_hand(player, create_card(CardId.STRIKE_IRONCLAD))
-        assert player.block == 6
+        assert player.block == 4
 
         combat.add_generated_card_to_creature_hand(player, create_card(CardId.VOLLEY))
-        assert player.block == 6
+        assert player.block == 4
 
         fire_before_side_turn_start(CombatSide.PLAYER, combat)
         combat.add_generated_card_to_creature_hand(player, create_card(CardId.ENTRENCH))
-        assert player.block == 12
+        assert player.block == 8
 
         relic = _combat_relic(combat, "REGALITE")
         other_owner_card = create_card(CardId.VOLLEY)
         other_owner_card.owner = combat.enemies[0]
         relic.after_card_generated_for_combat(player, other_owner_card, True, combat)
-        assert player.block == 12
+        assert player.block == 8
 
     def test_regalite_block_triggers_after_block_gained_hooks(self):
         combat = _make_ironclad_combat(["Regalite"], seed=1209)
@@ -144,7 +144,7 @@ class TestRelicUncommonOwnerScopeAndRoomHooksParity:
 
         combat.add_generated_card_to_creature_hand(player, create_card(CardId.VOLLEY))
 
-        assert player.block == 6
+        assert player.block == 4
         assert enemy.current_hp == start_hp - 5
 
     def test_reptile_trinket_applies_temporary_strength_on_owned_potion_use(self):

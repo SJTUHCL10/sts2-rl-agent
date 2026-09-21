@@ -136,11 +136,11 @@ SWEEPING_BEAM_CARDS = 1
 NULL_DAMAGE = 10
 NULL_UPGRADED_DAMAGE = 13
 NULL_WEAK_KEY = "weak"
-NULL_WEAK = 2
-NULL_UPGRADED_WEAK = 3
+NULL_WEAK = 1
+NULL_UPGRADED_WEAK = 2
 THUNDER_POWER_KEY = "thunder_power"
-THUNDER_POWER = 6
-THUNDER_UPGRADED_POWER = 8
+THUNDER_POWER = 8
+THUNDER_UPGRADED_POWER = 11
 TURBO_ENERGY_KEY = "energy"
 TURBO_ENERGY = 2
 TURBO_UPGRADED_ENERGY = 3
@@ -158,8 +158,8 @@ HELIX_DRILL_CALC_BASE_KEY = "calc_base"
 HELIX_DRILL_CALC_BASE = 0
 HELIX_DRILL_CALC_EXTRA_KEY = "calc_extra"
 HELIX_DRILL_CALC_EXTRA = 1
-HYPERBEAM_DAMAGE = 30
-HYPERBEAM_UPGRADED_DAMAGE = 38
+HYPERBEAM_DAMAGE = 24
+HYPERBEAM_UPGRADED_DAMAGE = 30
 HYPERBEAM_FOCUS_KEY = "focus_power"
 HYPERBEAM_FOCUS = 3
 METEOR_STRIKE_DAMAGE = 24
@@ -199,7 +199,7 @@ SCRAPE_UPGRADED_CARDS = 5
 SYNCHRONIZE_CALC_BASE_KEY = "calc_base"
 SYNCHRONIZE_CALC_BASE = 0
 SYNCHRONIZE_CALC_EXTRA_KEY = "calc_extra"
-SYNCHRONIZE_FOCUS_PER_ORB_TYPE = 2
+SYNCHRONIZE_FOCUS_PER_ORB_TYPE = 1
 MULTI_CAST_UPGRADED_EXTRA_EVOKE = 1
 QUADCAST_COST = 1
 QUADCAST_UPGRADED_COST = 0
@@ -1081,11 +1081,11 @@ def hyperbeam(card: CardInstance, combat: CombatState, target: Creature | None) 
     for enemy in combat.hittable_enemies:
         dmg = calculate_damage(card.base_damage, _owner(card, combat), enemy, ValueProp.MOVE, combat)
         apply_damage(enemy, dmg, ValueProp.MOVE, combat, _owner(card, combat))
-    # Lose Focus
+    # Lose Focus until the end of the owner's turn.
     combat.apply_power_to(
         _owner(card, combat),
-        PowerId.FOCUS,
-        -card.effect_vars.get(HYPERBEAM_FOCUS_KEY, HYPERBEAM_FOCUS),
+        PowerId.HYPERBEAM_FOCUS_DOWN,
+        card.effect_vars.get(HYPERBEAM_FOCUS_KEY, HYPERBEAM_FOCUS),
     )
 
 

@@ -383,7 +383,7 @@ class TestNecrobinderCardEffectsReferenceParity:
         assert card.base_damage == 0
         assert card.effect_vars["extra_damage"] == 1
         assert card.is_retain
-        assert card.exhausts
+        assert not card.exhausts
 
     def test_blight_strike_applies_doom_equal_to_damage_dealt(self):
         combat = _make_combat()

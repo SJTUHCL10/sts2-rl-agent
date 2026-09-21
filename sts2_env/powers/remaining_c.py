@@ -1062,7 +1062,11 @@ class StockPower(PowerInstance):
             else:
                 from sts2_env.monsters.act3 import create_axebot
 
-                axebot, axebot_ai = create_axebot(combat.rng, stock_amount=self.amount - 1)
+                axebot, axebot_ai = create_axebot(
+                    combat.rng,
+                    stock_amount=self.amount - 1,
+                    ascension_level=combat.ascension_level,
+                )
                 combat.add_enemy(axebot, axebot_ai)
 
 
@@ -1290,6 +1294,38 @@ class SynchronizePower(PowerInstance):
     def after_turn_end(self, owner: Creature, side: CombatSide, combat: CombatState) -> None:
         if side == owner.side:
             owner.apply_power(PowerId.FOCUS, -self.amount)
+            self.amount = 0
+
+
+# ---------------------------------------------------------------------------
+# HyperbeamFocusDownPower
+# ---------------------------------------------------------------------------
+class HyperbeamFocusDownPower(PowerInstance):
+    """Temporary Focus loss from Hyperbeam, restored at turn end."""
+
+    power_type = PowerType.DEBUFF
+    stack_type = PowerStackType.COUNTER
+    is_temporary = True
+
+    def __init__(self, amount: int):
+        super().__init__(PowerId.HYPERBEAM_FOCUS_DOWN, amount)
+
+    def after_power_amount_changed(
+        self,
+        owner: Creature,
+        target: Creature,
+        power_id: PowerId,
+        amount: int,
+        applier: Creature | None,
+        source: object | None,
+        combat: CombatState,
+    ) -> None:
+        if owner is target and power_id == self.power_id and amount != 0 and not self.consume_ignore_next_instance():
+            owner.apply_power(PowerId.FOCUS, -amount, applier=applier, source=source)
+
+    def after_turn_end(self, owner: Creature, side: CombatSide, combat: CombatState) -> None:
+        if side == owner.side:
+            owner.apply_power(PowerId.FOCUS, self.amount)
             self.amount = 0
 
 
@@ -2088,6 +2124,7 @@ _ALL_POWERS: dict[PowerId, type[PowerInstance]] = {
     PowerId.SWIPE: SwipePower,
     PowerId.SWORD_SAGE: SwordSagePower,
     PowerId.SYNCHRONIZE: SynchronizePower,
+    PowerId.HYPERBEAM_FOCUS_DOWN: HyperbeamFocusDownPower,
     PowerId.TAG_TEAM: TagTeamPower,
     PowerId.TANGLED: TangledPower,
     PowerId.TANK: TankPower,

@@ -2687,7 +2687,7 @@ class TestStatusParity:
         assert combat.play_card(0)
         assert combat.energy == 2
         assert len(combat.hand) == 2
-        assert combat.player.max_hp == starting_max_hp - 1
+        assert combat.player.max_hp == starting_max_hp - 2
         assert combat.player.current_hp == min(starting_hp, combat.player.max_hp)
 
     def test_beckon_triggers_at_turn_end_in_hand_not_on_draw(self):

@@ -273,7 +273,7 @@ class TestStatusCurseCardEffectsParity:
         assert combat.play_card(0)
 
         assert combat.energy == 1
-        assert combat.player.max_hp == max_hp_before - 1
+        assert combat.player.max_hp == max_hp_before - 2
 
     def test_infection_deals_turn_end_in_hand_damage_then_discards(self):
         combat = _make_combat()

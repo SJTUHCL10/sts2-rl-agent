@@ -342,25 +342,25 @@ class TestActionMasksPerPhase:
         env.reset(seed=42)
 
         mgr = RunManager(seed=805, character_id="Ironclad")
-        assert mgr.run_state.player.obtain_relic("BEAUTIFUL_BRACELET")
+        assert mgr.run_state.player.obtain_relic("KIFUDA")
         env._mgr = mgr
 
         mask = env.action_masks()
-        assert mask[_COMBAT_START] == 0
+        # Kifuda enchants up to three cards, so confirming zero is legal.
+        assert mask[_COMBAT_START] == 1
         assert mask[_COMBAT_START + 1] == 1
         assert np.sum(mask[_MAP_START:_MAP_START + _MAP_SIZE]) == 0
 
         env.step(_COMBAT_START + 1)
         env.step(_COMBAT_START + 2)
         env.step(_COMBAT_START + 3)
-        env.step(_COMBAT_START + 4)
         obs, reward, terminated, truncated, info = env.step(_COMBAT_START)
 
         assert not terminated
         assert not truncated
         assert mgr.phase == RunManager.PHASE_MAP_CHOICE
         assert mgr.run_state.pending_choice is None
-        assert sum(1 for card in mgr.run_state.player.deck if card.has_enchantment("Swift")) == 4
+        assert sum(1 for card in mgr.run_state.player.deck if card.has_enchantment("Adroit")) == 3
 
     def test_card_reward_mask(self, env):
         """Force into CARD_REWARD phase and verify mask."""

@@ -152,7 +152,7 @@ class TestRegentParity:
         assert combat.play_card(0)
         assert combat.player.get_power_amount(PowerId.ENERGY_NEXT_TURN) == 1
         blade = next(card for card in combat.hand if card.card_id.name == "SOVEREIGN_BLADE")
-        assert blade.base_damage == 16
+        assert blade.base_damage == 18
 
     def test_seeking_edge_forges_and_applies_seeking_edge_power(self):
         """Matches SeekingEdge.cs: forge immediately, then apply SeekingEdgePower."""
@@ -189,15 +189,16 @@ class TestRegentParity:
         assert enemy.current_hp == starting_hp - 8
         assert combat.stars == 1
 
-    def test_spoils_of_battle_forges_without_other_side_effects(self):
-        """Matches SpoilsOfBattle.cs: only forge by the card's forge amount."""
+    def test_spoils_of_battle_forges_and_draws_two_cards(self):
+        """Matches v0.111 SpoilsOfBattle.cs: forge 6 and draw two cards."""
         combat = _make_combat()
         combat.hand = [make_spoils_of_battle()]
         combat.energy = 1
 
         assert combat.play_card(0)
         blade = next(card for card in combat.hand if card.card_id.name == "SOVEREIGN_BLADE")
-        assert blade.base_damage == 20
+        assert blade.base_damage == 16
+        assert len(combat.hand) == 3
 
     def test_wrought_in_war_deals_damage_then_forges(self):
         """Matches WroughtInWar.cs: attack the target, then forge."""

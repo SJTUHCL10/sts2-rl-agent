@@ -359,7 +359,7 @@ class TestColorlessFactoryUpgradeParity:
         assert combat.player.block == 0
         assert ally.block == 17
 
-    def test_rend_factory_upgrade_uses_eighteen_plus_eight_per_debuff(self):
+    def test_rend_factory_upgrade_uses_twelve_plus_eight_per_debuff(self):
         combat = _make_combat()
         enemy = combat.enemies[0]
         enemy.current_hp = enemy.max_hp = 100
@@ -369,7 +369,7 @@ class TestColorlessFactoryUpgradeParity:
 
         assert combat.play_card(0, 0)
 
-        assert enemy.current_hp == 74
+        assert enemy.current_hp == 80
 
     def test_restlessness_factory_upgrade_draws_three_and_gains_three_when_only_card(self):
         combat = _make_combat()

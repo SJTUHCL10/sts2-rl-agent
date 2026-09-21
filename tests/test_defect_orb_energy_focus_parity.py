@@ -228,12 +228,12 @@ class TestDefectOrbEnergyFocusParity:
         combat.energy = 2
 
         assert combat.play_card(0)
-        assert combat.player.get_power_amount(PowerId.SYNCHRONIZE) == 4
-        assert combat.player.get_power_amount(PowerId.FOCUS) == 4
+        assert combat.player.get_power_amount(PowerId.SYNCHRONIZE) == 2
+        assert combat.player.get_power_amount(PowerId.FOCUS) == 2
 
         assert combat.play_card(0)
-        assert combat.player.get_power_amount(PowerId.SYNCHRONIZE) == 8
-        assert combat.player.get_power_amount(PowerId.FOCUS) == 8
+        assert combat.player.get_power_amount(PowerId.SYNCHRONIZE) == 4
+        assert combat.player.get_power_amount(PowerId.FOCUS) == 4
 
         fire_after_turn_end(CombatSide.PLAYER, combat)
 
