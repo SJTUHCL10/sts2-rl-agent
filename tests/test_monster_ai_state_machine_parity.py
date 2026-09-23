@@ -2550,6 +2550,10 @@ class TestFixedRotation:
         combat = _make_combat(rng_seed)
         creature, ai = create_kin_follower(Rng(rng_seed))
         dance_creature, dance_ai = create_kin_follower(Rng(rng_seed), starts_with_dance=True)
+        # A Minion cannot sustain combat on its own; keep a primary enemy
+        # present while exercising the follower's attack rotation.
+        primary, primary_ai = create_fogmog(Rng(rng_seed + 1))
+        combat.add_enemy(primary, primary_ai)
         combat.add_enemy(creature, ai)
 
         assert 58 <= creature.max_hp <= 59

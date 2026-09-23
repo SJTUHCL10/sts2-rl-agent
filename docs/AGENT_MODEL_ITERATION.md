@@ -8,10 +8,11 @@
 ## 1. 当前状态
 
 当前 Bridge 协议仍是 `sts2-entity-v2` / `candidate-v2`。代码中的新接口为
-`typed-set-tensor-v5` / `entity-actions-v3-extended-choice`，已完成一次 100k
-诊断试训；之后修复了两个药水 ID 规范化别名，词表 hash 随之改变，尚未重训。
-因此当前代码没有可直接加载的兼容 checkpoint。下述 500k 评估属于旧的 v4
-接口；v5 100k 模型属于别名修复前的词表，二者都不能直接用于当前代码。
+`typed-set-tensor-v5` / `entity-actions-v3-extended-choice`。两个药水 ID
+规范化别名修复后，已完成兼容当前代码的 500k 长训；旧的 v4 500k 与修复前的
+v5 100k 模型因接口或词表 hash 不同，不能直接用于当前代码。
+此 500k checkpoint 训练时的模拟器尚有副怪阻止战斗结束的 parity 错误；
+规则现已修复，模型可加载用于复评，但尚未在修复后的环境中重训。
 训练使用 MaskablePPO、无位置编码的
 Typed Set Transformer 和 candidate-aware actor，不使用 LSTM/GRU，也不考虑
 多人游戏。
@@ -70,8 +71,81 @@ python scripts/summarize_unknown_diagnostics.py `
 每条日志按 worker、字段和规范化 token 聚合次数，并保存首次出现的 phase、
 entity/candidate ID、动作槽及原始值。两个别名已在
 `categorical_vocabulary.py` 规范化为词表已有 token，并将别名表纳入词表 hash；
-针对性回归测试已确认不再产生 UNKNOWN。修复后的接口尚未训练，下一轮需重新
-训练；旧 checkpoint 会因 hash 不匹配而明确拒绝加载。
+针对性回归测试已确认不再产生 UNKNOWN。修复前的 checkpoint 会因 hash
+不匹配而明确拒绝加载；修复后的长训结果见下一节。
+
+### 1.2 v5 别名修复后 500k 长训（2026-09-23）
+
+`output/typed_set_v5_alias_fixed_500k_4env_20260923/` 使用 4 env × 1024
+step、CUDA 与默认 reward shaping。请求 500k，按 rollout 对齐实际完成
+503,808 steps，训练耗时 3,394 秒（148.4 step/s）。训练 observation 的
+UNKNOWN rate 与 entity overflow 均为 0。训练完成并确认产物后，已删除本次
+5 个定期恢复 checkpoint；保留 `best_model/best_model.zip`、`final_model.zip`、
+评估文件与元数据。
+
+20 个固定种子的周期评估在 50k 达到最高均层 7.00，因此预设规则推荐该
+best checkpoint。另以同一组 100 个种子（`100109..100208`）复评：
+
+| Policy | Wins | Mean floor | Median | Max | Truncated |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| v5 50k best | 0/100 | 7.32 | 6 | 16 | 0 |
+| v5 500k final | 0/100 | 7.72 | 7 | 16 | 0 |
+
+final 名义高 0.40 层，但逐种子差异较大；不能仅凭这 100 局断言其稳定优于
+best。模型元数据仍遵循训练前设定的 20-seed best 选择规则，并保留 final
+供进一步比较。脚本内置的另 100-seed final 评估同样为均层 7.72、0 胜；
+其随机策略基线均层 3.38。相同 100-seed 集合上的历史 v4 best 为 8.64 层；
+本次 v5 未提升这个能力指标，但架构和词表同时改变，不能将差距归因于别名修复。
+当前仍未采样到通关局。
+
+### 1.3 第一幕瓶颈诊断（2026-09-23）
+
+上述 final 的 100 局（seed `100109..100208`）最高仅 16 层，21 局因单场
+战斗超过训练设定的 50 回合而被模拟器强制判负；其中 **20 局**在终止时只剩
+带 `MINION` 的 `EYE_WITH_TEETH` 存活，没有存活的主敌人。seed `100110`
+可稳定复现：第 3 层主怪 `FOGMOG` 已死亡，副怪仍为 6 HP，战斗不结束，
+一直进行到 50 回合上限。放宽到 200 回合仍不结束。这不是单纯的 agent
+空过：50 回合内有 97 个非结束回合动作。
+
+这是已定位的模拟器 parity 缺口，而非观察信息不足。修复前的
+`CombatState._check_combat_end()` 以 `alive_enemies` 是否为空判胜，
+其中仍包括副怪；游戏反编译源码 `CombatManager.IsCombatEnding()` 则在没有
+存活**主敌人**时结束，`CreatureCmd.Kill()` 还会在最后一个主敌人死亡时
+杀死剩余副怪。该行为已修正并增加 Fogmog 场景测试；不能
+把旧模型在这个错误环境中的失败率解释为纯粹的网络容量或地图选路问题。
+
+全程训练结束 4,884 局、0 胜、仅 5 局进入第二幕，503 局触发战斗回合
+上限；其中最后 100k steps 共结束约 916 局，仅 1 局进入第二幕。地图边存在于
+v2 snapshot 的 `map_edges` 中，却没有进入当前 tensor；这妨碍路线汇合和
+远期路径价值判断。为隔离地图决策，另用 final 模型控制非地图动作，只在
+`MAP_CHOICE` 阶段均匀随机选合法节点，对前 30 个固定种子
+（`100109..100138`）做探索性评估：原策略均层 7.47、随机地图 7.27，
+战斗回合上限分别 7/30、6/30。样本小且仍受模拟器错误影响，不足以证明
+地图无用，但不支持“缺地图边是当前第一幕瓶颈”的优先判断。此前的完全随机
+基线随机的是**全部动作**，不能用它推断地图单独的影响。
+
+### 1.4 副怪战斗结束规则修复与旧模型复评（2026-09-23）
+
+`CombatState.kill_creature()` 现在在最后一个主敌人死亡时依次处理存活
+`MINION` 副怪的死亡钩子，再结束战斗；`_check_combat_end()` 仅以存活主敌人
+判定能否胜利，并保留其他死亡效果对结束战斗的阻断。
+`IllusionPower` 不再自行阻止战斗结束。Fogmog/Eye with Teeth、
+多个主敌人及主敌人存活时 Eye 复活均有回归测试；全套为
+4,742 passed、1 skipped。
+
+修复没有改变 observation/action/vocabulary，因此旧 500k final 模型仍能
+加载，但它的权重**仍由错误环境训练得到**。同一模型、同一 100 个固定种子
+在修复前后的完整 run 评估：
+
+| 环境规则 | Mean floor | Max floor | 50 回合强制失败 | Wins |
+| --- | ---: | ---: | ---: | ---: |
+| 修复前 | 7.72 | 16 | 21/100 | 0/100 |
+| 修复后 | 8.75 | 16 | 0/100 | 0/100 |
+
+逐种子比较有 22 局到达更高楼层、0 局下降、78 局不变。seed `100110`
+不再在第 3 层 Fogmog 战斗卡死，而是继续至第 5 层。修复后的逐局结果在
+`final_evaluation_post_minion_fix_100seed_100109.json`。这量化了 parity
+修复的直接收益，但仍未进入第二幕/采样到胜局；不能当作重训后的能力。
 
 ## 2. 基础架构
 
@@ -109,7 +183,7 @@ candidate embeddings
 地图当前作为带 `row/col/type/visited/reachable` 的普通 set tokens 注入，尚未
 显式编码边。
 
-### 2.2.1 v5 实现（待训练验证）
+### 2.2.1 v5 实现（已完成 500k 训练）
 
 - 每只敌人的当前 intent 按至多三个条目编码在对应 creature entity：类型、
   伤害、次数、总预计伤害及战斗 index。Bridge 同时保留原第一条 intent 字段。
@@ -332,15 +406,33 @@ player 分片缓存；否则应评估异步 rollout collector 的复杂度和收
 
 ## 7. 当前限制与后续方向
 
-- 100-seed 仍为 0 胜，完整 run 胜率仍是最终指标。
-- v5 诊断试训已将 UNKNOWN 定位到两个药水名的 CamelCase/词表规范差异；下一版
-  词表修复后需要重新训练，不能让旧 checkpoint 静默换用新 token ID。
-- 地图尚无 edge-aware encoder，不能直接表达路线汇合和远期路径价值。
-- reward shaping 仍是启发式，应做系数消融并考虑 potential-based shaping。
-- 下一阶段优先考虑共享 encoder 上的辅助 value targets：下一战胜负、结束 HP、
-  floor/act progress；其次是轻量地图 graph encoder。
-- 在没有胜局样本时，scripted/heuristic policy 的 behavior cloning warm start 或
-  curriculum 很可能比继续堆大 actor 更有样本效率。
-- GPU update 仍不是主要瓶颈；tensorizer、legacy observation、action mask 和
-  map topology 的明显同步重复工作已消除。后续要么为 RunState 增加 revision 后
-  安全分片缓存 snapshot，要么评估异步 rollout。
+1. **已修关键 parity，下一步是干净重训。** 最后主敌人死亡时副怪仍使战斗
+   无法结束的问题已有 Fogmog/Eye with Teeth 场景测试，旧模型固定种子
+   均层从 7.72 升至 8.75。仍应按死亡怪物、战斗回合、卡牌行动和地图节点
+   分解其余失败原因；现有 checkpoint 权重受旧环境影响。
+2. **验证信息瓶颈。** 当前每只怪的当前 intent、伤害/次数、战斗 index，
+   手牌实例、source/target entity 指针已进入模型，UNKNOWN/overflow 为 0；
+   不能再称这些信息“缺失”。但 map edges 没进 tensor；`counters` 只保留
+   数值总和，丢失各计数器名称/结构；最多两个 affliction、两个 enchantment
+   的截断仍在。卡牌/遗物/能力的具体效果规则没有显式关系表示，主要靠
+   content embedding 从交互中学习。应优先做观测扰动与分阶段评估，确认
+   哪项确实影响决策，而不是笼统加宽网络。
+3. **做对照实验。** 修复 parity 后，扩大上述固定其余策略、只随机/正常
+   地图的实验样本并覆盖多个训练 seed；记录第一幕 boss/第二幕到达率、
+   真实死亡与战斗回合上限。reward shaping 用同种子、多个训练 seed 做当前系数、
+   去掉各分量、potential-based shaping 的消融。现有 floor/combat-win/
+   HP-loss/step 奖励是启发式，不能保证不改变最优策略。当前
+   `gamma * gae_lambda = 0.999 * 0.95 ≈ 0.949`，100 步外 TD 残差的直接
+   GAE 权重约 0.005；4,884 局平均约 103 步，终局奖励虽通常落在同一
+   1024-step rollout 内，长程信用分配依然困难。可考虑辅助战斗结果/结束
+   HP 目标，或符合 `gamma*Phi(s')-Phi(s)`、终局 `Phi=0` 的 shaping。
+   目前 `step_penalty=0.001` 与 `gamma=0.999` 已近似抵消单纯拖延
+   `-1` 终局损失的折扣收益；不能把 Fogmog 的长战斗直接归咎于步惩罚过小。
+4. **扩训顺序。** 当前约 550 万参数，修复前的 500k 仍 0 胜且权重受
+   parity 错误污染；不建议直接跑 5M 或增大模型。下一轮可从头以相同
+   4×1024 配置跑 1M（最好多 seed），观察第二幕率和后半程能力曲线，再决定
+   是否到 5M。若仍难获得胜局，优先考虑 scripted/heuristic 示范预训练、
+   分阶段 curriculum 或下一战胜负/结束 HP 等辅助目标。更大网络只有在
+   排除环境与训练信号问题后、出现明确欠拟合证据时再试。
+5. GPU update 仍不是主要吞吐瓶颈；后续性能工程可评估安全的 RunState
+   revision 分片缓存或异步 rollout，但不能把吞吐改进当作能力改进。

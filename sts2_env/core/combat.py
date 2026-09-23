@@ -2989,12 +2989,19 @@ class CombatState:
         self.kill_creature(osty)
         return True
 
-    def kill_creature(self, creature: Creature | None) -> bool:
+    def kill_creature(
+        self, creature: Creature | None, *, _check_end: bool = True,
+    ) -> bool:
         """Immediately kill a creature."""
         if creature is None or creature.escaped:
             return False
         if creature.is_dead and getattr(creature, "_death_processed", False):
             return False
+        was_primary_enemy = (
+            creature.side == CombatSide.ENEMY
+            and creature in self.enemies
+            and not creature.has_power(PowerId.MINION)
+        )
         current_hp = creature.current_hp
         creature.current_hp = 0
         creature.block = 0
@@ -3024,7 +3031,8 @@ class CombatState:
                         after_death(state.creature, creature, self)
             self._fire_card_after_death(creature, was_removal_prevented)
             creature._death_processed = False
-            self._check_combat_end()
+            if _check_end:
+                self._check_combat_end()
             return True
         creature._death_processed = True
         should_remove_power: dict[PowerId, bool] = {}
@@ -3076,7 +3084,18 @@ class CombatState:
                     after_death(state.creature, creature, self)
         self._fire_card_after_death(creature, was_removal_prevented)
         self._sync_monster_death_move_responses(creature)
-        self._check_combat_end()
+        # CreatureCmd.Kill also kills the remaining secondary enemies when
+        # the last primary enemy dies. Resolve their death hooks before the
+        # combat-end hooks observe the final enemy set.
+        if was_primary_enemy and not any(
+            enemy.is_alive and not enemy.has_power(PowerId.MINION)
+            for enemy in self.enemies
+        ):
+            for enemy in list(self.alive_enemies):
+                if enemy.has_power(PowerId.MINION):
+                    self.kill_creature(enemy, _check_end=False)
+        if _check_end:
+            self._check_combat_end()
         return True
 
     def _fire_card_after_death(self, creature: Creature, was_removal_prevented: bool) -> None:
@@ -3856,7 +3875,11 @@ class CombatState:
                 for power in enemy.powers.values()
             )
         ]
-        if not self.alive_enemies and not blocking_dead_enemies:
+        alive_primary_enemies = any(
+            enemy.is_alive and not enemy.has_power(PowerId.MINION)
+            for enemy in self.enemies
+        )
+        if not alive_primary_enemies and not blocking_dead_enemies:
             self._end_combat(player_won=True)
         elif self.primary_player.is_dead:
             self._end_combat(player_won=False)

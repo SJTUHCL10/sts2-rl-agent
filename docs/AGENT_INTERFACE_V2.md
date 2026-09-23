@@ -40,6 +40,18 @@ V2 transports typed entity sets rather than a pre-flattened tensor:
 - map nodes and directed edges;
 - currently legal semantic action candidates.
 
+Transport coverage is not model-input coverage. The current
+`typed-set-tensor-v5` projection consumes map nodes and their coordinates,
+type, visited/reachable flags, but does **not** encode `map_edges`; it cannot
+reconstruct connected routes from the set of nodes alone. It also reduces a
+structured entity `counters` map to a numeric sum and keeps at most two
+afflictions and two enchantments. Conversely, each creature's current intents
+(up to three types with damage/hits), hand-card instances, and action-candidate
+source/target entity pointers do reach the model. The compatible 500k run
+recorded zero UNKNOWN categorical values and zero entity overflow. See
+[Typed Set Transformer Agent v2](TYPED_SET_TRANSFORMER_AGENT.md) for the exact
+projection; none of these tensor limits changes the v2 wire contract.
+
 Each entity has a stable `entity_id` within a decision snapshot. Card instances
 include identity, owner, zone, zone index, current and original cost, type,
 target type, upgrade state, enchantments, afflictions, and dynamic variables.
@@ -96,8 +108,10 @@ V2 sends a variable-length `candidates` array. A candidate contains:
 }
 ```
 
-The future policy scores candidates; it does not predict a global action-slot
-number. The Python client responds with:
+The v2 contract describes candidates semantically. The current Python policy
+scores them through a transitional 285-slot padded action space (the first
+157 slots retain legacy meanings), rather than a fully dynamic distribution.
+The Python client responds with:
 
 ```json
 {

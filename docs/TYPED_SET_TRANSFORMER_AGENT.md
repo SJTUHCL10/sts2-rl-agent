@@ -1,9 +1,12 @@
 # Typed Set Transformer Agent v2
 
-> 本文第 1–8 节记录 v4 长训时的设计和 157-slot 基线。当前代码已实现
-> `typed-set-tensor-v5` / `entity-actions-v3-extended-choice`，已完成 100k
-> 诊断试训，但之后修复了两个药水词表别名，当前 hash 尚无重训 checkpoint，
-> 也未实机验证；
+> 本文第 1–8 节记录 v4 长训时的设计和 157-slot 基线。当前代码使用
+> `typed-set-tensor-v5` / `entity-actions-v3-extended-choice`，已在修复
+> 药水词表别名后完成 4-env 500k 长训，训练 UNKNOWN/overflow 均为 0；
+> 100-seed final 在训练时的规则下均层 7.72、0 胜，尚未实机验证。
+> 主敌人死亡后副怪仍阻止战斗结束的模拟器 parity 缺口已修复；旧模型
+> 在修复后复评均层 8.75、0 胜，仍需从头重训，见
+> [模型迭代记录](AGENT_MODEL_ITERATION.md)。
 > 旧 v4 checkpoint 与新 tensor shape、动作语义和网络参数不兼容。
 
 ## v5 接口增量
@@ -82,6 +85,7 @@ actor-critic，但不同时更换游戏逻辑、动作语义和 PPO 算法。设
 - [Set Transformer, ICML 2019](https://proceedings.mlr.press/v97/lee19d.html)
 - [sb3-contrib MaskablePPO](https://sb3-contrib.readthedocs.io/en/master/modules/ppo_mask.html)
 - [Stable-Baselines3 custom policy](https://stable-baselines3.readthedocs.io/en/master/guide/custom_policy.html)
+- [Ng et al., policy-invariant potential-based reward shaping, ICML 1999](https://ai.stanford.edu/~ang/papers/shaping-icml99.pdf)
 
 ## 3. Observation tensor
 
@@ -172,6 +176,13 @@ ID、zone index 和 playable。
 Transformer 不使用 sequence positional encoding；`row/col` 是游戏语义特征，
 不是数组位置。当前版本没有显式 message passing over edges。后续可增加 Graph
 Transformer/GNN map encoder，再把输出作为一种 entity memory 注入全局集合。
+注意 v2 snapshot 已携带 `map_edges`，但 v5 tensorizer 只取 `map_nodes`；
+这是**传输层有、模型输入层没有**的信息。候选 map node 的 source 指针和
+`reachable` 只能告诉模型当前合法节点，不能恢复任意两节点之间的边或路线汇合。
+不过一次 30-seed 探索性对照中，保持 final 模型负责其他阶段、仅在地图
+阶段随机选合法节点，均层为 7.27；原策略为 7.47。这个小样本不排除
+地图边的长期价值；该对照使用的是修复前的模拟器规则，应在新环境中重做，
+再决定 graph encoder 的优先级。
 
 ## 4. Typed Set Transformer
 
@@ -280,16 +291,19 @@ cd C:\Users\A\Codes\sts\sts2-rl-agent
 python -m pip install -e ".[train,dev]"
 ```
 
-完整训练入口：
+修复已知模拟器 parity 缺口后，可用下面的 1M 实验命令检验扩训收益；
+当前不应把它当作已经验证有效的训练建议：
 
 ```powershell
 python scripts/train_agent_v2.py `
   --total-timesteps 1000000 `
-  --n-envs 16 `
-  --n-steps 256 `
+  --n-envs 4 `
+  --n-steps 1024 `
+  --batch-size 256 `
+  --device cuda `
   --checkpoint-freq 100000 `
   --eval-freq 25000 `
-  --output-dir output/typed_set_v4
+  --output-dir output/typed_set_v5_fixed_1m_4env
 ```
 
 周期评估使用 mask-aware `CapabilityEvalCallback`，按固定种子的胜率、平均层数
@@ -368,17 +382,28 @@ observation/mask 卡死；保留该结果可避免把未收敛策略误报成接
 
 ## 9. 已知限制与下一步
 
+- 修复前 500k v5 final 的 100 局评估中有 21 局触发 50 回合战斗上限，
+  其中 20 局只剩 `MINION` 副怪。规则修复后，同一模型的 100 局均层从
+  7.72 升至 8.75，战斗回合强制失败从 21 降至 0；但 checkpoint 权重仍
+  来自错误环境，应从头重训，不能把旧模型复评当成新训练结果。
+- 当前网络已有约 550 万参数，critic explained variance 在 500k 末约
+  0.73；这不能证明容量充分，但没有证据表明“加大参数量”比修环境、改训练
+  信号更优先。缺少完整通关样本、战斗超时和 20-seed 评估波动更值得先处理。
 - v3 训练默认启用可配置的 floor/combat-win/HP-loss/step shaping，并继续单独保留
   原始终局 `+1/-1`。各分量写进每个 episode 的 JSONL，便于做消融而不把 shaping
-  写死在网络中。更严格的下一步是比较 potential-based shaping 和 auxiliary task。
+  写死在网络中。当前奖励并非 policy-invariant 的 potential-based 形式。
+  在修正后的模拟器中，可比较默认系数、逐项移除与
+  `r' = r + gamma * Phi(s') - Phi(s)`（终局 `Phi=0`）的方案，并按多个
+  seed 比较真实胜率、第二幕率及战斗超时，而不仅是训练回报。
 - v3 牌、能力、遗物及结构字段使用显式、版本化 vocabulary。未知值仍有专用
   `UNKNOWN` ID 以保证运行安全，但训练前应通过覆盖审计使其计数为零。
 - v3 分别编码最多两个 affliction 和两个 enchantment，并提供 modifier 数量。
   超过两个 modifier 的组合目前仍会截断；后续可改为 modifier 子 token/DeepSets。
-- 地图暂未编码 edges。
-- v4 已将选择项的 content/option/zone 与 candidate token 对齐，但输出仍建立在
-  冻结的 157 action layout 上。协议已有 semantic `candidate_id`，未来可以实现
-  动态候选分布并消除固定 slot。
+- 地图暂未编码 edges；协议中有边，tensorizer 丢弃。应在 parity 修复后用
+  固定战斗策略的 map-only 消融确认实际影响，再设计 edge-aware encoder。
+- v5 已将选择项的 content/option/zone 和 source/target entity 指针与候选
+  对齐，但输出仍建立在 285 个固定 padded 槽上（前 157 个兼容旧槽）。
+  协议已有 semantic `candidate_id`，未来可实现动态候选分布并消除固定槽。
 - 不保证多人 ownership/targeting parity；多人游戏明确不在本阶段范围内。
 - 当前训练机器已安装 `torch 2.12.1+cu130`，并在 RTX 4070 SUPER 上验证
   CUDA 训练。CPU/GPU 分阶段性能数据、复现命令和优化建议见

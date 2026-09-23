@@ -156,7 +156,7 @@ from sts2_env.monsters.act2 import (
     create_decimillipede_segment,
     create_rocket,
 )
-from sts2_env.monsters.act1 import create_eye_with_teeth, create_parafright
+from sts2_env.monsters.act1 import create_eye_with_teeth, create_fogmog, create_parafright
 from sts2_env.monsters.act3 import create_door
 from sts2_env.monsters.act3 import (
     TEST_SUBJECT_MULTI_CLAW_MOVE,
@@ -972,11 +972,14 @@ class TestUntargetableReviveStates:
             character_id="Ironclad",
         )
         eye, eye_ai = create_eye_with_teeth(Rng(91))
+        primary, primary_ai = create_fogmog(Rng(92))
+        combat.add_enemy(primary, primary_ai)
         combat.add_enemy(eye, eye_ai)
         combat.start_combat()
 
         assert combat.kill_creature(eye)
         assert combat.is_over is False
+        assert primary.is_alive
         assert eye_ai.current_move.state_id == "REVIVE_MOVE"
         assert eye.powers[PowerId.ILLUSION].is_reviving is True
 
