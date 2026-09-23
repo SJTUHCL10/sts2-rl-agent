@@ -252,9 +252,32 @@ template，并将完整 space 校验改为显式 `validate=True` 的测试/诊�
 | PPO total time | 28.78 s | 23.10 s | -19.7% |
 
 优化没有修改 tensor shape、vocabulary 或 feature-layout hash，已有 v4 checkpoint
-保持兼容。下一步性能工作应先消除 entity wrapper 中被丢弃的 v1 observation、
-重复 action mask 和不变 run snapshot 的重复序列化；只有这些同步 CPU 工作继续
-下降后，才值得承担自定义异步 rollout collector 的复杂度。
+保持兼容。
+
+### 6.2 Snapshot 与 action-mask 去重
+
+2026-09-22 继续处理 wrapper/snapshot 重复工作：entity wrapper 不再构造随后丢弃
+的 151-element v1 observation；`info["action_mask"]` 同时供当前 structured
+observation 和下一次 policy 取 mask 使用；完整 run decision 不再先构造 combat
+candidates 后立即覆盖；act map 的不可变节点拓扑和边只序列化一次，visited/
+reachable 状态仍逐步刷新。直接修改底层私有模拟器状态的测试/诊断工具需要调用
+`invalidate_action_mask_cache()`，正常的 Gym `reset/step` 流程无需处理缓存。
+
+同一基准相对 6.1 优化后的版本继续改善：
+
+| Benchmark | 6.1 后 | 6.2 后 | Change |
+| --- | ---: | ---: | ---: |
+| entity-v2 environment, 5000 steps | 276.7 step/s | **353.4 step/s** | +27.7% |
+| entity observation overhead | 3.06 ms/step | **2.42 ms/step** | -21.0% |
+| 4-env CUDA PPO, 4096 steps | 177.3 step/s | **183.6 step/s** | +3.6% |
+| PPO rollout time | 16.33 s | **15.57 s** | -4.7% |
+| PPO total time | 23.10 s | **22.31 s** | -3.4% |
+
+没有缓存完整 persistent run snapshot：HP、deck card instance、relic counter 和
+potion state 都可能在相邻 combat action 间变化，缺少统一 revision 时缓存整块数据
+有产生陈旧观测的风险。当前只缓存生命周期和失效边界明确的 map topology。下一步
+若继续优化同步 CPU 路径，应先为 RunState 增加正式 revision，再按 inventory/map/
+player 分片缓存；否则应评估异步 rollout collector 的复杂度和收益。
 
 ## 7. 当前限制与后续方向
 
@@ -266,6 +289,6 @@ template，并将完整 space 校验改为显式 `validate=True` 的测试/诊�
   floor/act progress；其次是轻量地图 graph encoder。
 - 在没有胜局样本时，scripted/heuristic policy 的 behavior cloning warm start 或
   curriculum 很可能比继续堆大 actor 更有样本效率。
-- GPU update 仍不是主要瓶颈；tensorizer 标量热路径已优化，后续应消除 legacy
-  observation、action mask 和 persistent run snapshot 的重复构造，再评估异步
-  rollout。
+- GPU update 仍不是主要瓶颈；tensorizer、legacy observation、action mask 和
+  map topology 的明显同步重复工作已消除。后续要么为 RunState 增加 revision 后
+  安全分片缓存 snapshot，要么评估异步 rollout。

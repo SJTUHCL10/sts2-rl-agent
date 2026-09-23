@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from enum import Enum
 from typing import TYPE_CHECKING, Any
+from weakref import WeakKeyDictionary
 
 from sts2_env.agent_v2.candidates import build_action_candidates
 from sts2_env.agent_v2.schema import schema_manifest
@@ -13,10 +14,44 @@ from sts2_env.agent_v2.state_fields import (
 )
 
 if TYPE_CHECKING:
+    from sts2_env.map.generator import ActMap
     from sts2_env.cards.base import CardInstance
     from sts2_env.core.combat import CombatState
     from sts2_env.run.run_state import PlayerState, RunState
     from sts2_env.run.run_manager import RunManager
+
+
+_MapNodeTemplate = tuple[int, int, str]
+_MapEdgeTemplate = tuple[int, int, int, int]
+_MAP_TOPOLOGY_CACHE: WeakKeyDictionary[
+    Any,
+    tuple[tuple[_MapNodeTemplate, ...], tuple[_MapEdgeTemplate, ...]],
+] = WeakKeyDictionary()
+
+
+def _map_topology(
+    act_map: ActMap,
+) -> tuple[tuple[_MapNodeTemplate, ...], tuple[_MapEdgeTemplate, ...]]:
+    """Return immutable topology data cached for the lifetime of an act map."""
+    cached = _MAP_TOPOLOGY_CACHE.get(act_map)
+    if cached is not None:
+        return cached
+    points = sorted(
+        act_map.all_points(),
+        key=lambda point: (point.row, point.col),
+    )
+    nodes = tuple(
+        (point.col, point.row, point.point_type.name)
+        for point in points
+    )
+    edges = tuple(
+        (point.col, point.row, child.col, child.row)
+        for point in points
+        for child in point.children
+    )
+    result = (nodes, edges)
+    _MAP_TOPOLOGY_CACHE[act_map] = result
+    return result
 
 
 def _name(value: Any) -> str:
@@ -82,7 +117,11 @@ def _serialize_powers(creature: Any, entity_id: str) -> list[dict[str, Any]]:
     ]
 
 
-def build_combat_snapshot(combat: CombatState) -> dict[str, Any]:
+def build_combat_snapshot(
+    combat: CombatState,
+    *,
+    include_candidates: bool = True,
+) -> dict[str, Any]:
     owner = combat.primary_player
     owner_id = f"player:{getattr(owner, 'combat_id', 0)}"
     player_state = combat.combat_player_state_for(owner)
@@ -203,9 +242,11 @@ def build_combat_snapshot(combat: CombatState) -> dict[str, Any]:
         "exhaust_pile_count": len(zones["exhaust"]),
         "round": combat.round_number,
     }
-    snapshot["candidates"] = [
-        candidate.to_dict() for candidate in build_action_candidates(snapshot)
-    ]
+    if include_candidates:
+        snapshot["candidates"] = [
+            candidate.to_dict()
+            for candidate in build_action_candidates(snapshot)
+        ]
     return attach_v2_envelope(snapshot)
 
 
@@ -279,35 +320,33 @@ def build_run_snapshot(run_state: RunState) -> dict[str, Any]:
     map_edges: list[dict[str, Any]] = []
     if run_state.map is not None:
         visited = {(coord.col, coord.row) for coord in run_state.visited_map_coords}
-        points = sorted(
-            run_state.map.all_points(),
-            key=lambda point: (point.row, point.col),
-        )
+        node_templates, edge_templates = _map_topology(run_state.map)
         reachable = set()
         if run_state.visited_map_coords:
             last = run_state.visited_map_coords[-1]
-            current = next(
-                (point for point in points if point.coord == last),
-                None,
-            )
+            current = run_state.map.get_point(last)
             if current is not None:
                 reachable = {(child.col, child.row) for child in current.children}
         else:
-            reachable = {(point.col, point.row) for point in points if point.row == 0}
-        for point in points:
-            entity_id = f"map:{point.col}:{point.row}"
+            reachable = {
+                (col, row)
+                for col, row, _ in node_templates
+                if row == 0
+            }
+        for col, row, node_type in node_templates:
+            entity_id = f"map:{col}:{row}"
             map_nodes.append({
                 "entity_id": entity_id,
-                "row": point.row,
-                "col": point.col,
-                "node_type": point.point_type.name,
-                "visited": (point.col, point.row) in visited,
-                "reachable": (point.col, point.row) in reachable,
+                "row": row,
+                "col": col,
+                "node_type": node_type,
+                "visited": (col, row) in visited,
+                "reachable": (col, row) in reachable,
             })
-            map_edges.extend({
-                "source_id": entity_id,
-                "target_id": f"map:{child.col}:{child.row}",
-            } for child in point.children)
+        map_edges.extend({
+            "source_id": f"map:{source_col}:{source_row}",
+            "target_id": f"map:{target_col}:{target_row}",
+        } for source_col, source_row, target_col, target_row in edge_templates)
 
     return {
         "character_id": run_state.player.character_id,
@@ -349,11 +388,14 @@ def build_run_decision_snapshot(manager: RunManager) -> dict[str, Any]:
         from sts2_env.parity.bridge_replay import combat_state_to_bridge_state
 
         state = combat_state_to_bridge_state(combat)
-        combat_entities = build_combat_snapshot(combat)
+        combat_entities = build_combat_snapshot(
+            combat,
+            include_candidates=False,
+        )
         for key in ("players", "creatures", "powers", "relics", "potions"):
             state[key] = combat_entities.get(key, [])
     elif combat is not None:
-        state = build_combat_snapshot(combat)
+        state = build_combat_snapshot(combat, include_candidates=False)
     elif manager.is_over:
         # Gymnasium requires the observation returned by the terminal step.
         # RUN_OVER deliberately has no candidates; the environment's action

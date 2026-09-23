@@ -38,21 +38,45 @@ class STS2EntityRunEnv(gymnasium.Wrapper):
             # two-cycles while preserving every final subset and confirm
             # choice. Frozen v1 STS2RunEnv behavior remains unchanged.
             run_env_kwargs.setdefault("monotonic_choices", True)
+            run_env_kwargs.setdefault("encode_legacy_observations", False)
         base = env or STS2RunEnv(**run_env_kwargs)
+        # This wrapper always replaces the base environment's v1 vector with
+        # a structured observation, so constructing that vector is wasted.
+        base.encode_legacy_observations = False
         super().__init__(base)
         self.tensorizer_config = tensorizer_config
         self.observation_space = observation_space(tensorizer_config)
+        self._cached_action_mask: np.ndarray | None = None
 
     @property
     def run_env(self) -> STS2RunEnv:
         return self.env  # type: ignore[return-value]
 
-    def _structured_observation(self) -> dict[str, np.ndarray]:
+    def _structured_observation(
+        self,
+        action_mask: np.ndarray | None = None,
+    ) -> dict[str, np.ndarray]:
+        if action_mask is None:
+            action_mask = self.action_masks()
         return tensorize_snapshot(
             self.run_env.entity_observation(),
-            self.run_env.action_masks(),
+            action_mask,
             self.tensorizer_config,
         )
+
+    def _cache_action_mask(self, info: dict[str, Any]) -> np.ndarray:
+        mask = np.asarray(info["action_mask"], dtype=np.int8)
+        self._cached_action_mask = mask
+        return mask
+
+    def invalidate_action_mask_cache(self) -> None:
+        """Invalidate the mask after out-of-band mutation of ``run_env``.
+
+        Normal Gym usage changes state only through reset/step and never needs
+        this. It is provided for parity tools and tests that deliberately edit
+        private simulator state in place.
+        """
+        self._cached_action_mask = None
 
     def reset(
         self,
@@ -60,8 +84,10 @@ class STS2EntityRunEnv(gymnasium.Wrapper):
         seed: int | None = None,
         options: dict[str, Any] | None = None,
     ) -> tuple[dict[str, np.ndarray], dict[str, Any]]:
+        self._cached_action_mask = None
         _, info = self.env.reset(seed=seed, options=options)
-        return self._structured_observation(), info
+        action_mask = self._cache_action_mask(info)
+        return self._structured_observation(action_mask), info
 
     def step(
         self,
@@ -73,9 +99,11 @@ class STS2EntityRunEnv(gymnasium.Wrapper):
         bool,
         dict[str, Any],
     ]:
+        self._cached_action_mask = None
         _, reward, terminated, truncated, info = self.env.step(action)
+        action_mask = self._cache_action_mask(info)
         return (
-            self._structured_observation(),
+            self._structured_observation(action_mask),
             reward,
             terminated,
             truncated,
@@ -83,4 +111,6 @@ class STS2EntityRunEnv(gymnasium.Wrapper):
         )
 
     def action_masks(self) -> np.ndarray:
-        return self.run_env.action_masks()
+        if self._cached_action_mask is None:
+            self._cached_action_mask = self.run_env.action_masks()
+        return self._cached_action_mask

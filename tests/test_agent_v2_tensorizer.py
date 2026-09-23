@@ -34,12 +34,54 @@ def test_entity_run_env_observation_matches_declared_space() -> None:
     assert env.observation_space.contains(next_observation)
 
 
+def test_entity_run_env_reuses_info_action_mask(monkeypatch) -> None:
+    env = STS2EntityRunEnv(max_steps=20)
+    original = env.run_env.action_masks
+    calls = 0
+
+    def counted_action_masks() -> np.ndarray:
+        nonlocal calls
+        calls += 1
+        return original()
+
+    monkeypatch.setattr(env.run_env, "action_masks", counted_action_masks)
+    _, info = env.reset(seed=109)
+
+    assert calls == 1
+    assert env.action_masks() is info["action_mask"]
+    env._structured_observation()
+    assert calls == 1
+
+    env.step(int(np.flatnonzero(info["action_mask"])[0]))
+    assert calls == 2
+    env.action_masks()
+    assert calls == 2
+
+    env.invalidate_action_mask_cache()
+    env.action_masks()
+    assert calls == 3
+
+
+def test_entity_run_env_skips_discarded_legacy_observation(monkeypatch) -> None:
+    env = STS2EntityRunEnv(max_steps=20)
+
+    def fail_if_called() -> np.ndarray:
+        raise AssertionError("entity wrapper should not encode the v1 vector")
+
+    monkeypatch.setattr(env.run_env, "_encode_obs", fail_if_called)
+    observation, info = env.reset(seed=109)
+    env.step(int(np.flatnonzero(info["action_mask"])[0]))
+
+    assert env.observation_space.contains(observation)
+
+
 def test_entity_run_env_returns_structured_terminal_observation() -> None:
     config = TensorizerConfig(max_entities=64)
     env = STS2EntityRunEnv(tensorizer_config=config, max_steps=20)
     env.reset(seed=109)
     assert env.run_env._mgr is not None
     env.run_env._mgr.run_state.lose_run()
+    env.invalidate_action_mask_cache()
 
     observation = env._structured_observation()
 

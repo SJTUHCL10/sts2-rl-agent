@@ -248,6 +248,9 @@ class STS2RunEnv(gymnasium.Env):
         as a loss.
     render_mode : str or None
         ``"ansi"`` for text rendering.
+    encode_legacy_observations : bool
+        Build the frozen 151-element v1 observation on reset/step. Entity-v2
+        wrappers disable this because they replace that observation entirely.
     """
 
     metadata = {"render_modes": ["ansi"]}
@@ -261,6 +264,7 @@ class STS2RunEnv(gymnasium.Env):
         render_mode: str | None = None,
         reward_shaping: "RunRewardShapingConfig | None" = None,
         monotonic_choices: bool = False,
+        encode_legacy_observations: bool = True,
     ):
         super().__init__()
 
@@ -279,6 +283,11 @@ class STS2RunEnv(gymnasium.Env):
         self.render_mode = render_mode
         self.reward_shaping = reward_shaping
         self.monotonic_choices = monotonic_choices
+        self.encode_legacy_observations = encode_legacy_observations
+        self._legacy_observation_placeholder = np.zeros(
+            self.observation_space.shape,
+            dtype=self.observation_space.dtype,
+        )
 
         # Mutable state -- set during reset()
         self._mgr: RunManager | None = None
@@ -307,7 +316,7 @@ class STS2RunEnv(gymnasium.Env):
         self._episode_reward_components = {}
         self._combat_turn_limit_reached = False
 
-        obs = self._encode_obs()
+        obs = self._current_observation()
         info = self._build_info()
         return obs, info
 
@@ -388,7 +397,7 @@ class STS2RunEnv(gymnasium.Env):
                 self._episode_reward_components.get(name, 0.0) + float(value)
             )
 
-        obs = self._encode_obs()
+        obs = self._current_observation()
         info = self._build_info()
         info["base_reward"] = base_reward
         info["reward_components"] = reward_components
@@ -396,6 +405,12 @@ class STS2RunEnv(gymnasium.Env):
             self._episode_reward_components
         )
         return obs, float(reward), terminated, truncated, info
+
+    def _current_observation(self) -> np.ndarray:
+        """Build the public v1 observation unless an owning wrapper replaces it."""
+        if self.encode_legacy_observations:
+            return self._encode_obs()
+        return self._legacy_observation_placeholder
 
     def action_masks(self) -> np.ndarray:
         """Return a boolean mask over the unified discrete action space.

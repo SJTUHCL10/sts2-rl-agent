@@ -197,6 +197,7 @@ def test_entity_v4_multi_select_mask_is_monotonic() -> None:
     env = STS2EntityRunEnv(max_steps=20)
     env.reset(seed=1)
     _install_run_choice(env.run_env)
+    env.invalidate_action_mask_cache()
 
     assert env.action_masks()[1:3].tolist() == [1, 1]
     env.step(1)

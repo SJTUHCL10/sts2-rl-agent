@@ -133,6 +133,14 @@ def test_combat_snapshot_contains_entities_all_piles_and_semantic_candidates() -
     }
 
 
+def test_combat_snapshot_can_defer_candidate_construction() -> None:
+    snapshot = build_combat_snapshot(_combat(), include_candidates=False)
+
+    validate_v2_envelope(snapshot)
+    assert "candidates" not in snapshot
+    assert snapshot["cards"]
+
+
 def test_candidate_ids_are_semantic_not_policy_slot_numbers() -> None:
     state = {
         "type": "card_reward",
@@ -181,6 +189,22 @@ def test_run_snapshot_contains_full_inventory_and_map_graph() -> None:
     assert snapshot["map_nodes"]
     assert snapshot["map_edges"]
     assert any(node["reachable"] for node in snapshot["map_nodes"])
+
+
+def test_run_snapshot_reuses_immutable_map_topology(monkeypatch) -> None:
+    manager = RunManager(seed=110, character_id="Ironclad")
+    run = manager.run_state
+    first = build_run_snapshot(run)
+    assert run.map is not None
+
+    def fail_if_rebuilt():
+        raise AssertionError("map topology should be cached")
+
+    monkeypatch.setattr(run.map, "all_points", fail_if_rebuilt)
+    second = build_run_snapshot(run)
+
+    assert second["map_nodes"] == first["map_nodes"]
+    assert second["map_edges"] == first["map_edges"]
 
 
 def test_power_projection_keeps_amount_and_visible_counter_state() -> None:
