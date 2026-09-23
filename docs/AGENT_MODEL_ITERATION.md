@@ -7,13 +7,16 @@
 
 ## 1. 当前状态
 
-当前 Bridge 协议仍是 `sts2-entity-v2` / `candidate-v2`，模型输入为
-`typed-set-tensor-v4`，动作语义为
-`entity-actions-v2-monotonic-choice`。训练使用 MaskablePPO、无位置编码的
+当前 Bridge 协议仍是 `sts2-entity-v2` / `candidate-v2`。代码中的新接口为
+`typed-set-tensor-v5` / `entity-actions-v3-extended-choice`，已完成一次 100k
+诊断试训；之后修复了两个药水 ID 规范化别名，词表 hash 随之改变，尚未重训。
+因此当前代码没有可直接加载的兼容 checkpoint。下述 500k 评估属于旧的 v4
+接口；v5 100k 模型属于别名修复前的词表，二者都不能直接用于当前代码。
+训练使用 MaskablePPO、无位置编码的
 Typed Set Transformer 和 candidate-aware actor，不使用 LSTM/GRU，也不考虑
 多人游戏。
 
-当前推荐的本机 checkpoint 是：
+历史 v4 能力基线 checkpoint 是：
 
 ```text
 output/typed_set_v4_retrain_500k_4env_20260922/
@@ -36,11 +39,48 @@ step/s，但 100-seed mean floor 只有 6.08；4-env / 1024-step 配置为 96.4
 step/s、mean floor 7.12。500k 长训继续采用 4-env / 1024-step，包含周期评估
 的整体吞吐为 184.4 step/s。
 
+### 1.1 v5 UNKNOWN 诊断试训（2026-09-23）
+
+`output/typed_set_v5_unknown_diag_100k_4env_20260923/` 使用 4 env × 1024
+step、CUDA、默认 reward shaping；请求 100k，rollout 对齐后的实际步数为
+102,400。训练耗时 706 秒（约 145 step/s）。固定 20 seed 的周期均层：
+0k 5.75、25k 6.80、50k 7.75、75k 8.20、100k 8.20；best checkpoint
+在 75k 选出。final 在固定 100 seed 上为 0 胜、均层 8.01、中位 6.5、
+最高 16；75k best 在同组 100 seed 上为 0 胜、均层 8.11、中位 7、
+最高 18；同组随机策略均层 3.38。试训当时选择该 run 的
+`best_model/best_model.zip`；别名修复后其 layout hash 已不兼容当前代码，
+需重新训练。试训不能与 v4 500k 的模型能力直接等同。
+
+训练 observation 的 UNKNOWN rate 为 `5.78e-6`（749 次编码），没有 entity
+overflow。按 worker 记录的原始 token 日志包含 reset 等额外 observation，
+因此计数与训练 callback 略有差异。已定位的漏词仅为：
+
+- `FairyInABottle` → `FAIRY_IN_ABOTTLE`，词表中为 `FAIRY_IN_A_BOTTLE`；
+- `ShipInABottle` → `SHIP_IN_ABOTTLE`，词表中为 `SHIP_IN_A_BOTTLE`。
+
+两者发生在 `entity.content`，后者还出现在药水动作的
+`candidate.source_content`。这表示字段已进入 observation，只是没有对应的
+词表 ID。诊断日志在 `unknown_diagnostics/worker_*.jsonl`，可运行：
+
+```powershell
+python scripts/summarize_unknown_diagnostics.py `
+  output/typed_set_v5_unknown_diag_100k_4env_20260923/unknown_diagnostics
+```
+
+每条日志按 worker、字段和规范化 token 聚合次数，并保存首次出现的 phase、
+entity/candidate ID、动作槽及原始值。两个别名已在
+`categorical_vocabulary.py` 规范化为词表已有 token，并将别名表纳入词表 hash；
+针对性回归测试已确认不再产生 UNKNOWN。修复后的接口尚未训练，下一轮需重新
+训练；旧 checkpoint 会因 hash 不匹配而明确拒绝加载。
+
 ## 2. 基础架构
 
 ### 2.1 Observation
 
-`STS2EntityRunEnv` 将完整 run snapshot 转换为固定形状的 Dict observation：
+`STS2EntityRunEnv` 将完整 run snapshot 转换为固定形状的 Dict observation。
+本节以下的 157-slot/PMA 描述是 v4 长训时的结构；v5 的变化见下一节。
+
+v4 observation：
 
 - global categorical/numeric：阶段、角色、房间、层数、HP、金币等；
 - entity set：牌、玩家、敌人、能力、遗物、药水、地图节点和事件实体；
@@ -68,6 +108,17 @@ candidate embeddings
 
 地图当前作为带 `row/col/type/visited/reachable` 的普通 set tokens 注入，尚未
 显式编码边。
+
+### 2.2.1 v5 实现（待训练验证）
+
+- 每只敌人的当前 intent 按至多三个条目编码在对应 creature entity：类型、
+  伤害、次数、总预计伤害及战斗 index。Bridge 同时保留原第一条 intent 字段。
+- candidate 直接 cross-attend 全体 contextual entity；PMA 仍服务 global state、
+  critic 和 actor expert gate。candidate 还通过 `source_row`/`target_row` 显式
+  获取对应 entity token，因此相同牌或怪物实例不会仅凭 content ID 混淆。
+- 冻结的前 157 个 v1 slot 不变；entity policy 新增 128 个共享扩展选择槽，
+  总共 285 个动作，容纳更多卡牌奖励、火堆选项和水晶球格子。固定槽仍是过渡
+  方案，并非最终动态 action set。
 
 ### 2.3 Actor 与 critic
 
@@ -282,7 +333,8 @@ player 分片缓存；否则应评估异步 rollout collector 的复杂度和收
 ## 7. 当前限制与后续方向
 
 - 100-seed 仍为 0 胜，完整 run 胜率仍是最终指标。
-- v4 长训中 UNKNOWN rate 很低但非零；下一次长训应利用按字段统计定位并扩词表。
+- v5 诊断试训已将 UNKNOWN 定位到两个药水名的 CamelCase/词表规范差异；下一版
+  词表修复后需要重新训练，不能让旧 checkpoint 静默换用新 token ID。
 - 地图尚无 edge-aware encoder，不能直接表达路线汇合和远期路径价值。
 - reward shaping 仍是启发式，应做系数消融并考虑 potential-based shaping。
 - 下一阶段优先考虑共享 encoder 上的辅助 value targets：下一战胜负、结束 HP、

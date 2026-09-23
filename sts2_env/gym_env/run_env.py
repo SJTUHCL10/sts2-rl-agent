@@ -97,6 +97,7 @@ class _ActionLayout:
     treasure_size: int
     player_select_start: int
     player_select_size: int
+    extra_choice_size: int = 0
 
     @property
     def card_reward_reroll(self) -> int:
@@ -104,10 +105,16 @@ class _ActionLayout:
 
     @property
     def total_actions(self) -> int:
+        return self.extra_choice_start + self.extra_choice_size
+
+    @property
+    def extra_choice_start(self) -> int:
         return self.player_select_start + self.player_select_size
 
 
-def _build_action_layout() -> _ActionLayout:
+def _build_action_layout(extra_choice_size: int = 0) -> _ActionLayout:
+    if extra_choice_size < 0:
+        raise ValueError("extra_choice_size must be nonnegative")
     combat_start = 0
     combat_size = COMBAT_ACTION_SPACE_SIZE
     map_start = combat_start + combat_size
@@ -149,6 +156,7 @@ def _build_action_layout() -> _ActionLayout:
         treasure_size=treasure_size,
         player_select_start=player_select_start,
         player_select_size=player_select_size,
+        extra_choice_size=extra_choice_size,
     )
 
 
@@ -158,6 +166,8 @@ def _build_action_layout() -> _ActionLayout:
 
 _LAYOUT = _build_action_layout()
 TOTAL_ACTIONS = _LAYOUT.total_actions
+ENTITY_EXTRA_CHOICE_SLOTS = 128
+ENTITY_TOTAL_ACTIONS = _build_action_layout(ENTITY_EXTRA_CHOICE_SLOTS).total_actions
 
 # Export the legacy names that tests and callers already import.
 _COMBAT_START = _LAYOUT.combat_start
@@ -265,6 +275,7 @@ class STS2RunEnv(gymnasium.Env):
         reward_shaping: "RunRewardShapingConfig | None" = None,
         monotonic_choices: bool = False,
         encode_legacy_observations: bool = True,
+        extra_choice_slots: int = 0,
     ):
         super().__init__()
 
@@ -274,7 +285,8 @@ class STS2RunEnv(gymnasium.Env):
             shape=(RUN_OBS_SIZE,),
             dtype=np.float32,
         )
-        self.action_space = spaces.Discrete(_LAYOUT.total_actions)
+        self._layout = _build_action_layout(extra_choice_slots)
+        self.action_space = spaces.Discrete(self._layout.total_actions)
 
         self._character_id = character_id
         self._ascension_level = ascension_level
@@ -337,7 +349,13 @@ class STS2RunEnv(gymnasium.Env):
 
         # ---- dispatch action to RunManager ----
         try:
-            if phase != RunManager.PHASE_COMBAT and any(a.get("action") in {"choose", "confirm_choice"} for a in actions):
+            if action >= self._layout.extra_choice_start:
+                extras = self._extra_choice_actions(phase, actions)
+                index = action - self._layout.extra_choice_start
+                if not 0 <= index < min(len(extras), self._layout.extra_choice_size):
+                    raise ValueError(f"Unavailable extended choice action: {action}")
+                self._mgr.take_action(extras[index])
+            elif phase != RunManager.PHASE_COMBAT and any(a.get("action") in {"choose", "confirm_choice"} for a in actions):
                 self._step_noncombat_choice(action)
             elif phase == RunManager.PHASE_COMBAT:
                 self._step_combat(action)
@@ -417,7 +435,7 @@ class STS2RunEnv(gymnasium.Env):
 
         Required by *sb3-contrib* ``MaskablePPO``.
         """
-        layout = _LAYOUT
+        layout = self._layout
         mask = np.zeros(layout.total_actions, dtype=np.int8)
 
         if self._mgr is None or self._mgr.is_over:
@@ -495,7 +513,10 @@ class STS2RunEnv(gymnasium.Env):
                 mask[layout.card_reward_start + 3] = 1
             else:
                 mask[layout.card_reward_start + 3] = 1
-                pick_actions = [a for a in actions if a.get("action") == "pick_card"]
+                pick_actions = [
+                    a for a in actions
+                    if a.get("action") in {"pick_card", "pick_card_bundle"}
+                ]
                 for i in range(min(len(pick_actions), 3)):
                     mask[layout.card_reward_start + i] = 1
                 extra_cards = max(0, len(pick_actions) - 3)
@@ -534,11 +555,60 @@ class STS2RunEnv(gymnasium.Env):
         elif phase == RunManager.PHASE_TREASURE:
             mask[layout.treasure_start] = 1
 
+        if layout.extra_choice_size:
+            for index, action in enumerate(
+                self._extra_choice_actions(phase, actions)[:layout.extra_choice_size]
+            ):
+                if action.get("enabled", True):
+                    mask[layout.extra_choice_start + index] = 1
+
         # Safety: guarantee at least one action is unmasked.
         if mask.sum() == 0:
             mask[0] = 1
 
         return mask
+
+    def _extra_choice_actions(
+        self, phase: str, actions: list[dict],
+    ) -> list[dict]:
+        """Reuse extended choice slots across phases, preserving v1 slots."""
+        layout = self._layout
+        if phase != RunManager.PHASE_COMBAT and any(
+            action.get("action") in {"choose", "confirm_choice"}
+            for action in actions
+        ):
+            return [
+                action for action in actions if action.get("action") == "choose"
+            ][layout.combat_size - 1:]
+        if phase == RunManager.PHASE_MAP_CHOICE:
+            return actions[layout.map_size:]
+        if phase == RunManager.PHASE_CARD_REWARD:
+            bundles = [
+                action for action in actions
+                if action.get("action") == "pick_card_bundle"
+            ]
+            if bundles:
+                return bundles[3 + layout.card_reward_extra_size:]
+            return [
+                action for action in actions if action.get("action") == "pick_card"
+            ][3 + layout.card_reward_extra_size:]
+        if phase == RunManager.PHASE_BOSS_RELIC:
+            return [
+                action for action in actions if action.get("action") == "pick_relic"
+            ][layout.boss_relic_size:]
+        if phase == RunManager.PHASE_SHOP:
+            return [
+                action for action in actions if action.get("action") != "leave_shop"
+            ][layout.shop_size - 1:]
+        if phase == RunManager.PHASE_REST_SITE:
+            return [
+                action for action in actions if action.get("action") == "rest_option"
+            ][layout.rest_size:]
+        if phase == RunManager.PHASE_EVENT:
+            return [
+                action for action in actions if action.get("action") == "event_choice"
+            ][layout.event_size:]
+        return []
 
     # ------------------------------------------------------------------
     # Action dispatch helpers
@@ -546,7 +616,7 @@ class STS2RunEnv(gymnasium.Env):
 
     def _step_combat(self, action: int) -> None:
         """Translate a unified action index into a RunManager combat action."""
-        layout = _LAYOUT
+        layout = self._layout
         mgr = self._mgr
         assert mgr is not None
         combat = mgr.get_combat_state()
@@ -608,7 +678,7 @@ class STS2RunEnv(gymnasium.Env):
                 mgr.run_state.lose_run()
 
     def _step_map_choice(self, action: int) -> None:
-        layout = _LAYOUT
+        layout = self._layout
         mgr = self._mgr
         assert mgr is not None
         actions = mgr.get_available_actions()
@@ -618,7 +688,7 @@ class STS2RunEnv(gymnasium.Env):
         mgr.take_action(actions[local])
 
     def _step_card_reward(self, action: int) -> None:
-        layout = _LAYOUT
+        layout = self._layout
         mgr = self._mgr
         assert mgr is not None
         actions = mgr.get_available_actions()
@@ -641,8 +711,11 @@ class STS2RunEnv(gymnasium.Env):
             mgr.take_action({"action": "reroll_card_reward"})
             return
 
+        bundles = [a for a in actions if a.get("action") == "pick_card_bundle"]
+        pick_action = "pick_card_bundle" if bundles else "pick_card"
+
         if layout.card_reward_extra_start <= action < layout.card_reward_extra_start + layout.card_reward_extra_size:
-            mgr.take_action({"action": "pick_card", "index": 3 + (action - layout.card_reward_extra_start)})
+            mgr.take_action({"action": pick_action, "index": 3 + (action - layout.card_reward_extra_start)})
             return
 
         local = action - layout.card_reward_start
@@ -651,17 +724,17 @@ class STS2RunEnv(gymnasium.Env):
             # Skip
             mgr.take_action({"action": "skip"})
         else:
-            mgr.take_action({"action": "pick_card", "index": local})
+            mgr.take_action({"action": pick_action, "index": local})
 
     def _step_boss_relic(self, action: int) -> None:
-        layout = _LAYOUT
+        layout = self._layout
         mgr = self._mgr
         assert mgr is not None
         local = max(0, min(action - layout.boss_relic_start, layout.boss_relic_size - 1))
         mgr.take_action({"action": "pick_relic", "index": local})
 
     def _step_shop(self, action: int) -> None:
-        layout = _LAYOUT
+        layout = self._layout
         mgr = self._mgr
         assert mgr is not None
         local = action - layout.shop_start
@@ -682,7 +755,7 @@ class STS2RunEnv(gymnasium.Env):
             mgr.take_action({"action": "leave_shop"})
 
     def _step_rest_site(self, action: int) -> None:
-        layout = _LAYOUT
+        layout = self._layout
         mgr = self._mgr
         assert mgr is not None
         actions = [
@@ -695,7 +768,7 @@ class STS2RunEnv(gymnasium.Env):
         mgr.take_action(actions[local])
 
     def _step_event(self, action: int) -> None:
-        layout = _LAYOUT
+        layout = self._layout
         mgr = self._mgr
         assert mgr is not None
         actions = mgr.get_available_actions()
@@ -719,7 +792,7 @@ class STS2RunEnv(gymnasium.Env):
     def _step_noncombat_choice(self, action: int) -> None:
         mgr = self._mgr
         assert mgr is not None
-        layout = _LAYOUT
+        layout = self._layout
         local = max(0, min(action - layout.combat_start, layout.combat_size - 1))
         if local == 0:
             mgr.take_action({"action": "confirm_choice"})
@@ -746,7 +819,7 @@ class STS2RunEnv(gymnasium.Env):
 
     def _mask_shop(self, actions: list[dict], mask: np.ndarray) -> None:
         """Populate *mask* for shop buy-actions at indices 1..N."""
-        layout = _LAYOUT
+        layout = self._layout
         buyable = [
             a for a in actions if a.get("action") != "leave_shop"
         ]

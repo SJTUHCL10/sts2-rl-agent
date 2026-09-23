@@ -3,13 +3,16 @@
 from __future__ import annotations
 
 import json
+import hashlib
 
 import numpy as np
 
 from sts2_env.agent_v2.categorical_vocabulary import (
     DEFAULT_CATEGORICAL_VOCABULARY,
     UNKNOWN_ID,
+    VOCABULARY_VERSION,
     categorical_id,
+    canonical_token,
 )
 from sts2_env.agent_v2.tensorizer import TensorizerConfig, tensorize_snapshot
 from sts2_env.core.enums import CardId, PowerId
@@ -47,6 +50,29 @@ def test_vocabulary_is_sorted_unique_and_versioned() -> None:
     assert vocabulary.size == len(vocabulary.tokens) + 2
 
 
+def test_potion_id_aliases_share_known_tokens_and_change_vocabulary_hash() -> None:
+    for simulator_id, extracted_id in (
+        ("FairyInABottle", "FAIRY_IN_A_BOTTLE"),
+        ("ShipInABottle", "SHIP_IN_A_BOTTLE"),
+    ):
+        assert canonical_token(simulator_id) == extracted_id
+        assert categorical_id(simulator_id, strict=True) == categorical_id(
+            extracted_id, strict=True,
+        )
+        assert categorical_id(simulator_id) != UNKNOWN_ID
+    old_payload = json.dumps(
+        {
+            "version": VOCABULARY_VERSION,
+            "tokens": DEFAULT_CATEGORICAL_VOCABULARY.tokens,
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    assert DEFAULT_CATEGORICAL_VOCABULARY.vocabulary_hash != hashlib.sha256(
+        old_payload,
+    ).hexdigest()
+
+
 def test_afflictions_and_enchantments_use_individual_explicit_ids() -> None:
     config = TensorizerConfig(max_entities=8)
     snapshot = {
@@ -62,7 +88,7 @@ def test_afflictions_and_enchantments_use_individual_explicit_ids() -> None:
         }],
         "candidates": [],
     }
-    mask = np.zeros(157, dtype=np.int8)
+    mask = np.zeros(config.num_actions, dtype=np.int8)
     mask[0] = 1
 
     observation = tensorize_snapshot(snapshot, mask, config)

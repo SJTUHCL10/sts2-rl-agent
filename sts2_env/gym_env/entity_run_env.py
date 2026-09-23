@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 import gymnasium
@@ -13,9 +14,10 @@ from sts2_env.agent_v2.tensorizer import (
     observation_space,
     tensorize_snapshot,
 )
-from sts2_env.gym_env.run_env import STS2RunEnv
+from sts2_env.agent_v2.unknown_diagnostics import UnknownTokenDiagnostics
+from sts2_env.gym_env.run_env import ENTITY_EXTRA_CHOICE_SLOTS, STS2RunEnv
 
-ENTITY_ACTION_SEMANTICS_VERSION = "entity-actions-v2-monotonic-choice"
+ENTITY_ACTION_SEMANTICS_VERSION = "entity-actions-v3-extended-choice"
 
 
 class STS2EntityRunEnv(gymnasium.Wrapper):
@@ -26,6 +28,8 @@ class STS2EntityRunEnv(gymnasium.Wrapper):
         env: STS2RunEnv | None = None,
         *,
         tensorizer_config: TensorizerConfig = DEFAULT_TENSORIZER_CONFIG,
+        unknown_diagnostics_path: Path | None = None,
+        unknown_worker_index: int = 0,
         **run_env_kwargs: Any,
     ) -> None:
         if env is not None and run_env_kwargs:
@@ -39,12 +43,25 @@ class STS2EntityRunEnv(gymnasium.Wrapper):
             # choice. Frozen v1 STS2RunEnv behavior remains unchanged.
             run_env_kwargs.setdefault("monotonic_choices", True)
             run_env_kwargs.setdefault("encode_legacy_observations", False)
+            run_env_kwargs.setdefault("extra_choice_slots", ENTITY_EXTRA_CHOICE_SLOTS)
         base = env or STS2RunEnv(**run_env_kwargs)
+        if base.action_space.n != tensorizer_config.num_actions:
+            raise ValueError(
+                "Entity action count must match the tensorizer: "
+                f"{base.action_space.n} != {tensorizer_config.num_actions}"
+            )
         # This wrapper always replaces the base environment's v1 vector with
         # a structured observation, so constructing that vector is wasted.
         base.encode_legacy_observations = False
         super().__init__(base)
         self.tensorizer_config = tensorizer_config
+        self.unknown_diagnostics = (
+            UnknownTokenDiagnostics(
+                unknown_diagnostics_path,
+                worker_index=unknown_worker_index,
+            )
+            if unknown_diagnostics_path is not None else None
+        )
         self.observation_space = observation_space(tensorizer_config)
         self._cached_action_mask: np.ndarray | None = None
 
@@ -62,7 +79,13 @@ class STS2EntityRunEnv(gymnasium.Wrapper):
             self.run_env.entity_observation(),
             action_mask,
             self.tensorizer_config,
+            unknown_diagnostics=self.unknown_diagnostics,
         )
+
+    def close(self) -> None:
+        if self.unknown_diagnostics is not None:
+            self.unknown_diagnostics.flush()
+        super().close()
 
     def _cache_action_mask(self, info: dict[str, Any]) -> np.ndarray:
         mask = np.asarray(info["action_mask"], dtype=np.int8)

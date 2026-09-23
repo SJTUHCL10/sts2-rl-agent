@@ -52,6 +52,8 @@ def make_env_factory(
     max_steps: int,
     max_combat_turns: int,
     reward_shaping: RunRewardShapingConfig | None = None,
+    unknown_diagnostics_path: Path | None = None,
+    unknown_worker_index: int = 0,
 ) -> Callable[[], Any]:
     """Return a pickle-safe masked full-run environment factory."""
 
@@ -63,6 +65,8 @@ def make_env_factory(
             max_steps=max_steps,
             max_combat_turns=max_combat_turns,
             reward_shaping=reward_shaping,
+            unknown_diagnostics_path=unknown_diagnostics_path,
+            unknown_worker_index=unknown_worker_index,
         )
         env.reset(seed=seed)
         return env
@@ -489,6 +493,11 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             max_steps=args.max_steps,
             max_combat_turns=args.max_combat_turns,
             reward_shaping=reward_shaping,
+            unknown_diagnostics_path=(
+                output_dir / "unknown_diagnostics" / f"worker_{index}.jsonl"
+                if args.unknown_diagnostics else None
+            ),
+            unknown_worker_index=index,
         )
         for index in range(args.n_envs)
     ]
@@ -548,7 +557,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
         callbacks.append(CheckpointCallback(
             save_freq=max(args.checkpoint_freq // args.n_envs, 1),
             save_path=str(output_dir / "checkpoints"),
-            name_prefix="typed_set_v4",
+            name_prefix="typed_set_v5",
         ))
     capability_eval_callback = None
     if args.eval_freq > 0:
@@ -649,6 +658,10 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             reward_shaping.to_dict() if reward_shaping is not None else None
         ),
         "training_progress": metrics_callback.summary(),
+        "unknown_diagnostics": (
+            "unknown_diagnostics/worker_*.jsonl"
+            if args.unknown_diagnostics else None
+        ),
         "periodic_evaluation": (
             capability_eval_callback.summary()
             if capability_eval_callback is not None
@@ -712,6 +725,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--max-combat-turns", type=int, default=50)
     parser.add_argument("--max-entities", type=int, default=384)
     parser.add_argument(
+        "--unknown-diagnostics",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Write per-worker UNKNOWN field/token samples and counts.",
+    )
+    parser.add_argument(
         "--reward-shaping",
         action=argparse.BooleanOptionalAction,
         default=True,
@@ -768,7 +787,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--plot-window", type=int, default=100)
     parser.add_argument(
         "--output-dir",
-        default="output/typed_set_v4",
+        default="output/typed_set_v5",
     )
     parser.add_argument("--progress-bar", action="store_true")
     return parser

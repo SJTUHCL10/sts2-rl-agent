@@ -109,3 +109,28 @@ def test_finished_crystal_sphere_prioritizes_proceed_over_stale_cells():
         "action": "choose",
         "index": 58,
     }
+
+
+def test_extended_choices_cover_all_crystal_cells_and_rest_options():
+    adapter = FullRunStateAdapter(extra_choice_slots=128)
+    crystal = {
+        "type": "crystal_sphere",
+        "minigame": {"finished": False, "divinations_remaining": 6},
+        "options": [
+            {"action": "divine_cell", "index": index, "enabled": True}
+            for index in range(121)
+        ],
+    }
+    mask = adapter.compute_action_mask(crystal)
+    assert mask.shape == (285,)
+    assert mask.sum() == 121
+    assert adapter.decode_action(157, crystal) == {"action": "choose", "index": 4}
+    assert adapter.decode_action(273, crystal) == {"action": "choose", "index": 120}
+
+    rest = {
+        "type": "rest_site",
+        "options": [{"index": index, "enabled": True} for index in range(7)],
+    }
+    rest_mask = adapter.compute_action_mask(rest)
+    assert rest_mask.sum() == 7
+    assert adapter.decode_action(158, rest) == {"action": "choose", "index": 6}

@@ -116,7 +116,7 @@ def _detect_model_interface(model: Any) -> str:
     observation_space = model.observation_space
     observation_shape = getattr(observation_space, "shape", ())
     action_count = getattr(model.action_space, "n", 0)
-    if isinstance(observation_space, spaces.Dict) and action_count == 157:
+    if isinstance(observation_space, spaces.Dict) and action_count >= 157:
         required = {
             "global_categorical",
             "global_numeric",
@@ -135,7 +135,7 @@ def _detect_model_interface(model: Any) -> str:
     raise ValueError(
         "Unsupported model interface: observation space "
         f"{observation_space}, action count {action_count}. Expected "
-        "combat 131x115, full-run 151x157, or entity-v2 Dict x157."
+        "combat 131x115, full-run 151x157, or entity-v2 Dict with at least 157 actions."
     )
 
 
@@ -210,7 +210,6 @@ def run_agent(
     """
     model = load_model(model_path)
     adapter = StateAdapter()
-    full_run_adapter = FullRunStateAdapter()
     model_interface = _detect_model_interface(model)
     full_run_policy = model_interface == "full_run_v1"
     entity_v2_policy = model_interface == "entity_v2"
@@ -219,10 +218,16 @@ def run_agent(
         if entity_v2_policy
         else None
     )
+    full_run_adapter = FullRunStateAdapter(
+        extra_choice_slots=(
+            model.action_space.n - 157 if entity_v2_policy else 0
+        ),
+    )
     if entity_v2_policy:
         logger.info(
             "Detected entity-v2 Typed Set policy "
-            "(Dict observations, 157 actions)."
+            "(Dict observations, %d actions).",
+            model.action_space.n,
         )
     elif full_run_policy:
         logger.info("Detected full-run policy (151 observations, 157 actions).")

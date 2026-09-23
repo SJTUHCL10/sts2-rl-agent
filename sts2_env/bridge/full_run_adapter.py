@@ -58,7 +58,11 @@ class FullRunStateAdapter:
     screens.  Missing values have conservative starter-run defaults.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, extra_choice_slots: int = 0) -> None:
+        if extra_choice_slots < 0:
+            raise ValueError("extra_choice_slots must be nonnegative")
+        self.extra_choice_slots = extra_choice_slots
+        self.total_actions = TOTAL_ACTIONS + extra_choice_slots
         self.combat = StateAdapter()
         self.act = 0
         self.total_floor = 0
@@ -99,7 +103,7 @@ class FullRunStateAdapter:
         return obs
 
     def compute_action_mask(self, state: dict[str, Any]) -> np.ndarray:
-        mask = np.zeros(TOTAL_ACTIONS, dtype=np.int8)
+        mask = np.zeros(self.total_actions, dtype=np.int8)
         state_type = state.get("type")
         if state_type == BridgeStateType.COMBAT_ACTION:
             mask[:_COMBAT_SIZE] = self.combat.compute_action_mask(state)
@@ -138,11 +142,20 @@ class FullRunStateAdapter:
             self._mask_sequence(mask, _EVENT_START, self._event_choice_items(state), 4)
         elif state_type == BridgeStateType.TREASURE:
             mask[_TREASURE_START] = 1
+        for index, option in enumerate(
+            self._extra_choice_items(state)[:self.extra_choice_slots]
+        ):
+            if option.get("enabled", True):
+                mask[TOTAL_ACTIONS + index] = 1
         if not mask.any():
             mask[0] = 1
         return mask
 
     def decode_action(self, action: int, state: dict[str, Any]) -> dict[str, Any]:
+        if action >= TOTAL_ACTIONS:
+            return self._choose(
+                self._extra_choice_items(state), action - TOTAL_ACTIONS,
+            )
         state_type = state.get("type")
         if state_type == BridgeStateType.COMBAT_ACTION:
             decoded = self.combat.decode_action(action, state)
@@ -252,6 +265,35 @@ class FullRunStateAdapter:
             if str(option.get("action", "")).lower() == "proceed"
         ]
         return proceeds or choices
+
+    def _extra_choice_items(self, state: dict[str, Any]) -> list[dict[str, Any]]:
+        """Additional choices share one tail of the entity action layout."""
+        state_type = state.get("type")
+        if state_type == BridgeStateType.MAP_SELECT:
+            return list(state.get("nodes", []))[5:]
+        if state_type == BridgeStateType.CARD_SELECT:
+            return self._choice_items(state)[_COMBAT_SIZE - 1:]
+        if state_type == BridgeStateType.REWARD_SCREEN:
+            options = self._enabled(state.get("options", []))
+            return [
+                option for option in options
+                if str(option.get("action", "")).lower() != "proceed"
+            ][3:]
+        if state_type in {BridgeStateType.CARD_REWARD, BridgeStateType.CARD_BUNDLE}:
+            return self._choice_items(state)[6:]
+        if state_type == BridgeStateType.BOSS_RELIC:
+            return self._choice_items(state)[3:]
+        if state_type == BridgeStateType.SHOP:
+            options = self._enabled(state.get("options", []))
+            return [
+                option for option in options
+                if str(option.get("action", "")).lower() != "leave_shop"
+            ][9:]
+        if state_type == BridgeStateType.REST_SITE:
+            return self._choice_items(state)[5:]
+        if state_type in {BridgeStateType.EVENT, BridgeStateType.CRYSTAL_SPHERE}:
+            return self._event_choice_items(state)[4:]
+        return []
 
     @staticmethod
     def _mask_sequence(mask: np.ndarray, start: int, items: Any, limit: int) -> None:

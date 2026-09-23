@@ -608,6 +608,33 @@ public class RlCombatHandler : IRoomHandler, IHandler
                 var nextMove = enemy.Monster.NextMove;
                 if (nextMove?.Intents != null && nextMove.Intents.Count > 0)
                 {
+                    var currentIntents = new List<Dictionary<string, object>>();
+                    foreach (AbstractIntent intent in nextMove.Intents)
+                    {
+                        var serializedIntent = new Dictionary<string, object>
+                        {
+                            ["intent_type"] = intent.IntentType.ToString(),
+                            ["damage"] = 0,
+                            ["hits"] = 1,
+                        };
+                        if (intent is AttackIntent currentAttack)
+                        {
+                            ICombatState currentCombat = enemy.CombatState;
+                            if (currentCombat != null)
+                            {
+                                try
+                                {
+                                    serializedIntent["damage"] = currentAttack.GetSingleDamage(
+                                        currentCombat.PlayerCreatures, enemy);
+                                    serializedIntent["hits"] = currentAttack.Repeats > 0
+                                        ? currentAttack.Repeats : 1;
+                                }
+                                catch { }
+                            }
+                        }
+                        currentIntents.Add(serializedIntent);
+                    }
+                    data["intents"] = currentIntents;
                     AbstractIntent firstIntent = nextMove.Intents[0];
                     data["intent"] = firstIntent.IntentType.ToString();
                     data["intent_move_id"] = nextMove.Id;

@@ -18,11 +18,13 @@ import numpy as np
 from gymnasium import spaces
 
 from sts2_env.agent_v2.categorical_vocabulary import (
+    UNKNOWN_ID,
     VOCABULARY_HASH,
     VOCABULARY_SIZE,
     categorical_id as _uncached_categorical_id,
     canonical_token,
 )
+from sts2_env.agent_v2.unknown_diagnostics import UnknownTokenDiagnostics
 
 from sts2_env.core.constants import (
     ACTION_END_TURN,
@@ -32,6 +34,7 @@ from sts2_env.core.constants import (
     POTION_TARGET_OPTIONS,
 )
 from sts2_env.gym_env.run_env import (
+    ENTITY_TOTAL_ACTIONS,
     TOTAL_ACTIONS,
     _BOSS_RELIC_START,
     _CARD_RWD_EXTRA_START,
@@ -46,7 +49,32 @@ from sts2_env.gym_env.run_env import (
     _TREASURE_START,
 )
 
-TENSOR_ENCODING_VERSION = "typed-set-tensor-v4"
+TENSOR_ENCODING_VERSION = "typed-set-tensor-v5"
+MAX_CURRENT_INTENTS = 3
+_BRIDGE_PHASES = {
+    "map_select": "MAP_CHOICE",
+    "combat_action": "COMBAT",
+    "card_reward": "CARD_REWARD",
+    "reward_screen": "CARD_REWARD",
+    "card_bundle": "CARD_REWARD",
+    "card_select": "CARD_REWARD",
+    "boss_relic": "BOSS_RELIC",
+    "shop": "SHOP",
+    "rest_site": "REST_SITE",
+    "event": "EVENT",
+    "crystal_sphere": "EVENT",
+    "treasure": "TREASURE",
+    "run_complete": "RUN_OVER",
+}
+
+
+def _snapshot_phase(snapshot: dict[str, Any]) -> str:
+    global_state = snapshot.get("global")
+    global_phase = global_state.get("phase") if isinstance(global_state, dict) else None
+    return str(
+        snapshot.get("phase") or global_phase
+        or _BRIDGE_PHASES.get(str(snapshot.get("type", "")).casefold(), "")
+    ).upper()
 
 
 @dataclass(frozen=True, slots=True)
@@ -54,11 +82,11 @@ class TensorizerConfig:
     """Shape and vocabulary contract stored with a v2 checkpoint."""
 
     max_entities: int = 384
-    num_actions: int = TOTAL_ACTIONS
+    num_actions: int = ENTITY_TOTAL_ACTIONS
     categorical_vocab_size: int = VOCABULARY_SIZE
     categorical_vocabulary_hash: str = VOCABULARY_HASH
-    entity_categorical_fields: int = 13
-    entity_numeric_fields: int = 34
+    entity_categorical_fields: int = 16
+    entity_numeric_fields: int = 43
     candidate_categorical_fields: int = 7
     candidate_numeric_fields: int = 15
     global_categorical_fields: int = 4
@@ -141,6 +169,40 @@ def categorical_id(value: Any, *, strict: bool = False) -> int:
         return _cached_categorical_id(value, strict)
     except TypeError:
         return _uncached_categorical_id(value, strict=strict)
+
+
+def _categorical_fields(
+    values: list[Any],
+    names: tuple[str, ...],
+    context: dict[str, Any],
+    diagnostics: UnknownTokenDiagnostics | None,
+) -> np.ndarray:
+    if diagnostics is None:
+        return np.asarray([categorical_id(value) for value in values], dtype=np.int32)
+    encoded = []
+    for name, value in zip(names, values, strict=True):
+        category = categorical_id(value)
+        if category == UNKNOWN_ID:
+            diagnostics.record(name, value, context)
+        encoded.append(category)
+    return np.asarray(encoded, dtype=np.int32)
+
+
+_GLOBAL_CATEGORY_FIELDS = (
+    "global.phase", "global.character", "global.room_type", "global.screen_type",
+)
+_ENTITY_CATEGORY_FIELDS = (
+    "entity.type", "entity.content", "entity.zone", "entity.subtype",
+    "entity.rarity", "entity.owner", "entity.upgrade", "entity.affliction_0",
+    "entity.affliction_1", "entity.enchantment_0", "entity.enchantment_1",
+    "entity.status", "entity.count", "entity.intent_0", "entity.intent_1",
+    "entity.intent_2",
+)
+_CANDIDATE_CATEGORY_FIELDS = (
+    "candidate.action_type", "candidate.action_slot", "candidate.source_content",
+    "candidate.target_content", "candidate.phase", "candidate.option",
+    "candidate.source_zone_or_action",
+)
 
 
 def _content_id(entity: dict[str, Any]) -> Any:
@@ -229,13 +291,22 @@ def _iter_snapshot_entities(
     seen: set[tuple[str, str]] = set()
 
     def extend(container: dict[str, Any], key: str, entity_type: str) -> None:
+        if key == "hand" and container.get("cards"):
+            return  # Simulator already supplies the same instances in cards.
         for index, raw in enumerate(container.get(key, []) or []):
             if not isinstance(raw, dict):
                 continue
             item = dict(raw)
+            if entity_type == "CREATURE":
+                item.setdefault("combat_index", index)
+            elif key == "hand":
+                item.setdefault("zone", "hand")
+                item.setdefault("zone_index", index)
             identity = str(
-                item.get("entity_id") or f"{key}:{index}:{_content_id(item)}"
+                item.get("entity_id")
+                or _fallback_entity_id(key, item, index)
             )
+            item.setdefault("entity_id", identity)
             marker = (entity_type, identity)
             if marker in seen:
                 continue
@@ -245,6 +316,8 @@ def _iter_snapshot_entities(
     current_specs = (
         ("players", "PLAYER"),
         ("creatures", "CREATURE"),
+        ("enemies", "CREATURE"),
+        ("hand", "CARD"),
         ("cards", "CARD"),
         ("powers", "POWER"),
         ("relics", "RELIC"),
@@ -267,6 +340,10 @@ def _iter_snapshot_entities(
             item = dict(raw)
             item.setdefault("zone", "candidate")
             item.setdefault("zone_index", index)
+            item.setdefault(
+                "entity_id",
+                _fallback_entity_id(key, item, index),
+            )
             collected.append(("CHOICE", item))
 
     # Preserve current-screen order and priority. Only persistent deck copies
@@ -290,36 +367,67 @@ def _iter_snapshot_entities(
     return result
 
 
+def _fallback_entity_id(key: str, item: dict[str, Any], index: int) -> str:
+    prefix = "enemy" if key == "enemies" else key.rstrip("s")
+    return f"{prefix}:{item.get('id', 'unknown')}:{item.get('index', index)}"
+
+
 def _entity_row(
     entity_type: str,
     entity: dict[str, Any],
     config: TensorizerConfig,
+    diagnostics: UnknownTokenDiagnostics | None = None,
+    phase: str = "",
 ) -> tuple[np.ndarray, np.ndarray]:
     count = max(1, int(_finite(entity.get("count"), 1)))
     afflictions = _modifier_tokens(entity.get("afflictions"))
     enchantments = _modifier_tokens(entity.get("enchantments"))
-    categorical = np.asarray([
-        categorical_id(entity_type),
-        categorical_id(_content_id(entity)),
-        categorical_id(entity.get("zone")),
-        categorical_id(
+    intents = (entity.get("intents") or []) if entity_type == "CREATURE" else []
+    if not intents and entity_type == "CREATURE" and entity.get("intent"):
+        intents = [{
+            "intent_type": entity["intent"],
+            "damage": entity.get("intent_damage", 0),
+            "hits": entity.get("intent_hits", 1),
+        }]
+    if len(intents) > MAX_CURRENT_INTENTS:
+        raise ValueError(
+            f"Creature has {len(intents)} current intents; "
+            f"tensor supports {MAX_CURRENT_INTENTS}"
+        )
+    padded_intents = [*intents, *([{}] * (MAX_CURRENT_INTENTS - len(intents)))]
+    categorical_values = [
+        entity_type,
+        _content_id(entity),
+        entity.get("zone"),
+        (
             entity.get("card_type")
             or entity.get("power_type")
             or entity.get("target_type")
             or entity.get("side")
         ),
-        categorical_id(entity.get("rarity") or entity.get("stack_type")),
-        categorical_id(_owner_token(entity.get("owner_id"))),
-        categorical_id(
-            f"UPGRADE:{min(16, max(0, int(_finite(entity.get('upgrade_level'), 0))))}"
-        ),
-        categorical_id(afflictions[0]),
-        categorical_id(afflictions[1]),
-        categorical_id(enchantments[0]),
-        categorical_id(enchantments[1]),
-        categorical_id(entity.get("status")),
-        categorical_id(_count_token(count)),
-    ], dtype=np.int32)
+        entity.get("rarity") or entity.get("stack_type"),
+        _owner_token(entity.get("owner_id")),
+        f"UPGRADE:{min(16, max(0, int(_finite(entity.get('upgrade_level'), 0))))}",
+        afflictions[0],
+        afflictions[1],
+        enchantments[0],
+        enchantments[1],
+        entity.get("status"),
+        _count_token(count),
+        *(intent.get("intent_type") for intent in padded_intents),
+    ]
+    categorical = _categorical_fields(
+        categorical_values,
+        _ENTITY_CATEGORY_FIELDS,
+        {
+            "phase": phase,
+            "entity_type": entity_type,
+            "entity_id": str(entity.get("entity_id", ""))[:160],
+            "content_id": str(_content_id(entity) or "")[:160],
+            "zone": str(entity.get("zone", ""))[:80],
+        },
+        diagnostics,
+    )
 
     hp = _finite(entity.get("hp"))
     max_hp = max(1.0, _finite(entity.get("max_hp"), 1.0))
@@ -363,6 +471,28 @@ def _entity_row(
         float(bool(entity.get("show_counter", False))),
         float(bool(entity.get("hidden", False))),
         float(bool(entity.get("clickable", False))),
+        _ratio(
+            int(entity["combat_index"]) + 1
+            if entity_type == "CREATURE" and entity.get("combat_index") is not None
+            else 0,
+            MAX_ENEMIES,
+        ),
+        *(
+            value
+            for intent in padded_intents
+            for value in (
+                _ratio(intent.get("damage"), 100.0),
+                _ratio(intent.get("hits"), 10.0),
+            )
+        ),
+        _ratio(len(intents), MAX_CURRENT_INTENTS),
+        _ratio(
+            sum(
+                _finite(intent.get("damage")) * _finite(intent.get("hits"), 1)
+                for intent in intents
+            ),
+            300.0,
+        ),
     ], dtype=np.float32)
     return categorical, numeric
 
@@ -405,19 +535,16 @@ def _candidate_slots(
         containers.append(snapshot["run_state"])
     for container in containers:
         for key in (
-            "players", "creatures", "cards", "powers", "relics", "potions",
+            "players", "creatures", "enemies", "hand", "cards", "powers", "relics", "potions",
             "map_nodes", "crystal_cells", "options", "nodes", "bundles",
         ):
-            for item in container.get(key, []) or []:
+            for index, item in enumerate(container.get(key, []) or []):
                 if not isinstance(item, dict):
                     continue
                 entity_id = item.get("entity_id") or item.get("candidate_id")
                 if entity_id is None:
-                    index = item.get("index", 0)
-                    entity_id = (
-                        f"{key.rstrip('s')}:{item.get('id', 'unknown')}:{index}"
-                    )
-                entity_lookup[str(entity_id)] = item
+                    entity_id = _fallback_entity_id(key, item, index)
+                entity_lookup.setdefault(str(entity_id), item)
 
     candidates = []
     for raw in snapshot.get("candidates", []) or []:
@@ -441,26 +568,71 @@ def _candidate_slots(
             if slot is not None and 0 <= slot < TOTAL_ACTIONS:
                 aligned[slot] = candidate
 
-    phase = str(
-        snapshot.get("phase")
-        or snapshot.get("global", {}).get("phase")
-        or ""
-    ).upper()
+    phase = _snapshot_phase(snapshot)
     remaining = [
         candidate for candidate in candidates
         if candidate not in aligned.values()
     ]
 
-    def take(action_type: str) -> list[dict[str, Any]]:
+    def take(action_type: str, limit: int | None = None) -> list[dict[str, Any]]:
         selected = [
             item for item in remaining
             if str(item.get("action_type", "")).upper() == action_type
         ]
+        if limit is not None:
+            selected = selected[:limit]
         for item in selected:
             remaining.remove(item)
         return selected
 
-    if phase == "CARD_REWARD":
+    def align_options(options: list[dict[str, Any]], slots: Iterable[int]) -> None:
+        for position, (option, slot) in enumerate(zip(options, slots)):
+            if not action_mask[slot]:
+                continue
+            option_index = int(option.get("index", position))
+            match = next((
+                item for item in remaining
+                if (item.get("payload") or {}).get("index") == option_index
+            ), None)
+            if match is not None:
+                aligned[slot] = match
+                remaining.remove(match)
+
+    state_type = str(snapshot.get("type", "")).casefold()
+    if state_type == "reward_screen":
+        options = [item for item in snapshot.get("options", []) if item.get("enabled", True)]
+        picks = [item for item in options if str(item.get("action", "")).casefold() != "proceed"]
+        proceeds = [item for item in options if str(item.get("action", "")).casefold() == "proceed"]
+        align_options(picks[:3], range(_CARD_RWD_START, _CARD_RWD_START + 3))
+        align_options(proceeds[:1], [_CARD_RWD_START + 3])
+        align_options(picks[3:], range(TOTAL_ACTIONS, len(action_mask)))
+    elif state_type == "shop":
+        options = [item for item in snapshot.get("options", []) if item.get("enabled", True)]
+        buys = [item for item in options if str(item.get("action", "")).casefold() != "leave_shop"]
+        leaves = [item for item in options if str(item.get("action", "")).casefold() == "leave_shop"]
+        align_options(leaves[:1], [_SHOP_START])
+        align_options(buys[:9], range(_SHOP_START + 1, _SHOP_START + 10))
+        align_options(buys[9:], range(TOTAL_ACTIONS, len(action_mask)))
+    elif state_type == "crystal_sphere":
+        options = [item for item in snapshot.get("options", []) if item.get("enabled", True)]
+        minigame = snapshot.get("minigame")
+        if isinstance(minigame, dict) and (
+            minigame.get("finished") or minigame.get("divinations_remaining") == 0
+        ):
+            proceeds = [item for item in options if str(item.get("action", "")).casefold() == "proceed"]
+            options = proceeds or options
+        slots = [*range(_EVENT_START, _EVENT_START + 4), *range(TOTAL_ACTIONS, len(action_mask))]
+        align_options(options, slots)
+    elif state_type == "card_select":
+        cards = [item for item in snapshot.get("cards", []) if item.get("enabled", True)]
+        choice_slots = [*range(1, _COMBAT_SIZE), *range(TOTAL_ACTIONS, len(action_mask))]
+        align_options(cards, choice_slots)
+        if action_mask[0]:
+            command_type = "CONFIRM" if snapshot.get("run_state_available") else "SKIP"
+            matches = take(command_type, 1)
+            if matches:
+                aligned[0] = matches[0]
+    elif phase == "CARD_REWARD":
         pick_slots = [
             _CARD_RWD_START,
             _CARD_RWD_START + 1,
@@ -469,7 +641,10 @@ def _candidate_slots(
             _CARD_RWD_EXTRA_START + 1,
             _CARD_RWD_EXTRA_START + 2,
         ]
-        aligned.update(zip(pick_slots, take("PICK_CARD")))
+        picks = take("PICK_CARD", len(pick_slots))
+        if not picks:
+            picks = take("PICK_CARD_BUNDLE", len(pick_slots))
+        aligned.update(zip(pick_slots, picks))
         skips = take("SKIP")
         if skips:
             aligned[_CARD_RWD_START + 3] = skips[0]
@@ -479,7 +654,7 @@ def _candidate_slots(
     elif phase == "BOSS_RELIC":
         aligned.update(
             (_BOSS_RELIC_START + index, item)
-            for index, item in enumerate(take("PICK_RELIC")[:3])
+            for index, item in enumerate(take("PICK_RELIC", 3))
         )
 
     valid_unassigned = [
@@ -492,6 +667,8 @@ def _candidate_slots(
 
 
 def _action_family(slot: int) -> str:
+    if slot >= TOTAL_ACTIONS:
+        return "CHOOSE"
     if slot < _COMBAT_SIZE:
         if slot == ACTION_END_TURN:
             return "END_TURN_OR_CONFIRM"
@@ -516,7 +693,7 @@ def _action_family(slot: int) -> str:
         return "TREASURE_OR_REROLL"
     if slot >= _PLAYER_SELECT_START:
         return "SELECT_PLAYER"
-    return "UNKNOWN"
+    return "CHOOSE"
 
 
 def _candidate_row(
@@ -525,6 +702,7 @@ def _candidate_row(
     valid: bool,
     phase: Any,
     config: TensorizerConfig,
+    diagnostics: UnknownTokenDiagnostics | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
     item = candidate or {}
     features = (
@@ -542,17 +720,27 @@ def _candidate_row(
         features.get(key) for key in ("cards", "options", "relics")
     ):
         semantic_option = "COMPOSITE"
-    categorical = np.asarray([
-        categorical_id(item.get("action_type") or _action_family(slot)),
-        categorical_id(f"ACTION_SLOT:{slot + 1}"),
-        categorical_id(features.get("model_source_content")),
-        categorical_id(features.get("model_target_content")),
-        categorical_id(phase),
-        categorical_id(semantic_option),
-        categorical_id(
-            features.get("model_source_zone") or payload.get("action")
-        ),
-    ], dtype=np.int32)
+    categorical = _categorical_fields(
+        [
+            item.get("action_type") or _action_family(slot),
+            f"ACTION_SLOT:{slot + 1}",
+            features.get("model_source_content"),
+            features.get("model_target_content"),
+            phase,
+            semantic_option,
+            features.get("model_source_zone") or payload.get("action"),
+        ],
+        _CANDIDATE_CATEGORY_FIELDS,
+        {
+            "phase": phase,
+            "slot": slot,
+            "valid": valid,
+            "candidate_id": str(item.get("candidate_id", ""))[:160],
+            "source_id": str(item.get("source_id", ""))[:160],
+            "target_id": str(item.get("target_id", ""))[:160],
+        },
+        diagnostics,
+    )
     numeric = np.asarray([
         float(valid),
         _ratio(features.get("price"), 1000.0),
@@ -628,6 +816,14 @@ def observation_space(
             ),
             dtype=np.float32,
         ),
+        "candidate_source_row": spaces.Box(
+            -1, config.max_entities - 1,
+            shape=(config.num_actions,), dtype=np.int32,
+        ),
+        "candidate_target_row": spaces.Box(
+            -1, config.max_entities - 1,
+            shape=(config.num_actions,), dtype=np.int32,
+        ),
     })
 
 
@@ -637,6 +833,7 @@ def tensorize_snapshot(
     config: TensorizerConfig = DEFAULT_TENSORIZER_CONFIG,
     *,
     validate: bool = False,
+    unknown_diagnostics: UnknownTokenDiagnostics | None = None,
 ) -> dict[str, np.ndarray]:
     """Convert a v2 snapshot and fixed action mask to padded numpy tensors.
 
@@ -647,7 +844,7 @@ def tensorize_snapshot(
         raise ValueError(
             f"Expected action mask {(config.num_actions,)}, got {action_mask.shape}"
         )
-    phase = snapshot.get("phase") or snapshot.get("global", {}).get("phase")
+    phase = _snapshot_phase(snapshot)
     run_state = snapshot.get("run_state")
     run = run_state if isinstance(run_state, dict) else snapshot
     players = run.get("players", []) or snapshot.get("players", []) or []
@@ -658,17 +855,19 @@ def tensorize_snapshot(
         if str(item.get("zone", "")).casefold() == "deck"
     )
 
-    global_categorical = np.asarray([
-        categorical_id(phase),
-        categorical_id(
+    global_state = snapshot.get("global")
+    global_state = global_state if isinstance(global_state, dict) else {}
+    global_categorical = _categorical_fields(
+        [
+            phase,
             run.get("character_id") or player.get("character_id"),
-        ),
-        categorical_id(
-            snapshot.get("room_type")
-            or snapshot.get("global", {}).get("room_type")
-        ),
-        categorical_id(snapshot.get("type")),
-    ], dtype=np.int32)
+            snapshot.get("room_type") or global_state.get("room_type"),
+            snapshot.get("type"),
+        ],
+        _GLOBAL_CATEGORY_FIELDS,
+        {"phase": phase, "screen_type": str(snapshot.get("type", ""))},
+        unknown_diagnostics,
+    )
     hp = _finite(player.get("hp"))
     max_hp = max(1.0, _finite(player.get("max_hp"), 1.0))
     crystal = snapshot.get("crystal_minigame")
@@ -711,10 +910,16 @@ def tensorize_snapshot(
             ("OVERFLOW", {"id": "OVERFLOW", "count": overflow + 1})
         )
     for index, (entity_type, entity) in enumerate(entities):
-        categorical, numeric = _entity_row(entity_type, entity, config)
+        categorical, numeric = _entity_row(
+            entity_type, entity, config, unknown_diagnostics, phase,
+        )
         entity_categorical[index] = categorical
         entity_numeric[index] = numeric
         entity_mask[index] = 1
+    entity_rows: dict[str, int] = {}
+    for index, (_, entity) in enumerate(entities):
+        if entity.get("entity_id") is not None:
+            entity_rows.setdefault(str(entity["entity_id"]), index)
 
     candidate_categorical = np.zeros(
         (config.num_actions, config.candidate_categorical_fields),
@@ -724,6 +929,8 @@ def tensorize_snapshot(
         (config.num_actions, config.candidate_numeric_fields),
         dtype=np.float32,
     )
+    candidate_source_row = np.full(config.num_actions, -1, dtype=np.int32)
+    candidate_target_row = np.full(config.num_actions, -1, dtype=np.int32)
     aligned = _candidate_slots(snapshot, action_mask)
     for slot in range(config.num_actions):
         categorical, numeric = _candidate_row(
@@ -732,9 +939,19 @@ def tensorize_snapshot(
             bool(action_mask[slot]),
             phase,
             config,
+            unknown_diagnostics,
         )
         candidate_categorical[slot] = categorical
         candidate_numeric[slot] = numeric
+        candidate = aligned.get(slot)
+        if candidate is not None and action_mask[slot]:
+            for field, rows in (
+                ("source_id", candidate_source_row),
+                ("target_id", candidate_target_row),
+            ):
+                entity_id = candidate.get(field)
+                if entity_id is not None:
+                    rows[slot] = entity_rows.get(str(entity_id), -1)
 
     result = {
         "global_categorical": global_categorical,
@@ -744,9 +961,13 @@ def tensorize_snapshot(
         "entity_mask": entity_mask,
         "candidate_categorical": candidate_categorical,
         "candidate_numeric": candidate_numeric,
+        "candidate_source_row": candidate_source_row,
+        "candidate_target_row": candidate_target_row,
     }
     if validate and not observation_space(config).contains(result):
         raise ValueError(
             "Tensorized v2 observation violates its Gymnasium space"
         )
+    if unknown_diagnostics is not None:
+        unknown_diagnostics.note_observation()
     return result

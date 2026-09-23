@@ -266,8 +266,26 @@ class TypedSetTransformerExtractor(BaseFeaturesExtractor):
             self.config, self.config.num_memory_tokens
         )
         self.candidate_cross_attention = MultiheadAttentionBlock(self.config)
+        self.source_projection = nn.Linear(d_model, d_model, bias=False)
+        self.target_projection = nn.Linear(d_model, d_model, bias=False)
         self.global_norm = nn.LayerNorm(d_model)
         self.candidate_norm = nn.LayerNorm(d_model)
+
+    @staticmethod
+    def _pointed_entities(
+        entities: torch.Tensor,
+        rows: torch.Tensor,
+        projection: nn.Linear,
+    ) -> torch.Tensor:
+        """Gather one contextual entity per candidate; -1 means no relation."""
+        valid = rows >= 0
+        indices = rows.clamp(min=0).long()
+        selected = torch.gather(
+            entities,
+            1,
+            indices.unsqueeze(-1).expand(-1, -1, entities.shape[-1]),
+        )
+        return projection(selected) * valid.unsqueeze(-1)
 
     def forward(self, observations: dict[str, torch.Tensor]) -> torch.Tensor:
         entity_mask = observations["entity_mask"].bool()
@@ -301,7 +319,18 @@ class TypedSetTransformerExtractor(BaseFeaturesExtractor):
             observations["candidate_categorical"],
             observations["candidate_numeric"],
         )
-        candidates = self.candidate_cross_attention(candidates, memory)
+        candidates = candidates + self._pointed_entities(
+            entities,
+            observations["candidate_source_row"],
+            self.source_projection,
+        ) + self._pointed_entities(
+            entities,
+            observations["candidate_target_row"],
+            self.target_projection,
+        )
+        candidates = self.candidate_cross_attention(
+            candidates, entities, memory_padding_mask=~entity_mask,
+        )
         candidates = self.candidate_norm(
             candidates + global_state.unsqueeze(1)
         )

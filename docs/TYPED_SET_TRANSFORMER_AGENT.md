@@ -1,5 +1,39 @@
 # Typed Set Transformer Agent v2
 
+> 本文第 1–8 节记录 v4 长训时的设计和 157-slot 基线。当前代码已实现
+> `typed-set-tensor-v5` / `entity-actions-v3-extended-choice`，已完成 100k
+> 诊断试训，但之后修复了两个药水词表别名，当前 hash 尚无重训 checkpoint，
+> 也未实机验证；
+> 旧 v4 checkpoint 与新 tensor shape、动作语义和网络参数不兼容。
+
+## v5 接口增量
+
+| Tensor | v5 shape | 新含义 |
+| --- | ---: | --- |
+| `entity_categorical` | `[N, 16]` | 原 13 字段 + 最多三个当前 intent 类型 |
+| `entity_numeric` | `[N, 43]` | 原 34 字段 + 战斗 index、三组 intent 伤害/次数、intent 数量和总伤害 |
+| `candidate_categorical` | `[285, 7]` | 前 157 个旧槽 + 128 个复用的额外选择槽 |
+| `candidate_numeric` | `[285, 15]` | 与候选槽一一对应 |
+| `candidate_source_row` / `candidate_target_row` | `[285]` | 指向 entity tensor 的行号；无指向时为 `-1` |
+
+每只怪物的 **当前** move 中所有 intent（至多三个）写入该怪物 entity，
+不把未来招式表当作当前意图。Bridge 的 `enemies` 与模拟器的 `creatures`
+统一进入 creature entity；`combat_index` 与打牌目标 slot 顺序对应。
+手牌中的重复卡牌各保留实例 entity，source 指针区分实例；药水、奖励选项、
+地图/事件选项以及水晶球格子同样可作 source，敌人目标可作 target。
+永久牌组中的重复副本仍按原规则聚合。
+
+candidate cross-attention 的 key/value 改为全部 contextual entity，而非 PMA
+摘要；PMA 仍为 global state、critic 和 actor expert gate 提供全局信息。
+保留前 157 个 v1 slot 的解释，额外 128 槽按当前 screen 的选项顺序复用，
+可覆盖水晶球的 121 个格子、超过五个的火堆选项及更多奖励选项。该上限仍是
+固定空间过渡设计，未来可替换为真正的动态候选集合。
+
+水晶球事件初次选项后显示隐藏格子，每个可选格子都是有坐标、可点状态的
+`CRYSTAL_CELL` entity。候选动作的 source 指向该格子；模型只看到当前
+公开信息，不会看到未翻开格子的内容。前四个格子沿用旧事件槽，第五个起
+使用扩展槽，结束时的 proceed 保持事件选项语义。
+
 ## 1. 目标与边界
 
 本版本把 agent 从“固定向量打平后经过 MLP”升级为面向实体集合的

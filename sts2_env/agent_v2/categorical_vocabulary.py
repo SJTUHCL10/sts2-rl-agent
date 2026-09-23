@@ -13,6 +13,12 @@ VOCABULARY_VERSION = "sts2-categorical-v1"
 PAD_ID = 0
 UNKNOWN_ID = 1
 _ENCOUNTERED_UNKNOWN_TOKENS: set[str] = set()
+_CANONICAL_ALIASES = {
+    # Simulator potion IDs omit the separator before "Bottle"; extracted game
+    # content and the explicit vocabulary include it.
+    "FAIRY_IN_ABOTTLE": "FAIRY_IN_A_BOTTLE",
+    "SHIP_IN_ABOTTLE": "SHIP_IN_A_BOTTLE",
+}
 
 
 def canonical_token(value: Any) -> str:
@@ -26,7 +32,8 @@ def canonical_token(value: Any) -> str:
     text = str(value).strip()
     text = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", "_", text)
     text = re.sub(r"[^A-Za-z0-9]+", "_", text)
-    return text.strip("_").upper()
+    token = text.strip("_").upper()
+    return _CANONICAL_ALIASES.get(token, token)
 
 
 @dataclass(frozen=True, slots=True)
@@ -49,7 +56,11 @@ class CategoricalVocabulary:
         raw_tokens = [canonical_token(value) for value in payload["tokens"]]
         tokens = tuple(sorted(set(token for token in raw_tokens if token)))
         encoded = json.dumps(
-            {"version": VOCABULARY_VERSION, "tokens": tokens},
+            {
+                "version": VOCABULARY_VERSION,
+                "tokens": tokens,
+                "canonical_aliases": sorted(_CANONICAL_ALIASES.items()),
+            },
             sort_keys=True,
             separators=(",", ":"),
         ).encode("utf-8")

@@ -1,20 +1,251 @@
 from __future__ import annotations
 
 import copy
+import json
 
 import numpy as np
 import pytest
 
 import sts2_env.agent_v2.tensorizer as tensorizer_module
+from scripts.summarize_unknown_diagnostics import summarize
+from sts2_env.agent_v2.candidates import build_action_candidates
+from sts2_env.agent_v2.categorical_vocabulary import categorical_id
+from sts2_env.agent_v2.snapshot import build_run_decision_snapshot
 from sts2_env.agent_v2.tensorizer import (
     ENTITY_TYPE_TO_ID,
     TensorizerConfig,
     observation_space,
     tensorize_snapshot,
 )
-from sts2_env.agent_v2.snapshot import build_run_decision_snapshot
+from sts2_env.agent_v2.unknown_diagnostics import UnknownTokenDiagnostics
+from sts2_env.bridge.full_run_adapter import FullRunStateAdapter
+from sts2_env.core.constants import MAX_ENEMIES, MAX_HAND_SIZE, POTION_ACTION_START
+from sts2_env.events.act2 import CrystalSphere
 from sts2_env.gym_env.entity_run_env import STS2EntityRunEnv
 from sts2_env.run.run_manager import RunManager
+
+
+def test_current_intents_and_instance_pointers_are_distinct() -> None:
+    config = TensorizerConfig(max_entities=16)
+    snapshot = {
+        "type": "combat_action",
+        "phase": "COMBAT",
+        "cards": [
+            {"entity_id": f"card:hand:{i}", "card_id": "STRIKE", "zone": "hand", "zone_index": i}
+            for i in range(2)
+        ],
+        "potions": [{"entity_id": "potion:0", "id": "FIRE_POTION", "slot": 0}],
+        "creatures": [
+            {"entity_id": f"enemy:{i}", "id": "CULTIST", "intents": [
+                {"intent_type": "ATTACK", "damage": 7 + i, "hits": 1},
+                {"intent_type": "BUFF", "damage": 0, "hits": 1},
+            ]}
+            for i in range(2)
+        ],
+        "candidates": [
+            {
+                "candidate_id": f"play:{hand}:{target}",
+                "action_type": "PLAY_CARD",
+                "source_id": f"card:hand:{hand}",
+                "target_id": f"enemy:{target}",
+                "payload": {"action": "play", "card_index": hand, "target_index": target},
+            }
+            for hand, target in ((0, 0), (0, 1), (1, 1))
+        ] + [
+            {
+                "candidate_id": "play:0:none", "action_type": "PLAY_CARD",
+                "source_id": "card:hand:0",
+                "payload": {"action": "play", "card_index": 0, "target_index": -1},
+            },
+            {
+                "candidate_id": "potion:0:none", "action_type": "USE_POTION",
+                "source_id": "potion:0",
+                "payload": {"action": "potion", "slot": 0, "target_index": -1},
+            },
+        ],
+    }
+    slots = [
+        1 + MAX_HAND_SIZE + hand * MAX_ENEMIES + target
+        for hand, target in ((0, 0), (0, 1), (1, 1))
+    ]
+    mask = np.zeros(config.num_actions, dtype=np.int8)
+    mask[slots] = 1
+    mask[[1, POTION_ACTION_START]] = 1
+    observation = tensorize_snapshot(snapshot, mask, config, validate=True)
+
+    sources = observation["candidate_source_row"][slots]
+    targets = observation["candidate_target_row"][slots]
+    assert sources[0] == sources[1] != sources[2]
+    assert targets[0] != targets[1] == targets[2]
+    assert observation["entity_categorical"][targets[0], 13] == categorical_id("ATTACK")
+    assert observation["entity_categorical"][targets[0], 14] == categorical_id("BUFF")
+    assert observation["entity_numeric"][targets[0], 34] == pytest.approx(0.2)
+    assert observation["entity_numeric"][targets[1], 35] == pytest.approx(0.08)
+    assert observation["candidate_source_row"][1] == sources[0]
+    assert observation["candidate_target_row"][1] == -1
+    assert observation["candidate_source_row"][POTION_ACTION_START] >= 0
+    assert observation["candidate_target_row"][POTION_ACTION_START] == -1
+
+
+def test_live_bridge_hand_and_enemy_intent_become_pointed_entities() -> None:
+    config = TensorizerConfig(max_entities=16)
+    snapshot = {
+        "type": "combat_action",
+        "phase": "COMBAT",
+        "hand": [{"id": "STRIKE", "playable": True, "target": "AnyEnemy"}],
+        "enemies": [{
+            "id": "CULTIST", "is_alive": True,
+            "intent": "Attack", "intent_damage": 9, "intent_hits": 2,
+        }],
+    }
+    snapshot["candidates"] = [
+        candidate.to_dict() for candidate in build_action_candidates(snapshot)
+    ]
+    mask = np.zeros(config.num_actions, dtype=np.int8)
+    mask[1 + MAX_HAND_SIZE] = 1
+    observation = tensorize_snapshot(snapshot, mask, config, validate=True)
+    source = observation["candidate_source_row"][1 + MAX_HAND_SIZE]
+    target = observation["candidate_target_row"][1 + MAX_HAND_SIZE]
+    assert source >= 0 and target >= 0
+    assert observation["entity_categorical"][source, 0] == ENTITY_TYPE_TO_ID["CARD"]
+    assert observation["entity_categorical"][target, 0] == ENTITY_TYPE_TO_ID["CREATURE"]
+    assert observation["entity_numeric"][target, 35] == pytest.approx(0.09)
+    assert observation["entity_numeric"][target, 36] == pytest.approx(0.2)
+
+
+def test_fourth_reward_card_points_to_its_own_entity() -> None:
+    config = TensorizerConfig(max_entities=16)
+    snapshot = {
+        "type": "card_reward",
+        "cards": [{"index": index, "id": "STRIKE"} for index in range(4)],
+        "can_skip": True,
+    }
+    snapshot["candidates"] = [
+        candidate.to_dict() for candidate in build_action_candidates(snapshot)
+    ]
+    adapter = FullRunStateAdapter(extra_choice_slots=128)
+    mask = adapter.compute_action_mask(snapshot)
+    observation = tensorize_snapshot(snapshot, mask, config, validate=True)
+    assert mask[124]
+    rows = observation["candidate_source_row"][[120, 121, 122, 124]]
+    assert len(set(rows.tolist())) == 4
+    assert min(rows) >= 0
+    assert adapter.decode_action(124, snapshot) == {"action": "choose", "index": 3}
+
+
+@pytest.mark.parametrize("potion_id", ["FairyInABottle", "ShipInABottle"])
+def test_bottle_potion_entity_and_action_use_known_content(
+    potion_id: str,
+    tmp_path,
+) -> None:
+    config = TensorizerConfig(max_entities=8)
+    diagnostics = UnknownTokenDiagnostics(tmp_path / "worker_0.jsonl", worker_index=0)
+    snapshot = {
+        "type": "combat_action",
+        "phase": "COMBAT",
+        "potions": [{"entity_id": "potion:0", "potion_id": potion_id, "slot": 0}],
+        "candidates": [{
+            "candidate_id": "potion:0:none",
+            "action_type": "USE_POTION",
+            "source_id": "potion:0",
+            "payload": {"action": "potion", "slot": 0, "target_index": -1},
+        }],
+    }
+    mask = np.zeros(config.num_actions, dtype=np.int8)
+    mask[POTION_ACTION_START] = 1
+    observation = tensorize_snapshot(
+        snapshot, mask, config, validate=True, unknown_diagnostics=diagnostics,
+    )
+    diagnostics.flush()
+    expected = categorical_id(potion_id, strict=True)
+    assert observation["entity_categorical"][0, 1] == expected
+    assert observation["candidate_categorical"][POTION_ACTION_START, 2] == expected
+    assert not diagnostics.output_path.exists()
+
+
+def test_unknown_log_names_field_token_and_first_context(tmp_path) -> None:
+    config = TensorizerConfig(max_entities=8)
+    log_path = tmp_path / "worker_0.jsonl"
+    diagnostics = UnknownTokenDiagnostics(log_path, worker_index=0)
+    snapshot = {
+        "type": "combat_action", "phase": "COMBAT",
+        "creatures": [{
+            "entity_id": "enemy:42", "id": "NEW_MONSTER_NOT_IN_VOCAB",
+            "intents": [{"intent_type": "NEW_INTENT_NOT_IN_VOCAB"}],
+        }],
+    }
+    mask = np.zeros(config.num_actions, dtype=np.int8)
+    mask[0] = 1
+    tensorize_snapshot(snapshot, mask, config, unknown_diagnostics=diagnostics)
+    diagnostics.flush()
+    records = [json.loads(line) for line in log_path.read_text(encoding="utf-8").splitlines()]
+    by_field = {record["field"]: record for record in records}
+    assert by_field["entity.content"]["token"] == "NEW_MONSTER_NOT_IN_VOCAB"
+    assert by_field["entity.content"]["sample"]["entity_id"] == "enemy:42"
+    assert by_field["entity.intent_0"]["token"] == "NEW_INTENT_NOT_IN_VOCAB"
+    assert all(record["worker_index"] == 0 for record in records)
+    assert "candidate.action_slot" not in by_field
+    summary = summarize(tmp_path)
+    assert {item["field"] for item in summary} == {
+        "entity.content", "entity.intent_0",
+    }
+
+
+def test_crystal_sphere_extended_choice_points_to_cell() -> None:
+    env = STS2EntityRunEnv(max_steps=20)
+    env.reset(seed=843)
+    manager = env.run_env._mgr
+    assert manager is not None
+    manager._phase = RunManager.PHASE_EVENT
+    crystal = CrystalSphere()
+    manager._event_model = crystal
+    manager._event_options = crystal.generate_initial_options(manager.run_state)
+    manager._do_event_choice({"option_id": "debt"})
+    env.invalidate_action_mask_cache()
+    mask = env.action_masks()
+    assert len(manager.get_available_actions()) > 4
+    assert mask[157]
+    snapshot = env.run_env.entity_observation()
+    chosen_id = snapshot["options"][4]["entity_id"]
+    fifth_cell = next(cell for cell in snapshot["crystal_cells"] if cell["entity_id"] == chosen_id)
+    observation = env._structured_observation(mask)
+    row = observation["candidate_source_row"][157]
+    assert row >= 0
+    assert observation["entity_categorical"][row, 0] == ENTITY_TYPE_TO_ID["CRYSTAL_CELL"]
+    assert chosen_id == fifth_cell["entity_id"]
+    assert observation["entity_numeric"][row, 15] == pytest.approx(fifth_cell["y"] / 20)
+    assert observation["entity_numeric"][row, 16] == pytest.approx(fifth_cell["x"] / 10)
+    remaining = crystal.minigame.divination_count
+    env.step(157)
+    assert crystal.minigame.divination_count < remaining
+
+
+@pytest.mark.parametrize("state, slot, expected_index", [
+    ({"type": "reward_screen", "options": [
+        {"index": 9, "action": "proceed", "id": "proceed"},
+        {"index": 2, "action": "pick_reward", "id": "reward"},
+    ]}, 123, 9),
+    ({"type": "shop", "options": [
+        {"index": 4, "action": "buy_card", "id": "STRIKE"},
+        {"index": 8, "action": "leave_shop", "id": "leave"},
+    ]}, 130, 8),
+    ({"type": "crystal_sphere", "minigame": {"finished": True}, "options": [
+        {"index": 0, "action": "divine_cell", "entity_id": "crystal-cell:0:0"},
+        {"index": 1, "action": "proceed", "entity_id": "option:proceed:1"},
+    ]}, 145, 1),
+])
+def test_special_screen_candidate_pointer_matches_decoded_choice(state, slot, expected_index):
+    config = TensorizerConfig(max_entities=16)
+    state = copy.deepcopy(state)
+    state["candidates"] = [candidate.to_dict() for candidate in build_action_candidates(state)]
+    adapter = FullRunStateAdapter(extra_choice_slots=128)
+    mask = adapter.compute_action_mask(state)
+    observation = tensorize_snapshot(state, mask, config, validate=True)
+    command = adapter.decode_action(slot, state)
+    assert command == {"action": "choose", "index": expected_index}
+    row = observation["candidate_source_row"][slot]
+    assert row >= 0
+    assert observation["candidate_numeric"][slot, 5] == pytest.approx(expected_index / 256)
 
 
 def test_entity_run_env_observation_matches_declared_space() -> None:
@@ -26,8 +257,8 @@ def test_entity_run_env_observation_matches_declared_space() -> None:
     observation, info = env.reset(seed=109)
 
     assert env.observation_space.contains(observation)
-    assert observation["candidate_categorical"].shape == (157, 7)
-    assert observation["candidate_numeric"].shape == (157, 15)
+    assert observation["candidate_categorical"].shape == (config.num_actions, 7)
+    assert observation["candidate_numeric"].shape == (config.num_actions, 15)
     assert observation["entity_mask"].sum() > 0
     valid = np.flatnonzero(info["action_mask"])
     next_observation, _, _, _, _ = env.step(int(valid[0]))
@@ -118,7 +349,7 @@ def test_identical_deck_cards_are_count_compressed() -> None:
         },
         "candidates": [],
     }
-    mask = np.zeros(157, dtype=np.int8)
+    mask = np.zeros(config.num_actions, dtype=np.int8)
     mask[115] = 1
 
     observation = tensorize_snapshot(snapshot, mask, config, validate=True)
@@ -135,7 +366,7 @@ def test_identical_deck_cards_are_count_compressed() -> None:
 
 def test_full_observation_validation_is_opt_in(monkeypatch) -> None:
     config = TensorizerConfig(max_entities=8)
-    mask = np.zeros(157, dtype=np.int8)
+    mask = np.zeros(config.num_actions, dtype=np.int8)
     mask[0] = 1
     snapshot = {
         "type": "run_complete",
@@ -188,7 +419,7 @@ def test_combat_piles_compress_but_hand_instances_do_not() -> None:
         "cards": cards,
         "candidates": [],
     }
-    mask = np.zeros(157, dtype=np.int8)
+    mask = np.zeros(config.num_actions, dtype=np.int8)
     mask[0] = 1
 
     observation = tensorize_snapshot(snapshot, mask, config)
@@ -204,7 +435,7 @@ def test_combat_piles_compress_but_hand_instances_do_not() -> None:
 
 def test_candidate_uses_stable_content_not_runtime_instance_id() -> None:
     config = TensorizerConfig(max_entities=16)
-    mask = np.zeros(157, dtype=np.int8)
+    mask = np.zeros(config.num_actions, dtype=np.int8)
     mask[1] = 1
 
     def make_snapshot(instance: str) -> dict:
@@ -243,7 +474,7 @@ def test_candidate_uses_stable_content_not_runtime_instance_id() -> None:
 
 def test_card_selection_state_changes_candidate_features() -> None:
     config = TensorizerConfig(max_entities=16)
-    mask = np.zeros(157, dtype=np.int8)
+    mask = np.zeros(config.num_actions, dtype=np.int8)
     mask[0:3] = 1
     base = {
         "type": "card_select",
@@ -327,6 +558,10 @@ def test_typed_set_encoder_is_entity_permutation_invariant() -> None:
     permutation = np.random.default_rng(1).permutation(config.max_entities)
     for key in ("entity_categorical", "entity_numeric", "entity_mask"):
         permuted[key] = permuted[key][permutation]
+    old_to_new = np.argsort(permutation)
+    for key in ("candidate_source_row", "candidate_target_row"):
+        rows = permuted[key]
+        permuted[key] = np.where(rows >= 0, old_to_new[rows.clip(min=0)], -1)
 
     extractor = TypedSetTransformerExtractor(
         env.observation_space,

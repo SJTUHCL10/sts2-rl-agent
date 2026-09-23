@@ -159,6 +159,7 @@ def build_combat_snapshot(
             ]
         enemies.append({
             "entity_id": entity_id,
+            "combat_index": index,
             "owner_id": None,
             "monster_id": enemy.monster_id or "UNKNOWN",
             "id": enemy.monster_id or "UNKNOWN",
