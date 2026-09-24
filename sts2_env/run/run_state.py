@@ -24,7 +24,7 @@ from sts2_env.core.enums import MapPointType, RoomType
 from sts2_env.characters.all import get_character
 from sts2_env.map.map_point import MapCoord, MapPoint
 from sts2_env.map.generator import ActMap, generate_act_map
-from sts2_env.map.acts import ActConfig, ALL_ACTS
+from sts2_env.map.acts import ACT_0_UNDERDOCKS, ActConfig, ALL_ACTS
 from sts2_env.potions.base import PotionInstance
 from sts2_env.relics.base import RelicId, RelicRarity
 from sts2_env.cards.base import (
@@ -1405,6 +1405,7 @@ class RunState:
         seed: int = 0,
         ascension_level: int = 0,
         character_id: str = "Ironclad",
+        act1_variant: str = "overgrowth",
     ):
         self.seed = seed
         self.ascension_level = ascension_level
@@ -1417,7 +1418,17 @@ class RunState:
         self.players: list[PlayerState] = [self.player]
 
         # Act / map state
+        variant = act1_variant.casefold()
+        if variant == "random":
+            # The game uses a separate named act-selection RNG before creating
+            # the run. Do not consume the run's map/event RNG streams here.
+            act_rng = Rng(deterministic_hash_code(str(seed)), "act_selection")
+            variant = act_rng.choice(("overgrowth", "underdocks"))
+        if variant not in {"overgrowth", "underdocks"}:
+            raise ValueError(f"Unknown Act 1 variant: {act1_variant!r}")
         self.acts: list[ActConfig] = [act.to_mutable() for act in ALL_ACTS]
+        if variant == "underdocks":
+            self.acts[0] = ACT_0_UNDERDOCKS.to_mutable()
         self.current_act_index: int = 0
         self.map: ActMap | None = None
         self.visited_map_coords: list[MapCoord] = []

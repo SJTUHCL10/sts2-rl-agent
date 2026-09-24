@@ -158,9 +158,13 @@ def _get_starter_deck(character_id: str) -> list[CardInstance]:
 # Encounter pool accessor per act
 # ---------------------------------------------------------------------------
 
-def _get_encounter_pools(act_index: int) -> dict[str, list]:
+def _get_encounter_pools(act_index: int, act_id: str = "") -> dict[str, list]:
     """Return {weak, normal, elite, boss} encounter setup lists for an act."""
-    if act_index == 0:
+    if act_index == 0 and act_id == "Underdocks":
+        from sts2_env.encounters.act4 import (
+            WEAK_ENCOUNTERS, NORMAL_ENCOUNTERS, ELITE_ENCOUNTERS, BOSS_ENCOUNTERS,
+        )
+    elif act_index == 0:
         from sts2_env.encounters.act1 import (
             WEAK_ENCOUNTERS, NORMAL_ENCOUNTERS, ELITE_ENCOUNTERS, BOSS_ENCOUNTERS,
         )
@@ -230,6 +234,7 @@ class RunManager:
         character_id: str = DEFAULT_CHARACTER_ID,
         ascension_level: int = 0,
         start_with_neow: bool = False,
+        act1_variant: str = "overgrowth",
     ):
         self._seed = seed
         self._character_id = character_id
@@ -244,6 +249,7 @@ class RunManager:
             seed=seed,
             ascension_level=ascension_level,
             character_id=character_id,
+            act1_variant=act1_variant,
         )
         self._run_state.enable_deck_choice_requests = True
         self._run_state.player.max_hp = config["hp"]
@@ -549,7 +555,10 @@ class RunManager:
         self._selected_combat_player_id = player.player_id
 
         # Select encounter from appropriate pool
-        pools = _get_encounter_pools(self._run_state.current_act_index)
+        pools = _get_encounter_pools(
+            self._run_state.current_act_index,
+            self._run_state.current_act.act_id,
+        )
         if room_type == RoomType.BOSS:
             pool = pools["boss"]
         elif room_type == RoomType.ELITE:
@@ -776,8 +785,7 @@ class RunManager:
 
     def _enter_event(self) -> None:
         self._phase = self.PHASE_EVENT
-        act_cfg = self._run_state.current_act
-        event = pick_event(self._run_state, pool=act_cfg.event_ids)
+        event = pick_event(self._run_state)
         self._event_model = event
         if event is not None:
             event.reset_rng_for_run(self._run_state)

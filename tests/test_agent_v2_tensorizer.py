@@ -10,11 +10,12 @@ import pytest
 import sts2_env.agent_v2.tensorizer as tensorizer_module
 from scripts.summarize_unknown_diagnostics import summarize
 from sts2_env.agent_v2.candidates import build_action_candidates
-from sts2_env.agent_v2.categorical_vocabulary import categorical_id
+from sts2_env.agent_v2.categorical_vocabulary import UNKNOWN_ID, categorical_id
 from sts2_env.agent_v2.snapshot import build_run_decision_snapshot
 from sts2_env.agent_v2.tensorizer import (
     ENTITY_TYPE_TO_ID,
     LegacyV5TensorizerConfig,
+    LegacyV6TensorizerConfig,
     TensorizerConfig,
     observation_space,
     tensorize_snapshot,
@@ -236,7 +237,7 @@ def test_unknown_log_names_field_token_and_first_context(tmp_path) -> None:
     }
 
 
-def test_crystal_sphere_extended_choice_points_to_cell() -> None:
+def test_crystal_sphere_extended_choice_points_to_cell(tmp_path) -> None:
     env = STS2EntityRunEnv(max_steps=20)
     env.reset(seed=843)
     manager = env.run_env._mgr
@@ -251,6 +252,12 @@ def test_crystal_sphere_extended_choice_points_to_cell() -> None:
     assert len(manager.get_available_actions()) > 4
     assert mask[157]
     snapshot = env.run_env.entity_observation()
+    diagnostics = UnknownTokenDiagnostics(tmp_path / "crystal_unknown.jsonl", worker_index=0)
+    tensorize_snapshot(
+        snapshot, mask, TensorizerConfig(), unknown_diagnostics=diagnostics,
+    )
+    diagnostics.flush()
+    assert not diagnostics.output_path.exists()
     chosen_id = snapshot["options"][4]["entity_id"]
     fifth_cell = next(cell for cell in snapshot["crystal_cells"] if cell["entity_id"] == chosen_id)
     observation = env._structured_observation(mask)
@@ -263,6 +270,59 @@ def test_crystal_sphere_extended_choice_points_to_cell() -> None:
     remaining = crystal.minigame.divination_count
     env.step(157)
     assert crystal.minigame.divination_count < remaining
+
+
+def test_crystal_sphere_dynamic_ids_use_stable_v7_categories(tmp_path) -> None:
+    snapshot = {
+        "type": "crystal_sphere", "phase": "EVENT",
+        "crystal_cells": [
+            {"entity_id": "crystal-cell:3:4", "x": 3, "y": 4,
+             "hidden": True, "clickable": True, "revealed_item_id": None},
+            {"entity_id": "crystal-cell:6:9", "x": 6, "y": 9,
+             "hidden": False, "clickable": False,
+             "revealed_item_id": "crystal-item:6:9:Gold"},
+            {"entity_id": "crystal-cell:2:1", "x": 2, "y": 1,
+             "hidden": False, "clickable": False,
+             "revealed_item_id": "opaque-revealed-id"},
+        ],
+        "minigame": {"revealed_items": [
+            {"entity_id": "opaque-revealed-id", "item_type": "Potion"},
+        ]},
+        "options": [{
+            "index": 0, "id": "divine:3:4", "action": "divine_cell",
+            "x": 3, "y": 4, "entity_id": "crystal-cell:3:4",
+            "enabled": True,
+        }],
+        "relics": [{"entity_id": "relic:maw", "id": "MAW_BANK", "status": "Disabled"}],
+    }
+    snapshot["candidates"] = [
+        candidate.to_dict() for candidate in build_action_candidates(snapshot)
+    ]
+    config = TensorizerConfig(max_entities=16)
+    mask = np.zeros(config.num_actions, dtype=np.int8)
+    mask[145] = 1
+    diagnostics = UnknownTokenDiagnostics(tmp_path / "unknown.jsonl", worker_index=0)
+    observation = tensorize_snapshot(
+        snapshot, mask, config, validate=True, unknown_diagnostics=diagnostics,
+    )
+    diagnostics.flush()
+    assert not diagnostics.output_path.exists()
+    assert observation["entity_categorical"][0, 11] == categorical_id("FALSE", strict=True)
+    assert observation["entity_categorical"][1, 1] == categorical_id("CRYSTAL_CELL", strict=True)
+    assert observation["entity_categorical"][2, 1] == categorical_id("GOLD", strict=True)
+    assert observation["entity_categorical"][3, 1] == categorical_id("POTION", strict=True)
+    assert observation["candidate_categorical"][145, 0] == categorical_id("CHOOSE", strict=True)
+    assert observation["candidate_categorical"][145, 2] == categorical_id("CRYSTAL_CELL", strict=True)
+    assert observation["candidate_categorical"][145, 5] == categorical_id("CRYSTAL_CELL", strict=True)
+    assert observation["candidate_source_row"][145] == 1
+
+    legacy = LegacyV6TensorizerConfig(max_entities=16)
+    assert LegacyV6TensorizerConfig().feature_layout_hash() == (
+        "625fe891461deed56589f63a5bb1b285ebb05fb8775b83b571735cc1f79e7e41"
+    )
+    old_observation = tensorize_snapshot(snapshot, mask, legacy, validate=True)
+    assert old_observation["candidate_categorical"][145, 0] == UNKNOWN_ID
+    assert old_observation["entity_categorical"][2, 1] == UNKNOWN_ID
 
 
 @pytest.mark.parametrize(

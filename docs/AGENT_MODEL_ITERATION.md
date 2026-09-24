@@ -8,17 +8,18 @@
 ## 1. 当前状态
 
 当前 Bridge 协议仍是 `sts2-entity-v2` / `candidate-v2`。代码中的新接口为
-`typed-set-tensor-v6` / `entity-actions-v3-extended-choice`。v6 修正卡牌
-affliction 的序列化并加入附魔/affliction 强度；已有修复后从头训练的
-v6 500k checkpoint，推荐 `output/typed_set_v6_reward_fixed_500k_4env_20260924/`
-中的 `final_model.zip`。最近的 v5 1M checkpoint 是在副怪战斗结束规则修复后
-训练的，旧 v5 输入可由只读轨迹工具显式复现以便诊断，但不能静默用于 v6
-推理或继续训练。
+`typed-set-tensor-v8` / `entity-actions-v3-extended-choice`。v7 修正
+水晶球事件的动态 UNKNOWN，并防止复用的事件对象跨局残留 minigame 状态。
+v8 修正开局捏奥、第一幕地图变体与各幕事件池，并把当前幕 ID 加入全局类别输入。
+最近训练完成的 v6 500k checkpoint 是
+`output/typed_set_v6_reward_fixed_500k_4env_20260924/final_model.zip`；
+它可由只读轨迹工具通过显式 legacy-v6 投影诊断，但不能静默用于 v8 推理
+或继续训练。旧 v5 checkpoint 同样只能通过显式 legacy 投影诊断。
 训练使用 MaskablePPO、无位置编码的
 Typed Set Transformer 和 candidate-aware actor，不使用 LSTM/GRU，也不考虑
 多人游戏。
 
-最近的 v6 500k 结果见第 1.6 节；旧 v5 1M 结果及轨迹记录方法见第 1.5 节和
+v8 修复见第 1.8 节，v7 修复见第 1.7 节，v6 500k 结果见第 1.6 节；旧 v5 1M 结果及轨迹记录方法见第 1.5 节和
 [轨迹查看器](TRAJECTORY_VIEWER.md)。
 
 历史 v4 能力基线 checkpoint 是：
@@ -219,6 +220,39 @@ rollout 对齐后完成 503,808 steps，耗时 3,681 秒（含评估，136.9 ste
 `Disabled` 遗物状态与 `pay` 选项。它们并非普通战斗牌/敌人的漏词，
 但水晶球的局部动作语义确实受损，应使用稳定的动作/格子类型 token 和
 分离的坐标数值修复。训练诊断文件保存在 `unknown_diagnostics/`。
+
+### 1.7 水晶球 UNKNOWN 修复与 v7 边界（2026-09-24）
+
+按 v6 500k 的原始诊断日志汇总：4,030 次 `DIVINE_*`（动作类型及带坐标的
+选项 ID）、43 次 `CRYSTAL_ITEM_*`（已揭示物品的带坐标 ID）、7 次
+`Disabled` 遗物状态、6 次 `pay`。现在水晶球候选与隐藏格子使用稳定的
+`CHOOSE`/`CRYSTAL_CELL` 类别，坐标保留在已有 numeric 字段；已揭示格子
+使用公开的物品类型（Gold/Potion/Relic/CardReward/Curse），不泄漏隐藏物品。
+`Disabled` 映射为布尔假类别。事件注册表复用模型实例，故进入新的水晶球
+事件前清空旧 minigame/完成状态，避免初始 pay/debt 页面误判为格子页面。
+
+这些映射不改变 tensor 形状或词表大小，但**改变输入语义**，因此编码版本从
+v6 升到 v7，layout hash 随之变化。旧 v6 final 不能作为 v7 模型继续训练
+或部署；轨迹脚本保留只读 legacy-v6 投影。seed 100109 的旧 final 轨迹在
+兼容投影下仍为第 13 层、162 步，动作序列与修复前完全一致。要量化修复
+对能力的影响，需要用 v7 重新训练，而不能拿旧 v6 checkpoint 直接复评。
+
+### 1.8 开局捏奥、第一幕变体与事件池修正（2026-09-24）
+
+旧 `STS2EntityRunEnv` 沿用了 `RunManager(start_with_neow=False)` 默认值，
+使旧 v6 训练和轨迹从地图直接开始，漏掉第 0 层捏奥三选一遗物。新环境默认开启
+捏奥；事件选择后仍需经过遗物奖励确认，部分遗物会触发后续选牌。
+
+旧 `RunState` 第一幕固定使用 Overgrowth（密林）。现在使用独立的
+`act_selection` 随机流按 seed 在 Overgrowth/Underdocks（暗港）间选择，
+并匹配该幕的战斗遭遇与事件池。此处假设暗港已解锁且已经被发现；实际游戏的
+解锁/首次发现机制可能暂时强制选择特定幕。旧模型只读回放仍可显式
+固定旧开局和密林，但不能把它的评估当作新环境能力。按反编译的各幕
+`AllEvents` 校正后，`HungryForMushrooms` 仅存在于 Glory（第三幕）事件池，
+不再可能在正常第一幕问号房抽到。
+
+新全局类别第五列为 `act_id`，编码版本因此升为 v8。旧 v5/v6 权重不兼容，
+v7 也不能直接续训；要评估这些修正的学习效果需从头训练 v8。
 
 ## 2. 基础架构
 
@@ -483,10 +517,11 @@ player 分片缓存；否则应评估异步 rollout collector 的复杂度和收
    35–41 局在第 16 层结束，但 5 局已进入第二幕。用逐步轨迹按 Boss、
    入场 HP/牌组/药水和回合决策拆分失败，不能只凭终止层数归因。
 2. **验证信息瓶颈。** 当前每只怪的当前 intent、伤害/次数、战斗 index，
-   手牌实例、source/target entity 指针已进入模型，UNKNOWN/overflow 为 0；
-   不能再称这些信息“缺失”。但 map edges 没进 tensor；`counters` 只保留
+   手牌实例、source/target entity 指针已进入模型，不能再称这些信息“缺失”。
+   v6 训练没有 entity overflow，但发现水晶球局部 UNKNOWN；v7 已修复并有
+   针对性测试，尚待长训验证。map edges 仍没进 tensor；`counters` 只保留
    数值总和，丢失各计数器名称/结构。v6 已修正卡牌 affliction 和附魔强度
-   输入，但尚未训练；卡牌/遗物/能力的具体效果规则没有显式关系表示，主要靠
+   输入并完成 500k 训练；卡牌/遗物/能力的具体效果规则没有显式关系表示，主要靠
    content embedding 从交互中学习。应优先做观测扰动与分阶段评估，确认
    哪项确实影响决策，而不是笼统加宽网络。
 3. **做对照实验。** 修复 parity 后，扩大上述固定其余策略、只随机/正常

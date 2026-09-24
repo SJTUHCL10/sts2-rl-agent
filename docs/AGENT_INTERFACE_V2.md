@@ -41,7 +41,7 @@ V2 transports typed entity sets rather than a pre-flattened tensor:
 - currently legal semantic action candidates.
 
 Transport coverage is not model-input coverage. The current
-`typed-set-tensor-v6` projection consumes map nodes and their coordinates,
+`typed-set-tensor-v8` projection consumes map nodes and their coordinates,
 type, visited/reachable flags, but does **not** encode `map_edges`; it cannot
 reconstruct connected routes from the set of nodes alone. It also reduces a
 structured entity `counters` map to a numeric sum. Cards now encode one
@@ -49,9 +49,14 @@ affliction type/amount and one enchantment type/amount; this corrects the v5
 simulator affliction omission and enchantment-amount loss. Conversely, each
 creature's current intents
 (up to three types with damage/hits), hand-card instances, and action-candidate
-source/target entity pointers do reach the model. The historical v5 1M run
+source/target entity pointers do reach the model. Current v8 training starts
+with Neow and exposes the chosen Act 1 variant
+(`Overgrowth` or `Underdocks`) as a global categorical feature. Act-specific
+event and encounter pools follow the selected variant. The historical v5 1M run
 recorded zero UNKNOWN categorical values and zero entity overflow, but is not
-compatible with v6 inference. See
+compatible with v8 inference. The v6 500k checkpoint predates the Crystal
+Sphere UNKNOWN fix and can only be inspected with the explicit legacy-v6
+trace projection. See
 [Typed Set Transformer Agent v2](TYPED_SET_TRANSFORMER_AGENT.md) for the exact
 projection; none of these tensor limits changes the v2 wire contract.
 The current Python simulator tracks an affliction's type but not a variable

@@ -568,6 +568,7 @@ def main(argv: list[str] | None = None) -> int:
         character_id=character,
         ascension_level=args.ascension,
         start_with_neow=not args.skip_neow,
+        act1_variant="random",
     )
     return run_interactive(mgr)
 

@@ -49,7 +49,7 @@ from sts2_env.gym_env.run_env import (
     _TREASURE_START,
 )
 
-TENSOR_ENCODING_VERSION = "typed-set-tensor-v6"
+TENSOR_ENCODING_VERSION = "typed-set-tensor-v8"
 MAX_CURRENT_INTENTS = 3
 _BRIDGE_PHASES = {
     "map_select": "MAP_CHOICE",
@@ -89,7 +89,7 @@ class TensorizerConfig:
     entity_numeric_fields: int = 45
     candidate_categorical_fields: int = 7
     candidate_numeric_fields: int = 15
-    global_categorical_fields: int = 4
+    global_categorical_fields: int = 5
     global_numeric_fields: int = 16
 
     def __post_init__(self) -> None:
@@ -127,9 +127,20 @@ class LegacyV5TensorizerConfig(TensorizerConfig):
     """Read-only compatibility for tracing pre-modifier-fix checkpoints."""
 
     entity_numeric_fields: int = 43
+    global_categorical_fields: int = 4
 
     def feature_layout_hash(self) -> str:
         return _feature_layout_hash(self, "typed-set-tensor-v5")
+
+
+@dataclass(frozen=True, slots=True)
+class LegacyV6TensorizerConfig(TensorizerConfig):
+    """Read-only compatibility for tracing pre-UNKNOWN-fix checkpoints."""
+
+    global_categorical_fields: int = 4
+
+    def feature_layout_hash(self) -> str:
+        return _feature_layout_hash(self, "typed-set-tensor-v6")
 
 
 DEFAULT_TENSORIZER_CONFIG = TensorizerConfig()
@@ -204,6 +215,7 @@ def _categorical_fields(
 
 _GLOBAL_CATEGORY_FIELDS = (
     "global.phase", "global.character", "global.room_type", "global.screen_type",
+    "global.act_id",
 )
 _ENTITY_CATEGORY_FIELDS = (
     "entity.type", "entity.content", "entity.zone", "entity.subtype",
@@ -227,6 +239,43 @@ def _content_id(entity: dict[str, Any]) -> Any:
         if entity.get(key) not in (None, ""):
             return entity[key]
     return None
+
+
+_CRYSTAL_ITEM_TYPES = frozenset({
+    "CARD_REWARD", "CURSE", "GOLD", "POTION", "RELIC",
+})
+
+
+def _legacy_crystal_projection(config: TensorizerConfig) -> bool:
+    return isinstance(config, (LegacyV5TensorizerConfig, LegacyV6TensorizerConfig))
+
+
+def _entity_content(
+    entity_type: str, entity: dict[str, Any], config: TensorizerConfig,
+) -> Any:
+    if _legacy_crystal_projection(config):
+        return _content_id(entity)
+    if entity_type == "CRYSTAL_CELL":
+        public_item_type = canonical_token(entity.get("revealed_item_type"))
+        if public_item_type in _CRYSTAL_ITEM_TYPES:
+            return public_item_type
+        revealed_id = entity.get("revealed_item_id")
+        if revealed_id:
+            item_type = canonical_token(str(revealed_id).rsplit(":", 1)[-1])
+            if item_type in _CRYSTAL_ITEM_TYPES:
+                return item_type
+        # Hidden cells disclose no item type; their coordinates remain numeric.
+        return "CRYSTAL_CELL"
+    if entity_type == "CHOICE":
+        option_id = str(entity.get("id") or entity.get("option_id") or "")
+        if (
+            option_id.startswith("divine:")
+            or canonical_token(entity.get("action")) == "DIVINE_CELL"
+        ):
+            return "CRYSTAL_CELL"
+        if option_id in {"pay", "debt"} and entity.get("x") is None:
+            return "EVENT_CHOICE"
+    return _content_id(entity)
 
 
 def _owner_token(owner_id: Any) -> str | None:
@@ -323,6 +372,16 @@ def _iter_snapshot_entities(
     """Collect current-screen entities first, then persistent run entities."""
     collected: list[tuple[str, dict[str, Any]]] = []
     seen: set[tuple[str, str]] = set()
+    minigame = snapshot.get("minigame")
+    revealed_items = (
+        minigame.get("revealed_items", [])
+        if isinstance(minigame, dict) else snapshot.get("revealed_items", [])
+    )
+    revealed_item_types = {
+        str(item["entity_id"]): item.get("item_type")
+        for item in revealed_items or []
+        if isinstance(item, dict) and item.get("entity_id")
+    }
 
     def extend(container: dict[str, Any], key: str, entity_type: str) -> None:
         if key == "hand" and container.get("cards"):
@@ -331,6 +390,10 @@ def _iter_snapshot_entities(
             if not isinstance(raw, dict):
                 continue
             item = dict(raw)
+            if entity_type == "CRYSTAL_CELL" and item.get("revealed_item_id"):
+                item["revealed_item_type"] = revealed_item_types.get(
+                    str(item["revealed_item_id"])
+                )
             if legacy_v5 and entity_type == "CARD":
                 # v5 simulator snapshots always emitted an empty mapping.
                 item["afflictions"] = {}
@@ -465,7 +528,7 @@ def _entity_row(
     padded_intents = [*intents, *([{}] * (MAX_CURRENT_INTENTS - len(intents)))]
     categorical_values = [
         entity_type,
-        _content_id(entity),
+        _entity_content(entity_type, entity, config),
         entity.get("zone"),
         (
             entity.get("card_type")
@@ -480,7 +543,12 @@ def _entity_row(
         afflictions[1],
         enchantments[0],
         enchantments[1],
-        entity.get("status"),
+        (
+            "FALSE"
+            if not _legacy_crystal_projection(config)
+            and canonical_token(entity.get("status")) == "DISABLED"
+            else entity.get("status")
+        ),
         _count_token(count),
         *(intent.get("intent_type") for intent in padded_intents),
     ]
@@ -602,6 +670,7 @@ def _candidate_slots(
     action_mask: np.ndarray,
     *,
     legacy_v5: bool = False,
+    legacy_crystal: bool = False,
 ) -> dict[int, dict[str, Any]]:
     if legacy_v5 and snapshot.get("reward_item_type"):
         return {}  # Preserve the exact missing-candidate v5 projection.
@@ -631,7 +700,15 @@ def _candidate_slots(
         source = entity_lookup.get(str(item.get("source_id")))
         target = entity_lookup.get(str(item.get("target_id")))
         if source is not None:
-            features["model_source_content"] = _content_id(source)
+            if not legacy_crystal and str(snapshot.get("type", "")).casefold() == "crystal_sphere":
+                if source.get("x") is not None and source.get("y") is not None:
+                    features["model_source_content"] = "CRYSTAL_CELL"
+                elif str(source.get("id", "")).casefold() in {"pay", "debt"}:
+                    features["model_source_content"] = "EVENT_CHOICE"
+                else:
+                    features["model_source_content"] = _content_id(source)
+            else:
+                features["model_source_content"] = _content_id(source)
             features["model_source_zone"] = source.get("zone")
         if target is not None:
             features["model_target_content"] = _content_id(target)
@@ -804,11 +881,26 @@ def _candidate_row(
         features.get(key) for key in ("cards", "options", "relics")
     ):
         semantic_option = "COMPOSITE"
+    action_type = item.get("action_type") or _action_family(slot)
+    source_content = features.get("model_source_content")
+    if not _legacy_crystal_projection(config):
+        is_divination = (
+            canonical_token(action_type) == "DIVINE_CELL"
+            or str(item.get("candidate_id", "")).startswith("crystal_sphere:divine:")
+        )
+        if is_divination:
+            action_type = "CHOOSE"
+            source_content = semantic_option = "CRYSTAL_CELL"
+        elif str(item.get("candidate_id", "")) == "crystal_sphere:proceed" and (
+            canonical_token(semantic_option) in {"PAY", "DEBT"}
+        ):
+            semantic_option = "EVENT_CHOICE"
+            source_content = "EVENT_CHOICE"
     categorical = _categorical_fields(
         [
-            item.get("action_type") or _action_family(slot),
+            action_type,
             f"ACTION_SLOT:{slot + 1}",
-            features.get("model_source_content"),
+            source_content,
             features.get("model_target_content"),
             phase,
             semantic_option,
@@ -947,14 +1039,16 @@ def tensorize_snapshot(
 
     global_state = snapshot.get("global")
     global_state = global_state if isinstance(global_state, dict) else {}
-    global_categorical = _categorical_fields(
-        [
+    global_categories = [
             phase,
             run.get("character_id") or player.get("character_id"),
             snapshot.get("room_type") or global_state.get("room_type"),
             snapshot.get("type"),
-        ],
-        _GLOBAL_CATEGORY_FIELDS,
+            run.get("act_id") or global_state.get("act_id"),
+        ]
+    global_categorical = _categorical_fields(
+        global_categories[:config.global_categorical_fields],
+        _GLOBAL_CATEGORY_FIELDS[:config.global_categorical_fields],
         {"phase": phase, "screen_type": str(snapshot.get("type", ""))},
         unknown_diagnostics,
     )
@@ -1026,6 +1120,7 @@ def tensorize_snapshot(
     aligned = _candidate_slots(
         snapshot, action_mask,
         legacy_v5=isinstance(config, LegacyV5TensorizerConfig),
+        legacy_crystal=_legacy_crystal_projection(config),
     )
     for slot in range(config.num_actions):
         categorical, numeric = _candidate_row(

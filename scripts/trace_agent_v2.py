@@ -11,7 +11,9 @@ from sb3_contrib import MaskablePPO
 
 from sts2_env.agent_v2.tensorizer import (
     LegacyV5TensorizerConfig,
+    LegacyV6TensorizerConfig,
     TensorizerConfig,
+    TENSOR_ENCODING_VERSION,
 )
 from sts2_env.agent_v2.trajectory_trace import (
     TRACE_FORMAT,
@@ -37,13 +39,14 @@ def _metadata_path(model_path: Path) -> Path:
 def load_traced_model(
     model_path: Path, device: str,
 ) -> tuple[MaskablePPO, TensorizerConfig]:
-    """Choose exact current or legacy-v5 tensor semantics from checkpoint hash."""
+    """Choose exact current or read-only legacy tensor semantics by hash."""
     metadata = json.loads(_metadata_path(model_path).read_text(encoding="utf-8"))
     saved_config = metadata["tensorizer"]
     expected_hash = metadata["tensorizer_layout_hash"]
     candidates = (
         TensorizerConfig(**saved_config),
         LegacyV5TensorizerConfig(**saved_config),
+        LegacyV6TensorizerConfig(**saved_config),
     )
     config = next(
         (item for item in candidates if item.feature_layout_hash() == expected_hash),
@@ -137,6 +140,8 @@ def trace_episode(
                 "typed-set-tensor-v5"
                 if isinstance(config, LegacyV5TensorizerConfig)
                 else "typed-set-tensor-v6"
+                if isinstance(config, LegacyV6TensorizerConfig)
+                else TENSOR_ENCODING_VERSION
             ),
             "deterministic": deterministic,
             "summary": {

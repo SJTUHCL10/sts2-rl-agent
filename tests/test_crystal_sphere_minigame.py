@@ -6,10 +6,30 @@ from pathlib import Path
 
 from sts2_env.agent_v2.candidates import build_action_candidates
 from sts2_env.core.rng import Rng
+from sts2_env.events.act2 import CrystalSphere
+from sts2_env.parity.bridge_replay import run_manager_to_bridge_state
 from sts2_env.run.crystal_sphere import (
     CrystalSphereItemType,
     CrystalSphereMinigame,
 )
+from sts2_env.run.run_manager import RunManager
+
+
+def test_reused_crystal_sphere_clears_previous_minigame_on_entry() -> None:
+    manager = RunManager(seed=109)
+    event = CrystalSphere()
+    event.before_event_started(manager.run_state)
+    event.choose(manager.run_state, "debt")
+    assert event.minigame is not None
+    event._awaiting_proceed = True
+
+    event.before_event_started(manager.run_state)
+    assert event.minigame is None
+    assert event._awaiting_proceed is False
+    manager._phase = RunManager.PHASE_EVENT
+    manager._event_model = event
+    manager._event_options = event.generate_initial_options(manager.run_state)
+    assert run_manager_to_bridge_state(manager)["type"] == "event"
 
 
 def test_seeded_population_matches_dotnet_rng_golden_layout() -> None:

@@ -2,15 +2,16 @@
 
 > 本文第 1–8 节记录 v4 长训时的设计和 157-slot 基线。最近的 v5 1M
 > checkpoint 在修复副怪结束规则后训练，同种子 100 局均层约 12.2、0 胜。
-> 当前代码已升级到 `typed-set-tensor-v6`，修正卡牌 affliction 与附魔强度
-> 观测；修复后的 v6 500k 模型推荐使用 final checkpoint。旧 v5 模型只能通过
+> 当前代码已升级到 `typed-set-tensor-v8`：v7 消除水晶球动态 UNKNOWN，
+> v8 加入第 0 层捏奥、第一幕地图变体和精确幕事件池，并让模型看到当前幕 ID。
+> 最近训练的 v6 500k 模型推荐 final checkpoint，但 v6/v5 旧模型只能通过
 > [轨迹查看器](TRAJECTORY_VIEWER.md)的显式 legacy 投影用于诊断，不能
-> 静默作为 v6 模型加载或继续训练。实验详见
+> 静默作为 v8 模型加载或继续训练。实验详见
 > [模型迭代记录](AGENT_MODEL_ITERATION.md)。
 
 > 轨迹审计还修复了燃烧之血重复治疗与训练进程事件未注册。v6 额外接收
 > 事件 ID/选项和战后药水/遗物候选指针；历史 v5 训练数据不能与修复后的
-> 环境直接比较；v6 500k 已从头训练。
+> 环境直接比较；v6 500k 已从头训练，v8 修复后仍需另行重训。
 
 ## v5 接口增量
 
@@ -107,7 +108,7 @@ actor-critic，但不同时更换游戏逻辑、动作语义和 PPO 算法。设
 
 | Tensor | Shape | 含义 |
 | --- | ---: | --- |
-| `global_categorical` | `[4]` | phase、character、room、screen type |
+| `global_categorical` | `[5]` | phase、character、room、screen type、当前幕 ID（v8 新增） |
 | `global_numeric` | `[16]` | act/floor、HP、gold、deck/relic/potion 数量、round、终局等 |
 | `entity_categorical` | `[N, 13]` | type、content ID、zone、subtype、rarity、owner role、upgrade、两个 affliction、两个 enchantment、status、count bucket |
 | `entity_numeric` | `[N, 34]` | HP/block/energy/cost/damage/amount/count/map 坐标、modifier 数量及实体状态 |
@@ -305,8 +306,8 @@ cd C:\Users\A\Codes\sts\sts2-rl-agent
 python -m pip install -e ".[train,dev]"
 ```
 
-以下是 v6 输入的从头训练示例；v5 1M 结果不能通过 `--resume-from`
-直接续训到 v6：
+以下是当前 v8 输入的从头训练示例；v5/v6/v7 结果不能通过 `--resume-from`
+直接续训到 v8：
 
 ```powershell
 python scripts/train_agent_v2.py `
@@ -317,7 +318,7 @@ python scripts/train_agent_v2.py `
   --device cuda `
   --checkpoint-freq 100000 `
   --eval-freq 25000 `
-  --output-dir output/typed_set_v6_modifier_fixed_1m_4env
+  --output-dir output/typed_set_v8_act_neow_fixed_1m_4env
 ```
 
 周期评估使用 mask-aware `CapabilityEvalCallback`，按固定种子的胜率、平均层数
@@ -414,6 +415,8 @@ observation/mask 卡死；保留该结果可避免把未收敛策略误报成接
 - v6 按游戏的单张卡牌上限编码一个 affliction 和一个 enchantment，含强度；
   对违反单值约束的 snapshot 直接报错，以免悄悄截断。v5 的两槽历史设计
   保留在前述表格中。
+- v7 将水晶球的动态格子/物品 ID 投影为稳定类型与数值坐标；旧 v6 权重仅
+  能用只读兼容投影做轨迹诊断，不能直接续训。
 - 地图暂未编码 edges；协议中有边，tensorizer 丢弃。应在 parity 修复后用
   固定战斗策略的 map-only 消融确认实际影响，再设计 edge-aware encoder。
 - v5 已将选择项的 content/option/zone 和 source/target entity 指针与候选

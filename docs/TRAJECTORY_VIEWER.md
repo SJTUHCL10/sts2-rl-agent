@@ -17,10 +17,11 @@ C:\Users\Administrator\codes\sts\.conda\sts\python.exe scripts/trace_agent_v2.py
   --output-dir output/trajectory_v5_diagnostics
 ```
 
-同一命令也适用于当前带 `model_metadata.json` 的 v6 checkpoint，例如将
+同一命令也适用于带 `model_metadata.json` 的 v6 checkpoint，例如将
 `--model-path` 改为 `output/typed_set_v6_reward_fixed_500k_4env_20260924/final_model.zip`。
 脚本按 checkpoint 内记录的 layout hash 选择**严格匹配**的投影，不允许静默混用。
-v5 投影仅用于重现旧策略决策，不能用于 v6 续训或实机推理。无需模型时可用
+v5/v6 legacy 投影仅用于诊断旧策略决策，不能用于 v8 续训或实机推理。旧轨迹
+没有捏奥且固定密林，不能当成 v8 环境评估。无需模型时可用
 `--random` 跑诊断。`--episodes N` 从给定种子开始，每个种子生成独立的
 `seed_<seed>.json` 和 `seed_<seed>.html`。直接在浏览器打开 HTML 即可查看。
 

@@ -276,6 +276,8 @@ class STS2RunEnv(gymnasium.Env):
         monotonic_choices: bool = False,
         encode_legacy_observations: bool = True,
         extra_choice_slots: int = 0,
+        start_with_neow: bool = False,
+        act1_variant: str = "overgrowth",
     ):
         super().__init__()
 
@@ -296,6 +298,8 @@ class STS2RunEnv(gymnasium.Env):
         self.reward_shaping = reward_shaping
         self.monotonic_choices = monotonic_choices
         self.encode_legacy_observations = encode_legacy_observations
+        self.start_with_neow = start_with_neow
+        self.act1_variant = act1_variant
         self._legacy_observation_placeholder = np.zeros(
             self.observation_space.shape,
             dtype=self.observation_space.dtype,
@@ -323,6 +327,8 @@ class STS2RunEnv(gymnasium.Env):
             seed=run_seed,
             character_id=self._character_id,
             ascension_level=self._ascension_level,
+            start_with_neow=self.start_with_neow,
+            act1_variant=self.act1_variant,
         )
         self._step_count = 0
         self._episode_reward_components = {}

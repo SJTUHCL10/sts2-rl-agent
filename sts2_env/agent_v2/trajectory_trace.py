@@ -88,6 +88,7 @@ def compact_state(snapshot: dict[str, Any], manager: Any) -> dict[str, Any]:
         "phase": _name(snapshot.get("phase") or snapshot.get("global", {}).get("phase")),
         "floor": run.get("floor", 0),
         "act": run.get("act", 1),
+        "act_id": run.get("act_id"),
         "room_type": _name(room_type),
         "event_id": getattr(event, "event_id", None) if manager.phase == "EVENT" else None,
         "treasure_relic": treasure_relic,
@@ -318,7 +319,7 @@ function render() {
     const encountered=[...new Set(steps.flatMap(s=>(s.before.enemies||[]).map(e=>e.id)).filter(Boolean))];
     const event=steps.map(s=>s.before.event_id).find(Boolean);
     const gainedRelics=(last.relics||[]).filter(r=>!(first.relics||[]).includes(r));
-    section.append(el('summary',`${w.floor.replace('{n}',floor)} · ${term(room,lang)}${event?' · '+event:''}${encountered.length?' · '+encountered.join(', '):''} · ${w.hp} ${fmt(first.hp)} → ${fmt(last.hp)} · ${w.gold} ${fmt(first.gold)} → ${fmt(last.gold)}${gainedRelics.length?' · '+w.gainedRelic+' '+gainedRelics.join(', '):''} · ${visible.length} ${w.steps}`));
+    section.append(el('summary',`${w.floor.replace('{n}',floor)}${first.act_id?' · '+first.act_id:''} · ${term(room,lang)}${event?' · '+event:''}${encountered.length?' · '+encountered.join(', '):''} · ${w.hp} ${fmt(first.hp)} → ${fmt(last.hp)} · ${w.gold} ${fmt(first.gold)} → ${fmt(last.gold)}${gainedRelics.length?' · '+w.gainedRelic+' '+gainedRelics.join(', '):''} · ${visible.length} ${w.steps}`));
     const body=el('div',undefined,'steps');
     for(const s of visible) {
       const d=el('details',undefined,'step'), a=s.action;

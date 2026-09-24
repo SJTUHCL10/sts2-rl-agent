@@ -10,6 +10,8 @@ import numpy as np
 
 from sts2_env.agent_v2.tensorizer import (
     DEFAULT_TENSORIZER_CONFIG,
+    LegacyV5TensorizerConfig,
+    LegacyV6TensorizerConfig,
     TensorizerConfig,
     observation_space,
     tensorize_snapshot,
@@ -44,6 +46,12 @@ class STS2EntityRunEnv(gymnasium.Wrapper):
             run_env_kwargs.setdefault("monotonic_choices", True)
             run_env_kwargs.setdefault("encode_legacy_observations", False)
             run_env_kwargs.setdefault("extra_choice_slots", ENTITY_EXTRA_CHOICE_SLOTS)
+            is_legacy = isinstance(
+                tensorizer_config,
+                (LegacyV5TensorizerConfig, LegacyV6TensorizerConfig),
+            )
+            run_env_kwargs.setdefault("start_with_neow", not is_legacy)
+            run_env_kwargs.setdefault("act1_variant", "overgrowth" if is_legacy else "random")
         base = env or STS2RunEnv(**run_env_kwargs)
         if base.action_space.n != tensorizer_config.num_actions:
             raise ValueError(

@@ -65,6 +65,7 @@ class RunSession:
                 character_id=self.character,
                 ascension_level=self.ascension,
                 start_with_neow=not skip_neow,
+                act1_variant="random",
             )
             return self.state()
 

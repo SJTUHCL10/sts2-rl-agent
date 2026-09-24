@@ -354,6 +354,7 @@ def build_run_snapshot(run_state: RunState) -> dict[str, Any]:
     return {
         "character_id": run_state.player.character_id,
         "act": run_state.current_act_index + 1,
+        "act_id": run_state.current_act.act_id,
         "act_floor": run_state.act_floor,
         "floor": run_state.total_floor,
         "ascension": run_state.ascension_level,
@@ -423,7 +424,7 @@ def build_run_decision_snapshot(manager: RunManager) -> dict[str, Any]:
         **{
             key: run_snapshot[key]
             for key in (
-                "character_id", "act", "act_floor", "floor", "ascension",
+                "character_id", "act", "act_id", "act_floor", "floor", "ascension",
                 "is_over", "player_won",
             )
         },

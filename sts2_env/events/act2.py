@@ -89,6 +89,12 @@ class CrystalSphere(EventModel):
         )
         self._cost = self.UNCOVER_FUTURE_BASE_COST + extra
 
+    def before_event_started(self, run_state: RunState) -> None:
+        # Registered event models are reused across runs; a previous game's
+        # minigame must not make the next event's pay/debt screen look like a grid.
+        self._minigame = None
+        self._awaiting_proceed = False
+
     def generate_initial_options(self, run_state: RunState) -> list[EventOption]:
         self.ensure_vars_calculated(run_state)
         return [
