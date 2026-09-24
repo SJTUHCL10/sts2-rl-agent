@@ -9,14 +9,16 @@
 
 当前 Bridge 协议仍是 `sts2-entity-v2` / `candidate-v2`。代码中的新接口为
 `typed-set-tensor-v6` / `entity-actions-v3-extended-choice`。v6 修正卡牌
-affliction 的序列化并加入附魔/affliction 强度；尚无 v6 训练 checkpoint。
-最近的 v5 1M checkpoint 是在副怪战斗结束规则修复后训练的，旧 v5 输入可由
-只读轨迹工具显式复现以便诊断，但不能静默用于 v6 推理或继续训练。
+affliction 的序列化并加入附魔/affliction 强度；已有修复后从头训练的
+v6 500k checkpoint，推荐 `output/typed_set_v6_reward_fixed_500k_4env_20260924/`
+中的 `final_model.zip`。最近的 v5 1M checkpoint 是在副怪战斗结束规则修复后
+训练的，旧 v5 输入可由只读轨迹工具显式复现以便诊断，但不能静默用于 v6
+推理或继续训练。
 训练使用 MaskablePPO、无位置编码的
 Typed Set Transformer 和 candidate-aware actor，不使用 LSTM/GRU，也不考虑
 多人游戏。
 
-最近的 v5 1M 结果及轨迹记录方法见第 1.5 节和
+最近的 v6 500k 结果见第 1.6 节；旧 v5 1M 结果及轨迹记录方法见第 1.5 节和
 [轨迹查看器](TRAJECTORY_VIEWER.md)。
 
 历史 v4 能力基线 checkpoint 是：
@@ -183,11 +185,40 @@ categorical 的形状但将 entity numeric 从 43 扩至 45，并更新 layout h
 1M 的均层/通关统计只代表旧模拟器，不能作为修复后的能力基线。同一 v5
 checkpoint 在 seed 100109 的新轨迹会遇到真实事件，因缺少旧版事件语义
 而反复选择同一事件选项；v6 snapshot 已加入事件 ID/选项语义，以及战后
-药水/遗物奖励的候选来源指针。下一次训练需要从头进行，并重新评估。
+药水/遗物奖励的候选来源指针。修复后从头训练的 v6 500k 结果见第 1.6 节。
 另一次轨迹审计发现模拟器只给普通宝箱生成遗物，遗漏了打开宝箱时独立结算的
 42–52 金币（贫穷进阶乘 0.75 后向下取整）。现已在进入宝箱决策前自动
 结算金币、Spoils Map 等额外金币，再由 `COLLECT` 领取遗物；轨迹中的
 金币变化会单独展示。
+
+### 1.6 v6 修复后 500k 长训（2026-09-24）
+
+`output/typed_set_v6_reward_fixed_500k_4env_20260924/` 从头训练，
+seed 109、4 env × 1024 step、CUDA、默认 reward shaping。请求 500k，
+rollout 对齐后完成 503,808 steps，耗时 3,681 秒（含评估，136.9 step/s）。
+训练结束 4,860 局，0 胜；训练轨迹最高到第 45 层，但这只是探索中的单局，
+不能代表确定性策略的稳定能力。没有 entity overflow，6 局截断。
+
+20-seed 周期评估在 250k 取得最高均层 11.35，于是预设规则选择该
+`best_model`。但在同一 100 个固定种子（`100109..100208`）上复评时：
+
+| Policy | Mean floor | Median | Max | 第 16 层结束 | 进入第二幕 | Wins | Truncated |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 250k periodic best | 9.41 | 9 | 16 | 15/100 | 0/100 | 0/100 | 0/100 |
+| 500k final | **11.16** | 12 | 18 | 29/100 | 4/100 | 0/100 | 1/100 |
+| Masked random | 3.28 | 3 | 8 | 0/100 | 0/100 | 0/100 | 0/100 |
+
+逐种子比较，final 有 56 局比 best 更高、33 局更低、11 局相同，均层差
++1.75。因此本次元数据的 `recommended_model` 已改为 `final_model.zip`；
+`best_model` 仍保留供诊断。20-seed 选择器噪声较大，今后的 checkpoint
+推荐至少应补做较大样本复评。旧 v5 1M 的均层 12.20 来自重复回血、事件
+缺失及宝箱金币遗漏的环境，不宜与本次 11.16 直接比较。
+
+全程 UNKNOWN 编码率为 `6.40e-6`，共 4,086 个值；主要集中在水晶球事件的
+动态 `DIVINE_CELL` 动作类型、格子坐标 ID 和格子物品 ID。另有极少数
+`Disabled` 遗物状态与 `pay` 选项。它们并非普通战斗牌/敌人的漏词，
+但水晶球的局部动作语义确实受损，应使用稳定的动作/格子类型 token 和
+分离的坐标数值修复。训练诊断文件保存在 `unknown_diagnostics/`。
 
 ## 2. 基础架构
 
