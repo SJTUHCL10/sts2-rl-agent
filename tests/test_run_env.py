@@ -44,6 +44,7 @@ from sts2_env.gym_env.run_env import (
 from sts2_env.cards.regent import make_gather_light
 from sts2_env.monsters.act1_weak import create_shrinker_beetle
 from sts2_env.run.run_manager import RunManager
+from sts2_env.run.reward_objects import RelicReward
 from sts2_env.run.run_state import PlayerState
 from sts2_env.run.shop import ShopInventory
 
@@ -533,6 +534,21 @@ class TestActionMasksPerPhase:
                     assert mask[_TREASURE_START] == 1
                     return
         pytest.skip("No treasure encountered in tested seeds")
+
+    def test_treasure_action_grants_chest_gold(self, env):
+        env.reset(seed=93)
+        manager = env._mgr
+        assert manager is not None
+        starting_gold = manager.run_state.player.gold
+        manager._enter_treasure()
+        assert manager.run_state.player.gold >= starting_gold + 42
+        assert env.action_masks()[_TREASURE_START] == 1
+        gold_before_relic = manager.run_state.player.gold
+        manager._current_reward = RelicReward(manager.run_state.player.player_id, relic_id="LANTERN")
+
+        env.step(_TREASURE_START)
+
+        assert manager.run_state.player.gold == gold_before_relic
 
 
 # ---------------------------------------------------------------------------

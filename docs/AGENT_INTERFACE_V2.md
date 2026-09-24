@@ -41,16 +41,34 @@ V2 transports typed entity sets rather than a pre-flattened tensor:
 - currently legal semantic action candidates.
 
 Transport coverage is not model-input coverage. The current
-`typed-set-tensor-v5` projection consumes map nodes and their coordinates,
+`typed-set-tensor-v6` projection consumes map nodes and their coordinates,
 type, visited/reachable flags, but does **not** encode `map_edges`; it cannot
 reconstruct connected routes from the set of nodes alone. It also reduces a
-structured entity `counters` map to a numeric sum and keeps at most two
-afflictions and two enchantments. Conversely, each creature's current intents
+structured entity `counters` map to a numeric sum. Cards now encode one
+affliction type/amount and one enchantment type/amount; this corrects the v5
+simulator affliction omission and enchantment-amount loss. Conversely, each
+creature's current intents
 (up to three types with damage/hits), hand-card instances, and action-candidate
-source/target entity pointers do reach the model. The compatible 500k run
-recorded zero UNKNOWN categorical values and zero entity overflow. See
+source/target entity pointers do reach the model. The historical v5 1M run
+recorded zero UNKNOWN categorical values and zero entity overflow, but is not
+compatible with v6 inference. See
 [Typed Set Transformer Agent v2](TYPED_SET_TRANSFORMER_AGENT.md) for the exact
 projection; none of these tensor limits changes the v2 wire contract.
+The current Python simulator tracks an affliction's type but not a variable
+stack amount, so its card snapshots emit amount `1`; the live game-side v2
+serializer exposes the actual amount when available.
+
+The current simulator now registers built-in events in plain training processes,
+and v6 snapshots add a visible event-ID entity and semantic option IDs. Potion
+and relic reward picks likewise have a choice entity and a candidate source-row
+pointer. The explicit legacy-v5 tensor projection omits these additions so old
+checkpoints can be diagnosed without silently changing their inputs. The prior
+v5 training run also double-applied Burning Blood after victories and saw empty
+event rooms; its metrics are not a valid post-fix baseline.
+For live Bridge event messages, the option's `event_id` is used to create the
+same event-context row when available. Live option labels are localized text,
+not stable simulator option IDs; parity of option-specific policy behavior
+still needs live Bridge validation.
 
 Each entity has a stable `entity_id` within a decision snapshot. Card instances
 include identity, owner, zone, zone index, current and original cost, type,

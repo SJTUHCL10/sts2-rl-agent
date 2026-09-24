@@ -8,14 +8,16 @@
 ## 1. 当前状态
 
 当前 Bridge 协议仍是 `sts2-entity-v2` / `candidate-v2`。代码中的新接口为
-`typed-set-tensor-v5` / `entity-actions-v3-extended-choice`。两个药水 ID
-规范化别名修复后，已完成兼容当前代码的 500k 长训；旧的 v4 500k 与修复前的
-v5 100k 模型因接口或词表 hash 不同，不能直接用于当前代码。
-此 500k checkpoint 训练时的模拟器尚有副怪阻止战斗结束的 parity 错误；
-规则现已修复，模型可加载用于复评，但尚未在修复后的环境中重训。
+`typed-set-tensor-v6` / `entity-actions-v3-extended-choice`。v6 修正卡牌
+affliction 的序列化并加入附魔/affliction 强度；尚无 v6 训练 checkpoint。
+最近的 v5 1M checkpoint 是在副怪战斗结束规则修复后训练的，旧 v5 输入可由
+只读轨迹工具显式复现以便诊断，但不能静默用于 v6 推理或继续训练。
 训练使用 MaskablePPO、无位置编码的
 Typed Set Transformer 和 candidate-aware actor，不使用 LSTM/GRU，也不考虑
 多人游戏。
+
+最近的 v5 1M 结果及轨迹记录方法见第 1.5 节和
+[轨迹查看器](TRAJECTORY_VIEWER.md)。
 
 历史 v4 能力基线 checkpoint 是：
 
@@ -146,6 +148,46 @@ v2 snapshot 的 `map_edges` 中，却没有进入当前 tensor；这妨碍路线
 不再在第 3 层 Fogmog 战斗卡死，而是继续至第 5 层。修复后的逐局结果在
 `final_evaluation_post_minion_fix_100seed_100109.json`。这量化了 parity
 修复的直接收益，但仍未进入第二幕/采样到胜局；不能当作重训后的能力。
+
+### 1.5 修复后 v5 1M 长训与 v6 观测修正（2026-09-24）
+
+`output/typed_set_v5_minion_fixed_1m_4env_20260924/` 从头训练，请求
+1M、实际 1,003,520 environment steps；4 env × 1024、CUDA、seed 109。
+耗时 6,077 秒（165.1 step/s）。训练结束 8,669 局，其中 147 局在第二幕、
+2 局在第三幕结束，无通关；战斗 50 回合上限仅 2 局。训练 UNKNOWN 和 entity
+overflow 均为零。第 16 层结束 1,458 局，第一幕 Boss 成为更显著的诊断点。
+
+同一 100 个固定种子（`100109..100208`）完整 run 评估：
+
+| Policy | Mean floor | Median | Max | 第 16 层结束 | 进入第二幕 | Wins |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 旧 500k final，规则修复后复评 | 8.75 | — | 16 | — | 0/100 | 0 |
+| 新 525k best | 12.24 | 13 | 31 | 35/100 | 5/100 | 0 |
+| 新 1M final | 12.20 | 13 | 20 | 41/100 | 5/100 | 0 |
+
+预设 20-seed 选择在 525k 看到均层 13.9，但扩至 100-seed 后 best 与 final
+接近。不能据此断言继续训练到 5M 会稳步进步。best 的 100-seed 复评保存在
+`best_model/evaluation_100seed_100109.json`。下一步应记录 Boss 的入场 HP、
+牌组、药水、怪物及逐回合操作，分清资源管理与战斗决策问题；
+`scripts/trace_agent_v2.py` 可为旧 v5 checkpoint 生成 JSON 和中英双语离线 HTML。
+
+审计中还发现：模拟器的 `CardInstance.affliction` 为单值属性，但 v5 snapshot
+错误读取不存在的 `afflictions`，导致负面附着在训练时不可见；v5 tensorizer
+只保留附魔类型而丢弃强度。v6 改为每种各一个类型加数值强度，保留旧两槽
+categorical 的形状但将 entity numeric 从 43 扩至 45，并更新 layout hash。
+旧 v5 权重只能通过轨迹工具的显式 legacy 投影诊断，不能当作 v6 checkpoint。
+
+随后用轨迹工具发现两处会显著抬高旧成绩的环境问题：战士的燃烧之血先在
+`CombatState` 获胜钩子治疗 6，再被 `RunManager` 重复治疗 6；纯训练进程未
+导入事件注册模块，事件层实际只生成默认 Leave。现已分别修复，原 v5
+1M 的均层/通关统计只代表旧模拟器，不能作为修复后的能力基线。同一 v5
+checkpoint 在 seed 100109 的新轨迹会遇到真实事件，因缺少旧版事件语义
+而反复选择同一事件选项；v6 snapshot 已加入事件 ID/选项语义，以及战后
+药水/遗物奖励的候选来源指针。下一次训练需要从头进行，并重新评估。
+另一次轨迹审计发现模拟器只给普通宝箱生成遗物，遗漏了打开宝箱时独立结算的
+42–52 金币（贫穷进阶乘 0.75 后向下取整）。现已在进入宝箱决策前自动
+结算金币、Spoils Map 等额外金币，再由 `COLLECT` 领取遗物；轨迹中的
+金币变化会单独展示。
 
 ## 2. 基础架构
 
@@ -406,15 +448,14 @@ player 分片缓存；否则应评估异步 rollout collector 的复杂度和收
 
 ## 7. 当前限制与后续方向
 
-1. **已修关键 parity，下一步是干净重训。** 最后主敌人死亡时副怪仍使战斗
-   无法结束的问题已有 Fogmog/Eye with Teeth 场景测试，旧模型固定种子
-   均层从 7.72 升至 8.75。仍应按死亡怪物、战斗回合、卡牌行动和地图节点
-   分解其余失败原因；现有 checkpoint 权重受旧环境影响。
+1. **第一幕 Boss 诊断。** 修复 parity 后 v5 1M 固定 100 局均层约 12.2，
+   35–41 局在第 16 层结束，但 5 局已进入第二幕。用逐步轨迹按 Boss、
+   入场 HP/牌组/药水和回合决策拆分失败，不能只凭终止层数归因。
 2. **验证信息瓶颈。** 当前每只怪的当前 intent、伤害/次数、战斗 index，
    手牌实例、source/target entity 指针已进入模型，UNKNOWN/overflow 为 0；
    不能再称这些信息“缺失”。但 map edges 没进 tensor；`counters` 只保留
-   数值总和，丢失各计数器名称/结构；最多两个 affliction、两个 enchantment
-   的截断仍在。卡牌/遗物/能力的具体效果规则没有显式关系表示，主要靠
+   数值总和，丢失各计数器名称/结构。v6 已修正卡牌 affliction 和附魔强度
+   输入，但尚未训练；卡牌/遗物/能力的具体效果规则没有显式关系表示，主要靠
    content embedding 从交互中学习。应优先做观测扰动与分阶段评估，确认
    哪项确实影响决策，而不是笼统加宽网络。
 3. **做对照实验。** 修复 parity 后，扩大上述固定其余策略、只随机/正常
@@ -423,16 +464,14 @@ player 分片缓存；否则应评估异步 rollout collector 的复杂度和收
    去掉各分量、potential-based shaping 的消融。现有 floor/combat-win/
    HP-loss/step 奖励是启发式，不能保证不改变最优策略。当前
    `gamma * gae_lambda = 0.999 * 0.95 ≈ 0.949`，100 步外 TD 残差的直接
-   GAE 权重约 0.005；4,884 局平均约 103 步，终局奖励虽通常落在同一
+   GAE 权重约 0.005；终局奖励虽通常落在同一
    1024-step rollout 内，长程信用分配依然困难。可考虑辅助战斗结果/结束
    HP 目标，或符合 `gamma*Phi(s')-Phi(s)`、终局 `Phi=0` 的 shaping。
    目前 `step_penalty=0.001` 与 `gamma=0.999` 已近似抵消单纯拖延
    `-1` 终局损失的折扣收益；不能把 Fogmog 的长战斗直接归咎于步惩罚过小。
-4. **扩训顺序。** 当前约 550 万参数，修复前的 500k 仍 0 胜且权重受
-   parity 错误污染；不建议直接跑 5M 或增大模型。下一轮可从头以相同
-   4×1024 配置跑 1M（最好多 seed），观察第二幕率和后半程能力曲线，再决定
-   是否到 5M。若仍难获得胜局，优先考虑 scripted/heuristic 示范预训练、
-   分阶段 curriculum 或下一战胜负/结束 HP 等辅助目标。更大网络只有在
-   排除环境与训练信号问题后、出现明确欠拟合证据时再试。
+4. **扩训顺序。** 525k best 与 1M final 在 100-seed 上基本持平、仍 0 胜；
+   不建议直接跑 5M 或增大模型。先诊断 Boss，再以 v6 从头训练并与 v5
+   同种子对照；若第二幕依旧稀少，可考虑从真实 Boss 入场状态采样的
+   curriculum、示范预训练或战斗结果/结束 HP 辅助目标。
 5. GPU update 仍不是主要吞吐瓶颈；后续性能工程可评估安全的 RunState
    revision 分片缓存或异步 rollout，但不能把吞吐改进当作能力改进。

@@ -6,6 +6,7 @@ import json
 import hashlib
 
 import numpy as np
+import pytest
 
 from sts2_env.agent_v2.categorical_vocabulary import (
     DEFAULT_CATEGORICAL_VOCABULARY,
@@ -73,7 +74,7 @@ def test_potion_id_aliases_share_known_tokens_and_change_vocabulary_hash() -> No
     ).hexdigest()
 
 
-def test_afflictions_and_enchantments_use_individual_explicit_ids() -> None:
+def test_single_affliction_and_enchantment_use_explicit_ids_and_amounts() -> None:
     config = TensorizerConfig(max_entities=8)
     snapshot = {
         "type": "combat_action",
@@ -83,8 +84,8 @@ def test_afflictions_and_enchantments_use_individual_explicit_ids() -> None:
             "card_id": "STRIKE_IRONCLAD",
             "owner_id": "player:0",
             "zone": "hand",
-            "afflictions": {"BOUND": 1, "ENTANGLED": 1},
-            "enchantments": {"ADROIT": 1, "NIMBLE": 1},
+            "afflictions": {"BOUND": 2},
+            "enchantments": {"NIMBLE": 3},
         }],
         "candidates": [],
     }
@@ -94,15 +95,31 @@ def test_afflictions_and_enchantments_use_individual_explicit_ids() -> None:
     observation = tensorize_snapshot(snapshot, mask, config)
     row = observation["entity_categorical"][0]
 
-    assert set(row[7:9]) == {
-        categorical_id("BOUND", strict=True),
-        categorical_id("ENTANGLED", strict=True),
-    }
-    assert set(row[9:11]) == {
-        categorical_id("ADROIT", strict=True),
-        categorical_id("NIMBLE", strict=True),
-    }
+    assert row[7] == categorical_id("BOUND", strict=True)
+    assert row[8] == 0
+    assert row[9] == categorical_id("NIMBLE", strict=True)
+    assert row[10] == 0
+    assert observation["entity_numeric"][0, 43] > 0
+    assert observation["entity_numeric"][0, 44] > observation["entity_numeric"][0, 43]
     assert UNKNOWN_ID not in row
+
+
+def test_multiple_afflictions_are_rejected_instead_of_truncated() -> None:
+    config = TensorizerConfig(max_entities=8)
+    snapshot = {
+        "type": "combat_action",
+        "phase": "COMBAT",
+        "cards": [{
+            "entity_id": "card:player:0:1",
+            "card_id": "STRIKE_IRONCLAD",
+            "zone": "hand",
+            "afflictions": {"BOUND": 1, "ENTANGLED": 1},
+        }],
+    }
+    mask = np.zeros(config.num_actions, dtype=np.int8)
+    mask[0] = 1
+    with pytest.raises(ValueError, match="multiple modifiers"):
+        tensorize_snapshot(snapshot, mask, config)
 
 
 def test_reward_shaping_is_decomposed_and_penalizes_hp_loss() -> None:

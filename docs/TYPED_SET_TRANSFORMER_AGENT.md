@@ -1,13 +1,16 @@
 # Typed Set Transformer Agent v2
 
-> 本文第 1–8 节记录 v4 长训时的设计和 157-slot 基线。当前代码使用
-> `typed-set-tensor-v5` / `entity-actions-v3-extended-choice`，已在修复
-> 药水词表别名后完成 4-env 500k 长训，训练 UNKNOWN/overflow 均为 0；
-> 100-seed final 在训练时的规则下均层 7.72、0 胜，尚未实机验证。
-> 主敌人死亡后副怪仍阻止战斗结束的模拟器 parity 缺口已修复；旧模型
-> 在修复后复评均层 8.75、0 胜，仍需从头重训，见
+> 本文第 1–8 节记录 v4 长训时的设计和 157-slot 基线。最近的 v5 1M
+> checkpoint 在修复副怪结束规则后训练，同种子 100 局均层约 12.2、0 胜。
+> 当前代码已升级到 `typed-set-tensor-v6`，修正卡牌 affliction 与附魔强度
+> 观测，尚无兼容的 v6 checkpoint。旧 v5 模型只能通过
+> [轨迹查看器](TRAJECTORY_VIEWER.md)的显式 legacy 投影用于诊断，不能
+> 静默作为 v6 模型加载或继续训练。实验详见
 > [模型迭代记录](AGENT_MODEL_ITERATION.md)。
-> 旧 v4 checkpoint 与新 tensor shape、动作语义和网络参数不兼容。
+
+> 轨迹审计还修复了燃烧之血重复治疗与训练进程事件未注册。v6 额外接收
+> 事件 ID/选项和战后药水/遗物候选指针；历史 v5 训练数据不能与修复后的
+> 环境直接比较，必须从头训练。
 
 ## v5 接口增量
 
@@ -36,6 +39,16 @@ candidate cross-attention 的 key/value 改为全部 contextual entity，而非 
 `CRYSTAL_CELL` entity。候选动作的 source 指向该格子；模型只看到当前
 公开信息，不会看到未翻开格子的内容。前四个格子沿用旧事件槽，第五个起
 使用扩展槽，结束时的 proceed 保持事件选项语义。
+
+## v6 卡牌修饰观测
+
+游戏的卡牌同时最多有一个 affliction、一个 enchantment。v5 的模拟器
+`CardInstance.affliction` 已保存当前负面附着，但 snapshot 错读不存在的
+`afflictions` 属性；附魔字典的数值也被 tensorizer 丢弃。v6 snapshot 将
+当前 affliction 序列化为单元素映射，entity categorical 的每种修饰只用
+第一个类型槽；`entity_numeric` 从 `[N, 43]` 变为 `[N, 45]`，末尾新增
+affliction/enchantment 强度的 signed-log 数值。旧的第二类型槽保留为空，
+避免改动其余字段偏移；layout hash 随版本改变，必须重训。
 
 ## 1. 目标与边界
 
@@ -273,7 +286,8 @@ learning 干扰 candidate representation，可通过配置拆成独立 encoder�
 
 当前假设完整可见 snapshot 对单人 STS2 决策近似满足 Markov 性：
 
-- 当前牌堆、能力、遗物 counter、怪物 intent、地图和候选选项已经显式编码；
+- 当前牌堆、能力、怪物 intent、地图节点和候选选项已经编码；遗物/能力
+  `counters` 仍被压成总和，地图边仍未进入 tensor，这是待验证的信息损失；
 - 需要记忆的“历史”原则上应成为游戏状态字段，例如遗物计数器，而不是交给
   LSTM 猜测；
 - Bridge 丢字段时增加状态协议和 parity test，比隐藏状态补偿更可审计。
@@ -291,8 +305,8 @@ cd C:\Users\A\Codes\sts\sts2-rl-agent
 python -m pip install -e ".[train,dev]"
 ```
 
-修复已知模拟器 parity 缺口后，可用下面的 1M 实验命令检验扩训收益；
-当前不应把它当作已经验证有效的训练建议：
+以下是 v6 输入的从头训练示例；v5 1M 结果不能通过 `--resume-from`
+直接续训到 v6：
 
 ```powershell
 python scripts/train_agent_v2.py `
@@ -303,7 +317,7 @@ python scripts/train_agent_v2.py `
   --device cuda `
   --checkpoint-freq 100000 `
   --eval-freq 25000 `
-  --output-dir output/typed_set_v5_fixed_1m_4env
+  --output-dir output/typed_set_v6_modifier_fixed_1m_4env
 ```
 
 周期评估使用 mask-aware `CapabilityEvalCallback`，按固定种子的胜率、平均层数
@@ -397,8 +411,9 @@ observation/mask 卡死；保留该结果可避免把未收敛策略误报成接
   seed 比较真实胜率、第二幕率及战斗超时，而不仅是训练回报。
 - v3 牌、能力、遗物及结构字段使用显式、版本化 vocabulary。未知值仍有专用
   `UNKNOWN` ID 以保证运行安全，但训练前应通过覆盖审计使其计数为零。
-- v3 分别编码最多两个 affliction 和两个 enchantment，并提供 modifier 数量。
-  超过两个 modifier 的组合目前仍会截断；后续可改为 modifier 子 token/DeepSets。
+- v6 按游戏的单张卡牌上限编码一个 affliction 和一个 enchantment，含强度；
+  对违反单值约束的 snapshot 直接报错，以免悄悄截断。v5 的两槽历史设计
+  保留在前述表格中。
 - 地图暂未编码 edges；协议中有边，tensorizer 丢弃。应在 parity 修复后用
   固定战斗策略的 map-only 消融确认实际影响，再设计 edge-aware encoder。
 - v5 已将选择项的 content/option/zone 和 source/target entity 指针与候选

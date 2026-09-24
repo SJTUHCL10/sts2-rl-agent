@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 from weakref import WeakKeyDictionary
 
 from sts2_env.agent_v2.candidates import build_action_candidates
+from sts2_env.agent_v2.categorical_vocabulary import DEFAULT_CATEGORICAL_VOCABULARY
 from sts2_env.agent_v2.schema import schema_manifest
 from sts2_env.agent_v2.state_fields import (
     serialize_power_fields,
@@ -67,6 +68,7 @@ def serialize_card(
     playable: bool | None = None,
 ) -> dict[str, Any]:
     """Serialize all currently modeled card-instance state."""
+    affliction = card.affliction
     return {
         "entity_id": f"card:{owner_id}:{card.instance_id}",
         "card_id": card.card_id.name,
@@ -89,7 +91,7 @@ def serialize_card(
         "keywords": sorted(_name(value) for value in card.keywords),
         "tags": sorted(_name(value) for value in card.tags),
         "enchantments": dict(sorted(card.enchantments.items())),
-        "afflictions": dict(sorted(getattr(card, "afflictions", {}).items())),
+        "afflictions": {affliction: 1} if affliction is not None else {},
         "effect_vars": dict(sorted(card.effect_vars.items())),
         "combat_vars": {
             key: value
@@ -426,6 +428,78 @@ def build_run_decision_snapshot(manager: RunManager) -> dict[str, Any]:
             )
         },
     }
+    if manager.phase == "EVENT":
+        event = getattr(manager, "_event_model", None)
+        event_id = getattr(event, "event_id", None)
+        if event_id:
+            result["event_id"] = event_id
+            result["event_context"] = [{
+                "entity_id": f"event:{event_id}",
+                "id": event_id,
+                "zone": "event",
+            }]
+        if result.get("type") == "event":
+            event_actions = [
+                item for item in manager.get_available_actions()
+                if item.get("action") == "event_choice"
+            ]
+            if len(event_actions) == len(result.get("options", [])):
+                result["legacy_event_options"] = [
+                    dict(option) for option in result["options"]
+                ]
+                result["legacy_event_candidates"] = [
+                    candidate.to_dict()
+                    for candidate in build_action_candidates(result)
+                ]
+                for option, action in zip(result["options"], event_actions, strict=True):
+                    option["id"] = action.get("option_id")
+                    option["option_id"] = action.get("option_id")
+                    option["label"] = action.get("label")
+                    option["description"] = action.get("description")
+                    option["model_content"] = next(
+                        (
+                            value for value in (action.get("label"), action.get("option_id"))
+                            if value and DEFAULT_CATEGORICAL_VOCABULARY.contains(value)
+                        ),
+                        "EVENT_CHOICE",
+                    )
+    if manager.phase == "CARD_REWARD":
+        actions = manager.get_available_actions()
+        for pick_action, skip_action, item_key in (
+            ("pick_potion", "skip_potion", "potion_id"),
+            ("pick_relic_reward", "skip_relic", "relic_id"),
+        ):
+            pick = next((item for item in actions if item.get("action") == pick_action), None)
+            if pick is None:
+                continue
+            item_id = str(pick[item_key])
+            source_id = f"reward:{item_key}:{item_id}"
+            result["reward_item_type"] = item_key
+            result["options"] = [{
+                "entity_id": source_id,
+                "id": item_id,
+                item_key: item_id,
+                "action": pick_action,
+                "index": 0,
+            }]
+            result["candidates"] = [{
+                "candidate_id": f"reward:{pick_action}:{item_id}",
+                "action_type": "CHOOSE",
+                "source_id": source_id,
+                "payload": {"action": pick_action},
+                "features": {
+                    "model_source_content": item_id,
+                    "model_source_zone": "candidate",
+                },
+            }]
+            if any(item.get("action") == skip_action for item in actions):
+                result["candidates"].append({
+                    "candidate_id": f"reward:{skip_action}:{item_id}",
+                    "action_type": "SKIP",
+                    "payload": {"action": skip_action},
+                    "features": {"model_source_zone": "candidate"},
+                })
+            break
     result["candidates"] = [
         candidate.to_dict()
         for candidate in build_action_candidates(result)

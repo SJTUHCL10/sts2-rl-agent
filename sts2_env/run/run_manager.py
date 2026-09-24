@@ -47,6 +47,7 @@ from sts2_env.potions.all import (
 from sts2_env.potions.base import PotionInstance, create_potion, roll_random_potion_model
 from sts2_env.encounters.events import get_event_encounter_setup
 from sts2_env.run.events import EventModel, EventOption, EventResult, get_event, pick_event
+import sts2_env.events  # noqa: F401  # Populate the built-in event registry in training processes.
 from sts2_env.run.reward_objects import (
     AddCardsReward,
     CardBundlesReward,
@@ -67,6 +68,8 @@ from sts2_env.run.reward_objects import (
     UpgradeCardsReward,
     CARD_REWARD_ALTERNATIVE_LIMIT_MESSAGE,
     MAX_CARD_REWARD_ALTERNATIVES,
+    POVERTY_ASCENSION_GOLD_MULTIPLIER,
+    POVERTY_ASCENSION_LEVEL,
 )
 from sts2_env.run.rest_site import MendOption, RestSiteOption, generate_rest_site_options
 from sts2_env.run.rewards import generate_combat_reward_cards
@@ -89,6 +92,8 @@ CARD_REWARD_ACTION_PICK_CARD = "pick_card"
 CARD_REWARD_ACTION_REROLL = "reroll_card_reward"
 CARD_REWARD_ACTION_SKIP = "skip"
 CARD_REWARD_ACTION_SACRIFICE = "sacrifice_card_reward"
+TREASURE_GOLD_MIN = 42
+TREASURE_GOLD_MAX_EXCLUSIVE = 53
 
 
 # ---------------------------------------------------------------------------
@@ -100,31 +105,26 @@ _CHARACTER_CONFIG: dict[str, dict[str, Any]] = {
         "hp": 80,
         "gold": 99,
         "starter_relic": "BurningBlood",
-        "heal_after_combat": 6,
     },
     "Silent": {
         "hp": 70,
         "gold": 99,
         "starter_relic": "RingOfTheSnake",
-        "heal_after_combat": 0,
     },
     "Defect": {
         "hp": 75,
         "gold": 99,
         "starter_relic": "CrackedCore",
-        "heal_after_combat": 0,
     },
     "Necrobinder": {
         "hp": 75,
         "gold": 99,
         "starter_relic": "BoundPhylactery",
-        "heal_after_combat": 0,
     },
     "Regent": {
         "hp": 75,
         "gold": 99,
         "starter_relic": "DivineRight",
-        "heal_after_combat": 0,
     },
 }
 SUPPORTED_CHARACTER_IDS = tuple(_CHARACTER_CONFIG)
@@ -254,7 +254,6 @@ class RunManager:
         reset_instance_counter()
         self._run_state.player.deck = _get_starter_deck(character_id)
         self._run_state.player.obtain_relic(config["starter_relic"])
-        self._heal_after_combat: int = config["heal_after_combat"]
 
         # Initialize the run (ascension effects + first map)
         self._run_state.initialize_run()
@@ -277,6 +276,9 @@ class RunManager:
         self._current_rewards: RewardsSet | None = None
         self._pending_rewards: list[Reward] = []
         self._current_reward: Reward | None = None
+        self._treasure_opened = False
+        self._treasure_gold = 0
+        self._treasure_spoils_gold = 0
         self._return_phase_after_rewards: str | None = None
         self._resume_after_reward_chain = None
         self._selected_combat_player_id: int | None = None
@@ -803,12 +805,30 @@ class RunManager:
 
     def _enter_treasure(self) -> None:
         self._phase = self.PHASE_TREASURE
+        self._treasure_opened = False
+        self._treasure_gold = 0
+        self._treasure_spoils_gold = 0
         self._current_rewards = RewardsSet(self._run_state.player.player_id, room=self._current_room)
         self._pending_rewards = []
         generated = self._current_rewards.with_custom_rewards([
             RelicReward(self._run_state.player.player_id, rng_stream="treasure_room")
         ]).generate_without_offering(self._run_state)
         self._current_reward = generated[0] if generated else None
+        self._open_treasure()
+
+    def _open_treasure(self) -> None:
+        """Auto-open the chest before the agent chooses its relic."""
+        if self._treasure_opened:
+            return
+        self._treasure_opened = True
+        treasure_gold = self._run_state.rng.rewards.next_int_exclusive(
+            TREASURE_GOLD_MIN, TREASURE_GOLD_MAX_EXCLUSIVE,
+        )
+        if self._run_state.ascension_level >= POVERTY_ASCENSION_LEVEL:
+            treasure_gold = int(treasure_gold * POVERTY_ASCENSION_GOLD_MULTIPLIER)
+        self._run_state.player.gain_gold(treasure_gold)
+        self._treasure_gold = treasure_gold
+        self._treasure_spoils_gold = self._complete_spoils_map_quest()
 
     def _enter_room(self, room_type: RoomType) -> None:
         """Dispatch to the correct phase based on room type."""
@@ -1370,17 +1390,15 @@ class RunManager:
             }
 
         # --- Victory path ---
-        # Sync HP from combat back to run state
+        # Victory relic hooks already ran inside CombatState. Preserve that HP
+        # instead of applying the starter relic a second time here.
         player.max_hp = combat.player.max_hp
         player.current_hp = combat.player.current_hp
         player.potions = list(combat.potions)
         player.max_potion_slots = combat.max_potion_slots
         self._apply_deck_cards_after_combat_end()
 
-        # Post-combat heal (BurningBlood-style)
-        healed = 0
-        if self._heal_after_combat > 0 and player.current_hp > 0:
-            healed = player.heal(self._heal_after_combat)
+        healed = combat.victory_healed
 
         if self._current_room is None:
             self._current_room = create_room(room_type)
@@ -2040,23 +2058,27 @@ class RunManager:
                 "description": "Collected treasure.",
             }
 
+        # Direct test/CLI callers may install a reward without entering the
+        # room first; normal Gym/Bridge flow already opened it on entry.
+        self._open_treasure()
         info = reward.select(self)
-        spoils_gold = self._complete_spoils_map_quest()
+        info["treasure_gold"] = self._treasure_gold
+        info["gold_earned"] = self._treasure_gold + self._treasure_spoils_gold
         self._current_reward = None
         if self._run_state.pending_choice is not None:
             self._resume_after_run_choice = self._enter_map_choice
             info["phase"] = self.phase
             info["description"] = f"Collected treasure relic: {info.get('relic_id', reward.relic_id)}."
-            if spoils_gold:
-                info["spoils_gold"] = spoils_gold
+            if self._treasure_spoils_gold:
+                info["spoils_gold"] = self._treasure_spoils_gold
             return info
         self._consume_run_pending_rewards()
         if self._phase != self.PHASE_CARD_REWARD:
             self._enter_map_choice()
         info["phase"] = self.phase
         info["description"] = f"Collected treasure relic: {info.get('relic_id', reward.relic_id)}."
-        if spoils_gold:
-            info["spoils_gold"] = spoils_gold
+        if self._treasure_spoils_gold:
+            info["spoils_gold"] = self._treasure_spoils_gold
         return info
 
     def _complete_spoils_map_quest(self) -> int:

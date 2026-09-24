@@ -104,7 +104,7 @@ def test_spoils_map_treasure_completion_grants_gold_and_removes_card():
 
     assert result["phase"] == RunManager.PHASE_MAP_CHOICE
     assert result["spoils_gold"] == 600
-    assert mgr.run_state.player.gold == starting_gold + 600
+    assert mgr.run_state.player.gold == starting_gold + result["treasure_gold"] + 600
     assert spoils not in mgr.run_state.player.deck
     assert spoils not in treasure.quests
 

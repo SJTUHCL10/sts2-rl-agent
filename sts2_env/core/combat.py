@@ -170,6 +170,7 @@ class CombatState:
         self.current_side: CombatSide = CombatSide.PLAYER
         self.is_over: bool = False
         self.player_won: bool = False
+        self.victory_healed: int = 0
         self.turn_count: int = 0
         self._pending_retain_count: dict[int, int] = {}
         self.pending_choice: PendingCardChoice | None = None
@@ -3892,9 +3893,11 @@ class CombatState:
 
         self.is_over = True
         self.player_won = player_won
+        hp_before_end_hooks = self.player.current_hp
         fire_after_combat_end(self)
         if player_won:
             fire_after_combat_victory(self)
+            self.victory_healed = max(0, self.player.current_hp - hp_before_end_hooks)
 
     def __repr__(self) -> str:
         return (

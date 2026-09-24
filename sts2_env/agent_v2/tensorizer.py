@@ -49,7 +49,7 @@ from sts2_env.gym_env.run_env import (
     _TREASURE_START,
 )
 
-TENSOR_ENCODING_VERSION = "typed-set-tensor-v5"
+TENSOR_ENCODING_VERSION = "typed-set-tensor-v6"
 MAX_CURRENT_INTENTS = 3
 _BRIDGE_PHASES = {
     "map_select": "MAP_CHOICE",
@@ -86,7 +86,7 @@ class TensorizerConfig:
     categorical_vocab_size: int = VOCABULARY_SIZE
     categorical_vocabulary_hash: str = VOCABULARY_HASH
     entity_categorical_fields: int = 16
-    entity_numeric_fields: int = 43
+    entity_numeric_fields: int = 45
     candidate_categorical_fields: int = 7
     candidate_numeric_fields: int = 15
     global_categorical_fields: int = 4
@@ -107,15 +107,29 @@ class TensorizerConfig:
             )
 
     def feature_layout_hash(self) -> str:
-        payload = json.dumps(
-            {
-                "encoding_version": TENSOR_ENCODING_VERSION,
-                "config": asdict(self),
-            },
-            sort_keys=True,
-            separators=(",", ":"),
-        ).encode("utf-8")
-        return hashlib.sha256(payload).hexdigest()
+        return _feature_layout_hash(self, TENSOR_ENCODING_VERSION)
+
+
+def _feature_layout_hash(config: TensorizerConfig, version: str) -> str:
+    payload = json.dumps(
+        {
+            "encoding_version": version,
+            "config": asdict(config),
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
+@dataclass(frozen=True, slots=True)
+class LegacyV5TensorizerConfig(TensorizerConfig):
+    """Read-only compatibility for tracing pre-modifier-fix checkpoints."""
+
+    entity_numeric_fields: int = 43
+
+    def feature_layout_hash(self) -> str:
+        return _feature_layout_hash(self, "typed-set-tensor-v5")
 
 
 DEFAULT_TENSORIZER_CONFIG = TensorizerConfig()
@@ -207,7 +221,7 @@ _CANDIDATE_CATEGORY_FIELDS = (
 
 def _content_id(entity: dict[str, Any]) -> Any:
     for key in (
-        "card_id", "monster_id", "power_id", "relic_id", "potion_id",
+        "model_content", "card_id", "monster_id", "power_id", "relic_id", "potion_id",
         "node_type", "revealed_item_id", "character_id", "id", "type",
     ):
         if entity.get(key) not in (None, ""):
@@ -245,6 +259,24 @@ def _modifier_tokens(value: Any, limit: int = 2) -> list[str | None]:
         raw = (value,)
     tokens = sorted({canonical_token(item) for item in raw if item})[:limit]
     return [*tokens, *([None] * (limit - len(tokens)))]
+
+
+def _single_modifier(value: Any) -> tuple[str | None, float]:
+    """Extract the game's one modifier type and its stack amount."""
+    if isinstance(value, dict):
+        items = list(value.items())
+    elif isinstance(value, (list, tuple, set)):
+        items = [(item, 1) for item in value]
+    elif value in (None, ""):
+        items = []
+    else:
+        items = [(value, 1)]
+    if len(items) > 1:
+        raise ValueError(f"A card has multiple modifiers of one kind: {items!r}")
+    if not items:
+        return None, 0.0
+    name, amount = items[0]
+    return canonical_token(name), _finite(amount, 1)
 
 
 def _semantic_card_key(card: dict[str, Any]) -> str:
@@ -285,6 +317,8 @@ def _aggregate_pile_cards(
 
 def _iter_snapshot_entities(
     snapshot: dict[str, Any],
+    *,
+    legacy_v5: bool = False,
 ) -> list[tuple[str, dict[str, Any]]]:
     """Collect current-screen entities first, then persistent run entities."""
     collected: list[tuple[str, dict[str, Any]]] = []
@@ -297,6 +331,9 @@ def _iter_snapshot_entities(
             if not isinstance(raw, dict):
                 continue
             item = dict(raw)
+            if legacy_v5 and entity_type == "CARD":
+                # v5 simulator snapshots always emitted an empty mapping.
+                item["afflictions"] = {}
             if entity_type == "CREATURE":
                 item.setdefault("combat_index", index)
             elif key == "hand":
@@ -334,6 +371,8 @@ def _iter_snapshot_entities(
             extend(run_state, key, entity_type)
 
     for key in ("options", "nodes", "bundles"):
+        if legacy_v5 and snapshot.get("reward_item_type") and key == "options":
+            continue  # Old checkpoints saw no offered potion/relic choice row.
         for index, raw in enumerate(snapshot.get(key, []) or []):
             if not isinstance(raw, dict):
                 continue
@@ -344,6 +383,26 @@ def _iter_snapshot_entities(
                 "entity_id",
                 _fallback_entity_id(key, item, index),
             )
+            collected.append(("CHOICE", item))
+
+    if not legacy_v5:
+        event_context = snapshot.get("event_context") or []
+        if not event_context and _snapshot_phase(snapshot) == "EVENT":
+            event_id = snapshot.get("event_id") or next(
+                (
+                    item.get("event_id")
+                    for item in snapshot.get("options", []) or []
+                    if isinstance(item, dict) and item.get("event_id")
+                ),
+                None,
+            )
+            if event_id:
+                event_context = [{
+                    "entity_id": f"event:{event_id}",
+                    "id": event_id,
+                    "zone": "event",
+                }]
+        for item in event_context:
             collected.append(("CHOICE", item))
 
     # Preserve current-screen order and priority. Only persistent deck copies
@@ -380,8 +439,17 @@ def _entity_row(
     phase: str = "",
 ) -> tuple[np.ndarray, np.ndarray]:
     count = max(1, int(_finite(entity.get("count"), 1)))
-    afflictions = _modifier_tokens(entity.get("afflictions"))
-    enchantments = _modifier_tokens(entity.get("enchantments"))
+    legacy_v5 = isinstance(config, LegacyV5TensorizerConfig)
+    if legacy_v5:
+        # Simulator v5 snapshots accidentally omitted card.affliction.
+        afflictions = [None, None] if entity_type == "CARD" else _modifier_tokens(entity.get("afflictions"))
+        enchantments = _modifier_tokens(entity.get("enchantments"))
+        affliction_amount = enchantment_amount = 0.0
+    else:
+        affliction, affliction_amount = _single_modifier(entity.get("afflictions"))
+        enchantment, enchantment_amount = _single_modifier(entity.get("enchantments"))
+        afflictions = [affliction, None]
+        enchantments = [enchantment, None]
     intents = (entity.get("intents") or []) if entity_type == "CREATURE" else []
     if not intents and entity_type == "CREATURE" and entity.get("intent"):
         intents = [{
@@ -493,6 +561,10 @@ def _entity_row(
             ),
             300.0,
         ),
+        *([] if legacy_v5 else [
+            _signed_log(affliction_amount),
+            _signed_log(enchantment_amount),
+        ]),
     ], dtype=np.float32)
     return categorical, numeric
 
@@ -528,7 +600,11 @@ def _combat_candidate_slot(candidate: dict[str, Any]) -> int | None:
 def _candidate_slots(
     snapshot: dict[str, Any],
     action_mask: np.ndarray,
+    *,
+    legacy_v5: bool = False,
 ) -> dict[int, dict[str, Any]]:
+    if legacy_v5 and snapshot.get("reward_item_type"):
+        return {}  # Preserve the exact missing-candidate v5 projection.
     entity_lookup: dict[str, dict[str, Any]] = {}
     containers = [snapshot]
     if isinstance(snapshot.get("run_state"), dict):
@@ -633,6 +709,14 @@ def _candidate_slots(
             if matches:
                 aligned[0] = matches[0]
     elif phase == "CARD_REWARD":
+        if snapshot.get("reward_item_type"):
+            picks = take("CHOOSE", 1)
+            skips = take("SKIP", 1)
+            if picks:
+                aligned[_CARD_RWD_START] = picks[0]
+            if skips:
+                aligned[_CARD_RWD_START + 3] = skips[0]
+            return aligned
         pick_slots = [
             _CARD_RWD_START,
             _CARD_RWD_START + 1,
@@ -844,6 +928,12 @@ def tensorize_snapshot(
         raise ValueError(
             f"Expected action mask {(config.num_actions,)}, got {action_mask.shape}"
         )
+    if isinstance(config, LegacyV5TensorizerConfig) and "legacy_event_options" in snapshot:
+        snapshot = {
+            **snapshot,
+            "options": snapshot["legacy_event_options"],
+            "candidates": snapshot["legacy_event_candidates"],
+        }
     phase = _snapshot_phase(snapshot)
     run_state = snapshot.get("run_state")
     run = run_state if isinstance(run_state, dict) else snapshot
@@ -902,7 +992,9 @@ def tensorize_snapshot(
         dtype=np.float32,
     )
     entity_mask = np.zeros(config.max_entities, dtype=np.int8)
-    entities = _iter_snapshot_entities(snapshot)
+    entities = _iter_snapshot_entities(
+        snapshot, legacy_v5=isinstance(config, LegacyV5TensorizerConfig),
+    )
     overflow = max(0, len(entities) - config.max_entities)
     if overflow:
         entities = entities[: config.max_entities - 1]
@@ -931,7 +1023,10 @@ def tensorize_snapshot(
     )
     candidate_source_row = np.full(config.num_actions, -1, dtype=np.int32)
     candidate_target_row = np.full(config.num_actions, -1, dtype=np.int32)
-    aligned = _candidate_slots(snapshot, action_mask)
+    aligned = _candidate_slots(
+        snapshot, action_mask,
+        legacy_v5=isinstance(config, LegacyV5TensorizerConfig),
+    )
     for slot in range(config.num_actions):
         categorical, numeric = _candidate_row(
             slot,

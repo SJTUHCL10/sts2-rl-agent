@@ -116,6 +116,10 @@ observation 构造，而不是卡牌/怪物规则执行。
 能力诊断详见
 [AGENT_MODEL_ITERATION.md](AGENT_MODEL_ITERATION.md)。
 
+修复副怪规则后的 v5 1M 长训实际完成 1,003,520 steps，耗时 6,077 秒，
+端到端 165.1 step/s；100-seed 能力均层约 12.2。此结果仍使用 v5 卡牌
+modifier 投影。v6 修正该输入并改变 tensor shape，吞吐与能力均须重新测量。
+
 ## 训练建议
 
 正式训练应使用 `--device cuda`（训练脚本当前支持把 device 传给 SB3），并

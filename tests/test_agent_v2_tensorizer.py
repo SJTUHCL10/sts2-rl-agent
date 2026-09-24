@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 import json
+import math
 
 import numpy as np
 import pytest
@@ -13,16 +14,60 @@ from sts2_env.agent_v2.categorical_vocabulary import categorical_id
 from sts2_env.agent_v2.snapshot import build_run_decision_snapshot
 from sts2_env.agent_v2.tensorizer import (
     ENTITY_TYPE_TO_ID,
+    LegacyV5TensorizerConfig,
     TensorizerConfig,
     observation_space,
     tensorize_snapshot,
 )
+from sts2_env.agent_v2.snapshot import serialize_card
+from sts2_env.cards.ironclad import create_ironclad_starter_deck
 from sts2_env.agent_v2.unknown_diagnostics import UnknownTokenDiagnostics
 from sts2_env.bridge.full_run_adapter import FullRunStateAdapter
 from sts2_env.core.constants import MAX_ENEMIES, MAX_HAND_SIZE, POTION_ACTION_START
 from sts2_env.events.act2 import CrystalSphere
 from sts2_env.gym_env.entity_run_env import STS2EntityRunEnv
 from sts2_env.run.run_manager import RunManager
+from sts2_env.potions.base import create_potion
+
+
+def test_card_affliction_and_enchantment_amount_reach_v6_tensor() -> None:
+    card = create_ironclad_starter_deck()[0]
+    card.afflict("bound")
+    card.add_enchantment("Sharp", 3)
+    serialized = serialize_card(
+        card, zone="hand", zone_index=0, owner_id="player:0", playable=True,
+    )
+    assert serialized["afflictions"] == {"bound": 1}
+    assert serialized["enchantments"] == {"Sharp": 3}
+
+    config = TensorizerConfig(max_entities=8)
+    mask = np.zeros(config.num_actions, dtype=np.int8)
+    mask[0] = 1
+    state = {"type": "combat_action", "phase": "COMBAT", "cards": [serialized]}
+    observation = tensorize_snapshot(state, mask, config, validate=True)
+    categorical = observation["entity_categorical"][0]
+    numeric = observation["entity_numeric"][0]
+    assert categorical[7] == categorical_id("BOUND", strict=True)
+    assert categorical[9] == categorical_id("SHARP", strict=True)
+    assert numeric[43] == pytest.approx(math.log1p(1) / 5)
+    assert numeric[44] == pytest.approx(math.log1p(3) / 5)
+
+
+def test_legacy_v5_trace_tensor_preserves_old_modifier_projection() -> None:
+    config = LegacyV5TensorizerConfig(max_entities=8)
+    assert LegacyV5TensorizerConfig().feature_layout_hash() == (
+        "ec9db7fe8628c702f690df2449ba21d9553a7953f16350dce19f75f13d3b533e"
+    )
+    mask = np.zeros(config.num_actions, dtype=np.int8)
+    mask[0] = 1
+    state = {"type": "combat_action", "phase": "COMBAT", "cards": [{
+        "entity_id": "card:0", "card_id": "STRIKE", "zone": "hand",
+        "afflictions": {"BOUND": 1}, "enchantments": {"Sharp": 3},
+    }]}
+    observation = tensorize_snapshot(state, mask, config, validate=True)
+    assert observation["entity_numeric"].shape == (8, 43)
+    assert observation["entity_categorical"][0, 7] == 0
+    assert observation["entity_categorical"][0, 9] == categorical_id("SHARP")
 
 
 def test_current_intents_and_instance_pointers_are_distinct() -> None:
@@ -218,6 +263,102 @@ def test_crystal_sphere_extended_choice_points_to_cell() -> None:
     remaining = crystal.minigame.divination_count
     env.step(157)
     assert crystal.minigame.divination_count < remaining
+
+
+@pytest.mark.parametrize(
+    ("reward_type", "item_id", "pick_action", "skip_action"),
+    [
+        ("potion", "FruitJuice", "pick_potion", "skip_potion"),
+        ("relic", "FESTIVE_POPPER", "pick_relic_reward", "skip_relic"),
+    ],
+)
+def test_post_combat_item_reward_has_semantic_candidate_and_source_pointer(
+    reward_type: str, item_id: str, pick_action: str, skip_action: str,
+) -> None:
+    env = STS2EntityRunEnv(max_steps=20)
+    env.reset(seed=109)
+    manager = env.run_env._mgr
+    assert manager is not None
+    manager._phase = RunManager.PHASE_CARD_REWARD
+    if reward_type == "potion":
+        manager._offered_potion = create_potion(item_id)
+    else:
+        manager._offered_relic = item_id
+    env.invalidate_action_mask_cache()
+    mask = env.action_masks()
+    snapshot = env.run_env.entity_observation()
+    aligned = tensorizer_module._candidate_slots(snapshot, mask)
+    assert aligned[120]["payload"]["action"] == pick_action
+    assert aligned[123]["payload"]["action"] == skip_action
+    assert snapshot["options"][0]["id"] == item_id
+    observation = env._structured_observation(mask)
+    source_row = observation["candidate_source_row"][120]
+    assert source_row >= 0
+    assert observation["entity_categorical"][source_row, 0] == ENTITY_TYPE_TO_ID["CHOICE"]
+    legacy = LegacyV5TensorizerConfig()
+    old = tensorize_snapshot(snapshot, mask, legacy)
+    assert old["candidate_source_row"][120] == -1
+    assert old["candidate_source_row"][123] == -1
+    original = {key: value for key, value in snapshot.items() if key not in {
+        "reward_item_type", "options", "candidates",
+    }}
+    original["candidates"] = []
+    prior_projection = tensorize_snapshot(original, mask, legacy)
+    for key in old:
+        np.testing.assert_array_equal(old[key], prior_projection[key])
+    env.close()
+
+
+def test_event_identity_and_option_ids_reach_current_tensor_only() -> None:
+    env = STS2EntityRunEnv(max_steps=20)
+    env.reset(seed=100109)
+    manager = env.run_env._mgr
+    assert manager is not None
+    manager._enter_event()
+    assert manager._event_model is not None
+    env.invalidate_action_mask_cache()
+    mask = env.action_masks()
+    snapshot = env.run_env.entity_observation()
+    assert snapshot["event_id"] == manager._event_model.event_id
+    assert snapshot["options"][0]["id"] == manager.get_available_actions()[0]["option_id"]
+    assert categorical_id(snapshot["options"][0]["model_content"]) != 1
+    observation = env._structured_observation(mask)
+    assert observation["candidate_source_row"][145] >= 0
+    assert observation["candidate_categorical"][145, 2] != 1
+    assert any(
+        observation["entity_categorical"][row, 1] == categorical_id(snapshot["event_id"])
+        for row in range(int(observation["entity_mask"].sum()))
+    )
+    legacy = LegacyV5TensorizerConfig()
+    old = tensorize_snapshot(snapshot, mask, legacy)
+    original = {
+        **snapshot,
+        "options": snapshot["legacy_event_options"],
+        "candidates": snapshot["legacy_event_candidates"],
+        "event_context": [],
+    }
+    prior_projection = tensorize_snapshot(original, mask, legacy)
+    for key in old:
+        np.testing.assert_array_equal(old[key], prior_projection[key])
+    env.close()
+
+
+def test_live_event_option_event_id_becomes_context_entity() -> None:
+    config = TensorizerConfig(max_entities=8)
+    mask = np.zeros(config.num_actions, dtype=np.int8)
+    mask[145] = 1
+    snapshot = {
+        "type": "event",
+        "options": [{
+            "index": 0, "id": "event_choice", "action": "event_choice",
+            "event_id": "AbyssalBaths", "label": "Linger", "enabled": True,
+        }],
+    }
+    current = tensorize_snapshot(snapshot, mask, config)
+    assert any(
+        current["entity_categorical"][row, 1] == categorical_id("AbyssalBaths")
+        for row in range(int(current["entity_mask"].sum()))
+    )
 
 
 @pytest.mark.parametrize("state, slot, expected_index", [

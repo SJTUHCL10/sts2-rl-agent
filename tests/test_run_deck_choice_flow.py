@@ -405,7 +405,7 @@ def test_treasure_cursed_pearl_auto_applies_curse_and_gold_then_returns_to_map()
     result = mgr._do_treasure_collect()
 
     assert result["phase"] == RunManager.PHASE_MAP_CHOICE
-    assert mgr.run_state.player.gold == starting_gold + 333
+    assert mgr.run_state.player.gold == starting_gold + result["treasure_gold"] + 333
     assert any(card.card_id.name == "GREED" for card in mgr.run_state.player.deck)
 
 
@@ -617,7 +617,7 @@ def test_treasure_cursed_pearl_auto_adds_greed_reward_and_gold_before_returning_
 
     assert result["phase"] == RunManager.PHASE_MAP_CHOICE
     assert mgr.run_state.pending_choice is None
-    assert mgr.run_state.player.gold == starting_gold + 333
+    assert mgr.run_state.player.gold == starting_gold + result["treasure_gold"] + 333
     assert len(mgr.run_state.player.deck) == starting_deck + 1
     assert any(card.card_id.name == "GREED" for card in mgr.run_state.player.deck)
 
